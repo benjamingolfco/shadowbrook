@@ -19,6 +19,9 @@ public static class CourseEndpoints
         CreateCourseRequest request,
         ApplicationDbContext db)
     {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return Results.BadRequest(new { error = "Name is required." });
+
         var course = new Course
         {
             Id = Guid.NewGuid(),

@@ -74,6 +74,16 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotEqual(Guid.Empty, body.Id);
     }
 
+    [Fact]
+    public async Task PostCourse_WithoutName_ReturnsBadRequest()
+    {
+        var request = new { StreetAddress = "123 Main St" };
+
+        var response = await _client.PostAsJsonAsync("/courses", request);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     private record CourseResponse(
         Guid Id,
         string Name,
