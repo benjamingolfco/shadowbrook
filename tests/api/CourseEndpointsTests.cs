@@ -15,6 +15,42 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
+    public async Task GetAllCourses_ReturnsOk()
+    {
+        await _client.PostAsJsonAsync("/courses", new { Name = "Test Course" });
+
+        var response = await _client.GetAsync("/courses");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var courses = await response.Content.ReadFromJsonAsync<List<CourseResponse>>();
+        Assert.NotNull(courses);
+        Assert.NotEmpty(courses!);
+    }
+
+    [Fact]
+    public async Task GetCourseById_WhenExists_ReturnsOk()
+    {
+        var createResponse = await _client.PostAsJsonAsync("/courses", new { Name = "Lookup Course" });
+        var created = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
+
+        var response = await _client.GetAsync($"/courses/{created!.Id}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var course = await response.Content.ReadFromJsonAsync<CourseResponse>();
+        Assert.Equal("Lookup Course", course!.Name);
+    }
+
+    [Fact]
+    public async Task GetCourseById_WhenNotExists_ReturnsNotFound()
+    {
+        var response = await _client.GetAsync($"/courses/{Guid.NewGuid()}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
     public async Task PostCourse_ReturnsCreated()
     {
         var request = new
