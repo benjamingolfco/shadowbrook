@@ -24,10 +24,12 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             foreach (var descriptor in descriptorsToRemove)
                 services.Remove(descriptor);
 
+            // Share a single connection so the in-memory database persists across scopes
+            var connection = new Microsoft.Data.Sqlite.SqliteConnection("DataSource=:memory:");
+            connection.Open();
+
             services.AddDbContext<ApplicationDbContext>(options =>
             {
-                var connection = new Microsoft.Data.Sqlite.SqliteConnection("DataSource=:memory:");
-                connection.Open();
                 options.UseSqlite(connection);
             });
         });

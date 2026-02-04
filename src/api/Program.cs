@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Data;
+using Shadowbrook.Api.Endpoints;
 using Shadowbrook.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,5 +22,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.MapHealthChecks("/health");
+app.MapCourseEndpoints();
 
 app.Run();
