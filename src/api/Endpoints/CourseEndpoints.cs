@@ -13,6 +13,8 @@ public static class CourseEndpoints
         group.MapPost("", CreateCourse);
         group.MapGet("", GetAllCourses);
         group.MapGet("{id:guid}", GetCourseById);
+        group.MapPut("{id:guid}/tee-time-settings", UpdateTeeTimeSettings);
+        group.MapGet("{id:guid}/tee-time-settings", GetTeeTimeSettings);
     }
 
     private static async Task<IResult> CreateCourse(
@@ -53,6 +55,51 @@ public static class CourseEndpoints
         var course = await db.Courses.FindAsync(id);
         return course is null ? Results.NotFound() : Results.Ok(course);
     }
+
+    private static readonly int[] AllowedIntervals = [8, 10, 12];
+
+    private static async Task<IResult> UpdateTeeTimeSettings(
+        Guid id,
+        TeeTimeSettingsRequest request,
+        ApplicationDbContext db)
+    {
+        var course = await db.Courses.FindAsync(id);
+        if (course is null)
+            return Results.NotFound();
+
+        if (!AllowedIntervals.Contains(request.TeeTimeIntervalMinutes))
+            return Results.BadRequest(new { error = "Interval must be 8, 10, or 12 minutes." });
+
+        if (request.FirstTeeTime >= request.LastTeeTime)
+            return Results.BadRequest(new { error = "First tee time must be before last tee time." });
+
+        course.TeeTimeIntervalMinutes = request.TeeTimeIntervalMinutes;
+        course.FirstTeeTime = request.FirstTeeTime;
+        course.LastTeeTime = request.LastTeeTime;
+        course.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new TeeTimeSettingsResponse(
+            course.TeeTimeIntervalMinutes.Value,
+            course.FirstTeeTime.Value,
+            course.LastTeeTime.Value));
+    }
+
+    private static async Task<IResult> GetTeeTimeSettings(Guid id, ApplicationDbContext db)
+    {
+        var course = await db.Courses.FindAsync(id);
+        if (course is null)
+            return Results.NotFound();
+
+        if (course.TeeTimeIntervalMinutes is null)
+            return Results.Ok(new { });
+
+        return Results.Ok(new TeeTimeSettingsResponse(
+            course.TeeTimeIntervalMinutes.Value,
+            course.FirstTeeTime!.Value,
+            course.LastTeeTime!.Value));
+    }
 }
 
 public record CreateCourseRequest(
@@ -63,3 +110,13 @@ public record CreateCourseRequest(
     string? ZipCode = null,
     string? ContactEmail = null,
     string? ContactPhone = null);
+
+public record TeeTimeSettingsRequest(
+    int TeeTimeIntervalMinutes,
+    TimeOnly FirstTeeTime,
+    TimeOnly LastTeeTime);
+
+public record TeeTimeSettingsResponse(
+    int TeeTimeIntervalMinutes,
+    TimeOnly FirstTeeTime,
+    TimeOnly LastTeeTime);

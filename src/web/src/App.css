@@ -22,14 +22,16 @@ label {
   font-size: 0.9rem;
 }
 
-input {
+input,
+select {
   padding: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 1rem;
 }
 
-input:focus {
+input:focus,
+select:focus {
   outline: none;
   border-color: #646cff;
   box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);

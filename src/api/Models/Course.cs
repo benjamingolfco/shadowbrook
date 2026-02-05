@@ -10,6 +10,9 @@ public class Course
     public string? ZipCode { get; set; }
     public string? ContactEmail { get; set; }
     public string? ContactPhone { get; set; }
+    public int? TeeTimeIntervalMinutes { get; set; }
+    public TimeOnly? FirstTeeTime { get; set; }
+    public TimeOnly? LastTeeTime { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 }
