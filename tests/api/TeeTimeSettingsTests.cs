@@ -71,6 +71,21 @@ public class TeeTimeSettingsTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
+    public async Task UpdateTeeTimeSettings_FirstEqualsLast_ReturnsBadRequest()
+    {
+        var courseId = await CreateCourse();
+
+        var response = await _client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
+        {
+            TeeTimeIntervalMinutes = 10,
+            FirstTeeTime = "07:00",
+            LastTeeTime = "07:00"
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task UpdateTeeTimeSettings_CourseNotFound_ReturnsNotFound()
     {
         var response = await _client.PutAsJsonAsync($"/courses/{Guid.NewGuid()}/tee-time-settings", new

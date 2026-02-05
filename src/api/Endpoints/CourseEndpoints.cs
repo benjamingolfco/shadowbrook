@@ -92,13 +92,13 @@ public static class CourseEndpoints
         if (course is null)
             return Results.NotFound();
 
-        if (course.TeeTimeIntervalMinutes is null)
+        if (course.TeeTimeIntervalMinutes is null || course.FirstTeeTime is null || course.LastTeeTime is null)
             return Results.Ok(new { });
 
         return Results.Ok(new TeeTimeSettingsResponse(
             course.TeeTimeIntervalMinutes.Value,
-            course.FirstTeeTime!.Value,
-            course.LastTeeTime!.Value));
+            course.FirstTeeTime.Value,
+            course.LastTeeTime.Value));
     }
 }
 
