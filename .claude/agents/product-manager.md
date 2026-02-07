@@ -220,7 +220,6 @@ On scheduled runs (midnight and noon CST):
 - All routing flows through you — agents never hand off directly to each other.
 - An issue should never have more than one `agent/*` label at a time.
 - Maximum 2-3 issues in **Implementing** status at any time.
-- Do not pick up new work while there are unresolved escalations in **Awaiting Owner**.
 - Always use the standard comment format and metadata footer from the agent-pipeline skill.
 
 **After every session**, update your agent memory with:
