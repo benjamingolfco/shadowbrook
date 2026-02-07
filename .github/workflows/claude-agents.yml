@@ -3,11 +3,17 @@ name: Claude Agent Dispatch
 on:
   issues:
     types: [labeled]
+  pull_request:
+    types: [labeled]
 
 jobs:
   dispatch:
-    # Only run when an agent/* label is added to an issue that has the 'agentic' label
-    if: startsWith(github.event.label.name, 'agent/') && contains(github.event.issue.labels.*.name, 'agentic')
+    # Run when an agent/* label is added to an issue or PR that has the 'agentic' label
+    if: |
+      startsWith(github.event.label.name, 'agent/') && (
+        (github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'agentic')) ||
+        (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'agentic'))
+      )
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -21,13 +27,23 @@ jobs:
         with:
           fetch-depth: 0  # Full history for implementation agents that need to create branches
 
-      - name: Determine agent
+      - name: Determine agent and context
         id: agent
         run: |
           LABEL="${{ github.event.label.name }}"
           AGENT_NAME="${LABEL#agent/}"
           echo "name=$AGENT_NAME" >> $GITHUB_OUTPUT
           echo "file=.claude/agents/${AGENT_NAME}.md" >> $GITHUB_OUTPUT
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+            echo "title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+            echo "type=PR" >> $GITHUB_OUTPUT
+          else
+            echo "number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
+            echo "title=${{ github.event.issue.title }}" >> $GITHUB_OUTPUT
+            echo "type=issue" >> $GITHUB_OUTPUT
+          fi
 
       - name: Verify agent file exists
         run: |
@@ -48,6 +64,6 @@ jobs:
           prompt: |
             Read and follow .claude/skills/agent-pipeline/SKILL.md for pipeline protocols.
             Read and follow ${{ steps.agent.outputs.file }} for your role.
-            Work on issue #${{ github.event.issue.number }}
+            Work on ${{ steps.agent.outputs.type }} #${{ steps.agent.outputs.number }}
 
-            Issue title: ${{ github.event.issue.title }}
+            Title: ${{ steps.agent.outputs.title }}
