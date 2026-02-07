@@ -12,6 +12,12 @@ on:
 
 jobs:
   pm:
+    # Only one PM run per issue at a time — newest wins, older runs are cancelled.
+    # Agents post multiple comments + remove labels within seconds, each generating
+    # a separate event. Without this, the PM fires 2-3 times per handback.
+    concurrency:
+      group: pm-${{ github.event.issue.number || github.event.pull_request.number || 'cron' }}
+      cancel-in-progress: true
     # All event types require the 'agentic' label except schedule (cron always runs)
     if: |
       github.event_name == 'schedule' ||
