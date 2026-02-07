@@ -40,6 +40,8 @@ jobs:
           github_token: ${{ secrets.PAT_TOKEN }}
           additional_permissions: |
             actions: read
+          claude_args: |
+            --allowedTools "Bash(gh *)" "Bash(echo *)" "Bash(cat *)" "Read" "Write" "Edit" "Glob" "Grep"
           prompt: |
             Read and follow .claude/skills/agent-pipeline/SKILL.md for pipeline protocols.
             Read and follow .claude/agents/product-manager.md for your role.
