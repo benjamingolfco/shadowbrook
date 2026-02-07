@@ -34,6 +34,66 @@
 ## Workflow
 - Run `dotnet build shadowbrook.slnx` after C# changes to verify compilation
 - Run `pnpm --dir src/web lint` after TypeScript changes
+- Prefer unit tests before integration tests
 - Prefer running single tests over full suites for speed
-- Worktrees go in `.worktrees/` (gitignored)
 - `dotnet-ef` tool path: `export PATH="$PATH:/home/aaron/.dotnet/tools"`
+
+## Branching
+
+Work on branches, push, and create PRs. Never commit directly to main.
+
+| Prefix | When | Example |
+|--------|------|---------|
+| `issue/<number>-description` | Working on a GitHub issue | `issue/5-tee-time-settings` |
+| `bug/description` | Fixing a bug | `bug/course-name-validation` |
+| `chore/description` | Random tasks, cleanup, config | `chore/update-dependencies` |
+| `testing/description` | Trying something out | `testing/react-router` |
+
+## GitHub Project Management
+
+Repo: `benjamingolfco/shadowbrook` | Project: #1 under `benjamingolfco` org
+
+| Action | Command |
+|--------|---------|
+| Create issue | `gh api repos/benjamingolfco/shadowbrook/issues -X POST -f title="..." -f body="..." -f type="Feature"` |
+| List issue types | `gh api orgs/benjamingolfco/issue-types` |
+| Add labels | `gh issue edit {number} --add-label "label1,label2"` |
+| Add to project | `gh project item-add 1 --owner benjamingolfco --url {issue_url}` |
+| Set project field | `gh project item-edit --project-id {id} --id {item_id} --field-id {field_id} --single-select-option-id {option_id}` |
+| Link sub-issue | `gh api repos/benjamingolfco/shadowbrook/issues/{parent}/sub_issues -X POST -F sub_issue_id={child_id}` |
+| View issue | `gh issue view {number}` |
+| List issues | `gh issue list --state open` |
+| List project items | `gh project item-list 1 --owner benjamingolfco` |
+| List project fields | `gh project field-list 1 --owner benjamingolfco` |
+
+Notes:
+- Use `-F` (not `-f`) for integer fields (e.g., `sub_issue_id`)
+- Issue types: Task, Bug, Feature, User Story
+- Project fields: Status (Triage/Needs Story/Needs Architecture/Ready/Implementing/CI Pending/In Review/Changes Requested/Ready to Merge/Awaiting Owner/Done), Priority (P0/P1/P2), Size (XS-XL)
+
+### Issue Labels
+
+| Label | When to Apply |
+|-------|--------------|
+| `golfers love` | Feature/story where the golfer directly experiences or benefits from the functionality |
+| `course operators love` | Feature/story where the course operator directly experiences or benefits from the functionality |
+| `v1` | Core MVP — must ship for launch |
+| `v2` | Enhanced — post-MVP improvements |
+| `v3` | Future — long-term roadmap items |
+| `agentic` | Issue is managed by the automated agent pipeline (required for agents to process it) |
+| `agent/business-analyst` | Assign issue to Business Analyst agent |
+| `agent/architect` | Assign issue to Architect agent |
+| `agent/backend` | Assign issue to Backend Developer agent |
+| `agent/frontend` | Assign issue to Frontend Developer agent |
+| `agent/reviewer` | Assign issue to Code Reviewer agent |
+| `agent/devops` | Assign issue to DevOps Engineer agent |
+
+Apply audience labels based on who benefits — many features get **both** `golfers love` and `course operators love` (see "Features Both Golfers AND Courses Will Love" in the roadmap). Always apply exactly one version label (`v1`, `v2`, or `v3`) based on the roadmap tier. The `agentic` label opts an issue into the automated pipeline — without it, agents ignore the issue. Agent `agent/*` labels are managed by the pipeline — see below.
+
+## Agent Pipeline
+
+This project uses an automated multi-agent pipeline via GitHub Actions. See `.claude/skills/agent-pipeline/SKILL.md` for the full protocol.
+
+- **Workflow files:** `.github/workflows/claude-pm.yml` (orchestrator), `.github/workflows/claude-agents.yml` (dispatch)
+- **Agent definitions:** `.claude/agents/*.md`
+- **Pipeline statuses:** Triage → Needs Story → Needs Architecture → Ready → Implementing → CI Pending → In Review → Changes Requested → Ready to Merge → Done

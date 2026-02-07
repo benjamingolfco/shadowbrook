@@ -3,4 +3,8 @@
   <Folder Name="/src/api/">
     <Project Path="src/api/Shadowbrook.Api.csproj" />
   </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/api/">
+    <Project Path="tests/api/Shadowbrook.Api.Tests.csproj" />
+  </Folder>
 </Solution>

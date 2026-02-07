@@ -1,0 +1,51 @@
+name: Claude Agent Dispatch
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  dispatch:
+    # Only run when an agent/* label is added to an issue that has the 'agentic' label
+    if: startsWith(github.event.label.name, 'agent/') && contains(github.event.issue.labels.*.name, 'agentic')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for implementation agents that need to create branches
+
+      - name: Determine agent
+        id: agent
+        run: |
+          LABEL="${{ github.event.label.name }}"
+          AGENT_NAME="${LABEL#agent/}"
+          echo "name=$AGENT_NAME" >> $GITHUB_OUTPUT
+          echo "file=.claude/agents/${AGENT_NAME}.md" >> $GITHUB_OUTPUT
+
+      - name: Verify agent file exists
+        run: |
+          if [ ! -f "${{ steps.agent.outputs.file }}" ]; then
+            echo "::error::Agent file not found: ${{ steps.agent.outputs.file }}"
+            exit 1
+          fi
+
+      - name: Run Agent
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.PAT_TOKEN }}
+          additional_permissions: |
+            actions: read
+          prompt: |
+            Read and follow .claude/skills/agent-pipeline/SKILL.md for pipeline protocols.
+            Read and follow ${{ steps.agent.outputs.file }} for your role.
+            Work on issue #${{ github.event.issue.number }}
+
+            Issue title: ${{ github.event.issue.title }}
