@@ -236,7 +236,7 @@ Follow your agent-specific implementation workflow (defined in your agent file).
 
 ```bash
 git push -u origin issue/{number}-{short-description}
-gh pr create --draft --title "{short title}" --body "Closes #{number}
+gh pr create --draft --label "agentic" --title "{short title}" --body "Closes #{number}
 
 {summary of changes}"
 ```

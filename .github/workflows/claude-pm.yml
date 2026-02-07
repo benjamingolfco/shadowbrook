@@ -9,17 +9,15 @@ on:
     types: [created]
   pull_request:
     types: [opened, closed, synchronize]
-  check_suite:
-    types: [completed]
 
 jobs:
   pm:
-    # Issues/comments: require 'agentic' label, skip agent/* labels and bot comments
-    # Everything else (schedule, check_suite, pull_request): always run
+    # All event types require the 'agentic' label except schedule (cron always runs)
     if: |
-      (github.event_name != 'issues' && github.event_name != 'issue_comment') ||
+      github.event_name == 'schedule' ||
       (github.event_name == 'issue_comment' && !endsWith(github.event.comment.user.login, '[bot]') && contains(github.event.issue.labels.*.name, 'agentic')) ||
-      (github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'agentic') && !(github.event.action == 'labeled' && startsWith(github.event.label.name, 'agent/')))
+      (github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'agentic') && !(github.event.action == 'labeled' && startsWith(github.event.label.name, 'agent/'))) ||
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'agentic'))
     runs-on: ubuntu-latest
     permissions:
       contents: write
