@@ -14,12 +14,10 @@ on:
 
 jobs:
   pm:
-    # Gate: issues/comments require 'agentic' label; schedule/check_suite/PRs always run
-    # Skip: agent/* label events (handled by claude-agents.yml), bot comments (prevent loops)
+    # Issues/comments: require 'agentic' label, skip agent/* labels and bot comments
+    # Everything else (schedule, check_suite, pull_request): always run
     if: |
-      github.event_name == 'schedule' ||
-      github.event_name == 'check_suite' ||
-      github.event_name == 'pull_request' ||
+      (github.event_name != 'issues' && github.event_name != 'issue_comment') ||
       (github.event_name == 'issue_comment' && !endsWith(github.event.comment.user.login, '[bot]') && contains(github.event.issue.labels.*.name, 'agentic')) ||
       (github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'agentic') && !(github.event.action == 'labeled' && startsWith(github.event.label.name, 'agent/')))
     runs-on: ubuntu-latest
