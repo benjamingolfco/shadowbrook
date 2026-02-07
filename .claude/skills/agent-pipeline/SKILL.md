@@ -135,6 +135,152 @@ Each round-trip through PM counts toward the **3 round-trip limit** (see Escalat
 - Agents must **never** mark draft PRs as ready for review -- only the PM publishes PRs (with auto-merge enabled) when code review is approved and CI is green.
 - Only the **product owner** approves PRs for merge.
 
+## Specialist Agent Workflow
+
+Every specialist agent (BA, Architect, Backend, Frontend, DevOps, Reviewer) follows this workflow when triggered. Agent-specific expertise and implementation details live in the agent file; the process lives here.
+
+### Trigger
+
+You are triggered when the PM adds your `agent/*` label to an issue. This means the PM has assessed the issue and determined it needs your specialty.
+
+### Step 1: Gather Context
+
+1. **Read the issue** — title, body, existing comments, and any linked context (parent epic, related issues). Pay special attention to acceptance criteria and any prior agent comments.
+2. **Read the PM status comment** — find the `## PM Status` comment on the issue. Check the current phase, round-trip count, and history to understand where this issue stands in the pipeline.
+
+### Step 2: Execute Your Role
+
+Perform your role-specific work as defined in your agent file. This varies by agent — story refinement, technical planning, code implementation, code review, infrastructure work, etc.
+
+### Step 3: Handle Ambiguity
+
+If requirements, acceptance criteria, or the technical plan are insufficient for your work:
+
+1. Post a directed question using the standard comment format:
+   ```
+   [Your Agent Name → Target Agent or @aarongbenjamin] Specific question about what is unclear.
+   ```
+2. Hand back to the PM (see Step 4) so it can route the question appropriately.
+
+**Do not guess at decisions. It is better to escalate than to work based on assumptions.**
+
+### Step 4: Handback
+
+When your work is complete (or you need to escalate), **always** do all three of these:
+
+1. **Post a handback comment** summarizing what you did:
+   ```
+   [Your Agent Name → Product Manager] Summary of what was done for #{number}.
+   ```
+   Or if escalating:
+   ```
+   [Your Agent Name → Product Manager] Cannot proceed — {reason}. Posted questions for {target}.
+   ```
+
+2. **Include the metadata footer** on every comment:
+   ```
+   ---
+   _Agent: {agent-name} · Skills: {comma-separated skill list} · Run: [#{run_number}]({run_link})_
+   ```
+   Build the run link as: `$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID`
+
+3. **Remove your label** from the issue:
+   ```bash
+   gh issue edit {number} --remove-label "agent/{your-label}"
+   ```
+
+### Step 5: Observability
+
+As your **final step**, write a summary table to `$GITHUB_STEP_SUMMARY`:
+
+```markdown
+## Agent Run Summary
+| Field | Value |
+|-------|-------|
+| Agent | {Your Agent Name} |
+| Issue | #{number} — {title} |
+| Phase | {current pipeline phase} |
+| Skills | {comma-separated skill list} |
+| Actions Taken | {concise summary of what you did} |
+| Outcome | {Handback to PM / Escalated to {target} / Escalated to owner} |
+```
+
+---
+
+## Implementation Agent Workflow
+
+Agents that produce code (Backend Developer, Frontend Developer, DevOps Engineer) follow additional steps between context gathering and handback.
+
+### Read the Architect's Plan
+
+Find the `[Architect] Technical plan for #...` comment on the issue. This is your implementation blueprint — follow the file structure, patterns, data model, API design, and testing strategy it defines.
+
+If no technical plan exists (e.g., a well-defined bug or a simple task the PM routed directly to you), use the issue's acceptance criteria and your own codebase exploration to guide implementation.
+
+### Create a Branch
+
+Use the `issue/<number>-description` convention:
+```bash
+git checkout -b issue/{number}-{short-description}
+```
+
+### Implement, Test, Validate
+
+Follow your agent-specific implementation workflow (defined in your agent file). At a minimum:
+1. Explore existing code to match conventions before writing new code
+2. Implement the changes
+3. Run the relevant test/lint/build commands
+4. Fix any failures — iterate until green
+
+### Push and Open a Draft PR
+
+```bash
+git push -u origin issue/{number}-{short-description}
+gh pr create --draft --title "{short title}" --body "Closes #{number}
+
+{summary of changes}"
+```
+
+Then proceed to the standard handback (Step 4 above).
+
+---
+
+## Review Agent Workflow
+
+The Code Reviewer follows a specific workflow between context gathering and handback.
+
+### Find the PR
+
+Locate the PR linked to the issue:
+```bash
+gh pr list --search "#{number}" --json number,title,url,headRefName
+```
+
+### Read the Diff
+
+Review every changed file thoroughly:
+```bash
+gh pr diff {pr_number}
+```
+
+Use Glob, Grep, and Read to examine surrounding code, related files, and existing patterns. Don't review in isolation — understand how the changes fit into the broader codebase.
+
+### Post Your Review
+
+Use `gh pr review` to either approve or request changes:
+
+```bash
+# To approve:
+gh pr review {pr_number} --approve --body "..."
+
+# To request changes:
+gh pr review {pr_number} --request-changes --body "..."
+```
+
+Then proceed to the standard handback (Step 4 above).
+
+---
+
 ## Observability
 
 Three layers provide full traceability from high-level status down to individual actions.
@@ -149,16 +295,4 @@ The PM status comment's **History** section accumulates a log of every agent act
 
 ### 3. GitHub Actions Job Summary
 
-Every agent writes a summary table to `$GITHUB_STEP_SUMMARY` as its final step:
-
-```markdown
-## Agent Run Summary
-| Field | Value |
-|-------|-------|
-| Agent | Backend Developer |
-| Issue | #42 -- Tee time settings endpoint |
-| Phase | Implementing |
-| Skills | agent-pipeline, backend-developer |
-| Actions Taken | Created endpoint, service, and 3 integration tests |
-| Outcome | Handback to PM |
-```
+Every agent writes a summary table to `$GITHUB_STEP_SUMMARY` as its final step (see Step 5 in Specialist Agent Workflow above).
