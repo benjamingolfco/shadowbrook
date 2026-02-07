@@ -80,6 +80,7 @@ Notes:
 | `v1` | Core MVP — must ship for launch |
 | `v2` | Enhanced — post-MVP improvements |
 | `v3` | Future — long-term roadmap items |
+| `agentic` | Issue is managed by the automated agent pipeline (required for agents to process it) |
 | `agent/business-analyst` | Assign issue to Business Analyst agent |
 | `agent/architect` | Assign issue to Architect agent |
 | `agent/backend` | Assign issue to Backend Developer agent |
@@ -87,7 +88,7 @@ Notes:
 | `agent/reviewer` | Assign issue to Code Reviewer agent |
 | `agent/devops` | Assign issue to DevOps Engineer agent |
 
-Apply audience labels based on who benefits — many features get **both** `golfers love` and `course operators love` (see "Features Both Golfers AND Courses Will Love" in the roadmap). Always apply exactly one version label (`v1`, `v2`, or `v3`) based on the roadmap tier. Agent labels are managed by the automated pipeline — see below.
+Apply audience labels based on who benefits — many features get **both** `golfers love` and `course operators love` (see "Features Both Golfers AND Courses Will Love" in the roadmap). Always apply exactly one version label (`v1`, `v2`, or `v3`) based on the roadmap tier. The `agentic` label opts an issue into the automated pipeline — without it, agents ignore the issue. Agent `agent/*` labels are managed by the pipeline — see below.
 
 ## Agent Pipeline
 

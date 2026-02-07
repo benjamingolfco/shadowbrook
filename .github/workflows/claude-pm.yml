@@ -14,16 +14,18 @@ on:
 
 jobs:
   pm:
+    # Gate: only process issues with the 'agentic' label (except schedule/check_suite which scan broadly)
     # Don't run on comments from bots (prevent loops)
     # Don't run on agent/* label events (those are for claude-agents.yml)
     if: |
       github.event_name == 'schedule' ||
       github.event_name == 'check_suite' ||
-      (github.event_name == 'issues' && github.event.action == 'opened') ||
-      (github.event_name == 'issues' && github.event.action == 'labeled' && !startsWith(github.event.label.name, 'agent/')) ||
-      (github.event_name == 'issues' && github.event.action == 'unlabeled' && startsWith(github.event.label.name, 'agent/')) ||
+      (github.event_name == 'issues' && github.event.action == 'opened' && contains(github.event.issue.labels.*.name, 'agentic')) ||
+      (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'agentic') ||
+      (github.event_name == 'issues' && github.event.action == 'labeled' && !startsWith(github.event.label.name, 'agent/') && contains(github.event.issue.labels.*.name, 'agentic')) ||
+      (github.event_name == 'issues' && github.event.action == 'unlabeled' && startsWith(github.event.label.name, 'agent/') && contains(github.event.issue.labels.*.name, 'agentic')) ||
       (github.event_name == 'pull_request') ||
-      (github.event_name == 'issue_comment' && !endsWith(github.event.comment.user.login, '[bot]'))
+      (github.event_name == 'issue_comment' && !endsWith(github.event.comment.user.login, '[bot]') && contains(github.event.issue.labels.*.name, 'agentic'))
     runs-on: ubuntu-latest
     permissions:
       contents: write

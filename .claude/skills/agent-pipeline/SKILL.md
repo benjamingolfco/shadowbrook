@@ -12,7 +12,7 @@ This skill is the shared contract. Every agent loads it to understand how they c
 
 ## Agent Labels
 
-Labels are the routing mechanism. The PM adds a label to assign work; the agent removes it when done.
+Labels are the routing mechanism. The PM adds a label to assign work; the agent removes it when done. **Only issues with the `agentic` label are processed by the pipeline.** The `agentic` label is added by the product owner to opt an issue into automated management.
 
 | Label | Agent | Responsibility |
 |-------|-------|----------------|

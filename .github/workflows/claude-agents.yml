@@ -6,8 +6,8 @@ on:
 
 jobs:
   dispatch:
-    # Only run when an agent/* label is added
-    if: startsWith(github.event.label.name, 'agent/')
+    # Only run when an agent/* label is added to an issue that has the 'agentic' label
+    if: startsWith(github.event.label.name, 'agent/') && contains(github.event.issue.labels.*.name, 'agentic')
     runs-on: ubuntu-latest
     permissions:
       contents: write
