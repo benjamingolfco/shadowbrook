@@ -15,6 +15,8 @@ public static class CourseEndpoints
         group.MapGet("{id:guid}", GetCourseById);
         group.MapPut("{id:guid}/tee-time-settings", UpdateTeeTimeSettings);
         group.MapGet("{id:guid}/tee-time-settings", GetTeeTimeSettings);
+        group.MapPut("{id:guid}/pricing", UpdatePricing);
+        group.MapGet("{id:guid}/pricing", GetPricing);
     }
 
     private static async Task<IResult> CreateCourse(
@@ -100,6 +102,41 @@ public static class CourseEndpoints
             course.FirstTeeTime.Value,
             course.LastTeeTime.Value));
     }
+
+    private static async Task<IResult> UpdatePricing(
+        Guid id,
+        PricingRequest request,
+        ApplicationDbContext db)
+    {
+        var course = await db.Courses.FindAsync(id);
+        if (course is null)
+            return Results.NotFound();
+
+        if (request.FlatRatePrice < 0)
+            return Results.BadRequest(new { error = "Price must be greater than or equal to 0." });
+
+        if (request.FlatRatePrice > 10000)
+            return Results.BadRequest(new { error = "Price must be less than or equal to 10000." });
+
+        course.FlatRatePrice = request.FlatRatePrice;
+        course.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new PricingResponse(course.FlatRatePrice.Value));
+    }
+
+    private static async Task<IResult> GetPricing(Guid id, ApplicationDbContext db)
+    {
+        var course = await db.Courses.FindAsync(id);
+        if (course is null)
+            return Results.NotFound();
+
+        if (course.FlatRatePrice is null)
+            return Results.Ok(new { });
+
+        return Results.Ok(new PricingResponse(course.FlatRatePrice.Value));
+    }
 }
 
 public record CreateCourseRequest(
@@ -120,3 +157,7 @@ public record TeeTimeSettingsResponse(
     int TeeTimeIntervalMinutes,
     TimeOnly FirstTeeTime,
     TimeOnly LastTeeTime);
+
+public record PricingRequest(decimal FlatRatePrice);
+
+public record PricingResponse(decimal FlatRatePrice);

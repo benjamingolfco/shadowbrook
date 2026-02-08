@@ -13,6 +13,7 @@ public class Course
     public int? TeeTimeIntervalMinutes { get; set; }
     public TimeOnly? FirstTeeTime { get; set; }
     public TimeOnly? LastTeeTime { get; set; }
+    public decimal? FlatRatePrice { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 }
