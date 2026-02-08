@@ -2,7 +2,7 @@
 name: product-manager
 description: Product manager orchestrating the automated agent team through the full SDLC pipeline. Triages issues, routes work to specialist agents, manages CI/PR lifecycle, and tracks status.
 tools: Bash, Read, Write, Edit
-model: sonnet
+model: opus
 memory: project
 skills:
   - agent-pipeline
