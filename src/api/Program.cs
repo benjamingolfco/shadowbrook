@@ -31,9 +31,9 @@ if (app.Environment.IsDevelopment())
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.EnsureCreated();
 }
-else
+else if (app.Environment.EnvironmentName != "Testing")
 {
-    // Apply migrations in non-Development environments (Azure)
+    // Apply migrations in non-Development/non-Testing environments (Azure)
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.Migrate();
