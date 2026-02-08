@@ -87,7 +87,7 @@ jobs:
             --registry ${{ env.ACR_NAME }} \
             --image ${{ env.IMAGE_NAME }}:${{ github.sha }} \
             --image ${{ env.IMAGE_NAME }}:latest \
-            --file Dockerfile \
+            --file src/api/Dockerfile \
             .
 
       - name: Deploy infrastructure

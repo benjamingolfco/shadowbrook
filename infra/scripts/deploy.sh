@@ -88,7 +88,7 @@ cd "$REPO_ROOT"
 az acr build \
   --registry "$ACR_NAME" \
   --image "shadowbrook:$IMAGE_TAG" \
-  --file Dockerfile \
+  --file src/api/Dockerfile \
   .
 
 # Deploy Bicep template

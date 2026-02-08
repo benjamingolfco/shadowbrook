@@ -25,14 +25,14 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS api-build
 WORKDIR /app
 
 # Copy project files
-COPY src/api/Shadowbrook.Api.csproj src/api/
-RUN dotnet restore src/api/Shadowbrook.Api.csproj
+COPY src/api/Shadowbrook.Api.csproj ./
+RUN dotnet restore Shadowbrook.Api.csproj
 
 # Copy source code
-COPY src/api/ src/api/
+COPY src/api/ ./
 
 # Build and publish API (framework-dependent deployment)
-RUN dotnet publish src/api/Shadowbrook.Api.csproj \
+RUN dotnet publish Shadowbrook.Api.csproj \
     -c Release \
     -o /app/publish \
     --self-contained false \
