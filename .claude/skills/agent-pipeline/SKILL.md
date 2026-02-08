@@ -76,31 +76,118 @@ The PM detects owner approval by scanning issue comments for messages from `@aar
 
 ## Comment Format
 
-All agent comments follow a consistent format so humans and the PM can parse them.
+All agent comments use a structured format with role icons for instant visual recognition and clear action callouts.
 
-**Standard comment:**
-```
-[Business Analyst] Acceptance criteria added for the booking flow.
+### Role Icons
+
+Every comment heading starts with the agent's role icon:
+
+| Icon | Role |
+|------|------|
+| 📋 | Product Manager |
+| 📝 | Business Analyst |
+| 🏗️ | Architect |
+| ⚙️ | Backend Developer |
+| 🎨 | Frontend Developer |
+| 🔍 | Code Reviewer |
+| 🔧 | DevOps Engineer |
+
+### Comment Patterns
+
+**1. Action Required — PM notifying the product owner (PM only)**
+
+Used exclusively by the PM when the product owner needs to take action. The `> **Action Required**` callout and `@aarongbenjamin` @mention must be present so the owner gets notified.
+
+```markdown
+### 📋 Product Manager → @aarongbenjamin
+
+> **Action Required:** Review the user story and comment to approve or request changes.
+
+The BA refined the story with 6 acceptance criteria covering pricing setup, validation, and display.
+
+[View the BA's story refinement](#link-to-comment)
+
+---
+_Run: [#91](https://github.com/org/repo/actions/runs/12345)_
 ```
 
-**Directed message to another agent:**
-```
-[Backend Developer → Architect] Should we use a separate table for waitlist entries or a status column on bookings?
+**2. Handback — agent reporting completion to PM (no action callout)**
+
+Use when handing work back to the PM for routing. No `Action Required` — the PM handles this automatically.
+
+```markdown
+### 📝 Business Analyst → Product Manager
+
+Refined user story for #6 with comprehensive acceptance criteria.
+
+**What I did:**
+- Expanded from 2 generic items to 6 detailed Given/When/Then scenarios
+- Organized by workflow: Setting Pricing, Validation, Viewing
+- Kept focus on course operator perspective
+
+---
+_Run: [#89](https://github.com/org/repo/actions/runs/12345)_
 ```
 
-**Escalation to the product owner:**
-```
-[Architect → @aarongbenjamin] The requirements for walk-up discounts conflict with the cancellation policy. Need a product decision.
+**3. Work Output — substantive deliverable (plan, story, review)**
+
+Use for the actual content an agent produces (technical plans, story refinements, code reviews). These are reference artifacts, not routing messages.
+
+```markdown
+### 🏗️ Architect — Technical Plan for #6
+
+## Technical Plan
+
+### Approach
+...the actual plan content...
+
+---
+_Run: [#93](https://github.com/org/repo/actions/runs/12345)_
 ```
 
-**Handback to PM:**
-```
-[Backend Developer → Product Manager] Implementation complete. PR #42 opened with endpoint and tests.
+**4. Routing — PM assigning work to an agent (no action callout)**
+
+Use when the PM routes work to a specialist agent. The agent is triggered by the label, not the comment — the comment is for the audit trail.
+
+```markdown
+### 📋 Product Manager → Backend Developer
+
+Owner approved the technical plan. Implement the flat-rate pricing feature following the architect's design.
+
+**Implementation scope:**
+- Modify `src/api/Models/Course.cs` to add `FlatRatePrice` property
+- Create PUT/GET endpoints at `/courses/{id}/pricing`
+
+See the [Architect's technical plan](#link-to-comment) for full details.
+
+---
+_Run: [#98](https://github.com/org/repo/actions/runs/12345)_
 ```
 
-## Comment Metadata Footer
+**5. Question — agent needs clarification before it can proceed**
 
-Every agent comment ends with a metadata footer for traceability.
+Use when an agent is blocked and needs input. Direct the question to the appropriate target — the PM will route it and @mention the product owner if needed.
+
+```markdown
+### ⚙️ Backend Developer → Architect
+
+> **Question:** Should we allow $0.00 as a valid flat-rate price (free rounds), or require a minimum above zero?
+
+This affects the validation logic in the PUT endpoint. The acceptance criteria say "positive number" but $0 could be intentional for promotional rounds.
+
+---
+_Run: [#95](https://github.com/org/repo/actions/runs/12345)_
+```
+
+### @mention Rules
+
+- **Only the PM** @mentions the product owner (`@aarongbenjamin`). Specialist agents never @mention anyone — they hand back to the PM, which handles all notifications.
+- **Never @mention** agents — they are triggered by labels, not mentions.
+- The `> **Action Required:**` callout must appear on every comment where someone needs to act.
+
+### Run Link Footer
+
+Every comment ends with a run link footer for traceability.
 
 **Before posting any comment**, resolve the run link by reading the environment variables into concrete values:
 
@@ -109,11 +196,11 @@ RUN_ID="$GITHUB_RUN_ID"
 RUN_LINK="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
 ```
 
-Then use the resolved `$RUN_ID` and `$RUN_LINK` values (not the raw env var names) in your footer:
+Then use the resolved values in your footer:
 
 ```
 ---
-_Agent: backend-developer · Skills: agent-pipeline, backend-developer · Run: [#12345](https://github.com/org/repo/actions/runs/12345)_
+_Run: [#12345](https://github.com/org/repo/actions/runs/12345)_
 ```
 
 **Never write literal `${GITHUB_RUN_ID}` in comment text.** Always resolve it to the actual number first.
@@ -139,7 +226,7 @@ The PM creates and maintains **one status comment** on every active issue. This 
 All routing flows through the PM. Agents **never** hand off directly to other agents.
 
 1. Agent completes its work.
-2. Agent posts a `[Agent Name → Product Manager]` comment summarizing what was done, with the metadata footer.
+2. Agent posts a **Handback** comment (pattern #2 above) summarizing what was done, with the run link footer.
 3. Agent removes its own `agent/*` label from the issue.
 4. PM detects the label removal (via event trigger or cron).
 5. PM updates the project status field and edits the PM status comment.
@@ -155,8 +242,8 @@ All routing flows through the PM. Agents **never** hand off directly to other ag
 
 When an agent needs input from another specialist mid-task:
 
-1. Agent posts `[Agent A → Agent B] question` on the issue (e.g., `[Backend Developer → Architect] Should waitlist use a separate table?`).
-2. Agent posts `[Agent A → Product Manager]` handback comment and removes its own label.
+1. Agent posts a **Question** comment (pattern #5) directed at the target agent. Do **not** @mention the agent — the PM routes via labels.
+2. Agent posts a **Handback** comment (pattern #2) and removes its own label.
 3. PM detects the handback on its next run.
 4. PM adds `agent/b` label to route the question.
 5. Agent B answers with a comment, then hands back to PM.
@@ -170,8 +257,8 @@ Each round-trip through PM counts toward the **3 round-trip limit** (see Escalat
 |-----------|--------|
 | 3 round-trips between agents on the same issue without phase progression | PM escalates to product owner (`Awaiting Owner`) |
 | Agent hasn't commented within 24h of assignment | PM pings the issue and retriggers the agent workflow |
-| Issue in `Awaiting Owner` for 48h+ | PM posts a reminder comment tagging `@aarongbenjamin` |
-| Agent explicitly states it is blocked | PM immediately escalates to product owner |
+| Issue in `Awaiting Owner` for 48h+ | PM posts an **Action Required** reminder to `@aarongbenjamin` |
+| Agent explicitly states it is blocked | PM immediately escalates with an **Action Required** comment to `@aarongbenjamin` |
 
 ## Guardrails
 
@@ -202,10 +289,7 @@ Perform your role-specific work as defined in your agent file. This varies by ag
 
 If requirements, acceptance criteria, or the technical plan are insufficient for your work:
 
-1. Post a directed question using the standard comment format:
-   ```
-   [Your Agent Name → Target Agent or @aarongbenjamin] Specific question about what is unclear.
-   ```
+1. Post a **Question** comment (pattern #5 from Comment Format) directed at the appropriate target. Do not @mention anyone — the PM will handle routing and notifications.
 2. Hand back to the PM (see Step 4) so it can route the question appropriately.
 
 **Do not guess at decisions. It is better to escalate than to work based on assumptions.**
@@ -214,21 +298,9 @@ If requirements, acceptance criteria, or the technical plan are insufficient for
 
 When your work is complete (or you need to escalate), **always** do all three of these:
 
-1. **Post a handback comment** summarizing what you did:
-   ```
-   [Your Agent Name → Product Manager] Summary of what was done for #{number}.
-   ```
-   Or if escalating:
-   ```
-   [Your Agent Name → Product Manager] Cannot proceed — {reason}. Posted questions for {target}.
-   ```
+1. **Post a Handback comment** (pattern #2 from Comment Format) summarizing what you did. Use your role icon and `→ Product Manager` in the heading. Include the run link footer.
 
-2. **Include the metadata footer** on every comment:
-   ```
-   ---
-   _Agent: {agent-name} · Skills: {comma-separated skill list} · Run: [#{run_number}]({run_link})_
-   ```
-   Build the run link as: `$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID`
+2. **If you also produced a deliverable** (technical plan, story refinement, code review), post it as a separate **Work Output** comment (pattern #3) before the handback.
 
 3. **Remove your label** from the issue:
    ```bash
@@ -259,7 +331,7 @@ Agents that produce code (Backend Developer, Frontend Developer, DevOps Engineer
 
 ### Read the Architect's Plan
 
-Find the `[Architect] Technical plan for #...` comment on the issue. This is your implementation blueprint — follow the file structure, patterns, data model, API design, and testing strategy it defines.
+Find the `### 🏗️ Architect — Technical Plan` comment on the issue. This is your implementation blueprint — follow the file structure, patterns, data model, API design, and testing strategy it defines.
 
 If no technical plan exists (e.g., a well-defined bug or a simple task the PM routed directly to you), use the issue's acceptance criteria and your own codebase exploration to guide implementation.
 
@@ -333,7 +405,7 @@ Three layers provide full traceability from high-level status down to individual
 
 ### 1. Comment Footers
 
-Every agent comment includes the metadata footer (see Comment Metadata Footer above) linking back to the GitHub Actions run.
+Every agent comment includes a run link footer (see Run Link Footer above) linking back to the GitHub Actions run.
 
 ### 2. PM Status Comment
 
