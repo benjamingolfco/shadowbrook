@@ -32,9 +32,22 @@ if (app.Environment.IsDevelopment())
     db.Database.EnsureCreated();
 }
 
+// Serve static files and SPA fallback for non-Development environments
+if (!app.Environment.IsDevelopment())
+{
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+}
+
 app.UseHttpsRedirection();
 app.MapHealthChecks("/health");
 app.MapCourseEndpoints();
 app.MapTeeSheetEndpoints();
+
+// SPA fallback routing for non-Development environments
+if (!app.Environment.IsDevelopment())
+{
+    app.MapFallbackToFile("index.html");
+}
 
 app.Run();
