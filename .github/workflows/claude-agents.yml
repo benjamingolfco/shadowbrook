@@ -8,6 +8,10 @@ on:
 
 jobs:
   dispatch:
+    # Only one agent run per issue at a time — prevents duplicate dispatches
+    concurrency:
+      group: agent-${{ github.event.issue.number || github.event.pull_request.number }}
+      cancel-in-progress: true
     # Run when an agent/* label is added to an issue or PR that has the 'agentic' label
     if: |
       startsWith(github.event.label.name, 'agent/') && (
