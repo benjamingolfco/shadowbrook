@@ -31,6 +31,13 @@ if (app.Environment.IsDevelopment())
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.EnsureCreated();
 }
+else
+{
+    // Apply migrations in non-Development environments (Azure)
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
 
 // Serve static files and SPA fallback for non-Development environments
 if (!app.Environment.IsDevelopment())
@@ -39,7 +46,6 @@ if (!app.Environment.IsDevelopment())
     app.UseStaticFiles();
 }
 
-app.UseHttpsRedirection();
 app.MapHealthChecks("/health");
 app.MapCourseEndpoints();
 app.MapTeeSheetEndpoints();

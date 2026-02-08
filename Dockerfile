@@ -31,7 +31,7 @@ RUN dotnet restore src/api/Shadowbrook.Api.csproj
 # Copy source code
 COPY src/api/ src/api/
 
-# Build and publish API as self-contained deployment
+# Build and publish API (framework-dependent deployment)
 RUN dotnet publish src/api/Shadowbrook.Api.csproj \
     -c Release \
     -o /app/publish \

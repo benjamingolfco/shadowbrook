@@ -9,20 +9,10 @@
       "value": "eastus"
     },
     "sqlAdminLogin": {
-      "reference": {
-        "keyVault": {
-          "id": ""
-        },
-        "secretName": "sql-admin-login"
-      }
+      "value": "sqladmin"
     },
     "sqlAdminPassword": {
-      "reference": {
-        "keyVault": {
-          "id": ""
-        },
-        "secretName": "sql-admin-password"
-      }
+      "value": "PLACEHOLDER_REPLACE_WITH_SECRET"
     },
     "acrName": {
       "value": "shadowbrookacr"
