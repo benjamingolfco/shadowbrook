@@ -65,7 +65,7 @@ After the Architect posts the technical plan, the PM sets status to **Architectu
 
 ### Gate 3: PR Approval
 
-After CI passes and the code reviewer approves, the PM publishes the draft PR, sets status to **Ready to Merge**, and tags the product owner. The owner reviews the PR on GitHub and approves it for merge.
+After CI passes and the code reviewer approves, the PM enables auto-merge on the PR, sets status to **Ready to Merge**, and tags the product owner. The owner reviews the PR on GitHub and approves it for merge.
 
 - **Owner approves the PR:** GitHub auto-merge completes the squash merge. PM detects the merge and sets status to **Done**.
 - **Owner requests changes on the PR:** PM routes back to the implementation agent.
@@ -265,7 +265,7 @@ Each round-trip through PM counts toward the **3 round-trip limit** (see Escalat
 - PM limits concurrent `Implementing` issues to **2-3** to avoid context thrashing.
 - PM will **not** pick up new work while unresolved escalations await the product owner.
 - Agents must **never** merge PRs.
-- Agents must **never** mark draft PRs as ready for review -- only the PM publishes PRs (with auto-merge enabled) when code review is approved and CI is green.
+- Agents must **never** enable auto-merge on PRs -- only the PM enables auto-merge when code review is approved and CI is green.
 - Only the **product owner** approves PRs for merge.
 
 ## Specialist Agent Workflow
@@ -350,11 +350,11 @@ Follow your agent-specific implementation workflow (defined in your agent file).
 3. Run the relevant test/lint/build commands
 4. Fix any failures — iterate until green
 
-### Push and Open a Draft PR
+### Push and Open a PR
 
 ```bash
 git push -u origin issue/{number}-{short-description}
-gh pr create --draft --label "agentic" --title "{short title}" --body "Closes #{number}
+gh pr create --label "agentic" --title "{short title}" --body "Closes #{number}
 
 {summary of changes}"
 ```

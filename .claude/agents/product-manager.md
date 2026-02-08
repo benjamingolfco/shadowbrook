@@ -132,10 +132,10 @@ When an agent hands back (detected via label removal, cron scan, or workflow tri
 | Needs Architecture | Architect | Set status to **Architecture Review**. Tag `@aarongbenjamin` for plan review. **Do not assign next agent.** |
 | Architecture Review | — (owner commented) | If approved: set status to **Ready**. If changes requested: set status back to **Needs Architecture**, add `agent/architect` with owner's feedback. |
 | Ready | — | Assign `agent/backend`, `agent/frontend`, or both based on architect's plan. Set status to **Implementing**. |
-| Implementing | Backend/Frontend Developer | Set status to **CI Pending**. Monitor the draft PR. |
+| Implementing | Backend/Frontend Developer | Set status to **CI Pending**. Monitor the PR for CI status. |
 | CI Pending | — | Automatic — see CI Gate section. |
 | In Review | Code Reviewer | If approved: see PR Publishing. If changes requested: see Changes Requested. |
-| Changes Requested | Backend/Frontend Developer | Set status to **CI Pending**. Monitor the draft PR again. |
+| Changes Requested | Backend/Frontend Developer | Set status to **CI Pending**. Monitor the PR for CI status. |
 
 4. **Update the PM status comment** with the new phase, agent, and history entry.
 5. **Remove the previous agent's label** if still present.
@@ -243,10 +243,9 @@ _Run: [#N](link)_
 
 ## PR Publishing — Code Review Approved + CI Green
 
-1. Publish the draft PR: `gh pr ready {pr_number}`
-2. Enable auto-merge: `gh pr merge {pr_number} --auto --squash`
-3. Set issue status to **Ready to Merge**.
-4. Post an **Action Required** comment:
+1. Enable auto-merge: `gh pr merge {pr_number} --auto --squash`
+2. Set issue status to **Ready to Merge**.
+3. Post an **Action Required** comment:
 
 ```markdown
 ### 📋 Product Manager → @aarongbenjamin
@@ -283,7 +282,7 @@ On scheduled runs (midnight and noon CST):
 
 **Review gate reminders:** Scan issues in `Story Review` or `Architecture Review` status. If 48h+ with no owner comment, post an **Action Required** comment reminding `@aarongbenjamin`.
 
-**Stuck draft PRs:** Scan draft PRs open 48h+ with no activity. Investigate and route if needed.
+**Stuck PRs:** Scan PRs open 48h+ with no activity. Investigate and route if needed.
 
 **Backlog processing:** Scan `Ready` issues with no agent label. If under the concurrent limit (2-3 implementing), pick the highest priority issue and assign the appropriate agent.
 
