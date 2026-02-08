@@ -31,17 +31,19 @@ Update the project status field at every phase transition using the "Set project
 
 | Status | Option ID |
 |--------|-----------|
-| Triage | `d7a1d4b8` |
-| Needs Story | `1f733ae4` |
-| Needs Architecture | `277b9534` |
-| Ready | `78da7da8` |
-| Implementing | `c52bf0d7` |
-| CI Pending | `5140d9e5` |
-| In Review | `5c7d1545` |
-| Changes Requested | `3d0af85a` |
-| Ready to Merge | `1cfc5013` |
-| Awaiting Owner | `68c67be4` |
-| Done | `155a7da3` |
+| Triage | `419dea29` |
+| Needs Story | `4e3e5768` |
+| Story Review | `8d427c9e` |
+| Needs Architecture | `c7611935` |
+| Architecture Review | `8039d58d` |
+| Ready | `e82ffa87` |
+| Implementing | `40275ace` |
+| CI Pending | `7acb30e5` |
+| In Review | `663d782f` |
+| Changes Requested | `c3f67294` |
+| Ready to Merge | `4aef6ef4` |
+| Awaiting Owner | `4fd57247` |
+| Done | `b9a85561` |
 
 ---
 
@@ -101,7 +103,8 @@ Is it a raw idea, vague request, or missing acceptance criteria?
   NO  ↓
 
 Does it already have a clear user story and acceptance criteria?
-  YES → Set status to Needs Architecture. Add label: agent/architect.
+  YES → Set status to Story Review. Tag @aarongbenjamin for story review.
+        (Owner may have written the story themselves — still needs review gate confirmation.)
   NO  ↓
 
 Is it a task (infra, scripts, CI, deployment, architecture exploration)?
@@ -109,6 +112,8 @@ Is it a task (infra, scripts, CI, deployment, architecture exploration)?
     YES → Set status to Ready. Add label: agent/devops.
     NO  → Set status to Needs Architecture. Add label: agent/architect.
 ```
+
+**Note:** Even if an issue already has acceptance criteria at triage time, it still goes through the Story Review gate so the owner explicitly confirms before architecture begins. The only exception is well-defined bugs, which skip both review gates and go straight to Ready.
 
 ---
 
@@ -120,24 +125,48 @@ When an agent hands back (detected via label removal, cron scan, or workflow tri
 2. **Read the agent's handback comment** (most recent `[Agent → Product Manager]` comment).
 3. **Determine the next phase:**
 
-| Current Phase | Agent Handed Back | Typical Next Step |
-|---------------|-------------------|-------------------|
-| Needs Story | Business Analyst | Set status to Needs Architecture. Add `agent/architect`. |
-| Needs Architecture | Architect | Set status to Ready. (Wait for backlog processing to assign dev agent.) |
-| Ready | — | Assign `agent/backend`, `agent/frontend`, or both based on architect's plan. Set status to Implementing. |
-| Implementing | Backend/Frontend Developer | Set status to CI Pending. Monitor the draft PR. |
+| Current Phase | Agent Handed Back | Next Step |
+|---------------|-------------------|-----------|
+| Needs Story | Business Analyst | Set status to **Story Review**. Tag `@aarongbenjamin` for story review. **Do not assign next agent.** |
+| Story Review | — (owner commented) | If approved: set status to **Needs Architecture**, add `agent/architect`. If changes requested: set status back to **Needs Story**, add `agent/business-analyst` with owner's feedback. |
+| Needs Architecture | Architect | Set status to **Architecture Review**. Tag `@aarongbenjamin` for plan review. **Do not assign next agent.** |
+| Architecture Review | — (owner commented) | If approved: set status to **Ready**. If changes requested: set status back to **Needs Architecture**, add `agent/architect` with owner's feedback. |
+| Ready | — | Assign `agent/backend`, `agent/frontend`, or both based on architect's plan. Set status to **Implementing**. |
+| Implementing | Backend/Frontend Developer | Set status to **CI Pending**. Monitor the draft PR. |
 | CI Pending | — | Automatic — see CI Gate section. |
 | In Review | Code Reviewer | If approved: see PR Publishing. If changes requested: see Changes Requested. |
-| Changes Requested | Backend/Frontend Developer | Set status to CI Pending. Monitor the draft PR again. |
+| Changes Requested | Backend/Frontend Developer | Set status to **CI Pending**. Monitor the draft PR again. |
 
 4. **Update the PM status comment** with the new phase, agent, and history entry.
 5. **Remove the previous agent's label** if still present.
-6. **Add the next agent's label** to route work.
+6. **Add the next agent's label** to route work (unless entering a review gate — then wait for owner).
 
 **Special routing cases:**
 - If the handback includes a question for another agent, route to that agent. This counts as a round-trip.
 - If the architect's plan specifies both backend and frontend work, assign backend first. After backend hands back, assign frontend on the same branch.
 - If the agent explicitly states it is blocked, escalate immediately.
+
+---
+
+## Owner Review Handling
+
+When the PM is triggered by an `issue_comment` from `@aarongbenjamin` (not a `[bot]` user) on an issue in **Story Review** or **Architecture Review** status:
+
+1. **Read the owner's comment** to determine if it is an approval or a change request.
+2. **Approval signals:** Comments containing phrases like "approved", "looks good", "LGTM", "ship it", "go ahead", or other clear affirmative language.
+3. **Change request signals:** Comments containing feedback, questions, or revision requests.
+4. **Route accordingly** using the routing table above.
+5. **Update the PM status comment** with the owner's decision and new phase.
+
+When tagging the owner for review, include a concise summary of what the agent produced:
+
+```
+[Product Manager → @aarongbenjamin] The BA has refined the user story and acceptance criteria for #{number}. Please review and comment to approve or request changes.
+```
+
+```
+[Product Manager → @aarongbenjamin] The Architect has posted a technical plan for #{number}. Please review and comment to approve or request changes.
+```
 
 ---
 
@@ -203,6 +232,8 @@ On scheduled runs (midnight and noon CST):
 **Stalled work:** Scan issues with `agent/*` labels. If no agent comment within 24h, post a ping and retrigger by removing/re-adding the label.
 
 **Awaiting Owner reminders:** Scan `Awaiting Owner` issues. If 48h+ with no owner response, post a reminder tagging `@aarongbenjamin`.
+
+**Review gate reminders:** Scan issues in `Story Review` or `Architecture Review` status. If 48h+ with no owner comment, post a reminder tagging `@aarongbenjamin`.
 
 **Stuck draft PRs:** Scan draft PRs open 48h+ with no activity. Investigate and route if needed.
 

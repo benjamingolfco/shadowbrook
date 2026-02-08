@@ -33,15 +33,46 @@ The PM sets the project status field to reflect where each issue is in the pipel
 |--------|---------|
 | Triage | New issue, not yet assessed |
 | Needs Story | Requires BA refinement before work can begin |
-| Needs Architecture | Story is defined; needs technical design |
-| Ready | Fully specified and ready for implementation |
+| Story Review | BA finished; awaiting product owner review of user story and acceptance criteria |
+| Needs Architecture | Story approved by owner; needs technical design |
+| Architecture Review | Architect finished; awaiting product owner review of technical plan |
+| Ready | Plan approved by owner; fully specified and ready for implementation |
 | Implementing | An agent is actively writing code |
 | CI Pending | Code pushed, waiting for CI to pass |
 | In Review | PR open and assigned to code reviewer |
 | Changes Requested | Reviewer requested changes; implementation agent re-assigned |
-| Ready to Merge | CI green + review approved; PM will publish and auto-merge |
+| Ready to Merge | CI green + code review approved; awaiting product owner PR approval |
 | Awaiting Owner | Blocked on human input from the product owner |
 | Done | Merged and complete |
+
+## Product Owner Review Gates
+
+The pipeline pauses at three checkpoints for product owner review. The PM sets the appropriate status and tags the product owner. The owner signals approval by commenting on the issue.
+
+### Gate 1: Story Review
+
+After the BA refines the user story and acceptance criteria, the PM sets status to **Story Review** and tags the product owner. The owner reviews the story for completeness, correctness, and alignment with product goals.
+
+- **Owner approves:** Comments with approval (e.g., "story approved", "looks good", "approved"). PM advances to **Needs Architecture** and assigns the architect.
+- **Owner requests changes:** Comments with feedback. PM sets status back to **Needs Story** and re-assigns the BA with the owner's feedback.
+
+### Gate 2: Architecture Review
+
+After the Architect posts the technical plan, the PM sets status to **Architecture Review** and tags the product owner. The owner reviews the plan for alignment with product goals, scope, and technical direction.
+
+- **Owner approves:** Comments with approval. PM advances to **Ready**.
+- **Owner requests changes:** Comments with feedback. PM sets status back to **Needs Architecture** and re-assigns the architect with the owner's feedback.
+
+### Gate 3: PR Approval
+
+After CI passes and the code reviewer approves, the PM publishes the draft PR, sets status to **Ready to Merge**, and tags the product owner. The owner reviews the PR on GitHub and approves it for merge.
+
+- **Owner approves the PR:** GitHub auto-merge completes the squash merge. PM detects the merge and sets status to **Done**.
+- **Owner requests changes on the PR:** PM routes back to the implementation agent.
+
+### Detecting Owner Approval
+
+The PM detects owner approval by scanning issue comments for messages from `@aarongbenjamin` (not from a `[bot]` user) on issues in `Story Review` or `Architecture Review` status. The PM interprets the comment as approval or change request based on its content.
 
 ## Comment Format
 
@@ -103,7 +134,13 @@ All routing flows through the PM. Agents **never** hand off directly to other ag
 3. Agent removes its own `agent/*` label from the issue.
 4. PM detects the label removal (via event trigger or cron).
 5. PM updates the project status field and edits the PM status comment.
-6. PM adds the next agent's label -- or sets status to `Done` / `Awaiting Owner` if the pipeline is complete or blocked.
+6. PM determines the next step:
+   - **BA hands back** → PM sets status to **Story Review** and tags the product owner for review. Does **not** assign the next agent yet.
+   - **Architect hands back** → PM sets status to **Architecture Review** and tags the product owner for review. Does **not** assign the next agent yet.
+   - **Owner approves** (on Story Review or Architecture Review) → PM advances to the next phase and assigns the next agent.
+   - **Implementation agent hands back** → PM sets status to **CI Pending** and monitors the PR.
+   - **Code reviewer hands back** → PM publishes PR if approved, or re-assigns implementation agent if changes requested.
+   - Otherwise → sets status to `Done` / `Awaiting Owner` if the pipeline is complete or blocked.
 
 ## Inter-Agent Questions
 
