@@ -100,14 +100,23 @@ All agent comments follow a consistent format so humans and the PM can parse the
 
 ## Comment Metadata Footer
 
-Every agent comment ends with a metadata footer for traceability. Construct the run link from GitHub Actions environment variables.
+Every agent comment ends with a metadata footer for traceability.
+
+**Before posting any comment**, resolve the run link by reading the environment variables into concrete values:
+
+```bash
+RUN_ID="$GITHUB_RUN_ID"
+RUN_LINK="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+```
+
+Then use the resolved `$RUN_ID` and `$RUN_LINK` values (not the raw env var names) in your footer:
 
 ```
 ---
-_Agent: backend-developer · Skills: agent-pipeline, backend-developer · Run: [#N](link)_
+_Agent: backend-developer · Skills: agent-pipeline, backend-developer · Run: [#12345](https://github.com/org/repo/actions/runs/12345)_
 ```
 
-Build the run link as: `$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID`
+**Never write literal `${GITHUB_RUN_ID}` in comment text.** Always resolve it to the actual number first.
 
 ## PM Status Comment
 
