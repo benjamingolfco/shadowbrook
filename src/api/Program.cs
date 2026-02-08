@@ -31,10 +31,29 @@ if (app.Environment.IsDevelopment())
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.EnsureCreated();
 }
+else if (app.Environment.EnvironmentName != "Testing")
+{
+    // Apply migrations in non-Development/non-Testing environments (Azure)
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
 
-app.UseHttpsRedirection();
+// Serve static files and SPA fallback for non-Development environments
+if (!app.Environment.IsDevelopment())
+{
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+}
+
 app.MapHealthChecks("/health");
 app.MapCourseEndpoints();
 app.MapTeeSheetEndpoints();
+
+// SPA fallback routing for non-Development environments
+if (!app.Environment.IsDevelopment())
+{
+    app.MapFallbackToFile("index.html");
+}
 
 app.Run();
