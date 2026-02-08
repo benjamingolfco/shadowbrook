@@ -2,13 +2,15 @@ import { useState } from 'react'
 import CourseRegistration from './CourseRegistration'
 import TeeTimeSettings from './TeeTimeSettings'
 import AdminCourses from './AdminCourses'
+import TeeSheet from './TeeSheet'
 import './App.css'
 
-type View = 'register' | 'tee-times' | 'admin'
+type View = 'register' | 'tee-times' | 'tee-sheet' | 'admin'
 
 const views: Record<View, { label: string; component: () => React.JSX.Element }> = {
   register: { label: 'Register Course', component: CourseRegistration },
   'tee-times': { label: 'Tee Time Settings', component: TeeTimeSettings },
+  'tee-sheet': { label: 'Tee Sheet', component: TeeSheet },
   admin: { label: 'Admin: All Courses', component: AdminCourses },
 }
 
