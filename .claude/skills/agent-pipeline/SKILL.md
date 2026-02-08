@@ -65,12 +65,12 @@ After the Architect posts the technical plan, the PM sets status to **Architectu
 
 ### Gate 3: PR Approval
 
-After CI passes and the code reviewer approves, sets status to **Ready to Merge**, and tags the product owner. The owner reviews the PR on GitHub and approves it for merge.
+After CI passes and the code reviewer approves, the PM sets status to **Ready to Merge** and tags the product owner. The owner reviews the PR on GitHub, approves it, and merges it manually.
 
-- **Owner approves the PR:** GitHub auto-merge completes the squash merge. PM detects the merge and sets status to **Done**.
+- **Owner approves and merges the PR:** PM detects the merge and sets status to **Done**.
 - **Owner requests changes on the PR:** PM routes back to the implementation agent.
 
-DO NOT MERGE BEFORE BEFORE APPROVAL
+**The PM must NEVER enable auto-merge or merge the PR. Only the product owner merges.**
 
 ### Detecting Owner Approval
 
@@ -266,9 +266,10 @@ Each round-trip through PM counts toward the **3 round-trip limit** (see Escalat
 
 - PM limits concurrent `Implementing` issues to **2-3** to avoid context thrashing.
 - PM will **not** pick up new work while unresolved escalations await the product owner.
-- Agents must **never** merge PRs.
-- Agents must **never** enable auto-merge on PRs -- only the PM enables auto-merge when code review is approved and CI is green.
-- Only the **product owner** approves PRs for merge.
+- Agents must **never** merge PRs — including via `gh pr merge`, `gh pr merge --auto`, or any other merge mechanism.
+- Agents must **never** enable auto-merge on PRs.
+- Agents must **never** submit formal GitHub PR approvals (`gh pr review --approve`).
+- Only the **product owner** approves and merges PRs.
 
 ## Specialist Agent Workflow
 
@@ -387,14 +388,14 @@ Use Glob, Grep, and Read to examine surrounding code, related files, and existin
 
 ### Post Your Review
 
-Use `gh pr review` to either approve or request changes:
+**Never submit a formal GitHub approval.** Only the product owner approves PRs. Use `gh pr review --request-changes` to formally block a PR when issues are found. When the review passes, post a comment on the PR — do **not** use `--approve`.
 
 ```bash
-# To approve:
-gh pr review {pr_number} --approve --body "..."
-
-# To request changes:
+# When issues are found — formally block the PR:
 gh pr review {pr_number} --request-changes --body "..."
+
+# When review passes — post a comment only (NO --approve):
+gh pr review {pr_number} --comment --body "..."
 ```
 
 Then proceed to the standard handback (Step 4 above).

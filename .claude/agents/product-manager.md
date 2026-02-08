@@ -243,9 +243,8 @@ _Run: [#N](link)_
 
 ## PR Publishing — Code Review Approved + CI Green
 
-1. Enable auto-merge: `gh pr merge {pr_number} --auto --squash`
-2. Set issue status to **Ready to Merge**.
-3. Post an **Action Required** comment:
+1. Set issue status to **Ready to Merge**.
+2. Post an **Action Required** comment:
 
 ```markdown
 ### 📋 Product Manager → @aarongbenjamin
