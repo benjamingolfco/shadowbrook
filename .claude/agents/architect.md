@@ -2,7 +2,7 @@
 name: architect
 description: Technical planning and pattern selection for Shadowbrook. Use when designing API endpoints, data models, component structures, or selecting architecture patterns for new features.
 tools: Read, Glob, Grep, Bash, Write
-model: sonnet
+model: opus
 memory: project
 skills:
   - agent-pipeline
