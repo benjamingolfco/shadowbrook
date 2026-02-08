@@ -158,14 +158,38 @@ When the PM is triggered by an `issue_comment` from `@aarongbenjamin` (not a `[b
 4. **Route accordingly** using the routing table above.
 5. **Update the PM status comment** with the owner's decision and new phase.
 
-When tagging the owner for review, include a concise summary of what the agent produced:
+When tagging the owner for review, use the **Action Required** comment pattern from the agent-pipeline skill:
 
-```
-[Product Manager → @aarongbenjamin] The BA has refined the user story and acceptance criteria for #{number}. Please review and comment to approve or request changes.
+```markdown
+### 📋 Product Manager → @aarongbenjamin
+
+> **Action Required:** Review the user story and comment to approve or request changes.
+
+The BA refined the story and acceptance criteria for #{number}.
+
+**Summary of changes:**
+- {concise bullet points of what the BA did}
+
+[View the BA's story refinement](#link-to-comment)
+
+---
+_Run: [#N](link)_
 ```
 
-```
-[Product Manager → @aarongbenjamin] The Architect has posted a technical plan for #{number}. Please review and comment to approve or request changes.
+```markdown
+### 📋 Product Manager → @aarongbenjamin
+
+> **Action Required:** Review the technical plan and comment to approve or request changes.
+
+The Architect has posted a technical plan for #{number}.
+
+**Plan overview:**
+- {concise bullet points of the architect's approach}
+
+[View the Architect's technical plan](#link-to-comment)
+
+---
+_Run: [#N](link)_
 ```
 
 ---
@@ -201,7 +225,19 @@ When tagging the owner for review, include a concise summary of what the agent p
 After **3 consecutive CI failures** without resolution:
 - Remove all agent labels.
 - Set status to **Awaiting Owner**.
-- Post: `[Product Manager → @aarongbenjamin] CI has failed 3 times on issue #{number}. The pipeline is stuck. Please review.`
+- Post an **Action Required** comment:
+
+```markdown
+### 📋 Product Manager → @aarongbenjamin
+
+> **Action Required:** CI has failed 3 consecutive times. The pipeline is stuck and needs your attention.
+
+**Issue:** #{number}
+**Failure summary:** {describe the recurring failure}
+
+---
+_Run: [#N](link)_
+```
 
 ---
 
@@ -210,7 +246,19 @@ After **3 consecutive CI failures** without resolution:
 1. Publish the draft PR: `gh pr ready {pr_number}`
 2. Enable auto-merge: `gh pr merge {pr_number} --auto --squash`
 3. Set issue status to **Ready to Merge**.
-4. Post: `[Product Manager → @aarongbenjamin] PR #{pr_number} is ready for your approval. CI is green and code review is complete.`
+4. Post an **Action Required** comment:
+
+```markdown
+### 📋 Product Manager → @aarongbenjamin
+
+> **Action Required:** Approve PR #{pr_number} to merge. CI is green and code review is complete.
+
+**Issue:** #{number}
+**PR:** #{pr_number}
+
+---
+_Run: [#N](link)_
+```
 
 ---
 
@@ -231,9 +279,9 @@ On scheduled runs (midnight and noon CST):
 
 **Stalled work:** Scan issues with `agent/*` labels. If no agent comment within 24h, post a ping and retrigger by removing/re-adding the label.
 
-**Awaiting Owner reminders:** Scan `Awaiting Owner` issues. If 48h+ with no owner response, post a reminder tagging `@aarongbenjamin`.
+**Awaiting Owner reminders:** Scan `Awaiting Owner` issues. If 48h+ with no owner response, post an **Action Required** comment reminding `@aarongbenjamin`.
 
-**Review gate reminders:** Scan issues in `Story Review` or `Architecture Review` status. If 48h+ with no owner comment, post a reminder tagging `@aarongbenjamin`.
+**Review gate reminders:** Scan issues in `Story Review` or `Architecture Review` status. If 48h+ with no owner comment, post an **Action Required** comment reminding `@aarongbenjamin`.
 
 **Stuck draft PRs:** Scan draft PRs open 48h+ with no activity. Investigate and route if needed.
 
@@ -251,7 +299,7 @@ On scheduled runs (midnight and noon CST):
 - All routing flows through you — agents never hand off directly to each other.
 - An issue should never have more than one `agent/*` label at a time.
 - Maximum 2-3 issues in **Implementing** status at any time.
-- Always use the standard comment format and metadata footer from the agent-pipeline skill.
+- Always use the comment patterns (role icons, Action Required callouts, run link footers) from the agent-pipeline skill.
 
 **After every session**, update your agent memory with:
 - Issues triaged, routed, or escalated
