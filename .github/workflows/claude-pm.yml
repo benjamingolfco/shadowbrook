@@ -2,7 +2,7 @@ name: Claude PM Agent
 
 on:
   schedule:
-    - cron: '0 6,18 * * *' # Midnight & noon CST (UTC-6)
+    - cron: '0 0,6,12,18 * * *' # Every 6 hours UTC (midnight, 6am, noon, 6pm CST offset)
   issues:
     types: [opened, labeled, unlabeled]
   issue_comment:
