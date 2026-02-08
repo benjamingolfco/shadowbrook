@@ -69,7 +69,7 @@ Repo: `benjamingolfco/shadowbrook` | Project: #1 under `benjamingolfco` org
 Notes:
 - Use `-F` (not `-f`) for integer fields (e.g., `sub_issue_id`)
 - Issue types: Task, Bug, Feature, User Story
-- Project fields: Status (Triage/Needs Story/Needs Architecture/Ready/Implementing/CI Pending/In Review/Changes Requested/Ready to Merge/Awaiting Owner/Done), Priority (P0/P1/P2), Size (XS-XL)
+- Project fields: Status (Triage/Needs Story/Story Review/Needs Architecture/Architecture Review/Ready/Implementing/CI Pending/In Review/Changes Requested/Ready to Merge/Awaiting Owner/Done), Priority (P0/P1/P2), Size (XS-XL)
 
 ### Issue Labels
 
@@ -96,4 +96,4 @@ This project uses an automated multi-agent pipeline via GitHub Actions. See `.cl
 
 - **Workflow files:** `.github/workflows/claude-pm.yml` (orchestrator), `.github/workflows/claude-agents.yml` (dispatch)
 - **Agent definitions:** `.claude/agents/*.md`
-- **Pipeline statuses:** Triage → Needs Story → Needs Architecture → Ready → Implementing → CI Pending → In Review → Changes Requested → Ready to Merge → Done
+- **Pipeline statuses:** Triage → Needs Story → **Story Review** (owner gate) → Needs Architecture → **Architecture Review** (owner gate) → Ready → Implementing → CI Pending → In Review → Changes Requested → **Ready to Merge** (owner gate) → Done
