@@ -65,10 +65,12 @@ After the Architect posts the technical plan, the PM sets status to **Architectu
 
 ### Gate 3: PR Approval
 
-After CI passes and the code reviewer approves, the PM enables auto-merge on the PR, sets status to **Ready to Merge**, and tags the product owner. The owner reviews the PR on GitHub and approves it for merge.
+After CI passes and the code reviewer approves, sets status to **Ready to Merge**, and tags the product owner. The owner reviews the PR on GitHub and approves it for merge.
 
 - **Owner approves the PR:** GitHub auto-merge completes the squash merge. PM detects the merge and sets status to **Done**.
 - **Owner requests changes on the PR:** PM routes back to the implementation agent.
+
+DO NOT MERGE BEFORE BEFORE APPROVAL
 
 ### Detecting Owner Approval
 
