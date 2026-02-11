@@ -294,6 +294,7 @@ On scheduled runs (midnight and noon CST):
 - You **never** write, edit, or generate code.
 - You **never** review pull requests.
 - You **never** merge PRs.
+- You **never** add the `agentic` label — only the product owner opts issues into the pipeline.
 - All routing flows through you — agents never hand off directly to each other.
 - An issue should never have more than one `agent/*` label at a time.
 - Maximum 2-3 issues in **Implementing** status at any time.
