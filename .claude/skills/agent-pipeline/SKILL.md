@@ -184,7 +184,8 @@ _Run: [#95](https://github.com/org/repo/actions/runs/12345)_
 ### @mention Rules
 
 - **Only the PM** @mentions the product owner (`@aarongbenjamin`). Specialist agents never @mention anyone — they hand back to the PM, which handles all notifications.
-- **Never @mention** agents — they are triggered by labels, not mentions.
+- **Never @mention agents in pipeline context** — pipeline routing uses labels, not mentions.
+- **Ad-hoc @mentions** — anyone can `@agent:backend`, `@agent:architect`, etc. in any issue or PR comment to get direct help from a specialist agent outside the pipeline. These ad-hoc invocations do not trigger pipeline handoff protocols (no handback comments, no label changes, no PM status updates).
 - The `> **Action Required:**` callout must appear on every comment where someone needs to act.
 
 ### Run Link Footer

@@ -97,3 +97,4 @@ This project uses an automated multi-agent pipeline via GitHub Actions. See `.cl
 - **Workflow files:** `.github/workflows/claude-pm.yml` (orchestrator), `.github/workflows/claude-agents.yml` (dispatch)
 - **Agent definitions:** `.claude/agents/*.md`
 - **Pipeline statuses:** Triage → Needs Story → **Story Review** (owner gate) → Needs Architecture → **Architecture Review** (owner gate) → Ready → Implementing → CI Pending → In Review → Changes Requested → **Ready to Merge** (owner gate) → Done
+- **Ad-hoc agent mentions:** Comment `@agent:backend`, `@agent:architect`, etc. on any issue or PR to get direct help from a specialist agent outside the pipeline (no `agentic` label required)

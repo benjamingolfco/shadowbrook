@@ -45,3 +45,64 @@ jobs:
 
           claude_args: |
             --model claude-sonnet-4-5-20250929
+
+  agent:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@agent:')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@agent:')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@agent:')) ||
+      (github.event_name == 'issues' && contains(github.event.issue.body, '@agent:'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Extract agent name from comment
+        id: agent
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body || github.event.review.body || github.event.issue.body }}
+        run: |
+          AGENT_NAME=$(echo "$COMMENT_BODY" | grep -oP '@agent:([a-z][-a-z]*)' | head -1 | sed 's/@agent://')
+          if [ -z "$AGENT_NAME" ]; then
+            echo "::error::Could not extract agent name from comment"
+            exit 1
+          fi
+          echo "name=$AGENT_NAME" >> $GITHUB_OUTPUT
+          echo "file=.claude/agents/${AGENT_NAME}.md" >> $GITHUB_OUTPUT
+
+      - name: Verify agent file exists
+        run: |
+          if [ ! -f "${{ steps.agent.outputs.file }}" ]; then
+            echo "::error::Unknown agent: ${{ steps.agent.outputs.name }}. Available agents: $(ls .claude/agents/*.md | xargs -I{} basename {} .md | tr '\n' ', ')"
+            exit 1
+          fi
+
+      - name: Run Agent
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ steps.app-token.outputs.token }}
+          allowed_bots: "benjamingolfco-claude-agent[bot]"
+          additional_permissions: |
+            actions: read
+          claude_args: |
+            --model claude-sonnet-4-5-20250929 --allowedTools "Bash" "Read" "Write" "Edit" "Glob" "Grep"
+          prompt: |
+            Read .claude/agents/${{ steps.agent.outputs.name }}.md for your role and expertise.
+            You were @mentioned directly in a comment. Respond helpfully to the user's request.
+            This is an ad-hoc request — do NOT follow pipeline handoff protocols (no handback comments, no label changes, no PM status updates).
