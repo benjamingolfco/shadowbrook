@@ -1,8 +1,9 @@
 # Deploy to Dev Environment
 #
-# Orchestrates CI, infrastructure, API, and web deployments to dev.
+# Orchestrates infrastructure, API, and web deployments to dev.
 # Runs on push to main or manual trigger. Only deploys what changed
 # (workflow_dispatch always deploys everything).
+# CI already passed on the PR before merging to main.
 #
 # Required GitHub Secrets:
 #   - AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (OIDC login)
@@ -26,14 +27,7 @@ permissions:
 
 jobs:
   # ============================================================
-  # Run CI first
-  # ============================================================
-  ci:
-    uses: ./.github/workflows/ci.yml
-    secrets: inherit
-
-  # ============================================================
-  # Detect which directories changed (push to main only)
+  # Detect which directories changed
   # ============================================================
   detect-changes:
     runs-on: ubuntu-latest
@@ -61,7 +55,7 @@ jobs:
   # Deploy infrastructure (if Bicep files changed or manual)
   # ============================================================
   infra:
-    needs: [ci, detect-changes]
+    needs: detect-changes
     if: needs.detect-changes.outputs.infra == 'true' || github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/deploy-infra.yml
     with:
@@ -72,10 +66,9 @@ jobs:
   # Deploy API (if API files changed or manual)
   # ============================================================
   api:
-    needs: [ci, detect-changes, infra]
+    needs: [detect-changes, infra]
     if: |
       !cancelled() &&
-      needs.ci.result == 'success' &&
       (needs.detect-changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch') &&
       (needs.infra.result == 'success' || needs.infra.result == 'skipped')
     uses: ./.github/workflows/deploy-api.yml
@@ -88,10 +81,9 @@ jobs:
   # Deploy web (if web files changed or manual)
   # ============================================================
   web:
-    needs: [ci, detect-changes, api]
+    needs: [detect-changes, api]
     if: |
       !cancelled() &&
-      needs.ci.result == 'success' &&
       (needs.detect-changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch') &&
       (needs.api.result == 'success' || needs.api.result == 'skipped')
     uses: ./.github/workflows/deploy-web.yml

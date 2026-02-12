@@ -119,8 +119,7 @@ The workflow files in `.github/workflows/` must be on the default branch (main) 
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `ci.yml` | Push to main, called by others | Build, test, lint |
-| `pr-preview.yml` | Pull request | CI + deploy API to dev + SWA preview |
+| `pr.yml` | Pull request | CI + deploy API to dev + SWA preview |
 | `deploy-dev.yml` | Push to main, manual | CI + deploy infra/API/web to dev |
 | `deploy-infra.yml` | Called by orchestrators | Bicep infrastructure deployment |
 | `deploy-api.yml` | Called by orchestrators | Docker build + Container App deploy |

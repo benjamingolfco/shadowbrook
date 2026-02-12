@@ -1,6 +1,6 @@
 # Reusable — Deploy Bicep Infrastructure
 #
-# Two-phase deployment:
+# Subscription-level deployment (Bicep creates resource groups):
 #   1. Shared infrastructure (ACR) → shadowbrook-shared-rg
 #   2. Environment infrastructure  → shadowbrook-{env}-rg
 #
@@ -24,9 +24,7 @@ jobs:
       id-token: write
       contents: read
     env:
-      SHARED_RESOURCE_GROUP: shadowbrook-shared-rg
-      RESOURCE_GROUP: shadowbrook-${{ inputs.environment }}-rg
-      LOCATION: eastus
+      LOCATION: eastus2
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -38,25 +36,19 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Create shared resource group
-        run: az group create --name ${{ env.SHARED_RESOURCE_GROUP }} --location ${{ env.LOCATION }} --output none
-
       - name: Deploy shared infrastructure
         run: |
-          az deployment group create \
+          az deployment sub create \
             --name "shadowbrook-shared" \
-            --resource-group ${{ env.SHARED_RESOURCE_GROUP }} \
+            --location ${{ env.LOCATION }} \
             --parameters infra/bicep/parameters.shared.bicepparam
-
-      - name: Create environment resource group
-        run: az group create --name ${{ env.RESOURCE_GROUP }} --location ${{ env.LOCATION }} --output none
 
       - name: Deploy environment infrastructure
         env:
           SQL_ADMIN_LOGIN: ${{ secrets.SQL_ADMIN_LOGIN }}
           SQL_ADMIN_PASSWORD: ${{ secrets.SQL_ADMIN_PASSWORD }}
         run: |
-          az deployment group create \
+          az deployment sub create \
             --name "shadowbrook-${{ inputs.environment }}" \
-            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --location ${{ env.LOCATION }} \
             --parameters infra/bicep/parameters.${{ inputs.environment }}.bicepparam

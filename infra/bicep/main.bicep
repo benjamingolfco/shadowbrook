@@ -1,9 +1,12 @@
 // Shadowbrook - Environment Infrastructure Orchestration
 //
-// Deploys environment-specific resources. ACR lives in the shared resource group
+// Subscription-level deployment that creates the environment resource group
+// and deploys environment-specific resources. ACR lives in the shared resource group
 // (shadowbrook-shared-rg) and is referenced cross-RG via 'existing' resource.
+// Deployed via: az deployment sub create
 //
 // Deployment order (with explicit dependsOn):
+// 0. environmentRg    — Resource group (created first)
 // 1. database          — Azure SQL (independent)
 // 2. staticWebApp      — SWA for React frontend (independent)
 // 3. managedIdentity   — user-assigned identity (independent)
@@ -11,11 +14,13 @@
 // 5. acrRoleAssignment — depends on managedIdentity (deployed to shared RG)
 // 6. containerApp      — depends on acrRoleAssignment, containerAppEnv, database
 
+targetScope = 'subscription'
+
 @description('Environment name (dev, staging, prod)')
 param environment string = 'dev'
 
 @description('Azure region for resources')
-param location string = resourceGroup().location
+param location string = 'eastus2'
 
 @description('SQL Server administrator login')
 @secure()
@@ -34,6 +39,18 @@ param sharedResourceGroup string = 'shadowbrook-shared-rg'
 @description('Name of the shared Azure Container Registry')
 param acrName string = 'shadowbrookacr'
 
+@description('Name of the environment resource group')
+param resourceGroupName string = 'shadowbrook-${environment}-rg'
+
+// ============================================================================
+// Resource Group
+// ============================================================================
+
+resource environmentRg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
+  name: resourceGroupName
+  location: location
+}
+
 // ============================================================================
 // Shared resource references (cross-RG)
 // ============================================================================
@@ -50,6 +67,7 @@ resource existingAcr 'Microsoft.ContainerRegistry/registries@2025-11-01' existin
 // Azure SQL Database
 module database 'modules/database.bicep' = {
   name: 'database-deployment'
+  scope: environmentRg
   params: {
     environment: environment
     location: location
@@ -61,6 +79,7 @@ module database 'modules/database.bicep' = {
 // Azure Static Web App (React frontend)
 module staticWebApp 'modules/static-web-app.bicep' = {
   name: 'static-web-app-deployment'
+  scope: environmentRg
   params: {
     environment: environment
     location: location
@@ -70,6 +89,7 @@ module staticWebApp 'modules/static-web-app.bicep' = {
 // User-assigned managed identity for Container App
 module managedIdentity 'modules/managed-identity.bicep' = {
   name: 'managed-identity-deployment'
+  scope: environmentRg
   params: {
     environment: environment
     location: location
@@ -96,6 +116,7 @@ module acrRoleAssignment 'modules/acr-role-assignment.bicep' = {
 
 module containerAppEnv 'modules/container-app-env.bicep' = {
   name: 'container-app-env-deployment'
+  scope: environmentRg
   params: {
     environment: environment
     location: location
@@ -108,6 +129,7 @@ module containerAppEnv 'modules/container-app-env.bicep' = {
 
 module containerApp 'modules/container-app.bicep' = {
   name: 'container-app-deployment'
+  scope: environmentRg
   dependsOn: [
     acrRoleAssignment
   ]
@@ -118,7 +140,7 @@ module containerApp 'modules/container-app.bicep' = {
     containerRegistryLoginServer: existingAcr.properties.loginServer
     userAssignedIdentityId: managedIdentity.outputs.id
     imageTag: imageTag
-    sqlConnectionString: database.outputs.connectionString
+    sqlConnectionString: 'Server=tcp:${database.outputs.sqlServerFqdn},1433;Initial Catalog=${database.outputs.databaseName};Persist Security Info=False;User ID=${sqlAdminLogin};Password=${sqlAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
   }
 }
 

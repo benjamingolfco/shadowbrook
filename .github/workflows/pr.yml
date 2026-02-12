@@ -1,13 +1,14 @@
-# PR Preview Deployment
+# PR — CI + Preview Deployment
 #
-# Runs CI, then deploys API to dev Container App and creates SWA preview
-# for frontend. Tears down SWA preview on PR close.
+# Runs build/test/lint, then deploys API to dev and creates SWA preview.
+# Each job only runs when its relevant files changed.
+# Tears down SWA preview on PR close.
 #
 # Required GitHub Secrets:
 #   - AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (OIDC login)
 #   - AZURE_STATIC_WEB_APPS_API_TOKEN (SWA deployment token)
 
-name: PR Preview
+name: PR
 
 on:
   pull_request:
@@ -23,14 +24,6 @@ permissions:
   pull-requests: write
 
 jobs:
-  # ============================================================
-  # Run CI first (build, test, lint)
-  # ============================================================
-  ci:
-    if: github.event.action != 'closed'
-    uses: ./.github/workflows/ci.yml
-    secrets: inherit
-
   # ============================================================
   # Detect which directories changed
   # ============================================================
@@ -55,11 +48,79 @@ jobs:
               - 'src/web/**'
 
   # ============================================================
-  # Deploy API to dev Container App (after CI passes)
+  # CI — API
+  # ============================================================
+  build-api:
+    name: Build & Test API
+    needs: detect-changes
+    if: needs.detect-changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore shadowbrook.slnx
+
+      - name: Build
+        run: dotnet build shadowbrook.slnx --no-restore
+
+      - name: Test
+        run: dotnet test shadowbrook.slnx --no-build --logger trx --results-directory TestResults
+
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: test-results
+          path: TestResults/
+          retention-days: 7
+
+  # ============================================================
+  # CI — Web
+  # ============================================================
+  lint-web:
+    name: Lint & Build Web
+    needs: detect-changes
+    if: needs.detect-changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: pnpm --dir src/web install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm --dir src/web lint
+
+      - name: Build
+        run: pnpm --dir src/web build
+
+  # ============================================================
+  # Deploy API to dev (after CI passes)
   # ============================================================
   deploy-api:
-    needs: [ci, detect-changes]
-    if: needs.detect-changes.outputs.api == 'true'
+    needs: [detect-changes, build-api]
+    if: |
+      !cancelled() &&
+      needs.detect-changes.outputs.api == 'true' &&
+      needs.build-api.result == 'success'
     uses: ./.github/workflows/deploy-api.yml
     with:
       environment: dev
@@ -70,11 +131,11 @@ jobs:
   # Deploy frontend SWA preview (after CI + API deploy)
   # ============================================================
   deploy-web:
-    needs: [ci, detect-changes, deploy-api]
+    needs: [detect-changes, lint-web, deploy-api]
     if: |
       !cancelled() &&
-      needs.ci.result == 'success' &&
       needs.detect-changes.outputs.web == 'true' &&
+      needs.lint-web.result == 'success' &&
       (needs.deploy-api.result == 'success' || needs.deploy-api.result == 'skipped')
     uses: ./.github/workflows/deploy-web.yml
     with:

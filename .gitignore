@@ -27,6 +27,9 @@ Thumbs.db
 # Claude Code (local only)
 .claude/settings.local.json
 
+# Playwright MCP
+.playwright-mcp/
+
 # Worktrees
 .worktrees/
 

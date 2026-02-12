@@ -32,17 +32,19 @@ Examples:
 
 ### Deployment Order
 
-Deployment runs in two phases:
+Both phases use subscription-level deployments (`az deployment sub create`). Bicep creates the resource groups — they are not created separately by scripts.
 
-**Phase 1 — Shared infrastructure** (`shadowbrook-shared-rg`):
-1. **registry** — Azure Container Registry
+**Phase 1 — Shared infrastructure:**
+1. **Resource group** — `shadowbrook-shared-rg`
+2. **registry** — Azure Container Registry
 
-**Phase 2 — Environment infrastructure** (`shadowbrook-{env}-rg`):
-1. **database** — Azure SQL (independent)
-2. **staticWebApp** — SWA for React frontend (independent)
-3. **managedIdentity** — User-assigned identity (independent)
-4. **acrRoleAssignment** — AcrPull role (depends on identity, deployed to shared RG)
-5. **containerApp** — App + environment (depends on role assignment + database)
+**Phase 2 — Environment infrastructure:**
+1. **Resource group** — `shadowbrook-{env}-rg`
+2. **database** — Azure SQL (independent)
+3. **staticWebApp** — SWA for React frontend (independent)
+4. **managedIdentity** — User-assigned identity (independent)
+5. **acrRoleAssignment** — AcrPull role (depends on identity, deployed to shared RG)
+6. **containerApp** — App + environment (depends on role assignment + database)
 
 The environment deployment references the shared ACR cross-resource-group via Bicep's
 `existing` resource + `scope: resourceGroup(...)` pattern.
@@ -60,15 +62,7 @@ The environment deployment references the shared ACR cross-resource-group via Bi
 
 Deploy via GitHub Actions workflow:
 
-1. **Enable the workflow** (one-time setup by repository owner):
-   ```bash
-   cp infra/deploy-dev-workflow.yml .github/workflows/deploy-dev.yml
-   git add .github/workflows/deploy-dev.yml
-   git commit -m "chore: add dev environment deployment workflow"
-   git push
-   ```
-
-2. Configure GitHub Secrets:
+1. Configure GitHub Secrets:
    ```
    AZURE_CLIENT_ID - Azure service principal client ID
    AZURE_TENANT_ID - Azure tenant ID
@@ -77,7 +71,7 @@ Deploy via GitHub Actions workflow:
    SQL_ADMIN_PASSWORD - SQL Server admin password
    ```
 
-3. Trigger deployment:
+2. Trigger deployment:
    - Go to Actions -> Deploy to Dev Environment
    - Click "Run workflow"
    - Optionally specify an image tag
@@ -131,8 +125,8 @@ used across environments. Use the `--shared` flag to explicitly delete shared re
 
 ```
 infra/bicep/
-├── main.bicep                        # Environment orchestration template
-├── shared.bicep                      # Shared infrastructure (ACR)
+├── main.bicep                        # Environment orchestration (subscription-scoped)
+├── shared.bicep                      # Shared infrastructure (subscription-scoped)
 ├── parameters.dev.bicepparam         # Dev environment parameters
 ├── parameters.shared.bicepparam      # Shared infrastructure parameters
 └── modules/                          # Resource modules

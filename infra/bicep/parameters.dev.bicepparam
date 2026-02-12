@@ -2,7 +2,7 @@ using './main.bicep'
 
 // Non-sensitive environment configuration
 param environment = 'dev'
-param location = 'eastus'
+param location = 'eastus2'
 param imageTag = 'latest'
 
 // Sensitive credentials — resolved from environment variables at deploy time.
