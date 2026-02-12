@@ -1,0 +1,94 @@
+# Reusable — Build and Deploy API to Container App
+#
+# Builds Docker image, pushes to ACR, updates Container App, and health checks.
+# Called by deploy-dev.yml and pr-preview.yml.
+
+name: Deploy API
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Target environment (dev, staging, prod)'
+        required: true
+        type: string
+      image-tag:
+        description: 'Docker image tag (e.g., commit SHA or pr-123)'
+        required: true
+        type: string
+    outputs:
+      app-url:
+        description: 'Deployed application URL'
+        value: ${{ jobs.deploy.outputs.app-url }}
+
+jobs:
+  deploy:
+    name: Deploy API (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    outputs:
+      app-url: ${{ steps.get-url.outputs.url }}
+    env:
+      RESOURCE_GROUP: shadowbrook-${{ inputs.environment }}-rg
+      ACR_NAME: shadowbrookacr
+      IMAGE_NAME: shadowbrook
+      CONTAINER_APP_NAME: shadowbrook-app-${{ inputs.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push image to ACR
+        run: |
+          az acr build \
+            --registry ${{ env.ACR_NAME }} \
+            --image ${{ env.IMAGE_NAME }}:${{ inputs.image-tag }} \
+            --file src/api/Dockerfile \
+            .
+
+      - name: Deploy to Container App
+        run: |
+          az containerapp update \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ inputs.image-tag }}
+
+      - name: Get app URL
+        id: get-url
+        run: |
+          FQDN=$(az containerapp show \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query properties.configuration.ingress.fqdn \
+            --output tsv)
+          echo "url=https://$FQDN" >> "$GITHUB_OUTPUT"
+
+      - name: Health check
+        run: |
+          APP_URL="${{ steps.get-url.outputs.url }}"
+          echo "Waiting for $APP_URL/health ..."
+          for i in $(seq 1 30); do
+            if curl -f -s "$APP_URL/health" > /dev/null 2>&1; then
+              echo "Health check passed on attempt $i"
+              exit 0
+            fi
+            echo "Attempt $i: not ready, waiting 10s..."
+            sleep 10
+          done
+          echo "Health check failed after 30 attempts"
+          exit 1
+
+      - name: Deployment summary
+        run: |
+          echo "## API Deployment (${{ inputs.environment }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **URL:** ${{ steps.get-url.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Image:** \`${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ inputs.image-tag }}\`" >> "$GITHUB_STEP_SUMMARY"

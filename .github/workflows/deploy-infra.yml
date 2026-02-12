@@ -1,0 +1,62 @@
+# Reusable — Deploy Bicep Infrastructure
+#
+# Two-phase deployment:
+#   1. Shared infrastructure (ACR) → shadowbrook-shared-rg
+#   2. Environment infrastructure  → shadowbrook-{env}-rg
+#
+# Called by deploy-dev.yml (and future staging/prod orchestrators).
+
+name: Deploy Infrastructure
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Target environment (dev, staging, prod)'
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    name: Deploy Bicep (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      SHARED_RESOURCE_GROUP: shadowbrook-shared-rg
+      RESOURCE_GROUP: shadowbrook-${{ inputs.environment }}-rg
+      LOCATION: eastus
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Create shared resource group
+        run: az group create --name ${{ env.SHARED_RESOURCE_GROUP }} --location ${{ env.LOCATION }} --output none
+
+      - name: Deploy shared infrastructure
+        run: |
+          az deployment group create \
+            --name "shadowbrook-shared" \
+            --resource-group ${{ env.SHARED_RESOURCE_GROUP }} \
+            --parameters infra/bicep/parameters.shared.bicepparam
+
+      - name: Create environment resource group
+        run: az group create --name ${{ env.RESOURCE_GROUP }} --location ${{ env.LOCATION }} --output none
+
+      - name: Deploy environment infrastructure
+        env:
+          SQL_ADMIN_LOGIN: ${{ secrets.SQL_ADMIN_LOGIN }}
+          SQL_ADMIN_PASSWORD: ${{ secrets.SQL_ADMIN_PASSWORD }}
+        run: |
+          az deployment group create \
+            --name "shadowbrook-${{ inputs.environment }}" \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --parameters infra/bicep/parameters.${{ inputs.environment }}.bicepparam

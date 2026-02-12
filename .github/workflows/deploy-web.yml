@@ -1,0 +1,87 @@
+# Reusable — Build and Deploy Frontend to Static Web App
+#
+# Builds React app with VITE_API_URL and deploys to Azure Static Web Apps.
+# Handles both production deploys and PR preview environments.
+# For PR previews, the SWA action reads the caller's github context
+# to detect the PR number and create/destroy staging environments.
+#
+# Called by deploy-dev.yml (production) and pr-preview.yml (preview + cleanup).
+
+name: Deploy Web
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Target environment (dev, staging, prod)'
+        required: true
+        type: string
+      action:
+        description: 'SWA action: upload or close'
+        required: false
+        type: string
+        default: 'upload'
+
+jobs:
+  deploy:
+    name: Deploy Web (${{ inputs.environment }}, ${{ inputs.action }})
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        if: inputs.action == 'upload'
+        uses: actions/checkout@v6
+
+      - name: Azure login
+        if: inputs.action == 'upload'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get API URL
+        if: inputs.action == 'upload'
+        id: api-url
+        run: |
+          FQDN=$(az containerapp show \
+            --name shadowbrook-app-${{ inputs.environment }} \
+            --resource-group shadowbrook-${{ inputs.environment }}-rg \
+            --query properties.configuration.ingress.fqdn \
+            --output tsv)
+          echo "url=https://$FQDN" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node.js
+        if: inputs.action == 'upload'
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        if: inputs.action == 'upload'
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Install dependencies
+        if: inputs.action == 'upload'
+        run: pnpm --dir src/web install --frozen-lockfile
+
+      - name: Build
+        if: inputs.action == 'upload'
+        env:
+          VITE_API_URL: ${{ steps.api-url.outputs.url }}
+        run: pnpm --dir src/web build
+
+      - name: Deploy to Static Web App
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: ${{ inputs.action }}
+          app_location: src/web
+          output_location: dist
+          skip_app_build: true

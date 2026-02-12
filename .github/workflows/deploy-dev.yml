@@ -1,43 +1,44 @@
-# PR Preview Deployment
+# Deploy to Dev Environment
 #
-# Runs CI, then deploys API to dev Container App and creates SWA preview
-# for frontend. Tears down SWA preview on PR close.
+# Orchestrates CI, infrastructure, API, and web deployments to dev.
+# Runs on push to main or manual trigger. Only deploys what changed
+# (workflow_dispatch always deploys everything).
 #
 # Required GitHub Secrets:
 #   - AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (OIDC login)
+#   - SQL_ADMIN_LOGIN, SQL_ADMIN_PASSWORD (Bicep infra)
 #   - AZURE_STATIC_WEB_APPS_API_TOKEN (SWA deployment token)
 
-name: PR Preview
+name: Deploy Dev
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, closed]
+  push:
+    branches: [main]
+  workflow_dispatch:
 
 concurrency:
-  group: pr-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  group: deploy-dev
+  cancel-in-progress: false
 
 permissions:
   id-token: write
   contents: read
-  pull-requests: write
 
 jobs:
   # ============================================================
-  # Run CI first (build, test, lint)
+  # Run CI first
   # ============================================================
   ci:
-    if: github.event.action != 'closed'
     uses: ./.github/workflows/ci.yml
     secrets: inherit
 
   # ============================================================
-  # Detect which directories changed
+  # Detect which directories changed (push to main only)
   # ============================================================
   detect-changes:
-    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     outputs:
+      infra: ${{ steps.filter.outputs.infra }}
       api: ${{ steps.filter.outputs.api }}
       web: ${{ steps.filter.outputs.web }}
     steps:
@@ -49,46 +50,51 @@ jobs:
         uses: dorny/paths-filter@v3
         with:
           filters: |
+            infra:
+              - 'infra/bicep/**'
             api:
               - 'src/api/**'
             web:
               - 'src/web/**'
 
   # ============================================================
-  # Deploy API to dev Container App (after CI passes)
+  # Deploy infrastructure (if Bicep files changed or manual)
   # ============================================================
-  deploy-api:
+  infra:
     needs: [ci, detect-changes]
-    if: needs.detect-changes.outputs.api == 'true'
-    uses: ./.github/workflows/deploy-api.yml
+    if: needs.detect-changes.outputs.infra == 'true' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/deploy-infra.yml
     with:
       environment: dev
-      image-tag: pr-${{ github.event.pull_request.number }}
     secrets: inherit
 
   # ============================================================
-  # Deploy frontend SWA preview (after CI + API deploy)
+  # Deploy API (if API files changed or manual)
   # ============================================================
-  deploy-web:
-    needs: [ci, detect-changes, deploy-api]
+  api:
+    needs: [ci, detect-changes, infra]
     if: |
       !cancelled() &&
       needs.ci.result == 'success' &&
-      needs.detect-changes.outputs.web == 'true' &&
-      (needs.deploy-api.result == 'success' || needs.deploy-api.result == 'skipped')
-    uses: ./.github/workflows/deploy-web.yml
+      (needs.detect-changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch') &&
+      (needs.infra.result == 'success' || needs.infra.result == 'skipped')
+    uses: ./.github/workflows/deploy-api.yml
     with:
       environment: dev
-      action: upload
+      image-tag: ${{ github.sha }}
     secrets: inherit
 
   # ============================================================
-  # Tear down SWA preview on PR close
+  # Deploy web (if web files changed or manual)
   # ============================================================
-  cleanup-web:
-    if: github.event.action == 'closed'
+  web:
+    needs: [ci, detect-changes, api]
+    if: |
+      !cancelled() &&
+      needs.ci.result == 'success' &&
+      (needs.detect-changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch') &&
+      (needs.api.result == 'success' || needs.api.result == 'skipped')
     uses: ./.github/workflows/deploy-web.yml
     with:
       environment: dev
-      action: close
     secrets: inherit
