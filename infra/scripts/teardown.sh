@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Teardown Shadowbrook dev environment
-# Deletes the entire resource group and all resources within it
+# Teardown Shadowbrook environment
+# By default, only deletes the environment resource group (preserves shared ACR).
+# Use --shared to also delete the shared resource group.
+#
+# Usage: ./teardown.sh [--shared]
 
 # Configuration
 RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-shadowbrook-dev-rg}"
+SHARED_RESOURCE_GROUP="shadowbrook-shared-rg"
+DELETE_SHARED=false
+
+if [ "${1:-}" == "--shared" ]; then
+  DELETE_SHARED=true
+fi
 
 # Colors
 RED='\033[0;31m'
@@ -36,8 +45,11 @@ if ! az account show &> /dev/null; then
   exit 1
 fi
 
-# Confirm deletion
+# Confirm environment deletion
 log_warn "This will DELETE the resource group '$RESOURCE_GROUP' and ALL resources within it."
+if [ "$DELETE_SHARED" = true ]; then
+  log_warn "This will ALSO DELETE the shared resource group '$SHARED_RESOURCE_GROUP' (ACR)."
+fi
 log_warn "This action CANNOT be undone."
 echo ""
 read -p "Type 'yes' to confirm deletion: " -r
@@ -48,18 +60,34 @@ if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
   exit 0
 fi
 
-# Check if resource group exists
-if ! az group show --name "$RESOURCE_GROUP" &> /dev/null; then
+# Delete environment resource group
+if az group show --name "$RESOURCE_GROUP" &> /dev/null; then
+  log_info "Deleting resource group '$RESOURCE_GROUP'..."
+  az group delete \
+    --name "$RESOURCE_GROUP" \
+    --yes \
+    --no-wait
+  log_info "Deletion of '$RESOURCE_GROUP' initiated."
+else
   log_warn "Resource group '$RESOURCE_GROUP' does not exist. Nothing to delete."
-  exit 0
 fi
 
-# Delete resource group
-log_info "Deleting resource group '$RESOURCE_GROUP'..."
-az group delete \
-  --name "$RESOURCE_GROUP" \
-  --yes \
-  --no-wait
+# Delete shared resource group if requested
+if [ "$DELETE_SHARED" = true ]; then
+  if az group show --name "$SHARED_RESOURCE_GROUP" &> /dev/null; then
+    log_info "Deleting shared resource group '$SHARED_RESOURCE_GROUP'..."
+    az group delete \
+      --name "$SHARED_RESOURCE_GROUP" \
+      --yes \
+      --no-wait
+    log_info "Deletion of '$SHARED_RESOURCE_GROUP' initiated."
+  else
+    log_warn "Shared resource group '$SHARED_RESOURCE_GROUP' does not exist. Nothing to delete."
+  fi
+else
+  log_warn "Shared resource group '$SHARED_RESOURCE_GROUP' (ACR) was NOT deleted."
+  log_warn "To also delete shared resources, run: $0 --shared"
+fi
 
-log_info "Deletion initiated. This will take several minutes to complete."
-log_info "You can check the status in the Azure Portal or with: az group show --name $RESOURCE_GROUP"
+log_info "Deletion may take several minutes to complete."
+log_info "Check status with: az group show --name $RESOURCE_GROUP"

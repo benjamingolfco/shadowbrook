@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useState } from 'react'
+import { API_BASE } from './api'
 
 interface Course {
   id: string
@@ -27,7 +28,7 @@ export default function TeeTimeSettings() {
   const [message, setMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/courses')
+    fetch(`${API_BASE}/courses`)
       .then(r => r.json())
       .then((data: Course[]) => {
         setCourses(data)
@@ -42,7 +43,7 @@ export default function TeeTimeSettings() {
 
   async function loadSettings(courseId: string) {
     try {
-      const response = await fetch(`/courses/${courseId}/tee-time-settings`)
+      const response = await fetch(`${API_BASE}/courses/${courseId}/tee-time-settings`)
       if (!response.ok) return
       const data = await response.json()
       if (data.teeTimeIntervalMinutes) {
@@ -70,7 +71,7 @@ export default function TeeTimeSettings() {
     setMessage(null)
 
     try {
-      const response = await fetch(`/courses/${form.courseId}/tee-time-settings`, {
+      const response = await fetch(`${API_BASE}/courses/${form.courseId}/tee-time-settings`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from 'react'
+import { API_BASE } from './api'
 
 interface CourseForm {
   name: string
@@ -35,7 +36,7 @@ export default function CourseRegistration() {
     setMessage(null)
 
     try {
-      const response = await fetch('/courses', {
+      const response = await fetch(`${API_BASE}/courses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),

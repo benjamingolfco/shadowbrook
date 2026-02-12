@@ -1,0 +1,194 @@
+# PR Preview Deployment
+#
+# Deploys API to dev Container App and creates SWA preview for frontend.
+# Runs on every PR; tears down SWA preview on PR close.
+#
+# Required GitHub Secrets:
+#   - AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (OIDC login)
+#   - AZURE_STATIC_WEB_APPS_API_TOKEN (SWA deployment token)
+
+name: PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  AZURE_RESOURCE_GROUP: shadowbrook-dev-rg
+  ACR_NAME: shadowbrookacr
+  IMAGE_NAME: shadowbrook
+  CONTAINER_APP_NAME: shadowbrook-app-dev
+
+jobs:
+  # ============================================================
+  # Detect which directories changed
+  # ============================================================
+  detect-changes:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            api:
+              - 'src/api/**'
+              - 'src/api/Dockerfile'
+            web:
+              - 'src/web/**'
+
+  # ============================================================
+  # Deploy API to dev Container App
+  # ============================================================
+  deploy-api:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      app-url: ${{ steps.get-url.outputs.url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push image to ACR
+        run: |
+          az acr build \
+            --registry ${{ env.ACR_NAME }} \
+            --image ${{ env.IMAGE_NAME }}:pr-${{ github.event.pull_request.number }} \
+            --file src/api/Dockerfile \
+            .
+
+      - name: Deploy to Container App
+        run: |
+          az containerapp update \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:pr-${{ github.event.pull_request.number }}
+
+      - name: Get app URL
+        id: get-url
+        run: |
+          FQDN=$(az containerapp show \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --query properties.configuration.ingress.fqdn \
+            --output tsv)
+          echo "url=https://$FQDN" >> "$GITHUB_OUTPUT"
+
+      - name: Health check
+        run: |
+          APP_URL="${{ steps.get-url.outputs.url }}"
+          echo "Waiting for $APP_URL/health ..."
+          for i in $(seq 1 30); do
+            if curl -f -s "$APP_URL/health" > /dev/null 2>&1; then
+              echo "Health check passed on attempt $i"
+              exit 0
+            fi
+            echo "Attempt $i: not ready, waiting 10s..."
+            sleep 10
+          done
+          echo "Health check failed after 30 attempts"
+          exit 1
+
+      - name: Deployment summary
+        run: |
+          echo "## API Deployment" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **URL:** ${{ steps.get-url.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Image:** \`${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:pr-${{ github.event.pull_request.number }}\`" >> "$GITHUB_STEP_SUMMARY"
+
+  # ============================================================
+  # Deploy frontend SWA preview
+  # ============================================================
+  deploy-web:
+    needs: [detect-changes, deploy-api]
+    if: |
+      always() &&
+      needs.detect-changes.outputs.web == 'true' &&
+      needs.detect-changes.result == 'success' &&
+      (needs.deploy-api.result == 'success' || needs.deploy-api.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get API URL
+        id: api-url
+        run: |
+          FQDN=$(az containerapp show \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --query properties.configuration.ingress.fqdn \
+            --output tsv)
+          echo "url=https://$FQDN" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: pnpm --dir src/web install --frozen-lockfile
+
+      - name: Build
+        env:
+          VITE_API_URL: ${{ steps.api-url.outputs.url }}
+        run: pnpm --dir src/web build
+
+      - name: Deploy SWA preview
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: src/web
+          output_location: dist
+          skip_app_build: true
+
+  # ============================================================
+  # Tear down SWA preview on PR close
+  # ============================================================
+  cleanup-web:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close SWA preview
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: close

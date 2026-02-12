@@ -1,26 +1,51 @@
 # Shadowbrook Infrastructure
 
-Azure infrastructure for the Shadowbrook tee time booking platform.
+Azure infrastructure for the Shadowbrook tee time booking platform. **Bicep is the single source of truth** for all Azure resources.
 
 ## Architecture
 
-### Dev Environment
+### Shared Resources (`shadowbrook-shared-rg`)
 
-- **Azure Container Apps**: Hosts .NET API + React frontend in a single container
+Resources deployed once and reused across all environments:
+
+- **Azure Container Registry**: `shadowbrookacr` — stores container images promoted across environments
+
+### Per-Environment Resources (`shadowbrook-{env}-rg`)
+
+- **Azure Container Apps**: Hosts .NET API container
+- **Azure Static Web Apps**: Hosts React SPA frontend (Free tier)
 - **Azure SQL Database**: Basic tier (5 DTU) for development data
-- **Azure Container Registry**: Stores container images
-- **Log Analytics**: Container app logs and monitoring
+- **User-Assigned Managed Identity**: ACR pull access for the Container App
 
-**Estimated monthly cost:** ~$10-15
+**Estimated monthly cost:** ~$10-15 (dev environment)
 
 ### Resource Naming Convention
 
 `shadowbrook-{resource}-{environment}`
 
 Examples:
+- `shadowbrookacr` - Container Registry (shared)
 - `shadowbrook-app-dev` - Container App (dev)
 - `shadowbrook-sql-dev` - SQL Server (dev)
 - `shadowbrook-db-dev` - SQL Database (dev)
+- `id-shadowbrook-dev` - Managed Identity (dev)
+
+### Deployment Order
+
+Deployment runs in two phases:
+
+**Phase 1 — Shared infrastructure** (`shadowbrook-shared-rg`):
+1. **registry** — Azure Container Registry
+
+**Phase 2 — Environment infrastructure** (`shadowbrook-{env}-rg`):
+1. **database** — Azure SQL (independent)
+2. **staticWebApp** — SWA for React frontend (independent)
+3. **managedIdentity** — User-assigned identity (independent)
+4. **acrRoleAssignment** — AcrPull role (depends on identity, deployed to shared RG)
+5. **containerApp** — App + environment (depends on role assignment + database)
+
+The environment deployment references the shared ACR cross-resource-group via Bicep's
+`existing` resource + `scope: resourceGroup(...)` pattern.
 
 ## Deployment
 
@@ -28,7 +53,7 @@ Examples:
 
 1. **Azure CLI**: Install from https://aka.ms/azure-cli
 2. **Azure Subscription**: Active Azure subscription
-3. **Permissions**: Contributor role on the subscription
+3. **Permissions**: Contributor + User Access Administrator role on the subscription
 4. **Secrets**: SQL admin credentials
 
 ### GitHub Actions (Recommended)
@@ -37,7 +62,6 @@ Deploy via GitHub Actions workflow:
 
 1. **Enable the workflow** (one-time setup by repository owner):
    ```bash
-   # Copy the workflow file to .github/workflows/
    cp infra/deploy-dev-workflow.yml .github/workflows/deploy-dev.yml
    git add .github/workflows/deploy-dev.yml
    git commit -m "chore: add dev environment deployment workflow"
@@ -54,9 +78,9 @@ Deploy via GitHub Actions workflow:
    ```
 
 3. Trigger deployment:
-   - Go to Actions → Deploy to Dev Environment
+   - Go to Actions -> Deploy to Dev Environment
    - Click "Run workflow"
-   - Select branch and options
+   - Optionally specify an image tag
    - Click "Run workflow"
 
 ### Local Deployment
@@ -67,14 +91,20 @@ Deploy from your local machine:
 # Set required environment variables
 export SQL_ADMIN_LOGIN="sqladmin"
 export SQL_ADMIN_PASSWORD="YourSecurePassword123!"
-export AZURE_RESOURCE_GROUP="shadowbrook-dev-rg"
-export AZURE_LOCATION="eastus"
 
 # Login to Azure
 az login
 
-# Run deployment script
-./infra/scripts/deploy.sh
+# Run deployment script (deploys shared + environment)
+./infra/scripts/deploy.sh dev
+```
+
+#### What-if Mode
+
+Preview changes without deploying:
+
+```bash
+./infra/scripts/deploy.sh dev --what-if
 ```
 
 ## Teardown
@@ -82,44 +112,60 @@ az login
 To delete the dev environment and stop incurring costs:
 
 ```bash
-# Delete all resources
+# Delete environment only (preserves shared ACR)
 ./infra/scripts/teardown.sh
+
+# Delete environment AND shared resources (ACR)
+./infra/scripts/teardown.sh --shared
 ```
 
-This will:
-- Prompt for confirmation
-- Delete the entire resource group
-- Remove all resources (Container App, SQL Database, ACR, etc.)
+By default, teardown only deletes the environment resource group (`shadowbrook-dev-rg`).
+The shared resource group (`shadowbrook-shared-rg`) with ACR is preserved since it's
+used across environments. Use the `--shared` flag to explicitly delete shared resources too.
 
 **Note:** Deletion is asynchronous and takes several minutes to complete.
 
 ## Infrastructure as Code
 
-### Bicep Modules
+### Bicep Structure
 
-- `main.bicep` - Main orchestration template
-- `database.bicep` - Azure SQL Server and Database
-- `container-app.bicep` - Container Apps Environment and App
-- `parameters.dev.json` - Dev environment parameters
+```
+infra/bicep/
+├── main.bicep                        # Environment orchestration template
+├── shared.bicep                      # Shared infrastructure (ACR)
+├── parameters.dev.bicepparam         # Dev environment parameters
+├── parameters.shared.bicepparam      # Shared infrastructure parameters
+└── modules/                          # Resource modules
+    ├── database.bicep                # Azure SQL Server and Database
+    ├── registry.bicep                # Azure Container Registry
+    ├── managed-identity.bicep        # User-assigned managed identity
+    ├── acr-role-assignment.bicep     # AcrPull role assignment
+    ├── container-app.bicep           # Container Apps Environment and App
+    └── static-web-app.bicep          # Azure Static Web Apps (React frontend)
+```
+
+Parameter files use `.bicepparam` format with `readEnvironmentVariable()` for secrets — no credentials are stored in source control.
 
 ### Modifying Infrastructure
 
-1. Edit the Bicep files in `infra/bicep/`
-2. Test locally with Azure CLI:
+1. Edit the Bicep files in `infra/bicep/modules/`
+2. Verify compilation:
    ```bash
-   az deployment group create \
-     --resource-group shadowbrook-dev-rg \
-     --template-file infra/bicep/main.bicep \
-     --parameters @infra/bicep/parameters.dev.json
+   az bicep build --file infra/bicep/shared.bicep
+   az bicep build --file infra/bicep/main.bicep
    ```
-3. Commit changes and deploy via GitHub Actions
+3. Preview changes:
+   ```bash
+   ./infra/scripts/deploy.sh dev --what-if
+   ```
+4. Commit and deploy via GitHub Actions
 
 ## Troubleshooting
 
 ### Container App not starting
 
 Check logs in Azure Portal:
-1. Navigate to Container Apps → shadowbrook-app-dev
+1. Navigate to Container Apps -> shadowbrook-app-dev
 2. Click "Log stream" or "Logs"
 3. Look for startup errors
 
@@ -135,24 +181,15 @@ az containerapp show \
 
 ### ACR pull authentication errors
 
-Grant ACR pull access manually:
+The user-assigned managed identity should have AcrPull access automatically
+via Bicep. The role assignment is deployed to the shared resource group where
+ACR lives. If issues persist, verify the role assignment:
+
 ```bash
-PRINCIPAL_ID=$(az containerapp show \
-  --name shadowbrook-app-dev \
-  --resource-group shadowbrook-dev-rg \
-  --query identity.principalId \
-  --output tsv)
-
-ACR_ID=$(az acr show \
-  --name shadowbrookacr \
-  --resource-group shadowbrook-dev-rg \
-  --query id \
-  --output tsv)
-
-az role assignment create \
-  --assignee $PRINCIPAL_ID \
+az role assignment list \
+  --scope $(az acr show --name shadowbrookacr --resource-group shadowbrook-shared-rg --query id -o tsv) \
   --role AcrPull \
-  --scope $ACR_ID
+  --output table
 ```
 
 ## Cost Management
@@ -166,7 +203,6 @@ The Container App is configured to scale to 0 replicas when idle, reducing compu
 To completely stop the environment without deleting resources:
 
 ```bash
-# Stop the Container App
 az containerapp update \
   --name shadowbrook-app-dev \
   --resource-group shadowbrook-dev-rg \
@@ -177,7 +213,6 @@ az containerapp update \
 To restart:
 
 ```bash
-# Resume the Container App
 az containerapp update \
   --name shadowbrook-app-dev \
   --resource-group shadowbrook-dev-rg \
@@ -195,7 +230,4 @@ az containerapp logs show \
   --name shadowbrook-app-dev \
   --resource-group shadowbrook-dev-rg \
   --follow
-
-# View metrics in Azure Portal
-# Navigate to: Container Apps → shadowbrook-app-dev → Metrics
 ```

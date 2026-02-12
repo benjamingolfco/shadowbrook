@@ -8,6 +8,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/courses': 'http://localhost:5221',
+      '/tee-sheets': 'http://localhost:5221',
       '/health': 'http://localhost:5221',
     },
   },

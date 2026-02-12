@@ -34,3 +34,7 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Bicep build artifacts (compiled ARM templates)
+infra/bicep/*.json
+infra/bicep/modules/*.json

@@ -1,4 +1,4 @@
-.PHONY: help dev api web build test lint clean
+.PHONY: help dev api web build test lint clean docker-up docker-down docker-build
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -26,3 +26,12 @@ lint: ## Lint the frontend
 clean: ## Clean build artifacts
 	dotnet clean shadowbrook.slnx
 	rm -rf src/web/dist
+
+docker-up: ## Start app + SQL Server in Docker
+	docker compose up --build -d
+
+docker-down: ## Stop Docker containers
+	docker compose down
+
+docker-build: ## Build Docker image only
+	docker build -t shadowbrook:local -f src/api/Dockerfile .

@@ -1,4 +1,4 @@
-// Azure SQL Database Bicep module
+// Azure SQL Database module
 // Creates SQL Server and database (Basic tier for dev)
 
 @description('Environment name (dev, staging, prod)')
@@ -20,7 +20,7 @@ var sqlServerName = 'shadowbrook-sql-${environment}'
 var databaseName = 'shadowbrook-db-${environment}'
 
 // Azure SQL Server
-resource sqlServer 'Microsoft.Sql/servers@2023-08-01-preview' = {
+resource sqlServer 'Microsoft.Sql/servers@2023-08-01' = {
   name: sqlServerName
   location: location
   properties: {
@@ -33,7 +33,7 @@ resource sqlServer 'Microsoft.Sql/servers@2023-08-01-preview' = {
 }
 
 // Firewall rule to allow Azure services
-resource allowAzureServices 'Microsoft.Sql/servers/firewallRules@2023-08-01-preview' = {
+resource allowAzureServices 'Microsoft.Sql/servers/firewallRules@2023-08-01' = {
   parent: sqlServer
   name: 'AllowAzureServices'
   properties: {
@@ -43,7 +43,7 @@ resource allowAzureServices 'Microsoft.Sql/servers/firewallRules@2023-08-01-prev
 }
 
 // Azure SQL Database - Basic tier (5 DTU, 2GB)
-resource database 'Microsoft.Sql/servers/databases@2023-08-01-preview' = {
+resource database 'Microsoft.Sql/servers/databases@2023-08-01' = {
   parent: sqlServer
   name: databaseName
   location: location

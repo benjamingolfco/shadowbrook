@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { API_BASE } from './api'
 
 interface Course {
   id: string
@@ -28,7 +29,7 @@ export default function TeeSheet() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/courses')
+    fetch(`${API_BASE}/courses`)
       .then(r => r.json())
       .then((data: Course[]) => {
         setCourses(data)
@@ -45,7 +46,7 @@ export default function TeeSheet() {
 
     let cancelled = false
 
-    fetch(`/tee-sheets?courseId=${selectedCourseId}&date=${selectedDate}`)
+    fetch(`${API_BASE}/tee-sheets?courseId=${selectedCourseId}&date=${selectedDate}`)
       .then(async response => {
         if (!response.ok) {
           const errorData = await response.json()

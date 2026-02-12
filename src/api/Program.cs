@@ -8,6 +8,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHealthChecks();
 builder.Services.AddOpenApi();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+        if (origins is { Length: > 0 })
+            policy.WithOrigins(origins).AllowAnyMethod().AllowAnyHeader();
+    });
+});
+
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -39,21 +49,10 @@ else if (app.Environment.EnvironmentName != "Testing")
     db.Database.Migrate();
 }
 
-// Serve static files and SPA fallback for non-Development environments
-if (!app.Environment.IsDevelopment())
-{
-    app.UseDefaultFiles();
-    app.UseStaticFiles();
-}
+app.UseCors();
 
 app.MapHealthChecks("/health");
 app.MapCourseEndpoints();
 app.MapTeeSheetEndpoints();
-
-// SPA fallback routing for non-Development environments
-if (!app.Environment.IsDevelopment())
-{
-    app.MapFallbackToFile("index.html");
-}
 
 app.Run();

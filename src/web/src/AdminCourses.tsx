@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { API_BASE } from './api'
 
 interface Course {
   id: string
@@ -24,7 +25,7 @@ export default function AdminCourses() {
 
   async function fetchCourses() {
     try {
-      const response = await fetch('/courses')
+      const response = await fetch(`${API_BASE}/courses`)
       if (!response.ok) {
         throw new Error('Failed to fetch courses')
       }

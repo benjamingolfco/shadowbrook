@@ -1,27 +1,8 @@
-# Multi-stage Dockerfile for Shadowbrook dev environment
-# Builds React frontend and .NET API in a single container
+# Dockerfile for Shadowbrook API
+# API-only — frontend deploys separately via Azure Static Web Apps
 
-# Stage 1: Build React frontend
-FROM node:22-alpine AS frontend-build
-WORKDIR /app/web
-
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Copy package files
-COPY src/web/package.json src/web/pnpm-lock.yaml ./
-
-# Install dependencies
-RUN pnpm install --frozen-lockfile
-
-# Copy frontend source
-COPY src/web/ ./
-
-# Build frontend
-RUN pnpm build
-
-# Stage 2: Build .NET API
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS api-build
+# Stage 1: Build .NET API
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /app
 
 # Copy project files
@@ -35,25 +16,20 @@ COPY src/api/ ./
 RUN dotnet publish Shadowbrook.Api.csproj \
     -c Release \
     -o /app/publish \
-    --self-contained false \
-    --no-restore
+    --self-contained false
 
-# Stage 3: Final runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
+# Stage 2: Final runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
 # Install curl for health checks
-RUN apk add --no-cache curl
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
 # Copy published API
-COPY --from=api-build /app/publish .
-
-# Copy frontend build to wwwroot
-COPY --from=frontend-build /app/web/dist ./wwwroot
+COPY --from=build /app/publish .
 
 # Create non-root user
-RUN addgroup -g 1000 appuser && \
-    adduser -u 1000 -G appuser -s /bin/sh -D appuser && \
+RUN useradd -r -s /bin/false appuser && \
     chown -R appuser:appuser /app
 
 USER appuser

@@ -1,5 +1,5 @@
-// Azure Container Apps Bicep module
-// Creates Container Apps Environment and Container App
+// Azure Container App Bicep module
+// Deploys a Container App into an existing Container Apps Environment
 
 @description('Environment name (dev, staging, prod)')
 param environment string
@@ -7,8 +7,14 @@ param environment string
 @description('Azure region for resources')
 param location string
 
-@description('Azure Container Registry name')
-param acrName string
+@description('Resource ID of the Container Apps Environment')
+param containerAppEnvId string
+
+@description('Container registry login server URL (e.g., myregistry.azurecr.io)')
+param containerRegistryLoginServer string
+
+@description('Resource ID of the user-assigned managed identity for ACR pull')
+param userAssignedIdentityId string
 
 @description('Container image tag')
 param imageTag string
@@ -17,45 +23,14 @@ param imageTag string
 @secure()
 param sqlConnectionString string
 
-// Resource names
-var containerAppEnvName = 'shadowbrook-env-${environment}'
 var containerAppName = 'shadowbrook-app-${environment}'
-var logAnalyticsName = 'shadowbrook-logs-${environment}'
-
-// Log Analytics Workspace (required for Container Apps)
-resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
-  name: logAnalyticsName
-  location: location
-  properties: {
-    sku: {
-      name: 'PerGB2018'
-    }
-    retentionInDays: 30
-  }
-}
-
-// Container Apps Environment
-resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
-  name: containerAppEnvName
-  location: location
-  properties: {
-    appLogsConfiguration: {
-      destination: 'log-analytics'
-      logAnalyticsConfiguration: {
-        customerId: logAnalytics.properties.customerId
-        sharedKey: logAnalytics.listKeys().primarySharedKey
-      }
-    }
-    zoneRedundant: false
-  }
-}
 
 // Container App
-resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
+resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
   name: containerAppName
   location: location
   properties: {
-    managedEnvironmentId: containerAppEnv.id
+    environmentId: containerAppEnvId
     configuration: {
       ingress: {
         external: true
@@ -65,8 +40,8 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       }
       registries: [
         {
-          server: '${acrName}.azurecr.io'
-          identity: 'system'
+          server: containerRegistryLoginServer
+          identity: userAssignedIdentityId
         }
       ]
       secrets: [
@@ -80,7 +55,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       containers: [
         {
           name: 'shadowbrook-api'
-          image: '${acrName}.azurecr.io/shadowbrook:${imageTag}'
+          image: '${containerRegistryLoginServer}/shadowbrook:${imageTag}'
           resources: {
             cpu: json('0.25')
             memory: '0.5Gi'
@@ -140,11 +115,14 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
     }
   }
   identity: {
-    type: 'SystemAssigned'
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${userAssignedIdentityId}': {}
+    }
   }
 }
 
 // Outputs
 output appUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'
 output containerAppName string = containerApp.name
-output containerAppEnvName string = containerAppEnv.name
+output containerAppEnvId string = containerAppEnvId
