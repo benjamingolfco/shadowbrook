@@ -18,15 +18,16 @@ builder.Services.AddCors(options =>
     });
 });
 
-if (builder.Environment.IsDevelopment())
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (!string.IsNullOrWhiteSpace(connectionString))
 {
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseSqlite("Data Source=shadowbrook.db"));
+        options.UseSqlServer(connectionString));
 }
 else
 {
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+        options.UseSqlite("Data Source=shadowbrook.db"));
 }
 
 builder.Services.AddScoped<ITextMessageService, ConsoleTextMessageService>();
@@ -34,19 +35,16 @@ builder.Services.AddScoped<ITextMessageService, ConsoleTextMessageService>();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
-{
     app.MapOpenApi();
 
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.EnsureCreated();
-}
-else if (app.Environment.EnvironmentName != "Testing")
+if (app.Environment.EnvironmentName != "Testing")
 {
-    // Apply migrations in non-Development/non-Testing environments (Azure)
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
+    if (!string.IsNullOrWhiteSpace(app.Configuration.GetConnectionString("DefaultConnection")))
+        db.Database.Migrate();
+    else
+        db.Database.EnsureCreated();
 }
 
 app.UseCors();
