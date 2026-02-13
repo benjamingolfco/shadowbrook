@@ -1,13 +1,12 @@
 # Deploy to Dev Environment
 #
-# Orchestrates infrastructure, API, and web deployments to dev.
+# Orchestrates API and web deployments to dev.
 # Runs on push to main or manual trigger. Only deploys what changed
 # (workflow_dispatch always deploys everything).
-# CI already passed on the PR before merging to main.
+# Infrastructure is deployed separately via deploy-infra.yml.
 #
 # Required GitHub Secrets:
 #   - AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (OIDC login)
-#   - SQL_ADMIN_LOGIN, SQL_ADMIN_PASSWORD (Bicep infra)
 #   - AZURE_STATIC_WEB_APPS_API_TOKEN (SWA deployment token)
 
 name: Deploy Dev
@@ -33,7 +32,6 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      infra: ${{ steps.filter.outputs.infra }}
       api: ${{ steps.filter.outputs.api }}
       web: ${{ steps.filter.outputs.web }}
     steps:
@@ -45,33 +43,17 @@ jobs:
         uses: dorny/paths-filter@v3
         with:
           filters: |
-            infra:
-              - 'infra/bicep/**'
             api:
               - 'src/api/**'
             web:
               - 'src/web/**'
 
   # ============================================================
-  # Deploy infrastructure (if Bicep files changed or manual)
-  # ============================================================
-  infra:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.infra == 'true' || github.event_name == 'workflow_dispatch'
-    uses: ./.github/workflows/deploy-infra.yml
-    with:
-      environment: dev
-    secrets: inherit
-
-  # ============================================================
   # Deploy API (if API files changed or manual)
   # ============================================================
   api:
-    needs: [detect-changes, infra]
-    if: |
-      !cancelled() &&
-      (needs.detect-changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch') &&
-      (needs.infra.result == 'success' || needs.infra.result == 'skipped')
+    needs: detect-changes
+    if: needs.detect-changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/deploy-api.yml
     with:
       environment: dev

@@ -1,14 +1,24 @@
-# Reusable — Deploy Bicep Infrastructure
+# Deploy Bicep Infrastructure
 #
 # Subscription-level deployment (Bicep creates resource groups):
 #   1. Shared infrastructure (ACR) → shadowbrook-shared-rg
 #   2. Environment infrastructure  → shadowbrook-{env}-rg
 #
-# Called by deploy-dev.yml (and future staging/prod orchestrators).
+# Triggered manually or called by other workflows.
 
 name: Deploy Infrastructure
 
 on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment (dev, staging, prod)'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
   workflow_call:
     inputs:
       environment:
@@ -16,13 +26,14 @@ on:
         required: true
         type: string
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   deploy:
     name: Deploy Bicep (${{ inputs.environment }})
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
     env:
       LOCATION: eastus2
     steps:
