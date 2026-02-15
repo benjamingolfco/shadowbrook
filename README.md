@@ -4,6 +4,11 @@ Tee time booking platform for golf courses.
 
 > Private repository — [BenjaminGolfCo](https://github.com/benjamingolfco)
 
+## Live Environment (Dev)
+
+- **Frontend:** https://purple-glacier-073a0390f.2.azurestaticapps.net
+- **Backend API:** https://shadowbrook-app-dev.blackisland-89946fd2.eastus2.azurecontainerapps.io
+
 ## Tech Stack
 
 - **Backend:** .NET 10 Web API with EF Core 10 (Azure SQL)
