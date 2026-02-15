@@ -23,6 +23,9 @@ param imageTag string
 @secure()
 param sqlConnectionString string
 
+@description('Allowed CORS origin (e.g., https://my-swa.azurestaticapps.net)')
+param corsOrigin string
+
 var containerAppName = 'shadowbrook-app-${environment}'
 
 // Container App
@@ -68,6 +71,10 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
             {
               name: 'ConnectionStrings__DefaultConnection'
               secretRef: 'sql-connection-string'
+            }
+            {
+              name: 'Cors__AllowedOrigins__0'
+              value: corsOrigin
             }
           ]
           probes: [

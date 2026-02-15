@@ -340,6 +340,8 @@ If no technical plan exists (e.g., a well-defined bug or a simple task the PM ro
 
 ### Create a Branch
 
+**Agents must always work on branches and create PRs. Never commit directly to main.**
+
 Use the `issue/<number>-description` convention:
 ```bash
 git checkout -b issue/{number}-{short-description}
