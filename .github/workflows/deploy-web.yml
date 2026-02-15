@@ -77,6 +77,7 @@ jobs:
         run: pnpm --dir src/web build
 
       - name: Deploy to Static Web App
+        id: swa-deploy
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
@@ -85,3 +86,7 @@ jobs:
           app_location: src/web/dist
           output_location: ""
           skip_app_build: true
+
+      - name: Add URL to summary
+        if: inputs.action == 'upload'
+        run: echo "### 🌐 Web App URL" >> "$GITHUB_STEP_SUMMARY" && echo "${{ steps.swa-deploy.outputs.static_web_app_url }}" >> "$GITHUB_STEP_SUMMARY"

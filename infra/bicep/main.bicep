@@ -141,6 +141,7 @@ module containerApp 'modules/container-app.bicep' = {
     userAssignedIdentityId: managedIdentity.outputs.id
     imageTag: imageTag
     sqlConnectionString: 'Server=tcp:${database.outputs.sqlServerFqdn},1433;Initial Catalog=${database.outputs.databaseName};Persist Security Info=False;User ID=${sqlAdminLogin};Password=${sqlAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+    corsOrigin: 'https://${staticWebApp.outputs.defaultHostname}'
   }
 }
 
