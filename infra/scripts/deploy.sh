@@ -63,10 +63,21 @@ if [ -z "$WHAT_IF_FLAG" ]; then
   fi
 fi
 
-# Step 2: Deploy environment infrastructure (creates RG + all env resources)
+# Step 2: Preserve running container image (avoid clobbering with placeholder)
+CONTAINER_APP_NAME="shadowbrook-app-${ENVIRONMENT}"
+RESOURCE_GROUP="shadowbrook-${ENVIRONMENT}-rg"
+IMAGE_TAG=$(az containerapp show \
+  --name "$CONTAINER_APP_NAME" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query "properties.template.containers[0].image" \
+  --output tsv 2>/dev/null | sed 's/.*://' || echo "latest")
+echo "==> Using image tag: $IMAGE_TAG"
+
+# Step 3: Deploy environment infrastructure (creates RG + all env resources)
 echo "==> Deploying $ENVIRONMENT environment..."
 az deployment sub create \
   --name "shadowbrook-${ENVIRONMENT}" \
   --location "$LOCATION" \
   --parameters "$BICEP_DIR/parameters.${ENVIRONMENT}.bicepparam" \
+  --parameters imageTag="$IMAGE_TAG" \
   $WHAT_IF_FLAG

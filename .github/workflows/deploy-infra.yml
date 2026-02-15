@@ -54,6 +54,18 @@ jobs:
             --location ${{ env.LOCATION }} \
             --parameters infra/bicep/parameters.shared.bicepparam
 
+      - name: Get current container image tag
+        id: current-image
+        run: |
+          TAG=$(az containerapp show \
+            --name "shadowbrook-app-${{ inputs.environment }}" \
+            --resource-group "shadowbrook-${{ inputs.environment }}-rg" \
+            --query "properties.template.containers[0].image" \
+            --output tsv 2>/dev/null \
+            | sed 's/.*://')
+          echo "tag=${TAG:-latest}" >> "$GITHUB_OUTPUT"
+          echo "Using image tag: ${TAG:-latest}"
+
       - name: Deploy environment infrastructure
         env:
           SQL_ADMIN_LOGIN: ${{ secrets.SQL_ADMIN_LOGIN }}
@@ -62,4 +74,5 @@ jobs:
           az deployment sub create \
             --name "shadowbrook-${{ inputs.environment }}" \
             --location ${{ env.LOCATION }} \
-            --parameters infra/bicep/parameters.${{ inputs.environment }}.bicepparam
+            --parameters infra/bicep/parameters.${{ inputs.environment }}.bicepparam \
+            --parameters imageTag=${{ steps.current-image.outputs.tag }}
