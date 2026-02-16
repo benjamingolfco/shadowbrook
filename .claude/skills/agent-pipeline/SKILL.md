@@ -371,6 +371,51 @@ Then proceed to the standard handback (Step 4 above).
 
 ---
 
+## UX Designer Workflow
+
+The UX Designer follows a specific workflow between context gathering and handback.
+
+### Explore Existing UX Patterns
+
+Before writing any interaction spec, explore the codebase:
+
+1. Check existing pages and components with Glob (`src/web/src/features/*/pages/`, `src/web/src/components/`)
+2. Read existing UI code to understand current interaction patterns
+3. Check which shadcn/ui components are installed (`src/web/src/components/ui/`)
+4. Read the project principles in CLAUDE.md (especially "Zero Training Required")
+
+### Post the Interaction Spec
+
+Post a **Work Output** comment (pattern #3) with this structure:
+
+```markdown
+### 🎯 UX Designer — Interaction Spec for #{number}
+
+## User Flow
+[Step-by-step description of what the user does and sees]
+
+## Page/Component Breakdown
+[What's on the page, how it's laid out, which shadcn/ui components to use]
+
+## States
+- **Loading:** [what the user sees while data loads]
+- **Empty:** [what the user sees when there's no data]
+- **Error:** [what the user sees when something fails]
+- **Success:** [confirmation behavior after an action]
+
+## Responsive Behavior
+[How the layout adapts from mobile to desktop]
+
+## Accessibility
+[Keyboard navigation, focus management, screen reader notes]
+```
+
+Omit sections that are not applicable.
+
+Then proceed to the standard handback (Step 4 above).
+
+---
+
 ## Review Agent Workflow
 
 The Code Reviewer follows a specific workflow between context gathering and handback.
