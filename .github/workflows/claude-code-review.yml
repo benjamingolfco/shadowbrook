@@ -1,0 +1,66 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    # Cancel stale reviews when new commits are pushed
+    concurrency:
+      group: review-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Check if PR is agentic
+        id: check-agentic
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          LABELS=$(gh pr view ${{ github.event.pull_request.number }} --json labels --jq '.labels[].name')
+          if echo "$LABELS" | grep -q "^agentic$"; then
+            echo "agentic=true" >> $GITHUB_OUTPUT
+          else
+            echo "agentic=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run Code Reviewer
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ steps.app-token.outputs.token }}
+          allowed_bots: "benjamingolfco-claude-agent[bot]"
+          additional_permissions: |
+            actions: read
+          claude_args: |
+            --model claude-sonnet-4-5-20250929 --allowedTools "Bash" "Read" "Write" "Edit" "Glob" "Grep"
+          prompt: |
+            Read and follow .claude/agents/reviewer.md for your role.
+            Review PR #${{ github.event.pull_request.number }}
+
+            Title: ${{ github.event.pull_request.title }}
+            Agentic: ${{ steps.check-agentic.outputs.agentic }}
+
+            If Agentic is true:
+            - Use `gh pr review --request-changes` when issues are found
+            - Use `gh pr review --comment` when the review passes
+            If Agentic is false:
+            - Always use `gh pr review --comment` (never request-changes)
