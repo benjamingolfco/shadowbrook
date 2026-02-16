@@ -14,9 +14,24 @@ public class CoursePricingTests : IClassFixture<TestWebApplicationFactory>
 
     private async Task<Guid> CreateCourse()
     {
-        var response = await _client.PostAsJsonAsync("/courses", new { Name = "Test Course" });
+        var tenantId = await CreateTestTenantAsync();
+        var response = await _client.PostAsJsonAsync("/courses", new { TenantId = tenantId, Name = "Test Course" });
         var course = await response.Content.ReadFromJsonAsync<CourseResponse>();
         return course!.Id;
+    }
+
+    private async Task<Guid> CreateTestTenantAsync()
+    {
+        var response = await _client.PostAsJsonAsync("/tenants", new
+        {
+            OrganizationName = $"Test Tenant {Guid.NewGuid()}",
+            ContactName = "Test Contact",
+            ContactEmail = "test@tenant.com",
+            ContactPhone = "555-0000"
+        });
+
+        var tenant = await response.Content.ReadFromJsonAsync<TenantResponse>();
+        return tenant!.Id;
     }
 
     // AC 1-2: Setting and updating pricing
@@ -177,6 +192,7 @@ public class CoursePricingTests : IClassFixture<TestWebApplicationFactory>
     }
 
     private record CourseResponse(Guid Id, string Name);
+    private record TenantResponse(Guid Id);
     private record PricingResponse(decimal FlatRatePrice);
     private record ErrorResponse(string Error);
 }

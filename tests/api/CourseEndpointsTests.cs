@@ -17,7 +17,8 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task GetAllCourses_ReturnsOk()
     {
-        await _client.PostAsJsonAsync("/courses", new { Name = "Test Course" });
+        var tenantId = await CreateTestTenantAsync();
+        await _client.PostAsJsonAsync("/courses", new { TenantId = tenantId, Name = "Test Course" });
 
         var response = await _client.GetAsync("/courses");
 
@@ -31,7 +32,8 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task GetCourseById_WhenExists_ReturnsOk()
     {
-        var createResponse = await _client.PostAsJsonAsync("/courses", new { Name = "Lookup Course" });
+        var tenantId = await CreateTestTenantAsync();
+        var createResponse = await _client.PostAsJsonAsync("/courses", new { TenantId = tenantId, Name = "Lookup Course" });
         var created = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
         var response = await _client.GetAsync($"/courses/{created!.Id}");
@@ -53,8 +55,10 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task PostCourse_ReturnsCreated()
     {
+        var tenantId = await CreateTestTenantAsync();
         var request = new
         {
+            TenantId = tenantId,
             Name = "Braemar Golf Course",
             StreetAddress = "6364 John Harris Dr",
             City = "Edina",
@@ -84,6 +88,20 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    private async Task<Guid> CreateTestTenantAsync()
+    {
+        var response = await _client.PostAsJsonAsync("/tenants", new
+        {
+            OrganizationName = $"Test Tenant {Guid.NewGuid()}",
+            ContactName = "Test Contact",
+            ContactEmail = "test@tenant.com",
+            ContactPhone = "555-0000"
+        });
+
+        var tenant = await response.Content.ReadFromJsonAsync<TenantResponse>();
+        return tenant!.Id;
+    }
+
     private record CourseResponse(
         Guid Id,
         string Name,
@@ -95,4 +113,6 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
         string? ContactPhone,
         DateTimeOffset CreatedAt,
         DateTimeOffset UpdatedAt);
+
+    private record TenantResponse(Guid Id);
 }

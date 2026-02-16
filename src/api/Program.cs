@@ -61,6 +61,7 @@ if (app.Environment.EnvironmentName != "Testing")
 app.UseCors();
 
 app.MapHealthChecks("/health");
+app.MapTenantEndpoints();
 app.MapCourseEndpoints();
 app.MapTeeSheetEndpoints();
 

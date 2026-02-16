@@ -10,12 +10,23 @@ public class ApplicationDbContext : DbContext
     {
     }
 
+    public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<Booking> Bookings => Set<Booking>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Tenant>()
+            .HasIndex(t => t.OrganizationName)
+            .IsUnique();
+
+        modelBuilder.Entity<Course>()
+            .HasOne(c => c.Tenant)
+            .WithMany(t => t.Courses)
+            .HasForeignKey(c => c.TenantId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Booking>()
             .HasOne(b => b.Course)
