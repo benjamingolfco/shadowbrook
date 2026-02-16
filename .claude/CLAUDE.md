@@ -105,7 +105,6 @@ Notes:
 | `agent/ux-designer` | Assign issue to UX Designer agent |
 | `agent/backend-developer` | Assign issue to Backend Developer agent |
 | `agent/frontend-developer` | Assign issue to Frontend Developer agent |
-| `agent/reviewer` | Assign issue to Code Reviewer agent |
 | `agent/devops` | Assign issue to DevOps Engineer agent |
 
 Apply audience labels based on who benefits — many features get **both** `golfers love` and `course operators love` (see "Features Both Golfers AND Courses Will Love" in the roadmap). Always apply exactly one version label (`v1`, `v2`, or `v3`) based on the roadmap tier. The `agentic` label opts an issue into the automated pipeline — without it, agents ignore the issue. Agent `agent/*` labels are managed by the pipeline — see below.
@@ -114,6 +113,6 @@ Apply audience labels based on who benefits — many features get **both** `golf
 
 This project uses an automated multi-agent pipeline via GitHub Actions. See `.claude/skills/agent-pipeline/SKILL.md` for the full protocol.
 
-- **Workflow files:** `.github/workflows/claude-pm.yml` (orchestrator), `.github/workflows/claude-agents.yml` (dispatch)
+- **Workflow files:** `.github/workflows/claude-pm.yml` (orchestrator), `.github/workflows/claude-agents.yml` (dispatch), `.github/workflows/claude-code-review.yml` (standalone code review on all PRs)
 - **Agent definitions:** `.claude/agents/*.md`
 - **Pipeline statuses:** Triage → Needs Story → **Story Review** (owner gate) → Needs Architecture → **Architecture Review** (owner gate) → Ready → Implementing → CI Pending → In Review → Changes Requested → **Ready to Merge** (owner gate) → Done
