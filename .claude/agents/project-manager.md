@@ -299,10 +299,11 @@ When a PR is merged (`pull_request` closed with `merged: true`):
 
 On scheduled runs (every 6 hours UTC — 6am, noon, 6pm, midnight CST):
 
-**Morning standup (first run of the day only — 6am CST / 12:00 UTC):** Post a daily summary comment on the pinned standup issue #144. The summary should cover:
+**Morning standup (first run of the day only — 6am CST / 12:00 UTC):** Update the **body** of the pinned standup issue #144 with the latest pipeline summary. Editing the body keeps the summary visible at the top of the issue.
 
-```markdown
-### 📋 Daily Pipeline Standup — {date}
+```bash
+gh issue edit 144 --body "$(cat <<'STANDUP'
+## 📋 Daily Pipeline Standup — {date}
 
 **Needs Your Attention ({count}):**
 - #{number} — {title} — **{status}** since {date}
@@ -317,10 +318,12 @@ On scheduled runs (every 6 hours UTC — 6am, noon, 6pm, midnight CST):
 - #{number} — {title} — merged {date}
 
 ---
-_Run: [#N](link)_
+_Last updated: {timestamp} · Run: [#N](link)_
+STANDUP
+)"
 ```
 
-Omit sections with zero items. "Needs Your Attention" includes issues assigned to `@aarongbenjamin` (Story Review, Architecture Review, Ready to Merge, Awaiting Owner). To determine if this is the first run of the day, check the most recent comment on #144 — if it was posted today, skip the standup.
+Omit sections with zero items. "Needs Your Attention" includes issues assigned to `@aarongbenjamin` (Story Review, Architecture Review, Ready to Merge, Awaiting Owner). To determine if this is the first run of the day, read the issue body — if the date in the heading matches today, skip the standup.
 
 **Stalled work:** Scan issues with `agent/*` labels. If no agent comment within 24h, post a ping and retrigger by removing/re-adding the label.
 
