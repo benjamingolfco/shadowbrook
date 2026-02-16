@@ -26,6 +26,9 @@ param sqlConnectionString string
 @description('Allowed CORS origin (e.g., https://my-swa.azurestaticapps.net)')
 param corsOrigin string
 
+@description('Regex pattern for allowed CORS origins (e.g., PR staging URLs). When set, takes precedence over corsOrigin.')
+param corsOriginPattern string = ''
+
 var containerAppName = 'shadowbrook-app-${environment}'
 
 // Container App
@@ -75,6 +78,10 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
             {
               name: 'Cors__AllowedOrigins__0'
               value: corsOrigin
+            }
+            {
+              name: 'Cors__AllowedOriginPattern'
+              value: corsOriginPattern
             }
           ]
           probes: [

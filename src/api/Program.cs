@@ -13,8 +13,19 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
     {
         var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
-        if (origins is { Length: > 0 })
+        var originPattern = builder.Configuration["Cors:AllowedOriginPattern"];
+
+        if (!string.IsNullOrEmpty(originPattern))
+        {
+            var regex = new System.Text.RegularExpressions.Regex(originPattern);
+            policy.SetIsOriginAllowed(origin => regex.IsMatch(origin))
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        }
+        else if (origins is { Length: > 0 })
+        {
             policy.WithOrigins(origins).AllowAnyMethod().AllowAnyHeader();
+        }
     });
 });
 
