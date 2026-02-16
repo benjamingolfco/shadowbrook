@@ -6,7 +6,7 @@ user-invocable: false
 
 # Agent Pipeline Protocol
 
-Multi-agent system for automating the Shadowbrook development workflow on GitHub Actions. A **Product Manager (PM) orchestrator** routes work to **specialist agents** via labels, tracks status via GitHub Project fields, and manages state via a PM status comment on each issue.
+Multi-agent system for automating the Shadowbrook development workflow on GitHub Actions. A **Project Manager (PM) orchestrator** routes work to **specialist agents** via labels, tracks status via GitHub Project fields, and manages state via a PM status comment on each issue.
 
 This skill is the shared contract. Every agent loads it to understand how they communicate, hand off, and escalate.
 
@@ -18,8 +18,9 @@ Labels are the routing mechanism. The PM adds a label to assign work; the agent 
 |-------|-------|----------------|
 | `agent/business-analyst` | Business Analyst | Refines stories, defines acceptance criteria |
 | `agent/architect` | Architect | Plans technical approach, selects patterns |
-| `agent/backend` | Backend Developer | Implements .NET API code |
-| `agent/frontend` | Frontend Developer | Implements React UI code |
+| `agent/backend-developer` | Backend Developer | Implements .NET API code |
+| `agent/frontend-developer` | Frontend Developer | Implements React UI code |
+| `agent/ux-designer` | UX Designer | Designs interaction specs for UI stories |
 | `agent/reviewer` | Code Reviewer | Reviews PRs against project standards |
 | `agent/devops` | DevOps Engineer | Infrastructure, GitHub Actions, scripts, deployment |
 
@@ -53,12 +54,12 @@ The pipeline pauses at three checkpoints for product owner review. The PM sets t
 
 After the BA refines the user story and acceptance criteria, the PM sets status to **Story Review** and tags the product owner. The owner reviews the story for completeness, correctness, and alignment with product goals.
 
-- **Owner approves:** Comments with approval (e.g., "story approved", "looks good", "approved"). PM advances to **Needs Architecture** and assigns the architect.
+- **Owner approves:** Comments with approval (e.g., "story approved", "looks good", "approved"). PM advances to **Needs Architecture**. If the story involves UI changes, PM assigns both the Architect (`agent/architect`) and UX Designer (`agent/ux-designer`) in parallel. If backend-only, PM assigns only the Architect.
 - **Owner requests changes:** Comments with feedback. PM sets status back to **Needs Story** and re-assigns the BA with the owner's feedback.
 
 ### Gate 2: Architecture Review
 
-After the Architect posts the technical plan, the PM sets status to **Architecture Review** and tags the product owner. The owner reviews the plan for alignment with product goals, scope, and technical direction.
+After the Architect posts the technical plan (and the UX Designer posts the interaction spec, if dispatched), the PM sets status to **Architecture Review** and tags the product owner. The owner reviews the plan (and spec) for alignment with product goals, scope, and technical direction.
 
 - **Owner approves:** Comments with approval. PM advances to **Ready**.
 - **Owner requests changes:** Comments with feedback. PM sets status back to **Needs Architecture** and re-assigns the architect with the owner's feedback.
@@ -86,9 +87,10 @@ Every comment heading starts with the agent's role icon:
 
 | Icon | Role |
 |------|------|
-| 📋 | Product Manager |
+| 📋 | Project Manager |
 | 📝 | Business Analyst |
 | 🏗️ | Architect |
+| 🎯 | UX Designer |
 | ⚙️ | Backend Developer |
 | 🎨 | Frontend Developer |
 | 🔍 | Code Reviewer |
@@ -101,7 +103,7 @@ Every comment heading starts with the agent's role icon:
 Used exclusively by the PM when the product owner needs to take action. The `> **Action Required**` callout and `@aarongbenjamin` @mention must be present so the owner gets notified.
 
 ```markdown
-### 📋 Product Manager → @aarongbenjamin
+### 📋 Project Manager → @aarongbenjamin
 
 > **Action Required:** Review the user story and comment to approve or request changes.
 
@@ -118,7 +120,7 @@ _Run: [#91](https://github.com/org/repo/actions/runs/12345)_
 Use when handing work back to the PM for routing. No `Action Required` — the PM handles this automatically.
 
 ```markdown
-### 📝 Business Analyst → Product Manager
+### 📝 Business Analyst → Project Manager
 
 Refined user story for #6 with comprehensive acceptance criteria.
 
@@ -152,7 +154,7 @@ _Run: [#93](https://github.com/org/repo/actions/runs/12345)_
 Use when the PM routes work to a specialist agent. The agent is triggered by the label, not the comment — the comment is for the audit trail.
 
 ```markdown
-### 📋 Product Manager → Backend Developer
+### 📋 Project Manager → Backend Developer
 
 Owner approved the technical plan. Implement the flat-rate pricing feature following the architect's design.
 
@@ -234,7 +236,8 @@ All routing flows through the PM. Agents **never** hand off directly to other ag
 5. PM updates the project status field and edits the PM status comment.
 6. PM determines the next step:
    - **BA hands back** → PM sets status to **Story Review** and tags the product owner for review. Does **not** assign the next agent yet.
-   - **Architect hands back** → PM sets status to **Architecture Review** and tags the product owner for review. Does **not** assign the next agent yet.
+   - **Architect hands back** → If UX Designer was also dispatched, PM checks if UX Designer has also handed back. If both done: set status to **Architecture Review** and tag the product owner. If UX still working: update PM status comment, wait. If UX was not dispatched: set status to **Architecture Review** and tag the product owner. Does **not** assign the next agent yet.
+   - **UX Designer hands back** → PM checks if Architect has also handed back. If both done: set status to **Architecture Review** and tag the product owner. If Architect still working: update PM status comment, wait. Does **not** assign the next agent yet.
    - **Owner approves** (on Story Review or Architecture Review) → PM advances to the next phase and assigns the next agent.
    - **Implementation agent hands back** → PM sets status to **CI Pending** and monitors the PR.
    - **Code reviewer hands back** → PM publishes PR if approved, or re-assigns implementation agent if changes requested.
@@ -273,7 +276,7 @@ Each round-trip through PM counts toward the **3 round-trip limit** (see Escalat
 
 ## Specialist Agent Workflow
 
-Every specialist agent (BA, Architect, Backend, Frontend, DevOps, Reviewer) follows this workflow when triggered. Agent-specific expertise and implementation details live in the agent file; the process lives here.
+Every specialist agent (BA, Architect, UX Designer, Backend Developer, Frontend Developer, DevOps, Reviewer) follows this workflow when triggered. Agent-specific expertise and implementation details live in the agent file; the process lives here.
 
 ### Trigger
 
@@ -301,7 +304,7 @@ If requirements, acceptance criteria, or the technical plan are insufficient for
 
 When your work is complete (or you need to escalate), **always** do all three of these:
 
-1. **Post a Handback comment** (pattern #2 from Comment Format) summarizing what you did. Use your role icon and `→ Product Manager` in the heading. Include the run link footer.
+1. **Post a Handback comment** (pattern #2 from Comment Format) summarizing what you did. Use your role icon and `→ Project Manager` in the heading. Include the run link footer.
 
 2. **If you also produced a deliverable** (technical plan, story refinement, code review), post it as a separate **Work Output** comment (pattern #3) before the handback.
 
@@ -363,6 +366,51 @@ gh pr create --label "agentic" --title "{short title}" --body "Closes #{number}
 
 {summary of changes}"
 ```
+
+Then proceed to the standard handback (Step 4 above).
+
+---
+
+## UX Designer Workflow
+
+The UX Designer follows a specific workflow between context gathering and handback.
+
+### Explore Existing UX Patterns
+
+Before writing any interaction spec, explore the codebase:
+
+1. Check existing pages and components with Glob (`src/web/src/features/*/pages/`, `src/web/src/components/`)
+2. Read existing UI code to understand current interaction patterns
+3. Check which shadcn/ui components are installed (`src/web/src/components/ui/`)
+4. Read the project principles in CLAUDE.md (especially "Zero Training Required")
+
+### Post the Interaction Spec
+
+Post a **Work Output** comment (pattern #3) with this structure:
+
+```markdown
+### 🎯 UX Designer — Interaction Spec for #{number}
+
+## User Flow
+[Step-by-step description of what the user does and sees]
+
+## Page/Component Breakdown
+[What's on the page, how it's laid out, which shadcn/ui components to use]
+
+## States
+- **Loading:** [what the user sees while data loads]
+- **Empty:** [what the user sees when there's no data]
+- **Error:** [what the user sees when something fails]
+- **Success:** [confirmation behavior after an action]
+
+## Responsive Behavior
+[How the layout adapts from mobile to desktop]
+
+## Accessibility
+[Keyboard navigation, focus management, screen reader notes]
+```
+
+Omit sections that are not applicable.
 
 Then proceed to the standard handback (Step 4 above).
 

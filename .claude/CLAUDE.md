@@ -102,8 +102,9 @@ Notes:
 | `agentic` | Issue is managed by the automated agent pipeline (required for agents to process it) |
 | `agent/business-analyst` | Assign issue to Business Analyst agent |
 | `agent/architect` | Assign issue to Architect agent |
-| `agent/backend` | Assign issue to Backend Developer agent |
-| `agent/frontend` | Assign issue to Frontend Developer agent |
+| `agent/ux-designer` | Assign issue to UX Designer agent |
+| `agent/backend-developer` | Assign issue to Backend Developer agent |
+| `agent/frontend-developer` | Assign issue to Frontend Developer agent |
 | `agent/reviewer` | Assign issue to Code Reviewer agent |
 | `agent/devops` | Assign issue to DevOps Engineer agent |
 
