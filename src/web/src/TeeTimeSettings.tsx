@@ -32,9 +32,10 @@ export default function TeeTimeSettings() {
       .then(r => r.json())
       .then((data: Course[]) => {
         setCourses(data)
-        if (data.length > 0) {
-          setForm(prev => ({ ...prev, courseId: data[0].id }))
-          loadSettings(data[0].id)
+        const firstCourse = data[0]
+        if (firstCourse) {
+          setForm(prev => ({ ...prev, courseId: firstCourse.id }))
+          loadSettings(firstCourse.id)
         }
       })
       .catch(() => setMessage('Error: Could not load courses'))

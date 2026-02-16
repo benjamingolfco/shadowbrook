@@ -33,8 +33,9 @@ export default function TeeSheet() {
       .then(r => r.json())
       .then((data: Course[]) => {
         setCourses(data)
-        if (data.length > 0) {
-          setSelectedCourseId(data[0].id)
+        const firstCourse = data[0]
+        if (firstCourse) {
+          setSelectedCourseId(firstCourse.id)
         }
       })
       .catch(() => setError('Error: Could not load courses'))
@@ -166,17 +167,23 @@ export default function TeeSheet() {
 
 function getTodayDate(): string {
   const today = new Date()
-  return today.toISOString().split('T')[0]
+  const isoString = today.toISOString().split('T')[0]
+  return isoString ?? ''
 }
 
 function formatDate(dateString: string): string {
-  const [year, month, day] = dateString.split('-').map(Number)
+  const parts = dateString.split('-').map(Number)
+  const year = parts[0] ?? 0
+  const month = parts[1] ?? 0
+  const day = parts[2] ?? 0
   const date = new Date(year, month - 1, day)
   return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 }
 
 function formatTime(timeString: string): string {
-  const [hours, minutes] = timeString.split(':')
+  const parts = timeString.split(':')
+  const hours = parts[0] ?? '0'
+  const minutes = parts[1] ?? '00'
   const hour = parseInt(hours, 10)
   const ampm = hour >= 12 ? 'PM' : 'AM'
   const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
