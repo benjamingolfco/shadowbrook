@@ -7,6 +7,7 @@ import AdminLayout from '@/components/layout/AdminLayout';
 import OperatorLayout from '@/components/layout/OperatorLayout';
 import GolferLayout from '@/components/layout/GolferLayout';
 import CourseList from '@/features/admin/pages/CourseList';
+import CourseCreate from '@/features/admin/pages/CourseCreate';
 
 function Placeholder({ name }: { name: string }) {
   return (
@@ -50,7 +51,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'courses/new',
-        element: <Placeholder name="Create Course" />,
+        element: <CourseCreate />,
       },
     ],
   },
