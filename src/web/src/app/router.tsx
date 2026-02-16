@@ -10,15 +10,9 @@ import CourseList from '@/features/admin/pages/CourseList';
 import CourseCreate from '@/features/admin/pages/CourseCreate';
 import TeeTimeSettings from '@/features/operator/pages/TeeTimeSettings';
 import TeeSheet from '@/features/operator/pages/TeeSheet';
-
-function Placeholder({ name }: { name: string }) {
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">{name}</h1>
-      <p className="text-muted-foreground">Coming soon</p>
-    </div>
-  );
-}
+import BrowseTeeTimes from '@/features/golfer/pages/BrowseTeeTimes';
+import MyBookings from '@/features/golfer/pages/MyBookings';
+import Profile from '@/features/golfer/pages/Profile';
 
 function RoleRedirect() {
   const { role } = useAuth();
@@ -89,15 +83,15 @@ export const router = createBrowserRouter([
     children: [
       {
         path: 'tee-times',
-        element: <Placeholder name="Browse Tee Times" />,
+        element: <BrowseTeeTimes />,
       },
       {
         path: 'bookings',
-        element: <Placeholder name="My Bookings" />,
+        element: <MyBookings />,
       },
       {
         path: 'profile',
-        element: <Placeholder name="Profile" />,
+        element: <Profile />,
       },
     ],
   },
