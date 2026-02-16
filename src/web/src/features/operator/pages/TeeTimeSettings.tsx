@@ -56,11 +56,11 @@ export default function TeeTimeSettings() {
 
   // When settings load for the selected course, reset the form
   useEffect(() => {
-    if (settingsQuery.data) {
+    if (settingsQuery.data?.firstTeeTime && settingsQuery.data.lastTeeTime) {
       form.reset({
         teeTimeIntervalMinutes: settingsQuery.data.teeTimeIntervalMinutes,
-        firstTeeTime: settingsQuery.data.firstTeeTime.slice(0, 5), // HH:mm format
-        lastTeeTime: settingsQuery.data.lastTeeTime.slice(0, 5), // HH:mm format
+        firstTeeTime: settingsQuery.data.firstTeeTime.slice(0, 5),
+        lastTeeTime: settingsQuery.data.lastTeeTime.slice(0, 5),
       });
     }
   }, [settingsQuery.data, form]);
