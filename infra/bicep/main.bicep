@@ -142,6 +142,8 @@ module containerApp 'modules/container-app.bicep' = {
     imageTag: imageTag
     sqlConnectionString: 'Server=tcp:${database.outputs.sqlServerFqdn},1433;Initial Catalog=${database.outputs.databaseName};Persist Security Info=False;User ID=${sqlAdminLogin};Password=${sqlAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
     corsOrigin: 'https://${staticWebApp.outputs.defaultHostname}'
+    // Match main hostname and PR staging URLs (e.g., <name>-123.<region>.<slot>.azurestaticapps.net)
+    corsOriginPattern: '^https://${split(staticWebApp.outputs.defaultHostname, '.')[0]}(-\\d+)?\\..*\\.azurestaticapps\\.net$'
   }
 }
 
