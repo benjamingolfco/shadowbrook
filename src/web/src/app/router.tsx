@@ -4,20 +4,12 @@ import { createBrowserRouter, Navigate } from 'react-router';
 import { useAuth } from '@/features/auth';
 import AuthGuard from '@/features/auth/components/AuthGuard';
 import RoleGuard from '@/features/auth/components/RoleGuard';
-import AdminLayout from '@/components/layout/AdminLayout';
-import OperatorLayout from '@/components/layout/OperatorLayout';
-import GolferLayout from '@/components/layout/GolferLayout';
 
-// Lazy-loaded pages — each feature is a separate chunk
-const CourseList = lazy(() => import('@/features/admin/pages/CourseList'));
-const CourseCreate = lazy(() => import('@/features/admin/pages/CourseCreate'));
-const TeeSheet = lazy(() => import('@/features/operator/pages/TeeSheet'));
-const TeeTimeSettings = lazy(() => import('@/features/operator/pages/TeeTimeSettings'));
-const BrowseTeeTimes = lazy(() => import('@/features/golfer/pages/BrowseTeeTimes'));
-const MyBookings = lazy(() => import('@/features/golfer/pages/MyBookings'));
-const Profile = lazy(() => import('@/features/golfer/pages/Profile'));
+const AdminFeature = lazy(() => import('@/features/admin'));
+const OperatorFeature = lazy(() => import('@/features/operator'));
+const GolferFeature = lazy(() => import('@/features/golfer'));
 
-function LazyPage({ children }: { children: React.ReactNode }) {
+function LazyFeature({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<div className="p-6 text-muted-foreground">Loading...</div>}>{children}</Suspense>;
 }
 
@@ -39,67 +31,33 @@ export const router = createBrowserRouter([
     element: <RoleRedirect />,
   },
   {
-    path: '/admin',
+    path: '/admin/*',
     element: (
       <AuthGuard>
         <RoleGuard allowedRoles={['admin']}>
-          <AdminLayout />
+          <LazyFeature><AdminFeature /></LazyFeature>
         </RoleGuard>
       </AuthGuard>
     ),
-    children: [
-      {
-        path: 'courses',
-        element: <LazyPage><CourseList /></LazyPage>,
-      },
-      {
-        path: 'courses/new',
-        element: <LazyPage><CourseCreate /></LazyPage>,
-      },
-    ],
   },
   {
-    path: '/operator',
+    path: '/operator/*',
     element: (
       <AuthGuard>
         <RoleGuard allowedRoles={['operator']}>
-          <OperatorLayout />
+          <LazyFeature><OperatorFeature /></LazyFeature>
         </RoleGuard>
       </AuthGuard>
     ),
-    children: [
-      {
-        path: 'tee-sheet',
-        element: <LazyPage><TeeSheet /></LazyPage>,
-      },
-      {
-        path: 'settings',
-        element: <LazyPage><TeeTimeSettings /></LazyPage>,
-      },
-    ],
   },
   {
-    path: '/golfer',
+    path: '/golfer/*',
     element: (
       <AuthGuard>
         <RoleGuard allowedRoles={['golfer']}>
-          <GolferLayout />
+          <LazyFeature><GolferFeature /></LazyFeature>
         </RoleGuard>
       </AuthGuard>
     ),
-    children: [
-      {
-        path: 'tee-times',
-        element: <LazyPage><BrowseTeeTimes /></LazyPage>,
-      },
-      {
-        path: 'bookings',
-        element: <LazyPage><MyBookings /></LazyPage>,
-      },
-      {
-        path: 'profile',
-        element: <LazyPage><Profile /></LazyPage>,
-      },
-    ],
   },
 ]);
