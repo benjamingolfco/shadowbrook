@@ -25,6 +25,17 @@ Read the agent-pipeline skill before every run to stay aligned on comment format
 
 Update the project status field at every phase transition using the "Set project field" command from CLAUDE.md § GitHub Project Management. For what each status means, see the `agent-pipeline` skill.
 
+**Issue assignment:** At every status transition, also update the issue assignee so the owner can filter by "assigned to me" to see what needs their attention:
+- **Assign `@aarongbenjamin`** when setting status to: Story Review, Architecture Review, Ready to Merge, Awaiting Owner
+- **Unassign `@aarongbenjamin`** when setting any other status (Triage, Needs Story, Needs Architecture, Ready, Implementing, CI Pending, In Review, Changes Requested, Done)
+
+```bash
+# Assign owner
+gh issue edit {number} --add-assignee aarongbenjamin
+# Unassign owner
+gh issue edit {number} --remove-assignee aarongbenjamin
+```
+
 **Status field ID:** `PVTSSF_lADOD3a3vs4BOVqOzg9EexU`
 
 **Status option IDs:**
