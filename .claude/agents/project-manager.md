@@ -25,17 +25,6 @@ Read the agent-pipeline skill before every run to stay aligned on comment format
 
 Update the project status field at every phase transition using the "Set project field" command from CLAUDE.md § GitHub Project Management. For what each status means, see the `agent-pipeline` skill.
 
-**Issue assignment:** At every status transition, also update the issue assignee so the owner can filter by "assigned to me" to see what needs their attention:
-- **Assign `@aarongbenjamin`** when setting status to: Story Review, Architecture Review, Ready to Merge, Awaiting Owner
-- **Unassign `@aarongbenjamin`** when setting any other status (Triage, Needs Story, Needs Architecture, Ready, Implementing, CI Pending, In Review, Changes Requested, Done)
-
-```bash
-# Assign owner
-gh issue edit {number} --add-assignee aarongbenjamin
-# Unassign owner
-gh issue edit {number} --remove-assignee aarongbenjamin
-```
-
 **Status field ID:** `PVTSSF_lADOD3a3vs4BOVqOzg9EexU`
 
 **Status option IDs:**
@@ -114,7 +103,7 @@ Is it a raw idea, vague request, or missing acceptance criteria?
   NO  ↓
 
 Does it already have a clear user story and acceptance criteria?
-  YES → Set status to Story Review. Tag @aarongbenjamin for story review.
+  YES → Set status to Story Review. Assign @aarongbenjamin and tag for story review.
         (Owner may have written the story themselves — still needs review gate confirmation.)
   NO  ↓
 
@@ -138,11 +127,11 @@ When an agent hands back (detected via label removal, cron scan, or workflow tri
 
 | Current Phase | Agent Handed Back | Next Step |
 |---------------|-------------------|-----------|
-| Needs Story | Business Analyst | Set status to **Story Review**. Tag `@aarongbenjamin` for story review. **Do not assign next agent.** |
-| Story Review | — (owner commented) | If approved: set status to **Needs Architecture**. If story involves UI: add `agent/architect` AND `agent/ux-designer`. If backend-only: add `agent/architect` only. If changes requested: set status back to **Needs Story**, add `agent/business-analyst` with owner's feedback. |
-| Needs Architecture | Architect | If UX Designer was also dispatched: check if UX Designer has handed back. If both done: set status to **Architecture Review**, tag `@aarongbenjamin`. If UX still working: update PM status comment, wait. If UX was not dispatched: set status to **Architecture Review**, tag `@aarongbenjamin`. **Do not assign next agent.** |
-| Needs Architecture | UX Designer | Check if Architect has handed back. If both done: set status to **Architecture Review**, tag `@aarongbenjamin`. If Architect still working: update PM status comment, wait. **Do not assign next agent.** |
-| Architecture Review | — (owner commented) | If approved: set status to **Ready**. If changes requested: set status back to **Needs Architecture**, add `agent/architect` with owner's feedback. |
+| Needs Story | Business Analyst | Set status to **Story Review**. Assign and tag `@aarongbenjamin` for story review. **Do not assign next agent.** |
+| Story Review | — (owner commented) | If approved: unassign `@aarongbenjamin`, set status to **Needs Architecture**. If story involves UI: add `agent/architect` AND `agent/ux-designer`. If backend-only: add `agent/architect` only. If changes requested: unassign `@aarongbenjamin`, set status back to **Needs Story**, add `agent/business-analyst` with owner's feedback. |
+| Needs Architecture | Architect | If UX Designer was also dispatched: check if UX Designer has handed back. If both done: set status to **Architecture Review**, assign and tag `@aarongbenjamin`. If UX still working: update PM status comment, wait. If UX was not dispatched: set status to **Architecture Review**, assign and tag `@aarongbenjamin`. **Do not assign next agent.** |
+| Needs Architecture | UX Designer | Check if Architect has handed back. If both done: set status to **Architecture Review**, assign and tag `@aarongbenjamin`. If Architect still working: update PM status comment, wait. **Do not assign next agent.** |
+| Architecture Review | — (owner commented) | If approved: unassign `@aarongbenjamin`, set status to **Ready**. If changes requested: unassign `@aarongbenjamin`, set status back to **Needs Architecture**, add `agent/architect` with owner's feedback. |
 | Ready | — | Assign `agent/backend-developer`, `agent/frontend-developer`, or both based on architect's plan. Set status to **Implementing**. |
 | Implementing | Backend/Frontend Developer | Set status to **CI Pending**. Monitor the PR for CI status. |
 | CI Pending | — | Automatic — see CI Gate section. |
@@ -259,7 +248,7 @@ Note: The code reviewer runs automatically on all PRs via a separate workflow. T
 
 After **3 consecutive CI failures** without resolution:
 - Remove all agent labels.
-- Set status to **Awaiting Owner**.
+- Set status to **Awaiting Owner**. Assign `@aarongbenjamin`.
 - Post an **Action Required** comment:
 
 ```markdown
@@ -278,7 +267,7 @@ _Run: [#N](link)_
 
 ## PR Publishing — Code Review Approved + CI Green
 
-1. Set issue status to **Ready to Merge**.
+1. Set issue status to **Ready to Merge**. Assign `@aarongbenjamin`.
 2. Post an **Action Required** comment:
 
 ```markdown
@@ -300,7 +289,7 @@ _Run: [#N](link)_
 When a PR is merged (`pull_request` closed with `merged: true`):
 
 1. Find the linked issue from the PR body or branch name.
-2. Set issue status to **Done**.
+2. Set issue status to **Done**. Unassign `@aarongbenjamin`.
 3. Update PM status comment with final history entry.
 4. Close the issue if not auto-closed.
 

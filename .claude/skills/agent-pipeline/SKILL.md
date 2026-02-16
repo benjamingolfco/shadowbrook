@@ -47,25 +47,25 @@ The PM sets the project status field to reflect where each issue is in the pipel
 
 ## Product Owner Review Gates
 
-The pipeline pauses at three checkpoints for product owner review. The PM sets the appropriate status and tags the product owner. The owner signals approval by commenting on the issue.
+The pipeline pauses at three checkpoints for product owner review. The PM sets the appropriate status, assigns the issue to the product owner (`gh issue edit {number} --add-assignee aarongbenjamin`), and tags them with an **Action Required** comment. When the owner responds and the issue leaves the review gate, the PM unassigns them (`gh issue edit {number} --remove-assignee aarongbenjamin`). The same assign/unassign pattern applies to **Awaiting Owner** escalations. This lets the owner filter by "assigned to me" to see exactly what needs their attention.
 
 ### Gate 1: Story Review
 
-After the BA refines the user story and acceptance criteria, the PM sets status to **Story Review** and tags the product owner. The owner reviews the story for completeness, correctness, and alignment with product goals.
+After the BA refines the user story and acceptance criteria, the PM sets status to **Story Review**, assigns the product owner to the issue, and tags them. The owner reviews the story for completeness, correctness, and alignment with product goals.
 
 - **Owner approves:** Comments with approval (e.g., "story approved", "looks good", "approved"). PM advances to **Needs Architecture**. If the story involves UI changes, PM assigns both the Architect (`agent/architect`) and UX Designer (`agent/ux-designer`) in parallel. If backend-only, PM assigns only the Architect.
 - **Owner requests changes:** Comments with feedback. PM sets status back to **Needs Story** and re-assigns the BA with the owner's feedback.
 
 ### Gate 2: Architecture Review
 
-After the Architect posts the technical plan (and the UX Designer posts the interaction spec, if dispatched), the PM sets status to **Architecture Review** and tags the product owner. The owner reviews the plan (and spec) for alignment with product goals, scope, and technical direction.
+After the Architect posts the technical plan (and the UX Designer posts the interaction spec, if dispatched), the PM sets status to **Architecture Review**, assigns the product owner, and tags them. The owner reviews the plan (and spec) for alignment with product goals, scope, and technical direction.
 
 - **Owner approves:** Comments with approval. PM advances to **Ready**.
 - **Owner requests changes:** Comments with feedback. PM sets status back to **Needs Architecture** and re-assigns the architect with the owner's feedback.
 
 ### Gate 3: PR Approval
 
-After CI passes and the code reviewer approves, the PM sets status to **Ready to Merge** and tags the product owner. The owner reviews the PR on GitHub, approves it, and merges it manually.
+After CI passes and the code reviewer approves, the PM sets status to **Ready to Merge**, assigns the product owner, and tags them. The owner reviews the PR on GitHub, approves it, and merges it manually.
 
 - **Owner approves and merges the PR:** PM detects the merge and sets status to **Done**.
 - **Owner requests changes on the PR:** PM routes back to the implementation agent.
@@ -233,10 +233,10 @@ All routing flows through the PM. Agents **never** hand off directly to other ag
 4. PM detects the label removal (via event trigger or cron).
 5. PM updates the project status field and edits the PM status comment.
 6. PM determines the next step:
-   - **BA hands back** → PM sets status to **Story Review** and tags the product owner for review. Does **not** assign the next agent yet.
-   - **Architect hands back** → If UX Designer was also dispatched, PM checks if UX Designer has also handed back. If both done: set status to **Architecture Review** and tag the product owner. If UX still working: update PM status comment, wait. If UX was not dispatched: set status to **Architecture Review** and tag the product owner. Does **not** assign the next agent yet.
-   - **UX Designer hands back** → PM checks if Architect has also handed back. If both done: set status to **Architecture Review** and tag the product owner. If Architect still working: update PM status comment, wait. Does **not** assign the next agent yet.
-   - **Owner approves** (on Story Review or Architecture Review) → PM advances to the next phase and assigns the next agent.
+   - **BA hands back** → PM sets status to **Story Review**, assigns the product owner to the issue, and tags them for review. Does **not** assign the next agent yet.
+   - **Architect hands back** → If UX Designer was also dispatched, PM checks if UX Designer has also handed back. If both done: set status to **Architecture Review**, assign the product owner, and tag them. If UX still working: update PM status comment, wait. If UX was not dispatched: set status to **Architecture Review**, assign the product owner, and tag them. Does **not** assign the next agent yet.
+   - **UX Designer hands back** → PM checks if Architect has also handed back. If both done: set status to **Architecture Review**, assign the product owner, and tag them. If Architect still working: update PM status comment, wait. Does **not** assign the next agent yet.
+   - **Owner approves** (on Story Review or Architecture Review) → PM unassigns the product owner, advances to the next phase, and assigns the next agent.
    - **Implementation agent hands back** → PM sets status to **CI Pending** and monitors the PR.
    - **Code review completes** (detected via `pull_request_review` event) → PM publishes PR if review passes, or re-assigns implementation agent if changes requested.
    - Otherwise → sets status to `Done` / `Awaiting Owner` if the pipeline is complete or blocked.
@@ -258,7 +258,7 @@ Each round-trip through PM counts toward the **3 round-trip limit** (see Escalat
 
 | Condition | Action |
 |-----------|--------|
-| 3 round-trips between agents on the same issue without phase progression | PM escalates to product owner (`Awaiting Owner`) |
+| 3 round-trips between agents on the same issue without phase progression | PM escalates to product owner (`Awaiting Owner`), assigns them to the issue |
 | Agent hasn't commented within 24h of assignment | PM pings the issue and retriggers the agent workflow |
 | Issue in `Awaiting Owner` for 48h+ | PM posts an **Action Required** reminder to `@aarongbenjamin` |
 | Agent explicitly states it is blocked | PM immediately escalates with an **Action Required** comment to `@aarongbenjamin` |
