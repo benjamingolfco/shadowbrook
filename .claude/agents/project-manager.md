@@ -135,7 +135,7 @@ When an agent hands back (detected via label removal, cron scan, or workflow tri
 | Ready | — | Assign `agent/backend-developer`, `agent/frontend-developer`, or both based on architect's plan. Set status to **Implementing**. |
 | Implementing | Backend/Frontend Developer | Set status to **CI Pending**. Monitor the PR for CI status. |
 | CI Pending | — | Automatic — see CI Gate section. |
-| In Review | Code Reviewer | If approved: see PR Publishing. If changes requested: see Changes Requested. |
+| In Review | — (automatic review) | PM detects `pull_request_review` event. If review passes (comment, no request-changes): see PR Publishing. If review requests changes: set status to **Changes Requested**, re-assign implementation agent. |
 | Changes Requested | Backend/Frontend Developer | Set status to **CI Pending**. Monitor the PR for CI status. |
 
 4. **Update the PM status comment** with the new phase, agent, and history entry.
@@ -222,8 +222,9 @@ _Run: [#N](link)_
 ### CI passes
 
 1. Set issue status to **In Review**.
-2. Add label `agent/reviewer` to the issue.
-3. Update PM status comment.
+2. Update PM status comment.
+
+Note: The code reviewer runs automatically on all PRs via a separate workflow. The PM does not assign the reviewer. The PM detects the review outcome via `pull_request_review` events.
 
 ### CI fails
 

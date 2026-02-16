@@ -21,7 +21,6 @@ Labels are the routing mechanism. The PM adds a label to assign work; the agent 
 | `agent/backend-developer` | Backend Developer | Implements .NET API code |
 | `agent/frontend-developer` | Frontend Developer | Implements React UI code |
 | `agent/ux-designer` | UX Designer | Designs interaction specs for UI stories |
-| `agent/reviewer` | Code Reviewer | Reviews PRs against project standards |
 | `agent/devops` | DevOps Engineer | Infrastructure, GitHub Actions, scripts, deployment |
 
 The PM has **no label** -- it runs on its own triggers (label changes, cron, workflow dispatch) and is always watching.
@@ -93,7 +92,6 @@ Every comment heading starts with the agent's role icon:
 | 🎯 | UX Designer |
 | ⚙️ | Backend Developer |
 | 🎨 | Frontend Developer |
-| 🔍 | Code Reviewer |
 | 🔧 | DevOps Engineer |
 
 ### Comment Patterns
@@ -240,7 +238,7 @@ All routing flows through the PM. Agents **never** hand off directly to other ag
    - **UX Designer hands back** → PM checks if Architect has also handed back. If both done: set status to **Architecture Review** and tag the product owner. If Architect still working: update PM status comment, wait. Does **not** assign the next agent yet.
    - **Owner approves** (on Story Review or Architecture Review) → PM advances to the next phase and assigns the next agent.
    - **Implementation agent hands back** → PM sets status to **CI Pending** and monitors the PR.
-   - **Code reviewer hands back** → PM publishes PR if approved, or re-assigns implementation agent if changes requested.
+   - **Code review completes** (detected via `pull_request_review` event) → PM publishes PR if review passes, or re-assigns implementation agent if changes requested.
    - Otherwise → sets status to `Done` / `Awaiting Owner` if the pipeline is complete or blocked.
 
 ## Inter-Agent Questions
@@ -276,7 +274,7 @@ Each round-trip through PM counts toward the **3 round-trip limit** (see Escalat
 
 ## Specialist Agent Workflow
 
-Every specialist agent (BA, Architect, UX Designer, Backend Developer, Frontend Developer, DevOps, Reviewer) follows this workflow when triggered. Agent-specific expertise and implementation details live in the agent file; the process lives here.
+Every specialist agent (BA, Architect, UX Designer, Backend Developer, Frontend Developer, DevOps) follows this workflow when triggered. Agent-specific expertise and implementation details live in the agent file; the process lives here.
 
 ### Trigger
 
@@ -411,42 +409,6 @@ Post a **Work Output** comment (pattern #3) with this structure:
 ```
 
 Omit sections that are not applicable.
-
-Then proceed to the standard handback (Step 4 above).
-
----
-
-## Review Agent Workflow
-
-The Code Reviewer follows a specific workflow between context gathering and handback.
-
-### Find the PR
-
-Locate the PR linked to the issue:
-```bash
-gh pr list --search "#{number}" --json number,title,url,headRefName
-```
-
-### Read the Diff
-
-Review every changed file thoroughly:
-```bash
-gh pr diff {pr_number}
-```
-
-Use Glob, Grep, and Read to examine surrounding code, related files, and existing patterns. Don't review in isolation — understand how the changes fit into the broader codebase.
-
-### Post Your Review
-
-**Never submit a formal GitHub approval.** Only the product owner approves PRs. Use `gh pr review --request-changes` to formally block a PR when issues are found. When the review passes, post a comment on the PR — do **not** use `--approve`.
-
-```bash
-# When issues are found — formally block the PR:
-gh pr review {pr_number} --request-changes --body "..."
-
-# When review passes — post a comment only (NO --approve):
-gh pr review {pr_number} --comment --body "..."
-```
 
 Then proceed to the standard handback (Step 4 above).
 
