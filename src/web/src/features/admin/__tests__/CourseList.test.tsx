@@ -14,7 +14,7 @@ describe('CourseList', () => {
       data: undefined,
       isLoading: true,
       error: null,
-    } as ReturnType<typeof useCourses>);
+    } as unknown as ReturnType<typeof useCourses>);
 
     render(<CourseList />);
     expect(screen.getByText('Loading courses...')).toBeInTheDocument();
@@ -25,7 +25,7 @@ describe('CourseList', () => {
       data: undefined,
       isLoading: false,
       error: new Error('Network error'),
-    } as ReturnType<typeof useCourses>);
+    } as unknown as ReturnType<typeof useCourses>);
 
     render(<CourseList />);
     expect(screen.getByText('Error: Network error')).toBeInTheDocument();
@@ -36,7 +36,7 @@ describe('CourseList', () => {
       data: [],
       isLoading: false,
       error: null,
-    } as ReturnType<typeof useCourses>);
+    } as unknown as ReturnType<typeof useCourses>);
 
     render(<CourseList />);
     expect(screen.getByText('No courses registered yet.')).toBeInTheDocument();
@@ -57,7 +57,7 @@ describe('CourseList', () => {
       ],
       isLoading: false,
       error: null,
-    } as ReturnType<typeof useCourses>);
+    } as unknown as ReturnType<typeof useCourses>);
 
     render(<CourseList />);
     expect(screen.getByText('Pine Valley')).toBeInTheDocument();
@@ -70,7 +70,7 @@ describe('CourseList', () => {
       data: [],
       isLoading: false,
       error: null,
-    } as ReturnType<typeof useCourses>);
+    } as unknown as ReturnType<typeof useCourses>);
 
     render(<CourseList />);
     expect(screen.getByRole('link', { name: 'Register Course' })).toHaveAttribute(
