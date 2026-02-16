@@ -6,6 +6,7 @@ import RoleGuard from '@/features/auth/components/RoleGuard';
 import AdminLayout from '@/components/layout/AdminLayout';
 import OperatorLayout from '@/components/layout/OperatorLayout';
 import GolferLayout from '@/components/layout/GolferLayout';
+import CourseList from '@/features/admin/pages/CourseList';
 
 function Placeholder({ name }: { name: string }) {
   return (
@@ -45,7 +46,7 @@ export const router = createBrowserRouter([
     children: [
       {
         path: 'courses',
-        element: <Placeholder name="Course List" />,
+        element: <CourseList />,
       },
       {
         path: 'courses/new',
