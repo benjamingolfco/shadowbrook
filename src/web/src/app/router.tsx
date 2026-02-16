@@ -8,6 +8,7 @@ import OperatorLayout from '@/components/layout/OperatorLayout';
 import GolferLayout from '@/components/layout/GolferLayout';
 import CourseList from '@/features/admin/pages/CourseList';
 import CourseCreate from '@/features/admin/pages/CourseCreate';
+import TeeTimeSettings from '@/features/operator/pages/TeeTimeSettings';
 
 function Placeholder({ name }: { name: string }) {
   return (
@@ -71,7 +72,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'settings',
-        element: <Placeholder name="Tee Time Settings" />,
+        element: <TeeTimeSettings />,
       },
     ],
   },
