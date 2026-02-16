@@ -1,5 +1,5 @@
 ---
-name: backend
+name: backend-developer
 description: Backend developer for implementing .NET API features. Use proactively when building endpoints, services, models, or writing integration tests.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet

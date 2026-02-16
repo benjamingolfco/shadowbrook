@@ -1,5 +1,5 @@
 ---
-name: frontend
+name: frontend-developer
 description: Frontend developer for implementing React/TypeScript UI features. Use proactively when building components, pages, hooks, state management, or styling.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet

@@ -72,7 +72,7 @@ jobs:
             --model claude-sonnet-4-5-20250929 --allowedTools "Bash" "Read" "Write" "Edit" "Glob" "Grep"
           prompt: |
             Read and follow .claude/skills/agent-pipeline/SKILL.md for pipeline protocols.
-            Read and follow .claude/agents/product-manager.md for your role.
+            Read and follow .claude/agents/project-manager.md for your role.
 
             Event: ${{ github.event_name }}
             Action: ${{ github.event.action || 'N/A' }}
