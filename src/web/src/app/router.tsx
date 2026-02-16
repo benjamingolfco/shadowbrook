@@ -9,6 +9,7 @@ import GolferLayout from '@/components/layout/GolferLayout';
 import CourseList from '@/features/admin/pages/CourseList';
 import CourseCreate from '@/features/admin/pages/CourseCreate';
 import TeeTimeSettings from '@/features/operator/pages/TeeTimeSettings';
+import TeeSheet from '@/features/operator/pages/TeeSheet';
 
 function Placeholder({ name }: { name: string }) {
   return (
@@ -68,7 +69,7 @@ export const router = createBrowserRouter([
     children: [
       {
         path: 'tee-sheet',
-        element: <Placeholder name="Tee Sheet" />,
+        element: <TeeSheet />,
       },
       {
         path: 'settings',
