@@ -11,10 +11,6 @@ const roleOrder: Role[] = ['admin', 'operator', 'golfer'];
 export function DevRoleSwitcher() {
   const { role, setRole } = useAuth();
 
-  if (!import.meta.env.DEV) {
-    return null;
-  }
-
   const cycleRole = () => {
     const currentIndex = roleOrder.indexOf(role);
     const nextIndex = (currentIndex + 1) % roleOrder.length;
