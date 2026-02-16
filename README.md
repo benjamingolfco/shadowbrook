@@ -4,6 +4,14 @@ Tee time booking platform for golf courses.
 
 > Private repository — [BenjaminGolfCo](https://github.com/benjamingolfco)
 
+## Principles
+
+1. **Zero Training Required** — both golfers and operators are productive immediately
+2. **Event-Driven Backend** — domain events, not service coupling, for resiliency and scalability
+3. **SMS is the Communication Channel** — web for actions, SMS for golfer communication
+4. **Multi-Tenant from Day One** — shared infrastructure, isolated course data and configuration
+5. **Configuration Without Opinions** — sensible defaults, full operator control
+
 ## Live Environment (Dev)
 
 - **Frontend:** https://purple-glacier-073a0390f.2.azurestaticapps.net
