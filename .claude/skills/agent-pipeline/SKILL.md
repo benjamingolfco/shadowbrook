@@ -25,7 +25,7 @@ Multi-agent system for automating the Shadowbrook development workflow on GitHub
 
 **What planning agents DO:**
 - Receive issue context via Task prompt
-- Produce their work product (refined story, technical plan, interaction spec, dev task list)
+- Produce their work product (refined story, technical plan, interaction spec)
 - Return the work product as text in their Task response
 
 **What implementation agents DO:**
@@ -266,7 +266,7 @@ Created and pinned by the PM. Single source of truth for pipeline phase, agent a
 
 ### 2. Dev Task List (`## Dev Task List`)
 
-Created and pinned by the PM after the Architect (and optionally UX Designer) returns their work. Structured checklist of implementation work grouped by agent. The PM reads this to know which agents to dispatch and in what order. The coordinator checks off items as implementation agents complete work.
+Created and pinned by the PM **after the owner approves the architecture**. The PM extracts tasks from the architect's plan and UX spec into a structured checklist grouped by agent. The PM reads this to know which agents to dispatch and in what order. The coordinator checks off items as implementation agents complete work.
 
 ## PM Status Comment
 
@@ -304,13 +304,13 @@ PM analyzes event → determines BA/architect/UX needed
 ### Architect + UX Parallel Flow
 
 ```
-PM spawns architect → returns technical plan + backend dev tasks
-PM spawns UX designer → returns interaction spec + frontend dev tasks
+PM spawns architect → returns technical plan
+PM spawns UX designer → returns interaction spec
 PM merges both outputs:
   → posts technical plan comment
   → posts interaction spec comment
-  → creates Dev Task List (backend + frontend sections), pins it
-  → sets status to Architecture Review
+  → sets status to Architecture Review, tags owner
+Owner approves → PM creates Dev Task List (from plan + spec), pins it, sets Ready
 ```
 
 ### Implementation Agent Flow (separate workflow)
@@ -332,8 +332,8 @@ Coordinator gathers context (issue body, technical plan, dev task list items)
 | Needs Story | BA returns via Task | Post story comment, set Story Review, tag owner |
 | Story Review | Owner approves | Spawn architect (+ UX if UI), set Needs Architecture |
 | Story Review | Owner requests changes | Spawn BA again with feedback |
-| Needs Architecture | Architect + UX return | Post plan + spec comments, create dev task list, set Architecture Review, tag owner |
-| Architecture Review | Owner approves | Set Ready, add implementation agent label |
+| Needs Architecture | Architect + UX return | Post plan + spec comments, set Architecture Review, tag owner |
+| Architecture Review | Owner approves | Create Dev Task List (from plan + spec), pin it, set Ready, add implementation agent label |
 | Ready | — | Add implementation agent label, set Implementing |
 | Implementing | Impl agent returns | Post handback, check off tasks, dispatch next agent or set CI Pending |
 | CI Pending | CI passes | Set In Review |
@@ -394,7 +394,7 @@ The Dev Task List is a pinned comment on the issue that tracks all implementatio
 
 ### Who Creates It
 
-The **PM** creates the Dev Task List after receiving work products from the Architect (and optionally UX Designer). The PM combines backend tasks from the Architect's plan and frontend tasks from the UX Designer's spec into a single comment, then pins it.
+The **PM** creates the Dev Task List **after the owner approves the architecture** (not before). This avoids creating a task list that gets thrown away if the owner requests changes. The PM extracts backend tasks from the Architect's plan and frontend tasks from the UX Designer's spec, combines them into a single comment, and pins it.
 
 ### Rules
 

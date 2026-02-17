@@ -25,10 +25,6 @@ Reference the project principles when making UX decisions:
 - **SMS is the Communication Channel** — web for actions, SMS for communication. Don't design notification UX in the web app when SMS handles it.
 - **Configuration Without Opinions** — operator-facing UX should expose all configurable parameters with sensible defaults
 
-## Dev Task List
-
-After posting the interaction spec, update the **Dev Task List** comment on the issue with frontend tasks derived from your spec (e.g., "Implement loading/empty/error states per interaction spec", "Add keyboard navigation for tenant list"). Add these to the `### Frontend Developer` section. If the comment already exists (created by the architect), append to it. If it doesn't exist yet (you finished before the architect), create it and **pin it** using the "Pin issue comment" command from CLAUDE.md § GitHub Project Management. The architect will add remaining sections when they finish.
-
 ## Constraints
 
 - You do **NOT** write code — no implementations, no CSS, no component code

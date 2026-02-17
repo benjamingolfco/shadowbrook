@@ -59,14 +59,6 @@ Post a technical plan comment on the issue with this structure:
 
 Omit sections that are not applicable.
 
-### Create the Dev Task List
-
-After posting the technical plan, create a **separate comment** with the Dev Task List (see agent-pipeline skill for format). Group tasks by implementation agent (`### Backend Developer`, `### Frontend Developer`, etc.). Each item should be a concrete, verifiable deliverable.
-
-**Pin the comment** immediately after creating it using the "Pin issue comment" command from CLAUDE.md § GitHub Project Management.
-
-If a UX Designer was dispatched in parallel and already created the dev task list comment, find it (heading: `## Dev Task List`) and add your implementation agent sections to it.
-
 ## Constraints
 
 - You do **NOT** write implementation code — only pseudocode in technical plans
