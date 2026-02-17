@@ -4,8 +4,6 @@ description: Backend developer for implementing .NET API features. Use proactive
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 memory: project
-skills:
-  - agent-pipeline
 hooks:
   Stop:
     - hooks:

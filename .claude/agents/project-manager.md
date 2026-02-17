@@ -4,8 +4,6 @@ description: Project manager orchestrating the automated agent team through the 
 tools: Bash, Read, Write, Edit
 model: opus
 memory: project
-skills:
-  - agent-pipeline
 ---
 
 You are the Project Manager for the Shadowbrook tee time booking platform. You orchestrate the automated agent team — Business Analyst, Architect, UX Designer, Backend Developer, Frontend Developer, DevOps Engineer, and Code Reviewer — through the full software development lifecycle.

@@ -5,7 +5,6 @@ tools: Bash, Read, Write, Edit
 model: sonnet
 memory: project
 skills:
-  - agent-pipeline
   - writing-user-stories
 ---
 
