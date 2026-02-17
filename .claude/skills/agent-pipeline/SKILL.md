@@ -1,18 +1,62 @@
 ---
 name: agent-pipeline
-description: Shared protocol for the automated multi-agent GitHub pipeline. Defines comment format, handoff rules, escalation thresholds, and observability.
+description: Shared protocol for the automated multi-agent GitHub pipeline. Defines architecture, comment format, handoff rules, escalation thresholds, and observability.
 user-invocable: false
 ---
 
 # Agent Pipeline Protocol
 
-Multi-agent system for automating the Shadowbrook development workflow on GitHub Actions. A **Project Manager (PM) orchestrator** routes work to **specialist agents** via labels, tracks status via GitHub Project fields, and manages state via a PM status comment on each issue.
+Multi-agent system for automating the Shadowbrook development workflow on GitHub Actions.
 
-This skill is the shared contract. Every agent loads it to understand how they communicate, hand off, and escalate.
+## Architecture
+
+### Workflow Model
+
+| Workflow | File | Triggers | Concurrency |
+|----------|------|----------|-------------|
+| **Shadowbrook Pipeline** | `claude-pipeline.yml` | issues, issue_comment, pull_request, pull_request_review, pull_request_review_comment, check_suite | `pipeline-{issue}`, cancel-in-progress: true |
+| **Shadowbrook Implementation** | `claude-implementation.yml` | issues:labeled (backend/frontend/devops only) | `impl-{issue}-{label}`, cancel-in-progress: false |
+| **Shadowbrook Cron** | `claude-cron.yml` | schedule (every 6h) | `cron`, cancel-in-progress: true |
+| **Claude Code Review** | `claude-code-review.yml` | pull_request | `review-{pr}`, cancel-in-progress: true |
+
+### Agent Responsibility Split
+
+**Agents are pure specialists.** They receive context, do their domain work, and return results. They never interact with GitHub issues directly.
+
+**What planning agents DO:**
+- Receive issue context via Task prompt
+- Produce their work product (refined story, technical plan, interaction spec, dev task list)
+- Return the work product as text in their Task response
+
+**What implementation agents DO:**
+- Receive issue context and task list via Task prompt
+- Create branches, write code, run tests, push, open PRs
+- Return a summary (PR number, files changed, tasks completed)
+
+**What agents DON'T DO:**
+- Post comments on issues
+- Add or remove labels
+- Pin comments
+- Write GITHUB_STEP_SUMMARY
+- Know about pipeline protocol, comment format, or handoff rules
+
+**The PM (pipeline/cron workflows) and coordinator (implementation workflow) handle ALL GitHub interactions:**
+- Formatting and posting comments (with role icons, run link footers)
+- Adding/removing labels
+- Pinning comments
+- Writing GITHUB_STEP_SUMMARY
+- Updating PM status comments
+- Managing project status fields
+
+### Why Implementation Needs a Separate Workflow
+
+Implementation agents take 10-20+ minutes. During execution they create PRs — GitHub events that retrigger workflows. With `cancel-in-progress: true`, those events would cancel the running agent. Implementation agents must run in a separate workflow with `cancel-in-progress: false`.
+
+---
 
 ## Agent Labels
 
-Labels are the routing mechanism. The PM adds a label to assign work; the agent removes it when done. **Only issues with the `agentic` label are processed by the pipeline.** The `agentic` label is added by the product owner to opt an issue into automated management.
+Labels are the routing mechanism. The PM adds a label to assign work; the PM or coordinator removes it when done. **Only issues with the `agentic` label are processed by the pipeline.** The `agentic` label is added by the product owner to opt an issue into automated management.
 
 | Label | Agent | Responsibility |
 |-------|-------|----------------|
@@ -23,7 +67,11 @@ Labels are the routing mechanism. The PM adds a label to assign work; the agent 
 | `agent/ux-designer` | UX Designer | Designs interaction specs for UI stories |
 | `agent/devops` | DevOps Engineer | Infrastructure, GitHub Actions, scripts, deployment |
 
-The PM has **no label** -- it runs on its own triggers (label changes, cron, workflow dispatch) and is always watching.
+For planning agents (BA, Architect, UX Designer), labels serve as **observability markers** — the PM adds the label before spawning the agent via Task, and removes it after posting the agent's output.
+
+For implementation agents (Backend Dev, Frontend Dev, DevOps), labels are **dispatch triggers** — adding the label triggers the implementation workflow.
+
+---
 
 ## Project Statuses
 
@@ -78,7 +126,7 @@ The PM detects owner approval by scanning issue comments for messages from `@aar
 
 ## Comment Format
 
-All agent comments use a structured format with role icons for instant visual recognition and clear action callouts.
+All comments posted by the PM/coordinator use a structured format with role icons for instant visual recognition and clear action callouts.
 
 ### Role Icons
 
@@ -113,43 +161,51 @@ The BA refined the story with 6 acceptance criteria covering pricing setup, vali
 _Run: [#91](https://github.com/org/repo/actions/runs/12345)_
 ```
 
-**2. Handback — agent reporting completion to PM (no action callout)**
+**2. Agent Work Output — PM posting agent's deliverable**
 
-Use when handing work back to the PM for routing. No `Action Required` — the PM handles this automatically.
+Used by the PM/coordinator when posting an agent's work product (technical plan, story refinement, interaction spec). The PM formats the output with the agent's role icon.
 
 ```markdown
-### 📝 Business Analyst → Project Manager
+### 📝 Business Analyst — Story Refinement for #6
 
-Refined user story for #6 with comprehensive acceptance criteria.
-
-**What I did:**
-- Expanded from 2 generic items to 6 detailed Given/When/Then scenarios
-- Organized by workflow: Setting Pricing, Validation, Viewing
-- Kept focus on course operator perspective
+{agent's refined story content}
 
 ---
 _Run: [#89](https://github.com/org/repo/actions/runs/12345)_
 ```
 
-**3. Work Output — substantive deliverable (plan, story, review)**
-
-Use for the actual content an agent produces (technical plans, story refinements, code reviews). These are reference artifacts, not routing messages.
-
 ```markdown
 ### 🏗️ Architect — Technical Plan for #6
 
-## Technical Plan
-
-### Approach
-...the actual plan content...
+{agent's technical plan content}
 
 ---
 _Run: [#93](https://github.com/org/repo/actions/runs/12345)_
 ```
 
-**4. Routing — PM assigning work to an agent (no action callout)**
+**3. Handback — coordinator reporting implementation completion**
 
-Use when the PM routes work to a specialist agent. The agent is triggered by the label, not the comment — the comment is for the audit trail.
+Used by the implementation coordinator when an implementation agent finishes.
+
+```markdown
+### ⚙️ Backend Developer → Project Manager
+
+Implemented flat-rate pricing feature for #6.
+
+**What was done:**
+- Created `src/api/Models/Pricing.cs` with flat-rate entity
+- Added PUT/GET endpoints at `/courses/{id}/pricing`
+- Wrote 4 integration tests
+
+**PR:** #42
+
+---
+_Run: [#95](https://github.com/org/repo/actions/runs/12345)_
+```
+
+**4. Routing — PM assigning work to an implementation agent**
+
+Used when the PM routes work to an implementation agent. The agent is triggered by the label, not the comment — the comment is for the audit trail.
 
 ```markdown
 ### 📋 Project Manager → Backend Developer
@@ -166,9 +222,9 @@ See the [Architect's technical plan](#link-to-comment) for full details.
 _Run: [#98](https://github.com/org/repo/actions/runs/12345)_
 ```
 
-**5. Question — agent needs clarification before it can proceed**
+**5. Question Escalation — PM routing an agent's question**
 
-Use when an agent is blocked and needs input. Direct the question to the appropriate target — the PM will route it and @mention the product owner if needed.
+Used when an agent returned a question in its Task response that the PM needs to route.
 
 ```markdown
 ### ⚙️ Backend Developer → Architect
@@ -183,35 +239,26 @@ _Run: [#95](https://github.com/org/repo/actions/runs/12345)_
 
 ### @mention Rules
 
-- **Only the PM** @mentions the product owner (`@aarongbenjamin`). Specialist agents never @mention anyone — they hand back to the PM, which handles all notifications.
+- **Only the PM** @mentions the product owner (`@aarongbenjamin`). Agents never @mention anyone.
 - **Never @mention** agents — they are triggered by labels, not mentions.
 - The `> **Action Required:**` callout must appear on every comment where someone needs to act.
 
 ### Run Link Footer
 
-Every comment ends with a run link footer for traceability.
-
-**Before posting any comment**, resolve the run link by reading the environment variables into concrete values:
-
-```bash
-RUN_ID="$GITHUB_RUN_ID"
-RUN_LINK="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-```
-
-Then use the resolved values in your footer:
+Every comment ends with a run link footer for traceability. The PM and coordinator receive the Run ID and Run Link as workflow context variables and use them directly.
 
 ```
 ---
 _Run: [#12345](https://github.com/org/repo/actions/runs/12345)_
 ```
 
-**Never write literal `${GITHUB_RUN_ID}` in comment text.** Always resolve it to the actual number first.
+**Never write literal `${GITHUB_RUN_ID}` in comment text.** Always use the resolved values provided in the workflow prompt.
 
 ## Pinned Comments
 
 Two comments are **pinned** to every active issue for easy access. Pinning ensures they appear prominently and are not buried in the comment thread.
 
-Use the "Pin issue comment" command from CLAUDE.md § GitHub Project Management. Pinning is idempotent — calling it on an already-pinned comment is safe. Agents must pin a comment immediately after creating it.
+Use the "Pin issue comment" command from CLAUDE.md § GitHub Project Management. Pinning is idempotent — calling it on an already-pinned comment is safe. The PM/coordinator must pin a comment immediately after creating it.
 
 ### 1. PM Status Comment (`## PM Status`)
 
@@ -219,7 +266,7 @@ Created and pinned by the PM. Single source of truth for pipeline phase, agent a
 
 ### 2. Dev Task List (`## Dev Task List`)
 
-Created and pinned by the Architect (or UX Designer if they finish first). Structured checklist of implementation work grouped by agent. The PM reads this to know which agents to dispatch and in what order. Implementation agents check off items as they complete work.
+Created and pinned by the PM after the Architect (and optionally UX Designer) returns their work. Structured checklist of implementation work grouped by agent. The PM reads this to know which agents to dispatch and in what order. The coordinator checks off items as implementation agents complete work.
 
 ## PM Status Comment
 
@@ -232,39 +279,75 @@ The PM creates and maintains **one status comment** on every active issue. This 
 **Summary:** Backend agent is building the tee time settings endpoint and tests.
 
 **History:**
-- BA refined story, added 5 acceptance criteria (skills: writing-user-stories) · [Run #12](link)
-- Architect designed endpoint structure and DB schema (skills: agent-pipeline) · [Run #14](link)
-- Backend agent assigned for implementation (skills: agent-pipeline, backend-developer) · [Run #15](link)
+- BA refined story, added 5 acceptance criteria · [Run #12](link)
+- Architect designed endpoint structure and DB schema · [Run #14](link)
+- Backend agent assigned for implementation · [Run #15](link)
 ```
 
 ## Handoff Protocol
 
 All routing flows through the PM. Agents **never** hand off directly to other agents.
 
-1. Agent completes its work.
-2. Agent posts a **Handback** comment (pattern #2 above) summarizing what was done, with the run link footer.
-3. Agent removes its own `agent/*` label from the issue.
-4. PM detects the label removal (via event trigger or cron).
-5. PM updates the project status field and edits the PM status comment.
-6. PM determines the next step:
-   - **BA hands back** → PM sets status to **Story Review**, assigns the product owner to the issue, and tags them for review. Does **not** assign the next agent yet.
-   - **Architect hands back** → If UX Designer was also dispatched, PM checks if UX Designer has also handed back. If both done: set status to **Architecture Review**, assign the product owner, and tag them. If UX still working: update PM status comment, wait. If UX was not dispatched: set status to **Architecture Review**, assign the product owner, and tag them. Does **not** assign the next agent yet.
-   - **UX Designer hands back** → PM checks if Architect has also handed back. If both done: set status to **Architecture Review**, assign the product owner, and tag them. If Architect still working: update PM status comment, wait. Does **not** assign the next agent yet.
-   - **Owner approves** (on Story Review or Architecture Review) → PM unassigns the product owner, advances to the next phase, and assigns the next agent.
-   - **Implementation agent hands back** → PM reads the **Dev Task List** comment. If another agent section has unchecked items, dispatch that agent (status stays **Implementing**). If all items are checked, set status to **CI Pending** and monitor the PR.
-   - **Code review completes** (detected via `pull_request_review` event) → PM publishes PR if review passes, or re-assigns implementation agent if changes requested.
-   - Otherwise → sets status to `Done` / `Awaiting Owner` if the pipeline is complete or blocked.
+### Planning Agent Flow (single PM run)
+
+```
+PM analyzes event → determines BA/architect/UX needed
+  → adds agent/{name} label (observability)
+  → gathers issue context
+  → spawns agent via Task (issue context + specialist instructions)
+  → agent returns work product text
+  → PM formats as comment (role icon, run link footer)
+  → PM posts comment, pins if needed, removes label, updates status
+  → PM advances to next phase
+```
+
+### Architect + UX Parallel Flow
+
+```
+PM spawns architect → returns technical plan + backend dev tasks
+PM spawns UX designer → returns interaction spec + frontend dev tasks
+PM merges both outputs:
+  → posts technical plan comment
+  → posts interaction spec comment
+  → creates Dev Task List (backend + frontend sections), pins it
+  → sets status to Architecture Review
+```
+
+### Implementation Agent Flow (separate workflow)
+
+```
+Coordinator gathers context (issue body, technical plan, dev task list items)
+  → spawns implementation agent via Task (context + tasks to implement)
+  → agent creates branch, implements, tests, pushes, opens PR
+  → agent returns: PR number, files changed, tasks completed, summary
+  → coordinator formats handback comment (role icon, run link)
+  → coordinator posts comment, checks off dev task items, removes label
+  → coordinator writes GITHUB_STEP_SUMMARY
+```
+
+### Routing Summary
+
+| Current Phase | Trigger | PM/Coordinator Action |
+|---------------|---------|----------------------|
+| Needs Story | BA returns via Task | Post story comment, set Story Review, tag owner |
+| Story Review | Owner approves | Spawn architect (+ UX if UI), set Needs Architecture |
+| Story Review | Owner requests changes | Spawn BA again with feedback |
+| Needs Architecture | Architect + UX return | Post plan + spec comments, create dev task list, set Architecture Review, tag owner |
+| Architecture Review | Owner approves | Set Ready, add implementation agent label |
+| Ready | — | Add implementation agent label, set Implementing |
+| Implementing | Impl agent returns | Post handback, check off tasks, dispatch next agent or set CI Pending |
+| CI Pending | CI passes | Set In Review |
+| CI Pending | CI fails | Add implementation agent label, set Implementing |
+| In Review | Review passes | Set Ready to Merge, tag owner |
+| In Review | Review requests changes | Add implementation agent label, set Changes Requested |
+| Changes Requested | Impl agent returns | Set CI Pending |
 
 ## Inter-Agent Questions
 
-When an agent needs input from another specialist mid-task:
-
-1. Agent posts a **Question** comment (pattern #5) directed at the target agent. Do **not** @mention the agent — the PM routes via labels.
-2. Agent posts a **Handback** comment (pattern #2) and removes its own label.
-3. PM detects the handback on its next run.
-4. PM adds `agent/b` label to route the question.
-5. Agent B answers with a comment, then hands back to PM.
-6. PM re-routes to the original agent to continue work.
+When an agent encounters ambiguity, it includes the question in its Task response. The PM/coordinator:
+- Answers it if possible (from existing context)
+- Escalates to product owner if not (posts an Action Required comment)
+- Routes to another agent if appropriate (spawns the target agent with the question)
 
 Each round-trip through PM counts toward the **3 round-trip limit** (see Escalation Rules).
 
@@ -279,121 +362,11 @@ Each round-trip through PM counts toward the **3 round-trip limit** (see Escalat
 
 ## Guardrails
 
-- PM limits concurrent `Implementing` issues to **2-3** to avoid context thrashing.
-- PM will **not** pick up new work while unresolved escalations await the product owner.
 - Agents must **never** merge PRs — including via `gh pr merge`, `gh pr merge --auto`, or any other merge mechanism.
 - Agents must **never** enable auto-merge on PRs.
 - Agents must **never** submit formal GitHub PR approvals (`gh pr review --approve`).
 - Only the **product owner** approves and merges PRs.
-
-## Specialist Agent Workflow
-
-Every specialist agent (BA, Architect, UX Designer, Backend Developer, Frontend Developer, DevOps) follows this workflow when triggered. Agent-specific expertise and implementation details live in the agent file; the process lives here.
-
-### Trigger
-
-You are triggered when the PM adds your `agent/*` label to an issue. This means the PM has assessed the issue and determined it needs your specialty.
-
-### Step 1: Gather Context
-
-1. **Read the issue** — title, body, existing comments, and any linked context (parent epic, related issues). Pay special attention to acceptance criteria and any prior agent comments.
-2. **Read the PM status comment** — find the `## PM Status` comment on the issue. Check the current phase, round-trip count, and history to understand where this issue stands in the pipeline.
-
-### Step 2: Execute Your Role
-
-Perform your role-specific work as defined in your agent file. This varies by agent — story refinement, technical planning, code implementation, code review, infrastructure work, etc.
-
-### Step 3: Handle Ambiguity
-
-If requirements, acceptance criteria, or the technical plan are insufficient for your work:
-
-1. Post a **Question** comment (pattern #5 from Comment Format) directed at the appropriate target. Do not @mention anyone — the PM will handle routing and notifications.
-2. Hand back to the PM (see Step 4) so it can route the question appropriately.
-
-**Do not guess at decisions. It is better to escalate than to work based on assumptions.**
-
-### Step 4: Handback
-
-When your work is complete (or you need to escalate), **always** do all three of these:
-
-1. **Post a Handback comment** (pattern #2 from Comment Format) summarizing what you did. Use your role icon and `→ Project Manager` in the heading. Include the run link footer.
-
-2. **If you also produced a deliverable** (technical plan, story refinement, code review), post it as a separate **Work Output** comment (pattern #3) before the handback.
-
-3. **Remove your label** from the issue:
-   ```bash
-   gh issue edit {number} --remove-label "agent/{your-label}"
-   ```
-
-### Step 5: Observability
-
-As your **final step**, write a summary table to `$GITHUB_STEP_SUMMARY`:
-
-```markdown
-## Agent Run Summary
-| Field | Value |
-|-------|-------|
-| Agent | {Your Agent Name} |
-| Issue | #{number} — {title} |
-| Phase | {current pipeline phase} |
-| Skills | {comma-separated skill list} |
-| Actions Taken | {concise summary of what you did} |
-| Outcome | {Handback to PM / Escalated to {target} / Escalated to owner} |
-```
-
----
-
-## Implementation Agent Workflow
-
-Agents that produce code (Backend Developer, Frontend Developer, DevOps Engineer) follow additional steps between context gathering and handback.
-
-### Read the Architect's Plan
-
-Find the `### 🏗️ Architect — Technical Plan` comment on the issue. This is your implementation blueprint — follow the file structure, patterns, data model, API design, and testing strategy it defines.
-
-If no technical plan exists (e.g., a well-defined bug or a simple task the PM routed directly to you), use the issue's acceptance criteria and your own codebase exploration to guide implementation.
-
-### Create a Branch
-
-**Agents must always work on branches and create PRs. Never commit directly to main.**
-
-Use the `issue/<number>-description` convention:
-```bash
-git checkout -b issue/{number}-{short-description}
-```
-
-### Implement, Test, Validate
-
-Follow your agent-specific implementation workflow (defined in your agent file). At a minimum:
-1. Explore existing code to match conventions before writing new code
-2. Implement the changes
-3. Run the relevant test/lint/build commands
-4. Fix any failures — iterate until green
-
-### Push and Open a PR
-
-```bash
-git push -u origin issue/{number}-{short-description}
-gh pr create --label "agentic" --title "{short title}" --body "Closes #{number}
-
-{summary of changes}"
-```
-
-Then proceed to the standard handback (Step 4 above).
-
-### Update the Dev Task List
-
-Before handing back, find the `## Dev Task List` comment on the issue and check off all items you completed:
-
-```bash
-# 1. Find the dev task list comment
-COMMENT_ID=$(gh api repos/benjamingolfco/shadowbrook/issues/{number}/comments --jq '.[] | select(.body | startswith("## Dev Task List")) | .id')
-
-# 2. Get current body, update checkboxes for your completed items, then patch
-gh api repos/benjamingolfco/shadowbrook/issues/comments/$COMMENT_ID -X PATCH -f body="..."
-```
-
-Replace `- [ ]` with `- [x]` for each item you completed. Do not modify items belonging to other agents.
+- PM will **not** pick up new work while unresolved escalations await the product owner.
 
 ---
 
@@ -421,36 +394,21 @@ The Dev Task List is a pinned comment on the issue that tracks all implementatio
 
 ### Who Creates It
 
-The **Architect** creates the Dev Task List as a separate comment (not inside the technical plan) after posting the technical plan. The architect must **pin the comment** immediately after creating it.
-
-If the **UX Designer** is dispatched in parallel, they add frontend tasks derived from their interaction spec to the `### Frontend Developer` section. If the UX Designer finishes before the architect, they create the comment with the Frontend Developer section. When the architect finishes, they find the existing comment and add remaining sections. If the architect finishes first, the UX Designer finds the existing comment and appends to the Frontend Developer section.
+The **PM** creates the Dev Task List after receiving work products from the Architect (and optionally UX Designer). The PM combines backend tasks from the Architect's plan and frontend tasks from the UX Designer's spec into a single comment, then pins it.
 
 ### Rules
 
 - Group tasks by implementation agent (`### Backend Developer`, `### Frontend Developer`, `### DevOps Engineer`).
 - Each item should be a concrete, verifiable deliverable — not a vague description.
-- Only the agent who owns a section may check off items in that section.
-- Implementation agents must **not** add new items. If scope expands, hand back to the PM.
+- The coordinator checks off items as implementation agents complete them.
+- Implementation agents must **not** add new items. If scope expands, the coordinator escalates to the PM.
 - The PM reads the dev task list after each implementation handback to determine what to dispatch next.
 
 ---
 
-## UX Designer Workflow
+## UX Designer Output Format
 
-The UX Designer follows a specific workflow between context gathering and handback.
-
-### Explore Existing UX Patterns
-
-Before writing any interaction spec, explore the codebase:
-
-1. Check existing pages and components with Glob (`src/web/src/features/*/pages/`, `src/web/src/components/`)
-2. Read existing UI code to understand current interaction patterns
-3. Check which shadcn/ui components are installed (`src/web/src/components/ui/`)
-4. Read the project principles in CLAUDE.md (especially "Zero Training Required")
-
-### Post the Interaction Spec
-
-Post a **Work Output** comment (pattern #3) with this structure:
+The UX Designer produces an interaction spec with this structure (returned via Task, posted by PM):
 
 ```markdown
 ### 🎯 UX Designer — Interaction Spec for #{number}
@@ -476,8 +434,6 @@ Post a **Work Output** comment (pattern #3) with this structure:
 
 Omit sections that are not applicable.
 
-Then proceed to the standard handback (Step 4 above).
-
 ---
 
 ## Observability
@@ -486,12 +442,23 @@ Three layers provide full traceability from high-level status down to individual
 
 ### 1. Comment Footers
 
-Every agent comment includes a run link footer (see Run Link Footer above) linking back to the GitHub Actions run.
+Every comment posted by PM/coordinator includes a run link footer linking back to the GitHub Actions run.
 
 ### 2. PM Status Comment
 
-The PM status comment's **History** section accumulates a log of every agent action on the issue, including skills used and run links.
+The PM status comment's **History** section accumulates a log of every agent action on the issue, including run links.
 
 ### 3. GitHub Actions Job Summary
 
-Every agent writes a summary table to `$GITHUB_STEP_SUMMARY` as its final step (see Step 5 in Specialist Agent Workflow above).
+The implementation coordinator writes a summary table to `$GITHUB_STEP_SUMMARY` after each agent run:
+
+```markdown
+## Agent Run Summary
+| Field | Value |
+|-------|-------|
+| Agent | {Agent Name} |
+| Issue | #{number} — {title} |
+| Phase | {current pipeline phase} |
+| Actions Taken | {concise summary} |
+| Outcome | {PR opened / Escalated / etc.} |
+```

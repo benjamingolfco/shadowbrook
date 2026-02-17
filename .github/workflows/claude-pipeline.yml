@@ -1,8 +1,6 @@
-name: Claude PM Agent
+name: Shadowbrook Pipeline
 
 on:
-  schedule:
-    - cron: '0 0,6,12,18 * * *' # Every 6 hours UTC (midnight, 6am, noon, 6pm CST offset)
   issues:
     types: [opened, labeled, unlabeled]
   issue_comment:
@@ -22,11 +20,10 @@ jobs:
     # Agents post multiple comments + remove labels within seconds, each generating
     # a separate event. Without this, the PM fires 2-3 times per handback.
     concurrency:
-      group: pm-${{ github.event.issue.number || github.event.pull_request.number || github.event.review.pull_request_url || github.event.check_suite.id || 'cron' }}
+      group: pipeline-${{ github.event.issue.number || github.event.pull_request.number || github.event.review.pull_request_url || github.event.check_suite.id }}
       cancel-in-progress: true
-    # All event types require the 'agentic' label except schedule (cron always runs)
+    # All event types require the 'agentic' label
     if: |
-      github.event_name == 'schedule' ||
       (github.event_name == 'issue_comment' && !endsWith(github.event.comment.user.login, '[bot]') && contains(github.event.issue.labels.*.name, 'agentic')) ||
       (github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'agentic') && !(github.event.action == 'labeled' && startsWith(github.event.label.name, 'agent/'))) ||
       (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'agentic')) ||
@@ -80,17 +77,38 @@ jobs:
             Run Link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
             ## Instructions
-            1. Read .claude/agents/project-manager.md for your full role definition and status management IDs.
-            2. Read .claude/skills/agent-pipeline/SKILL.md for pipeline protocols, comment format, and handoff rules.
-            3. Use Explore subagents (via the Task tool) when gathering context that produces verbose output:
-               - Scanning issue comments across multiple issues (cron runs)
-               - Reading CI logs and PR review details
-               - Checking multiple issues for stalled work
-               This keeps your main context clean for decision-making and routing.
-            4. Analyze the situation and take appropriate action per your role definition.
+            1. Read `.claude/agents/project-manager.md` for your role definition, routing logic, and status IDs.
+            2. Read `.claude/skills/agent-pipeline/SKILL.md` for pipeline protocols and comment format.
+            3. Analyze the triggering event and take appropriate action.
 
-            For scheduled runs: perform cron duties (standup, stalled work scan, backlog processing).
-            For check_suite events: CI completed — check result and associated PR.
-            For all other events: respond to the specific trigger.
+            ## Spawning Planning Agents
+            When routing to a planning agent (business-analyst, architect, ux-designer):
 
-            Use the Run ID and Run Link above in all comment footers — never read environment variables for these.
+            1. Add the `agent/{name}` label for observability.
+            2. Gather all issue context the agent needs (body, acceptance criteria, PM status,
+               prior comments, review feedback if re-dispatch).
+            3. Spawn the agent using the Task tool with subagent_type matching the agent name.
+               In the Task prompt, include:
+               - All issue context (paste it — agent should not need GitHub API calls)
+               - Clear instructions on what to produce and return
+               - Do NOT include SKILL.md — agents don't need pipeline protocol
+            4. When the agent returns its work product:
+               - Format it as a proper comment (role icon, run link footer per SKILL.md patterns)
+               - Post the comment on the issue
+               - Pin the comment if it's a Dev Task List
+               - Remove the agent label
+               - Update PM status comment
+               - Advance to the next pipeline phase
+
+            For parallel dispatch (architect + UX designer), spawn both sequentially,
+            then merge their outputs into properly formatted comments.
+
+            ## Implementation Agents
+            For implementation agents (backend-developer, frontend-developer, devops):
+            - Add the `agent/{name}` label. The implementation workflow handles dispatch.
+            - Post a routing comment, update PM status, then finish.
+            - Do NOT spawn these via Task.
+
+            ## General
+            - Use Explore subagents (Task with subagent_type "Explore") for verbose context gathering.
+            - Use the Run ID and Run Link above in all comment footers — never read environment variables for these.

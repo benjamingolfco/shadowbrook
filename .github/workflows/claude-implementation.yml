@@ -1,0 +1,101 @@
+name: Shadowbrook Implementation
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  dispatch:
+    # Only one agent run per issue+label at a time — prevents duplicate dispatches
+    concurrency:
+      group: impl-${{ github.event.issue.number }}-${{ github.event.label.name }}
+      cancel-in-progress: false
+    # Run only when an implementation agent label is added to an agentic issue
+    if: |
+      (
+        github.event.label.name == 'agent/backend-developer' ||
+        github.event.label.name == 'agent/frontend-developer' ||
+        github.event.label.name == 'agent/devops'
+      ) && contains(github.event.issue.labels.*.name, 'agentic')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for implementation agents that need to create branches
+
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Determine agent and context
+        id: agent
+        run: |
+          LABEL="${{ github.event.label.name }}"
+          AGENT_NAME="${LABEL#agent/}"
+          echo "name=$AGENT_NAME" >> $GITHUB_OUTPUT
+          echo "file=.claude/agents/${AGENT_NAME}.md" >> $GITHUB_OUTPUT
+          echo "number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
+          echo "title=${{ github.event.issue.title }}" >> $GITHUB_OUTPUT
+
+      - name: Verify agent file exists
+        run: |
+          if [ ! -f "${{ steps.agent.outputs.file }}" ]; then
+            echo "::error::Agent file not found: ${{ steps.agent.outputs.file }}"
+            exit 1
+          fi
+
+      - name: Run Implementation Coordinator
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ steps.app-token.outputs.token }}
+          allowed_bots: "benjamingolfco-claude-agent[bot]"
+          additional_permissions: |
+            actions: read
+          claude_args: |
+            --model claude-sonnet-4-5-20250929 --allowedTools "Bash" "Read" "Write" "Edit" "Glob" "Grep" "Task"
+          prompt: |
+            You are a coordinator for the Shadowbrook agent pipeline.
+
+            ## Context
+            Agent: ${{ steps.agent.outputs.name }}
+            Issue: #${{ steps.agent.outputs.number }} — ${{ steps.agent.outputs.title }}
+            Run ID: ${{ github.run_id }}
+            Run Link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            ## Step 1: Gather Context
+            Read the pipeline protocol:
+            - Read `.claude/skills/agent-pipeline/SKILL.md` for comment format and role icons.
+
+            Read the issue and its comments:
+            - Issue body and acceptance criteria
+            - Architect's technical plan
+            - Dev Task List (items for this agent)
+            - PM's routing comment (why this agent was dispatched)
+            - Review feedback if this is a re-dispatch
+
+            ## Step 2: Spawn the Implementation Agent
+            Use the Task tool with subagent_type "${{ steps.agent.outputs.name }}".
+            In the Task prompt:
+            - Include issue context, technical plan, and specific tasks to implement
+            - Include the Dev Task List items assigned to this agent
+            - Tell the agent to create a branch, implement, test, push, and open a PR
+            - Tell the agent to return: PR number, files changed, tasks completed, summary
+            - Do NOT include SKILL.md — agents don't need pipeline protocol
+
+            ## Step 3: Post-Agent Cleanup
+            After the agent returns:
+            1. Format and post a handback comment using the agent's role icon and run link footer
+            2. Check off completed items in the Dev Task List comment
+            3. Remove the `agent/${{ steps.agent.outputs.name }}` label
+            4. Write GITHUB_STEP_SUMMARY table

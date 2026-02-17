@@ -113,8 +113,13 @@ Apply audience labels based on who benefits — many features get **both** `golf
 
 ## Agent Pipeline
 
-This project uses an automated multi-agent pipeline via GitHub Actions. See `.claude/skills/agent-pipeline/SKILL.md` for the full protocol.
+This project uses an automated multi-agent pipeline via GitHub Actions.
+See `.claude/skills/agent-pipeline/SKILL.md` for the full protocol.
 
-- **Workflow files:** `.github/workflows/claude-pm.yml` (orchestrator), `.github/workflows/claude-agents.yml` (dispatch), `.github/workflows/claude-code-review.yml` (standalone code review on all PRs)
+- **Workflow files:**
+  - `.github/workflows/claude-pipeline.yml` — event-driven PM + inline planning agents
+  - `.github/workflows/claude-implementation.yml` — implementation agent dispatch
+  - `.github/workflows/claude-cron.yml` — scheduled maintenance
+  - `.github/workflows/claude-code-review.yml` — standalone code review on all PRs
 - **Agent definitions:** `.claude/agents/*.md`
-- **Pipeline statuses:** Triage → Needs Story → **Story Review** (owner gate) → Needs Architecture → **Architecture Review** (owner gate) → Ready → Implementing → CI Pending → In Review → Changes Requested → **Ready to Merge** (owner gate) → Done
+- **Pipeline statuses:** Triage → Needs Story → **Story Review** → Needs Architecture → **Architecture Review** → Ready → Implementing → CI Pending → In Review → Changes Requested → **Ready to Merge** → Done
