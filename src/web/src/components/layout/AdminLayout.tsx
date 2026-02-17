@@ -26,6 +26,15 @@ export default function AdminLayout() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
+                <NavLink to="/admin/tenants">
+                  {({ isActive }) => (
+                    <span className={isActive ? 'font-semibold' : ''}>Tenants</span>
+                  )}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
                 <NavLink to="/admin/courses">
                   {({ isActive }) => (
                     <span className={isActive ? 'font-semibold' : ''}>Courses</span>
