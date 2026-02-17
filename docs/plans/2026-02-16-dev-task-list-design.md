@@ -29,19 +29,14 @@ The architect creates a **Dev Task List** comment on the issue — a structured 
 - [ ] Add routes for /admin/tenants and /admin/tenants/new
 ```
 
-When the UX designer is dispatched in parallel, they add their own section:
-
-```markdown
-### UX Designer
-- [x] Post interaction spec for tenant registration flow
-```
+When the UX designer is dispatched in parallel, they add frontend tasks derived from their interaction spec to the Frontend Developer section (e.g., state handling, accessibility, responsive behavior).
 
 ## Responsibilities
 
 | Actor | Responsibility |
 |-------|---------------|
-| **Architect** | Creates the dev task list comment after posting the technical plan. Groups tasks by agent. Pins the comment. |
-| **UX Designer** | Adds a UX Designer section to the dev task list if dispatched in parallel. If UX finishes before the architect, creates the comment; architect adds to it. |
+| **Architect** | Creates the dev task list comment after posting the technical plan. Groups tasks by implementation agent. Pins the comment. |
+| **UX Designer** | Adds frontend tasks derived from their interaction spec to the `### Frontend Developer` section. Does not create a UX Designer section — the UX designer's output is work *for* the frontend developer. |
 | **Implementation agents** | Check off items (`- [x]`) as they complete them. Do not add new items — if scope expands, hand back to PM. |
 | **PM** | Reads the dev task list to determine which agents still have unchecked items. Dispatches agents in order. After all items are checked, advances to CI Pending. |
 

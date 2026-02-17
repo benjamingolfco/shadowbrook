@@ -423,13 +423,11 @@ The Dev Task List is a pinned comment on the issue that tracks all implementatio
 
 The **Architect** creates the Dev Task List as a separate comment (not inside the technical plan) after posting the technical plan. The architect must **pin the comment** immediately after creating it.
 
-If the **UX Designer** is dispatched in parallel and finishes before the architect, the UX Designer creates the comment with a UX Designer section. When the architect finishes, they find the existing comment and add the implementation agent sections.
-
-If the architect finishes first, the UX Designer finds the existing comment and adds their section.
+If the **UX Designer** is dispatched in parallel, they add frontend tasks derived from their interaction spec to the `### Frontend Developer` section. If the UX Designer finishes before the architect, they create the comment with the Frontend Developer section. When the architect finishes, they find the existing comment and add remaining sections. If the architect finishes first, the UX Designer finds the existing comment and appends to the Frontend Developer section.
 
 ### Rules
 
-- Group tasks by agent (`### Backend Developer`, `### Frontend Developer`, `### UX Designer`, `### DevOps Engineer`).
+- Group tasks by implementation agent (`### Backend Developer`, `### Frontend Developer`, `### DevOps Engineer`).
 - Each item should be a concrete, verifiable deliverable — not a vague description.
 - Only the agent who owns a section may check off items in that section.
 - Implementation agents must **not** add new items. If scope expands, hand back to the PM.
