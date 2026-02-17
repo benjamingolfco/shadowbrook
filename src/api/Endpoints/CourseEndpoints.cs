@@ -26,9 +26,15 @@ public static class CourseEndpoints
         if (string.IsNullOrWhiteSpace(request.Name))
             return Results.BadRequest(new { error = "Name is required." });
 
+        // Validate that the tenant exists
+        var tenantExists = await db.Tenants.AnyAsync(t => t.Id == request.TenantId);
+        if (!tenantExists)
+            return Results.BadRequest(new { error = "Tenant does not exist." });
+
         var course = new Course
         {
             Id = Guid.NewGuid(),
+            TenantId = request.TenantId,
             Name = request.Name,
             StreetAddress = request.StreetAddress,
             City = request.City,
@@ -140,6 +146,7 @@ public static class CourseEndpoints
 }
 
 public record CreateCourseRequest(
+    Guid TenantId,
     string Name,
     string? StreetAddress = null,
     string? City = null,
