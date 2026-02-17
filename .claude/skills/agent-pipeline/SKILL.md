@@ -207,9 +207,23 @@ _Run: [#12345](https://github.com/org/repo/actions/runs/12345)_
 
 **Never write literal `${GITHUB_RUN_ID}` in comment text.** Always resolve it to the actual number first.
 
+## Pinned Comments
+
+Two comments are **pinned** to every active issue for easy access. Pinning ensures they appear prominently and are not buried in the comment thread.
+
+Use the "Pin issue comment" command from CLAUDE.md § GitHub Project Management. Pinning is idempotent — calling it on an already-pinned comment is safe. Agents must pin a comment immediately after creating it.
+
+### 1. PM Status Comment (`## PM Status`)
+
+Created and pinned by the PM. Single source of truth for pipeline phase, agent assignment, and history.
+
+### 2. Dev Task List (`## Dev Task List`)
+
+Created and pinned by the Architect (or UX Designer if they finish first). Structured checklist of implementation work grouped by agent. The PM reads this to know which agents to dispatch and in what order. Implementation agents check off items as they complete work.
+
 ## PM Status Comment
 
-The PM creates and maintains **one status comment** on every active issue. This is the single source of truth for where an issue stands. The PM edits this comment in place (never creates a new one).
+The PM creates and maintains **one status comment** on every active issue. This is the single source of truth for where an issue stands. The PM edits this comment in place (never creates a new one). **The PM must pin this comment after creating it.**
 
 ```markdown
 ## PM Status
@@ -237,7 +251,7 @@ All routing flows through the PM. Agents **never** hand off directly to other ag
    - **Architect hands back** → If UX Designer was also dispatched, PM checks if UX Designer has also handed back. If both done: set status to **Architecture Review**, assign the product owner, and tag them. If UX still working: update PM status comment, wait. If UX was not dispatched: set status to **Architecture Review**, assign the product owner, and tag them. Does **not** assign the next agent yet.
    - **UX Designer hands back** → PM checks if Architect has also handed back. If both done: set status to **Architecture Review**, assign the product owner, and tag them. If Architect still working: update PM status comment, wait. Does **not** assign the next agent yet.
    - **Owner approves** (on Story Review or Architecture Review) → PM unassigns the product owner, advances to the next phase, and assigns the next agent.
-   - **Implementation agent hands back** → PM sets status to **CI Pending** and monitors the PR.
+   - **Implementation agent hands back** → PM reads the **Dev Task List** comment. If another agent section has unchecked items, dispatch that agent (status stays **Implementing**). If all items are checked, set status to **CI Pending** and monitor the PR.
    - **Code review completes** (detected via `pull_request_review` event) → PM publishes PR if review passes, or re-assigns implementation agent if changes requested.
    - Otherwise → sets status to `Done` / `Awaiting Owner` if the pipeline is complete or blocked.
 
@@ -366,6 +380,60 @@ gh pr create --label "agentic" --title "{short title}" --body "Closes #{number}
 ```
 
 Then proceed to the standard handback (Step 4 above).
+
+### Update the Dev Task List
+
+Before handing back, find the `## Dev Task List` comment on the issue and check off all items you completed:
+
+```bash
+# 1. Find the dev task list comment
+COMMENT_ID=$(gh api repos/benjamingolfco/shadowbrook/issues/{number}/comments --jq '.[] | select(.body | startswith("## Dev Task List")) | .id')
+
+# 2. Get current body, update checkboxes for your completed items, then patch
+gh api repos/benjamingolfco/shadowbrook/issues/comments/$COMMENT_ID -X PATCH -f body="..."
+```
+
+Replace `- [ ]` with `- [x]` for each item you completed. Do not modify items belonging to other agents.
+
+---
+
+## Dev Task List
+
+The Dev Task List is a pinned comment on the issue that tracks all implementation work grouped by agent. It serves as the contract between the architect's plan and the PM's routing logic.
+
+### Format
+
+```markdown
+## Dev Task List
+
+### Backend Developer
+- [ ] Create Tenant entity with org name and contact fields
+- [ ] Add required TenantId FK to Course entity
+- [ ] Implement POST /tenants endpoint with validation
+- [ ] Write integration tests for all tenant endpoints
+
+### Frontend Developer
+- [ ] Create Tenant TypeScript type and API hooks
+- [ ] Build TenantCreate page (registration form)
+- [ ] Build TenantList page (list view with course counts)
+- [ ] Add routes for /admin/tenants
+```
+
+### Who Creates It
+
+The **Architect** creates the Dev Task List as a separate comment (not inside the technical plan) after posting the technical plan. The architect must **pin the comment** immediately after creating it.
+
+If the **UX Designer** is dispatched in parallel and finishes before the architect, the UX Designer creates the comment with a UX Designer section. When the architect finishes, they find the existing comment and add the implementation agent sections.
+
+If the architect finishes first, the UX Designer finds the existing comment and adds their section.
+
+### Rules
+
+- Group tasks by agent (`### Backend Developer`, `### Frontend Developer`, `### UX Designer`, `### DevOps Engineer`).
+- Each item should be a concrete, verifiable deliverable — not a vague description.
+- Only the agent who owns a section may check off items in that section.
+- Implementation agents must **not** add new items. If scope expands, hand back to the PM.
+- The PM reads the dev task list after each implementation handback to determine what to dispatch next.
 
 ---
 

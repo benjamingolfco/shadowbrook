@@ -84,6 +84,8 @@ Repo: `benjamingolfco/shadowbrook` | Project: #1 under `benjamingolfco` org
 | List issues | `gh issue list --state open` |
 | List project items | `gh project item-list 1 --owner benjamingolfco` |
 | List project fields | `gh project field-list 1 --owner benjamingolfco` |
+| Pin issue comment | `gh api repos/benjamingolfco/shadowbrook/issues/comments/{comment_id}/pin -X PUT` |
+| Unpin issue comment | `gh api repos/benjamingolfco/shadowbrook/issues/comments/{comment_id}/pin -X DELETE` |
 
 Notes:
 - Use `-F` (not `-f`) for integer fields (e.g., `sub_issue_id`)

@@ -73,6 +73,11 @@ You create and maintain **one** PM status comment on every active issue. Edit it
 2. Find the comment whose body starts with `## PM Status`
 3. To update: `gh api repos/benjamingolfco/shadowbrook/issues/comments/{comment_id} -X PATCH -f body="..."`
 4. To create: `gh api repos/benjamingolfco/shadowbrook/issues/{number}/comments -X POST -f body="..."`
+5. **Pin the comment** after creating it using the "Pin issue comment" command from CLAUDE.md § GitHub Project Management. Pinning is idempotent — always pin after creating to ensure it sticks.
+
+**Finding the Dev Task List comment:**
+1. Find the comment whose body starts with `## Dev Task List`
+2. Read unchecked items per agent section to determine which agents still have work remaining
 
 ---
 
@@ -149,8 +154,8 @@ When an agent hands back (detected via label removal, cron scan, or workflow tri
 | Needs Architecture | Architect | If UX Designer was also dispatched: check if UX Designer has handed back. If both done: set status to **Architecture Review**, assign and tag `@aarongbenjamin`. If UX still working: update PM status comment, wait. If UX was not dispatched: set status to **Architecture Review**, assign and tag `@aarongbenjamin`. **Do not assign next agent.** |
 | Needs Architecture | UX Designer | Check if Architect has handed back. If both done: set status to **Architecture Review**, assign and tag `@aarongbenjamin`. If Architect still working: update PM status comment, wait. **Do not assign next agent.** |
 | Architecture Review | — (owner commented) | If approved: unassign `@aarongbenjamin`, set status to **Ready**. If changes requested: unassign `@aarongbenjamin`, set status back to **Needs Architecture**, add `agent/architect` with owner's feedback. |
-| Ready | — | Assign `agent/backend-developer`, `agent/frontend-developer`, or both based on architect's plan. Set status to **Implementing**. |
-| Implementing | Backend/Frontend Developer | Set status to **CI Pending**. Monitor the PR for CI status. |
+| Ready | — | Read the **Dev Task List** comment to determine which agents have work. Assign the first agent with unchecked items (backend before frontend). Set status to **Implementing**. |
+| Implementing | Backend/Frontend Developer | Read the **Dev Task List** comment. If another agent section has unchecked items, dispatch that agent (status stays **Implementing**). If all items are checked, set status to **CI Pending**. Monitor the PR for CI status. |
 | CI Pending | — | Automatic — see CI Gate section. |
 | In Review | — (automatic review) | PM detects `pull_request_review` event. If review passes (comment, no request-changes): see PR Publishing. If review requests changes: set status to **Changes Requested**, re-assign implementation agent. |
 | Changes Requested | Backend/Frontend Developer | Set status to **CI Pending**. Monitor the PR for CI status. |

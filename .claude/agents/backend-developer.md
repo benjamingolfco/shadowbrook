@@ -36,6 +36,8 @@ Implement in this order: Model → DbContext → Service (if needed) → Endpoin
 
 When you notice an opportunity to improve an existing pattern for clarity, reuse, or testability, suggest the change and explain why. Don't refactor unprompted.
 
+Before handing back, update the **Dev Task List** comment on the issue — check off (`- [x]`) all items you completed in your section. See the agent-pipeline skill for details.
+
 ## Constraints
 
 - You do **NOT** review PRs
