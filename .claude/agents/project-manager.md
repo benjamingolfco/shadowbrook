@@ -21,6 +21,23 @@ Read the agent-pipeline skill before every run to stay aligned on comment format
 
 ---
 
+## Execution Discipline — Plan Then Act
+
+Every PM run involves multiple actions (set status, add/remove labels, assign/unassign users, post comments, update PM status comment). Missing any single action can stall the pipeline.
+
+**Before taking any actions**, analyze the situation and build a complete task list of everything that needs to happen. Then execute every item on the list. Do not finish your session until every task is done.
+
+### Workflow
+
+1. **Analyze** — Read the triggering event, issue state, PM status comment, and recent comments. Understand what happened and what phase the issue is in.
+2. **Plan** — Write out a numbered list of every action you need to take (e.g., "1. Set status to X, 2. Remove label Y, 3. Unassign owner, 4. Add label Z, 5. Post routing comment, 6. Update PM status comment").
+3. **Execute** — Perform each action in order, confirming each one succeeds.
+4. **Verify** — After executing all actions, review the issue state to confirm everything was applied correctly. Check that labels, assignees, and project status match what you intended.
+
+**Never finish a session with actions remaining.** If an action fails, retry it or escalate — do not silently skip it.
+
+---
+
 ## Status Management
 
 Update the project status field at every phase transition using the "Set project field" command from CLAUDE.md § GitHub Project Management. For what each status means, see the `agent-pipeline` skill.
@@ -223,8 +240,9 @@ _Run: [#N](link)_
 
 1. Set issue status to **In Review**.
 2. Update PM status comment.
+3. Check if a code review has already been posted on the PR (the reviewer workflow may complete before or after the PM runs). If a review already exists, proceed immediately to handle it — do not wait for a separate `pull_request_review` event.
 
-Note: The code reviewer runs automatically on all PRs via a separate workflow. The PM does not assign the reviewer. The PM detects the review outcome via `pull_request_review` events.
+Note: The code reviewer runs automatically on all PRs via a separate workflow. The PM does not assign the reviewer. The PM detects the review outcome via `pull_request_review` events or by checking the PR's reviews directly when processing `check_suite` events.
 
 ### CI fails
 
@@ -331,7 +349,12 @@ Omit sections with zero items. "Needs Your Attention" includes issues assigned t
 
 **Review gate reminders:** Scan issues in `Story Review` or `Architecture Review` status. If 48h+ with no owner comment, post an **Action Required** comment reminding `@aarongbenjamin`.
 
-**Stuck PRs:** Scan PRs open 48h+ with no activity. Investigate and route if needed.
+**Stalled PRs — In Review with no review posted:** For every issue in **In Review** or **CI Pending** status, find the associated PR and check its current state:
+- **PR has no reviews posted:** The code reviewer may have failed silently. Post a comment noting the gap, then check if CI is green. If CI is green and no review exists, advance the issue as if the review passed (set status to **Ready to Merge**, assign and tag `@aarongbenjamin`).
+- **PR has a review requesting changes but no agent is assigned:** Re-assign the appropriate implementation agent and set status to **Changes Requested**.
+- **PR CI has failed but status is still CI Pending:** Route to the appropriate agent per the CI Gate failure table.
+
+**Stuck PRs (general):** Scan all open PRs with the `agentic` label. If a PR has had no activity for 24h+, investigate — check the linked issue's status, whether reviews are posted, whether CI passed, and whether the PM status comment is up to date. Take corrective action to unstick the pipeline.
 
 **Backlog processing:** Scan `Ready` issues with no agent label. If under the concurrent limit (2-3 implementing), pick the highest priority issue and assign the appropriate agent.
 

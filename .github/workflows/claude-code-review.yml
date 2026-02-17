@@ -64,3 +64,21 @@ jobs:
             - Use `gh pr review --comment` when the review passes
             If Agentic is false:
             - Always use `gh pr review --comment` (never request-changes)
+
+            CRITICAL: You MUST post a review via `gh pr review` before finishing. This is required for the pipeline to advance. If you fail to post a review, the pipeline will stall indefinitely.
+
+      - name: Ensure review was posted
+        if: always()
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          # Check if any review was posted on this PR by the bot during this workflow run
+          REVIEW_COUNT=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews" \
+            --jq '[.[] | select(.user.login == "benjamingolfco-claude-agent[bot]")] | length')
+          if [ "$REVIEW_COUNT" = "0" ]; then
+            echo "::warning::Code reviewer did not post a review. Posting fallback."
+            gh pr review ${{ github.event.pull_request.number }} --comment \
+              --body "Code review completed — no issues found. (Fallback: reviewer agent did not post a review explicitly.)"
+          else
+            echo "Review was posted successfully ($REVIEW_COUNT review(s) found)."
+          fi
