@@ -45,7 +45,7 @@ Multi-agent system for automating the Shadowbrook development workflow on GitHub
 - Adding/removing labels
 - Pinning comments
 - Writing GITHUB_STEP_SUMMARY
-- Updating PM status comments
+- Updating the Issue Plan comment
 - Managing project status fields
 
 ### Why Implementation Needs a Separate Workflow
@@ -254,35 +254,60 @@ _Run: [#12345](https://github.com/org/repo/actions/runs/12345)_
 
 **Never write literal `${GITHUB_RUN_ID}` in comment text.** Always use the resolved values provided in the workflow prompt.
 
-## Pinned Comments
+## Issue Plan Comment
 
-Two comments are **pinned** to every active issue for easy access. Pinning ensures they appear prominently and are not buried in the comment thread.
+The PM creates and maintains **one pinned comment** on every active issue — the Issue Plan. This is the single source of truth for the issue's status, all agent deliverables, and the implementation task list. The PM edits it in place as the issue progresses — never creates separate comments for agent output.
 
-Use the "Pin issue comment" command from CLAUDE.md § GitHub Project Management. Pinning is idempotent — calling it on an already-pinned comment is safe. The PM/coordinator must pin a comment immediately after creating it.
+Use the "Pin issue comment" command from CLAUDE.md § GitHub Project Management. Pinning is idempotent — calling it on an already-pinned comment is safe. **Pin the comment immediately after creating it.**
 
-### 1. PM Status Comment (`## PM Status`)
+### Format
 
-Created and pinned by the PM. Single source of truth for pipeline phase, agent assignment, and history.
-
-### 2. Dev Task List (`## Dev Task List`)
-
-Created and pinned by the PM **after the owner approves the architecture**. The PM extracts tasks from the architect's plan and UX spec into a structured checklist grouped by agent. The PM reads this to know which agents to dispatch and in what order. The coordinator checks off items as implementation agents complete work.
-
-## PM Status Comment
-
-The PM creates and maintains **one status comment** on every active issue. This is the single source of truth for where an issue stands. The PM edits this comment in place (never creates a new one). **The PM must pin this comment after creating it.**
+The Issue Plan starts minimal at triage and grows as each phase adds content. Sections are added in order — never remove earlier sections.
 
 ```markdown
-## PM Status
-**Phase:** Implementing · **Agent:** Backend Developer · **Round-trips:** 1/3
+## Issue Plan
 
-**Summary:** Backend agent is building the tee time settings endpoint and tests.
+**Phase:** {current phase} · **Agent:** {current agent or "—"} · **PR:** {#number or "—"}
 
-**History:**
-- BA refined story, added 5 acceptance criteria · [Run #12](link)
-- Architect designed endpoint structure and DB schema · [Run #14](link)
-- Backend agent assigned for implementation · [Run #15](link)
+### Story
+{refined story and acceptance criteria from BA — added after BA completes}
+
+### Technical Plan
+{architect's plan — added after architect completes}
+
+### Interaction Spec
+{UX designer's spec — added after UX designer completes, omit if no UI}
+
+### Dev Tasks
+#### Backend Developer
+- [ ] Create Tenant entity with org name and contact fields
+- [ ] Implement POST /tenants endpoint with validation
+- [ ] Write integration tests
+
+#### Frontend Developer
+- [ ] Create Tenant TypeScript type and API hooks
+- [ ] Build TenantCreate page (registration form)
+
+### History
+- Triaged as P1/M, routed to BA · [Run #10](link)
+- BA refined story with 5 acceptance criteria · [Run #12](link)
+- Owner approved story · [Run #13](link)
+- Architect designed endpoint structure · [Run #14](link)
+- Owner approved plan, dev tasks created · [Run #16](link)
+- Backend agent assigned · [Run #17](link)
 ```
+
+### Section Lifecycle
+
+| Phase | What the PM adds to the Issue Plan |
+|-------|------------------------------------|
+| Triage | Create comment with Phase line + History entry. Pin it. |
+| Needs Story → Story Review | Add `### Story` section with BA's refined story. Update Phase. |
+| Needs Architecture → Architecture Review | Add `### Technical Plan` and optionally `### Interaction Spec`. Update Phase. |
+| Architecture Review → Ready | Add `### Dev Tasks` section (extracted from plan + spec). Update Phase. |
+| Implementing | Update Phase + Agent. Check off dev task items as agents complete them. |
+| CI Pending / In Review / etc. | Update Phase. Add PR link. |
+| Done | Update Phase to Done. Final History entry. |
 
 ## Handoff Protocol
 
@@ -296,8 +321,8 @@ PM analyzes event → determines BA/architect/UX needed
   → gathers issue context
   → spawns agent via Task (issue context + specialist instructions)
   → agent returns work product text
-  → PM formats as comment (role icon, run link footer)
-  → PM posts comment, pins if needed, removes label, updates status
+  → PM adds output to Issue Plan comment (appropriate section)
+  → PM removes label, updates status
   → PM advances to next phase
 ```
 
@@ -307,21 +332,20 @@ PM analyzes event → determines BA/architect/UX needed
 PM spawns architect → returns technical plan
 PM spawns UX designer → returns interaction spec
 PM merges both outputs:
-  → posts technical plan comment
-  → posts interaction spec comment
+  → adds Technical Plan + Interaction Spec sections to Issue Plan
   → sets status to Architecture Review, tags owner
-Owner approves → PM creates Dev Task List (from plan + spec), pins it, sets Ready
+Owner approves → PM adds Dev Tasks section to Issue Plan, sets Ready
 ```
 
 ### Implementation Agent Flow (separate workflow)
 
 ```
-Coordinator gathers context (issue body, technical plan, dev task list items)
+Coordinator gathers context (Issue Plan comment — story, technical plan, dev tasks)
   → spawns implementation agent via Task (context + tasks to implement)
   → agent creates branch, implements, tests, pushes, opens PR
   → agent returns: PR number, files changed, tasks completed, summary
   → coordinator formats handback comment (role icon, run link)
-  → coordinator posts comment, checks off dev task items, removes label
+  → coordinator posts handback comment, checks off dev task items in Issue Plan, removes label
   → coordinator writes GITHUB_STEP_SUMMARY
 ```
 
@@ -329,11 +353,11 @@ Coordinator gathers context (issue body, technical plan, dev task list items)
 
 | Current Phase | Trigger | PM/Coordinator Action |
 |---------------|---------|----------------------|
-| Needs Story | BA returns via Task | Post story comment, set Story Review, tag owner |
+| Needs Story | BA returns via Task | Add Story section to Issue Plan, set Story Review, tag owner |
 | Story Review | Owner approves | Spawn architect (+ UX if UI), set Needs Architecture |
 | Story Review | Owner requests changes | Spawn BA again with feedback |
-| Needs Architecture | Architect + UX return | Post plan + spec comments, set Architecture Review, tag owner |
-| Architecture Review | Owner approves | Create Dev Task List (from plan + spec), pin it, set Ready, add implementation agent label |
+| Needs Architecture | Architect + UX return | Add Technical Plan + Interaction Spec sections to Issue Plan, set Architecture Review, tag owner |
+| Architecture Review | Owner approves | Add Dev Tasks section to Issue Plan, set Ready, add implementation agent label |
 | Ready | — | Add implementation agent label, set Implementing |
 | Implementing | Impl agent returns | Post handback, check off tasks, dispatch next agent or set CI Pending |
 | CI Pending | CI passes | Set In Review |
@@ -370,39 +394,21 @@ Each round-trip through PM counts toward the **3 round-trip limit** (see Escalat
 
 ---
 
-## Dev Task List
+## Dev Tasks Section
 
-The Dev Task List is a pinned comment on the issue that tracks all implementation work grouped by agent. It serves as the contract between the architect's plan and the PM's routing logic.
+The `### Dev Tasks` section of the Issue Plan tracks all implementation work grouped by agent. It serves as the contract between the architect's plan and the PM's routing logic.
 
-### Format
+### When It's Added
 
-```markdown
-## Dev Task List
-
-### Backend Developer
-- [ ] Create Tenant entity with org name and contact fields
-- [ ] Add required TenantId FK to Course entity
-- [ ] Implement POST /tenants endpoint with validation
-- [ ] Write integration tests for all tenant endpoints
-
-### Frontend Developer
-- [ ] Create Tenant TypeScript type and API hooks
-- [ ] Build TenantCreate page (registration form)
-- [ ] Build TenantList page (list view with course counts)
-- [ ] Add routes for /admin/tenants
-```
-
-### Who Creates It
-
-The **PM** creates the Dev Task List **after the owner approves the architecture** (not before). This avoids creating a task list that gets thrown away if the owner requests changes. The PM extracts backend tasks from the Architect's plan and frontend tasks from the UX Designer's spec, combines them into a single comment, and pins it.
+The PM adds the Dev Tasks section to the Issue Plan **after the owner approves the architecture** (not before). This avoids creating task lists that get thrown away if the owner requests changes. The PM extracts backend tasks from the Architect's plan and frontend tasks from the UX Designer's spec.
 
 ### Rules
 
-- Group tasks by implementation agent (`### Backend Developer`, `### Frontend Developer`, `### DevOps Engineer`).
+- Group tasks by implementation agent (`#### Backend Developer`, `#### Frontend Developer`, `#### DevOps Engineer`).
 - Each item should be a concrete, verifiable deliverable — not a vague description.
 - The coordinator checks off items as implementation agents complete them.
 - Implementation agents must **not** add new items. If scope expands, the coordinator escalates to the PM.
-- The PM reads the dev task list after each implementation handback to determine what to dispatch next.
+- The PM reads the Dev Tasks section after each implementation handback to determine what to dispatch next.
 
 ---
 
@@ -444,9 +450,9 @@ Three layers provide full traceability from high-level status down to individual
 
 Every comment posted by PM/coordinator includes a run link footer linking back to the GitHub Actions run.
 
-### 2. PM Status Comment
+### 2. Issue Plan Comment
 
-The PM status comment's **History** section accumulates a log of every agent action on the issue, including run links.
+The Issue Plan comment's **History** section accumulates a log of every agent action on the issue, including run links.
 
 ### 3. GitHub Actions Job Summary
 
