@@ -34,12 +34,15 @@ public static class CourseEndpoints
             return Results.BadRequest(new { error = "TenantId is required (via X-Tenant-Id header or request body)." });
 
         // Validate that the tenant exists
-        var tenantExists = await db.Tenants.AnyAsync(t => t.Id == tenantId.Value);
-        if (!tenantExists)
+        var tenant = await db.Tenants.FindAsync(tenantId.Value);
+        if (tenant is null)
             return Results.BadRequest(new { error = "Tenant does not exist." });
 
-        // Check for duplicate course name within this tenant
-        var duplicateExists = await db.Courses.AnyAsync(c => c.TenantId == tenantId.Value && c.Name == request.Name);
+        // Check for duplicate course name within the tenant (case-insensitive)
+        var duplicateExists = await db.Courses
+            .IgnoreQueryFilters()
+            .AnyAsync(c => c.TenantId == tenantId.Value &&
+                          EF.Functions.Like(c.Name, request.Name));
         if (duplicateExists)
             return Results.Conflict(new { error = "A course with this name already exists for this tenant." });
 
@@ -61,19 +64,61 @@ public static class CourseEndpoints
         db.Courses.Add(course);
         await db.SaveChangesAsync();
 
-        return Results.Created($"/courses/{course.Id}", course);
+        var response = new CourseResponse(
+            course.Id,
+            course.Name,
+            course.StreetAddress,
+            course.City,
+            course.State,
+            course.ZipCode,
+            course.ContactEmail,
+            course.ContactPhone,
+            course.CreatedAt,
+            course.UpdatedAt,
+            new TenantInfo(tenant.Id, tenant.OrganizationName));
+
+        return Results.Created($"/courses/{course.Id}", response);
     }
 
     private static async Task<IResult> GetAllCourses(ApplicationDbContext db, ICurrentUser currentUser)
     {
         // Query filter automatically scopes to tenant when TenantId is present
-        var courses = await db.Courses.ToListAsync();
+        var courses = await db.Courses
+            .Include(c => c.Tenant)
+            .Select(c => new CourseResponse(
+                c.Id,
+                c.Name,
+                c.StreetAddress,
+                c.City,
+                c.State,
+                c.ZipCode,
+                c.ContactEmail,
+                c.ContactPhone,
+                c.CreatedAt,
+                c.UpdatedAt,
+                new TenantInfo(c.Tenant!.Id, c.Tenant.OrganizationName)))
+            .ToListAsync();
         return Results.Ok(courses);
     }
 
     private static async Task<IResult> GetCourseById(Guid id, ApplicationDbContext db)
     {
-        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
+        var course = await db.Courses
+            .Include(c => c.Tenant)
+            .Where(c => c.Id == id)
+            .Select(c => new CourseResponse(
+                c.Id,
+                c.Name,
+                c.StreetAddress,
+                c.City,
+                c.State,
+                c.ZipCode,
+                c.ContactEmail,
+                c.ContactPhone,
+                c.CreatedAt,
+                c.UpdatedAt,
+                new TenantInfo(c.Tenant!.Id, c.Tenant.OrganizationName)))
+            .FirstOrDefaultAsync();
         return course is null ? Results.NotFound() : Results.Ok(course);
     }
 
@@ -167,6 +212,21 @@ public record CreateCourseRequest(
     string? ZipCode = null,
     string? ContactEmail = null,
     string? ContactPhone = null);
+
+public record CourseResponse(
+    Guid Id,
+    string Name,
+    string? StreetAddress,
+    string? City,
+    string? State,
+    string? ZipCode,
+    string? ContactEmail,
+    string? ContactPhone,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    TenantInfo Tenant);
+
+public record TenantInfo(Guid Id, string OrganizationName);
 
 public record TeeTimeSettingsRequest(
     int TeeTimeIntervalMinutes,

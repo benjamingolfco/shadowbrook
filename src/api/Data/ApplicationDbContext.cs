@@ -46,6 +46,10 @@ public class ApplicationDbContext : DbContext
             .HasIndex(c => c.TenantId);
 
         modelBuilder.Entity<Course>()
+            .Property(c => c.Name)
+            .UseCollation(isSqlite ? "NOCASE" : "Latin1_General_CI_AS");
+
+        modelBuilder.Entity<Course>()
             .HasIndex(c => new { c.TenantId, c.Name })
             .IsUnique();
 
