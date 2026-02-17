@@ -1,0 +1,48 @@
+# Owner Gate — Require owner approval for agentic PRs
+#
+# Creates a required status check that blocks agentic PRs until
+# @aarongbenjamin approves. Non-agentic PRs auto-pass.
+
+name: Owner Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  owner-gate:
+    name: owner-approval
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Check owner approval
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          REPO=${{ github.repository }}
+
+          # Check if PR has the 'agentic' label
+          HAS_AGENTIC=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json labels --jq '.labels[].name' | grep -c '^agentic$' || true)
+
+          if [ "$HAS_AGENTIC" -eq 0 ]; then
+            echo "Not an agentic PR — auto-pass"
+            exit 0
+          fi
+
+          echo "Agentic PR — checking for owner approval..."
+
+          # Check if aarongbenjamin has approved
+          APPROVED=$(gh api "repos/$REPO/pulls/$PR_NUMBER/reviews" \
+            --jq '[.[] | select(.user.login == "aarongbenjamin" and .state == "APPROVED")] | length')
+
+          if [ "$APPROVED" -gt 0 ]; then
+            echo "Owner has approved — pass"
+            exit 0
+          fi
+
+          echo "::error::Agentic PR requires approval from @aarongbenjamin before merging"
+          exit 1
