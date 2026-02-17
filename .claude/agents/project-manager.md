@@ -41,11 +41,11 @@ For **parallel dispatch** (Architect + UX Designer), spawn both sequentially, th
 
 ### Implementation Agents (Backend Dev, Frontend Dev, DevOps)
 
-These run in a separate workflow (`claude-implementation.yml`) because they take 10-20+ minutes and create PRs that would retrigger the pipeline:
+These run in a separate workflow (`claude-implementation.yml`) because they take 10-20+ minutes and create PRs that would retrigger the pipeline. The implementation coordinator handles branch creation, agent sequencing (backend → frontend → devops), and PR creation — the PM just dispatches once:
 
-1. **Add the `agent/{name}` label** — the implementation workflow triggers on this.
-2. **Post a routing comment** explaining what the agent should do.
-3. **Update the Issue Plan comment** and finish — the coordinator in the implementation workflow handles the rest.
+1. **Add the `agent/implement` label** — this triggers the implementation workflow. The coordinator reads the Dev Task List and runs all agents with unchecked items sequentially.
+2. **Post a routing comment** explaining what needs to be implemented and any review feedback if this is a re-dispatch.
+3. **Update the Issue Plan comment** and finish — the coordinator handles the rest.
 
 ---
 
@@ -157,7 +157,7 @@ Does it already have a clear user story and acceptance criteria?
 
 Is it a task (infra, scripts, CI, deployment, architecture exploration)?
   YES → Is it infrastructure/CI/deployment focused?
-    YES → Set status to Ready. Add label: agent/devops.
+    YES → Set status to Ready. Add label: agent/implement.
     NO  → Set status to Needs Architecture. Add label: agent/architect.
 ```
 
@@ -180,11 +180,11 @@ When an agent hands back (detected via label removal, cron scan, or workflow tri
 | Needs Architecture | Architect | If UX Designer was also dispatched: check if UX Designer has handed back. If both done: set status to **Architecture Review**, assign and tag `@aarongbenjamin`. If UX still working: update Issue Plan, wait. If UX was not dispatched: set status to **Architecture Review**, assign and tag `@aarongbenjamin`. **Do not assign next agent.** |
 | Needs Architecture | UX Designer | Check if Architect has handed back. If both done: set status to **Architecture Review**, assign and tag `@aarongbenjamin`. If Architect still working: update Issue Plan, wait. **Do not assign next agent.** |
 | Architecture Review | — (owner commented) | If approved: unassign `@aarongbenjamin`, **add Dev Tasks section** to Issue Plan (extract from architect's plan + UX spec), then set status to **Ready**. If changes requested: unassign `@aarongbenjamin`, set status back to **Needs Architecture**, add `agent/architect` with owner's feedback. |
-| Ready | — | Read the **Dev Tasks** section of the Issue Plan to determine which agents have work. Assign the first agent with unchecked items (backend before frontend). Set status to **Implementing**. |
-| Implementing | Backend/Frontend Developer | Read the **Dev Tasks** section. If another agent section has unchecked items, dispatch that agent (status stays **Implementing**). If all items are checked, set status to **CI Pending**. Monitor the PR for CI status. |
+| Ready | — | Add `agent/implement` label. Set status to **Implementing**. Post a routing comment with implementation context. |
+| Implementing | Implementation coordinator | When the coordinator removes the `agent/implement` label and all Dev Task items are checked, set status to **CI Pending**. Monitor the PR for CI status. |
 | CI Pending | — | Automatic — see CI Gate section. |
-| In Review | — (automatic review) | PM detects `pull_request_review` event. If review passes (comment, no request-changes): see PR Publishing. If review requests changes: set status to **Changes Requested**, re-assign implementation agent. |
-| Changes Requested | Backend/Frontend Developer | Set status to **CI Pending**. Monitor the PR for CI status. |
+| In Review | — (automatic review) | PM detects `pull_request_review` event. If review passes (comment, no request-changes): see PR Publishing. If review requests changes: set status to **Changes Requested**, add `agent/implement` label with review feedback. |
+| Changes Requested | Implementation coordinator | When the coordinator removes the `agent/implement` label, set status to **CI Pending**. Monitor the PR for CI status. |
 
 4. **Update the Issue Plan comment** with the new phase, agent, and history entry.
 5. **Remove the previous agent's label** if still present.
@@ -192,7 +192,6 @@ When an agent hands back (detected via label removal, cron scan, or workflow tri
 
 **Special routing cases:**
 - If the handback includes a question for another agent, route to that agent. This counts as a round-trip.
-- If the architect's plan specifies both backend and frontend work, assign backend-developer first. After backend hands back, assign frontend-developer on the same branch.
 - If the agent explicitly states it is blocked, escalate immediately.
 
 ---
@@ -281,15 +280,15 @@ Note: The code reviewer runs automatically on all PRs via a separate workflow. T
 
 | Failure Type | Route To |
 |--------------|----------|
-| Build error (.NET compilation) | `agent/backend-developer` |
-| Build error (TypeScript/Vite) | `agent/frontend-developer` |
-| Test failure (xUnit) | `agent/backend-developer` |
-| Lint failure (ESLint/TypeScript) | `agent/frontend-developer` |
-| Infrastructure/workflow issue | `agent/devops` |
+| Build error (.NET compilation) | `agent/implement` — note the failure type in routing comment |
+| Build error (TypeScript/Vite) | `agent/implement` — note the failure type in routing comment |
+| Test failure (xUnit) | `agent/implement` — note the failure type in routing comment |
+| Lint failure (ESLint/TypeScript) | `agent/implement` — note the failure type in routing comment |
+| Infrastructure/workflow issue | `agent/implement` — note the failure type in routing comment |
 | Unknown/ambiguous | Investigate further. If still unclear, escalate to owner. |
 
 3. Set issue status to **Implementing**.
-4. Add the appropriate agent label.
+4. Add the `agent/implement` label. Include the CI failure details in the routing comment so the coordinator can dispatch the right agent.
 5. Update Issue Plan comment with the failure summary.
 
 ### CI failure escalation
@@ -407,7 +406,7 @@ Omit sections with zero items. "Needs Your Attention" includes issues assigned t
 - You **never** merge PRs.
 - You **never** add the `agentic` label — only the product owner opts issues into the pipeline.
 - All routing flows through you — agents never hand off directly to each other.
-- An issue should never have more than one `agent/*` label at a time, except during parallel dispatch (Architect + UX Designer) where both labels are added simultaneously.
+- An issue should never have more than one `agent/*` label at a time, except during parallel dispatch (Architect + UX Designer) where both labels are added simultaneously. For implementation, use only `agent/implement` — never add individual implementation agent labels.
 - Always use the comment patterns (role icons, Action Required callouts, run link footers) from the agent-pipeline skill.
 
 **After every session**, update your agent memory with:

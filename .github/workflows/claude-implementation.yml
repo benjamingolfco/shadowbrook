@@ -6,17 +6,14 @@ on:
 
 jobs:
   dispatch:
-    # Only one agent run per issue+label at a time — prevents duplicate dispatches
+    # Only one implementation run per issue at a time
     concurrency:
-      group: impl-${{ github.event.issue.number }}-${{ github.event.label.name }}
+      group: impl-${{ github.event.issue.number }}
       cancel-in-progress: false
-    # Run only when an implementation agent label is added to an agentic issue
+    # Run only when the agent/implement label is added to an agentic issue
     if: |
-      (
-        github.event.label.name == 'agent/backend-developer' ||
-        github.event.label.name == 'agent/frontend-developer' ||
-        github.event.label.name == 'agent/devops'
-      ) && contains(github.event.issue.labels.*.name, 'agentic')
+      github.event.label.name == 'agent/implement' &&
+      contains(github.event.issue.labels.*.name, 'agentic')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -28,7 +25,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for implementation agents that need to create branches
+          fetch-depth: 0  # Full history for branch creation
 
       - name: Generate GitHub App token
         id: app-token
@@ -37,22 +34,11 @@ jobs:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - name: Determine agent and context
-        id: agent
+      - name: Set issue context
+        id: issue
         run: |
-          LABEL="${{ github.event.label.name }}"
-          AGENT_NAME="${LABEL#agent/}"
-          echo "name=$AGENT_NAME" >> $GITHUB_OUTPUT
-          echo "file=.claude/agents/${AGENT_NAME}.md" >> $GITHUB_OUTPUT
           echo "number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
           echo "title=${{ github.event.issue.title }}" >> $GITHUB_OUTPUT
-
-      - name: Verify agent file exists
-        run: |
-          if [ ! -f "${{ steps.agent.outputs.file }}" ]; then
-            echo "::error::Agent file not found: ${{ steps.agent.outputs.file }}"
-            exit 1
-          fi
 
       - name: Run Implementation Coordinator
         uses: anthropics/claude-code-action@v1
@@ -66,11 +52,10 @@ jobs:
           claude_args: |
             --model claude-sonnet-4-5-20250929 --allowedTools "Bash" "Read" "Write" "Edit" "Glob" "Grep" "Task"
           prompt: |
-            You are a coordinator for the Shadowbrook agent pipeline.
+            You are the implementation coordinator for the Shadowbrook agent pipeline.
 
             ## Context
-            Agent: ${{ steps.agent.outputs.name }}
-            Issue: #${{ steps.agent.outputs.number }} — ${{ steps.agent.outputs.title }}
+            Issue: #${{ steps.issue.outputs.number }} — ${{ steps.issue.outputs.title }}
             Run ID: ${{ github.run_id }}
             Run Link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
@@ -80,24 +65,43 @@ jobs:
 
             Read the issue and its comments:
             - Issue body and acceptance criteria
-            - Architect's technical plan
-            - Dev Task List (items for this agent)
-            - PM's routing comment (why this agent was dispatched)
-            - Review feedback if this is a re-dispatch
+            - Architect's technical plan and UX interaction spec (in the Issue Plan comment)
+            - Dev Task List (all agent sections)
+            - PM's routing comment (why implementation was dispatched)
+            - Review feedback if this is a re-dispatch after CI failure or code review changes
 
-            ## Step 2: Spawn the Implementation Agent
-            Use the Task tool with subagent_type "${{ steps.agent.outputs.name }}".
-            In the Task prompt:
-            - Include issue context, technical plan, and specific tasks to implement
-            - Include the Dev Task List items assigned to this agent
-            - Tell the agent to create a branch, implement, test, push, and open a PR
-            - Tell the agent to return: PR number, files changed, tasks completed, summary
+            ## Step 2: Set Up Branch and PR
+            Check if a branch and PR already exist for this issue (re-dispatch case):
+            - Look for an existing branch matching `issue/${{ steps.issue.outputs.number }}-*`
+            - If a branch exists, check it out and pull latest. If a PR exists, note its number.
+            - If no branch exists, create one from main: `issue/{number}-{slug}` where slug is a short kebab-case summary of the issue title.
+
+            ## Step 3: Run Implementation Agents
+            Read the Dev Task List from the Issue Plan comment. Determine which agent sections have unchecked items.
+
+            Run agents **sequentially** in this order (skip agents with no unchecked items):
+            1. **Backend Developer** (`subagent_type: "backend"`)
+            2. **Frontend Developer** (`subagent_type: "frontend"`)
+            3. **DevOps Engineer** (`subagent_type: "devops"`)
+
+            For each agent:
+            - Spawn via the Task tool
+            - In the Task prompt, include:
+              - Issue context, technical plan, and UX spec
+              - The specific Dev Task items for this agent (only unchecked items)
+              - Tell the agent to implement on the current branch, commit, and push
+              - Tell the agent NOT to create branches or PRs — the coordinator handles that
+              - Tell the agent to return: files changed, tasks completed, summary
             - Do NOT include SKILL.md — agents don't need pipeline protocol
+            - After the agent returns, post a handback comment using the agent's role icon and run link footer
+            - Check off completed items in the Dev Task List comment
 
-            ## Step 3: Post-Agent Cleanup
-            After the agent returns:
-            1. Format and post a handback comment using the agent's role icon and run link footer
-            2. Check off completed items in the Dev Task List comment
-            3. Update the PR title and description to reflect ALL work done so far (not just this agent's). Read the PR's current body and the Dev Task List to build a complete summary covering every agent that has contributed. Use `gh pr edit` to update the title and body.
-            4. Remove the `agent/${{ steps.agent.outputs.name }}` label
-            5. Write GITHUB_STEP_SUMMARY table
+            ## Step 4: Create or Update PR
+            After all agents have completed:
+            - If no PR exists: create one with `gh pr create`. The title should summarize all work done. The body should cover all agents' contributions with a test plan.
+            - If a PR already exists: update the title and body with `gh pr edit` to reflect the current state of all work.
+            - Link the PR to the issue (include "Closes #${{ steps.issue.outputs.number }}" in the body).
+
+            ## Step 5: Cleanup
+            1. Remove the `agent/implement` label
+            2. Write GITHUB_STEP_SUMMARY table summarizing all agents that ran, tasks completed, and PR number

@@ -15,7 +15,7 @@ Multi-agent system for automating the Shadowbrook development workflow on GitHub
 | Workflow | File | Triggers | Concurrency |
 |----------|------|----------|-------------|
 | **Shadowbrook Pipeline** | `claude-pipeline.yml` | issues, issue_comment, pull_request, pull_request_review, pull_request_review_comment, check_suite | `pipeline-{issue}`, cancel-in-progress: true |
-| **Shadowbrook Implementation** | `claude-implementation.yml` | issues:labeled (backend/frontend/devops only) | `impl-{issue}-{label}`, cancel-in-progress: false |
+| **Shadowbrook Implementation** | `claude-implementation.yml` | issues:labeled (`agent/implement` only) | `impl-{issue}`, cancel-in-progress: false |
 | **Shadowbrook Cron** | `claude-cron.yml` | schedule (every 6h) | `cron`, cancel-in-progress: true |
 | **Claude Code Review** | `claude-code-review.yml` | pull_request | `review-{pr}`, cancel-in-progress: true |
 
@@ -30,8 +30,8 @@ Multi-agent system for automating the Shadowbrook development workflow on GitHub
 
 **What implementation agents DO:**
 - Receive issue context and task list via Task prompt
-- Create branches, write code, run tests, push, open PRs
-- Return a summary (PR number, files changed, tasks completed)
+- Write code, run tests, commit, and push to the branch (created by the coordinator)
+- Return a summary (files changed, tasks completed)
 
 **What agents DON'T DO:**
 - Post comments on issues
@@ -62,14 +62,12 @@ Labels are the routing mechanism. The PM adds a label to assign work; the PM or 
 |-------|-------|----------------|
 | `agent/business-analyst` | Business Analyst | Refines stories, defines acceptance criteria |
 | `agent/architect` | Architect | Plans technical approach, selects patterns |
-| `agent/backend-developer` | Backend Developer | Implements .NET API code |
-| `agent/frontend-developer` | Frontend Developer | Implements React UI code |
 | `agent/ux-designer` | UX Designer | Designs interaction specs for UI stories |
-| `agent/devops` | DevOps Engineer | Infrastructure, GitHub Actions, scripts, deployment |
+| `agent/implement` | Implementation Coordinator | Runs all implementation agents (backend, frontend, devops) sequentially |
 
 For planning agents (BA, Architect, UX Designer), labels serve as **observability markers** — the PM adds the label before spawning the agent via Task, and removes it after posting the agent's output.
 
-For implementation agents (Backend Dev, Frontend Dev, DevOps), labels are **dispatch triggers** — adding the label triggers the implementation workflow.
+For implementation, a single `agent/implement` label **triggers the implementation workflow**. The coordinator reads the Dev Task List and runs all needed agents (backend → frontend → devops) in one workflow run. It also handles branch creation and PR creation/updates.
 
 ---
 
@@ -341,12 +339,17 @@ Owner approves → PM adds Dev Tasks section to Issue Plan, sets Ready
 
 ```
 Coordinator gathers context (Issue Plan comment — story, technical plan, dev tasks)
-  → spawns implementation agent via Task (context + tasks to implement)
-  → agent creates branch, implements, tests, pushes, opens PR
-  → agent returns: PR number, files changed, tasks completed, summary
-  → coordinator formats handback comment (role icon, run link)
-  → coordinator posts handback comment, checks off dev task items in Issue Plan, removes label
-  → coordinator writes GITHUB_STEP_SUMMARY
+  → creates branch (or checks out existing branch for re-dispatches)
+  → reads Dev Task List, determines which agents have unchecked items
+  → for each agent (backend → frontend → devops):
+      → spawns agent via Task (context + unchecked tasks for this agent)
+      → agent implements on the branch, commits, pushes
+      → agent returns: files changed, tasks completed, summary
+      → coordinator posts handback comment (role icon, run link)
+      → coordinator checks off completed Dev Task items
+  → creates PR (or updates existing PR) with complete summary of all work
+  → removes agent/implement label
+  → writes GITHUB_STEP_SUMMARY
 ```
 
 ### Routing Summary
@@ -357,13 +360,13 @@ Coordinator gathers context (Issue Plan comment — story, technical plan, dev t
 | Story Review | Owner approves | Spawn architect (+ UX if UI), set Needs Architecture |
 | Story Review | Owner requests changes | Spawn BA again with feedback |
 | Needs Architecture | Architect + UX return | Add Technical Plan + Interaction Spec sections to Issue Plan, set Architecture Review, tag owner |
-| Architecture Review | Owner approves | Add Dev Tasks section to Issue Plan, set Ready, add implementation agent label |
-| Ready | — | Add implementation agent label, set Implementing |
-| Implementing | Impl agent returns | Post handback, check off tasks, dispatch next agent or set CI Pending |
+| Architecture Review | Owner approves | Add Dev Tasks section to Issue Plan, set Ready, add `agent/implement` label |
+| Ready | — | Add `agent/implement` label, set Implementing |
+| Implementing | Coordinator finishes | All tasks checked, set CI Pending |
 | CI Pending | CI passes | Set In Review |
-| CI Pending | CI fails | Add implementation agent label, set Implementing |
+| CI Pending | CI fails | Add `agent/implement` label, set Implementing |
 | In Review | Review passes | Set Ready to Merge, tag owner |
-| In Review | Review requests changes | Add implementation agent label, set Changes Requested |
+| In Review | Review requests changes | Add `agent/implement` label, set Changes Requested |
 | Changes Requested | Impl agent returns | Set CI Pending |
 
 ## Inter-Agent Questions
