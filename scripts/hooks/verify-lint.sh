@@ -3,14 +3,21 @@
 
 cd "$(git rev-parse --show-toplevel 2>/dev/null || echo '.')"
 
-OUTPUT=$(pnpm --dir src/web lint 2>&1)
+# Detect package manager (prefer pnpm, fall back to npm)
+if command -v pnpm &> /dev/null; then
+  PKG_MGR="pnpm --dir src/web"
+else
+  PKG_MGR="npm --prefix src/web run"
+fi
+
+OUTPUT=$($PKG_MGR lint 2>&1)
 if [ $? -ne 0 ]; then
   echo "Lint failed. Fix errors before finishing:" >&2
   echo "$OUTPUT" >&2
   exit 2
 fi
 
-OUTPUT=$(pnpm --dir src/web build 2>&1)
+OUTPUT=$($PKG_MGR build 2>&1)
 if [ $? -ne 0 ]; then
   echo "Build failed. Fix TypeScript errors before finishing:" >&2
   echo "$OUTPUT" >&2
