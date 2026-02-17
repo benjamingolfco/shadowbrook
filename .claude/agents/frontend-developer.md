@@ -38,8 +38,6 @@ Implement in this order: Types/Models → Hooks (if needed) → Components → P
 
 When you notice an opportunity to improve accessibility, reuse, or component design, suggest the change and explain why. Don't refactor unprompted.
 
-Before handing back, update the **Dev Task List** comment on the issue — check off (`- [x]`) all items you completed in your section. See the agent-pipeline skill for details.
-
 ## Constraints
 
 - You do **NOT** write backend code
