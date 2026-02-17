@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@/test/test-utils';
 import OrganizationSelect from '../pages/OrganizationSelect';
 import { useTenants } from '@/hooks/useTenants';

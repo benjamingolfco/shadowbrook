@@ -11,13 +11,13 @@ export function getActiveTenantId(): string | null {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const headers: Record<string, string> = {
+  const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...options?.headers,
   };
 
   if (activeTenantId) {
-    headers['X-Tenant-Id'] = activeTenantId;
+    (headers as Record<string, string>)['X-Tenant-Id'] = activeTenantId;
   }
 
   const response = await fetch(`${BASE_URL}${path}`, {
