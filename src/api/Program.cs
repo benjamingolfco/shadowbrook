@@ -52,10 +52,10 @@ if (app.Environment.EnvironmentName != "Testing")
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    if (!string.IsNullOrWhiteSpace(app.Configuration.GetConnectionString("DefaultConnection")))
-        db.Database.Migrate();
-    else
+    if (app.Environment.IsDevelopment())
         db.Database.EnsureCreated();
+    else
+        db.Database.Migrate();
 }
 
 app.UseCors();
