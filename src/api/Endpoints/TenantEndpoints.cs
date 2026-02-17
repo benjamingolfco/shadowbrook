@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace Shadowbrook.Api.Endpoints;
 
-public static class TenantEndpoints
+public static partial class TenantEndpoints
 {
     public static void MapTenantEndpoints(this WebApplication app)
     {
@@ -37,7 +37,8 @@ public static class TenantEndpoints
 
         // Check for duplicate organization name (case-insensitive)
         var existingTenant = await db.Tenants
-            .FirstOrDefaultAsync(t => t.OrganizationName.ToLower() == request.OrganizationName.ToLower());
+            .FirstOrDefaultAsync(t => EF.Functions.Collate(t.OrganizationName, "NOCASE")
+                == EF.Functions.Collate(request.OrganizationName, "NOCASE"));
 
         if (existingTenant is not null)
             return Results.Conflict(new { error = "A tenant with this organization name already exists." });
@@ -71,7 +72,6 @@ public static class TenantEndpoints
     private static async Task<IResult> GetAllTenants(ApplicationDbContext db)
     {
         var tenants = await db.Tenants
-            .Include(t => t.Courses)
             .Select(t => new TenantListResponse(
                 t.Id,
                 t.OrganizationName,
@@ -108,10 +108,12 @@ public static class TenantEndpoints
         return Results.Ok(response);
     }
 
+    [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase)]
+    private static partial Regex EmailRegex();
+
     private static bool IsValidEmail(string email)
     {
-        var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase);
-        return emailRegex.IsMatch(email);
+        return EmailRegex().IsMatch(email);
     }
 }
 

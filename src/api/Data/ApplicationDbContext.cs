@@ -19,6 +19,10 @@ public class ApplicationDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Tenant>()
+            .Property(t => t.OrganizationName)
+            .UseCollation("NOCASE");
+
+        modelBuilder.Entity<Tenant>()
             .HasIndex(t => t.OrganizationName)
             .IsUnique();
 
