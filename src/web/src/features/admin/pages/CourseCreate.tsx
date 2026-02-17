@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
-import { useNavigate } from 'react-router';
+import { useNavigate, Link } from 'react-router';
 import { api } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-keys';
 import type { Course } from '@/types/course';
@@ -16,8 +16,17 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useTenants } from '../hooks/useTenants';
 
 const courseSchema = z.object({
+  tenantId: z.string().min(1, 'Tenant assignment is required'),
   name: z.string().min(1, 'Course name is required'),
   streetAddress: z.string().optional(),
   city: z.string().optional(),
@@ -32,10 +41,12 @@ type CourseFormData = z.infer<typeof courseSchema>;
 export default function CourseCreate() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { data: tenants, isLoading: isLoadingTenants, error: tenantsError } = useTenants();
 
   const form = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
+      tenantId: '',
       name: '',
       streetAddress: '',
       city: '',
@@ -67,6 +78,51 @@ export default function CourseCreate() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="tenantId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Assign to Tenant *</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingTenants || !tenants || tenants.length === 0}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={
+                        isLoadingTenants ? 'Loading tenants...' :
+                        !tenants || tenants.length === 0 ? 'No tenants available' :
+                        'Select a tenant'
+                      } />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {tenants && tenants
+                      .sort((a, b) => a.organizationName.localeCompare(b.organizationName))
+                      .map((tenant) => (
+                        <SelectItem key={tenant.id} value={tenant.id}>
+                          {tenant.organizationName}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                {tenantsError && (
+                  <p className="text-sm text-destructive">
+                    Error loading tenants: {tenantsError instanceof Error ? tenantsError.message : 'Unknown error'}
+                  </p>
+                )}
+                {!isLoadingTenants && tenants && tenants.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No tenants found.{' '}
+                    <Link to="/admin/tenants/new" className="text-primary underline">
+                      Create a tenant
+                    </Link>{' '}
+                    first.
+                  </p>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="name"
