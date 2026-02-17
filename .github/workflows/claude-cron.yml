@@ -73,10 +73,10 @@ jobs:
                - Advance to the next pipeline phase
 
             ## Implementation Agents
-            For implementation agents (backend-developer, frontend-developer, devops):
-            - Add the `agent/{name}` label. The implementation workflow handles dispatch.
-            - Post a routing comment, update PM status, then finish.
-            - Do NOT spawn these via Task.
+            To dispatch implementation, add the single `agent/implement` label. The implementation coordinator handles branch creation, runs all needed agents (backend → frontend → devops) sequentially, and creates/updates the PR.
+            - Add the `agent/implement` label to trigger the implementation workflow.
+            - Post a routing comment with implementation context, update PM status, then finish.
+            - Do NOT spawn implementation agents via Task. Do NOT use individual agent labels.
 
             ## General
             - Use Explore subagents (Task with subagent_type "Explore") for verbose context gathering.
