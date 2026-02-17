@@ -98,5 +98,6 @@ jobs:
             After the agent returns:
             1. Format and post a handback comment using the agent's role icon and run link footer
             2. Check off completed items in the Dev Task List comment
-            3. Remove the `agent/${{ steps.agent.outputs.name }}` label
-            4. Write GITHUB_STEP_SUMMARY table
+            3. Update the PR title and description to reflect ALL work done so far (not just this agent's). Read the PR's current body and the Dev Task List to build a complete summary covering every agent that has contributed. Use `gh pr edit` to update the title and body.
+            4. Remove the `agent/${{ steps.agent.outputs.name }}` label
+            5. Write GITHUB_STEP_SUMMARY table
