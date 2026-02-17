@@ -34,11 +34,13 @@ These run inline within the PM's workflow:
    - Format it as a proper comment (role icon, run link footer per SKILL.md patterns)
    - Post the comment on the issue
    - Pin the comment if it's a Dev Task List
-   - Remove the agent label
-   - Update PM status comment
-   - Advance to the next pipeline phase
+   - **Update PM status comment** (do this BEFORE removing labels)
+   - Set project status field to the next phase
+   - Post Action Required comment if entering a review gate
+   - Assign/unassign owner as needed
+   - **Remove the agent label last** — label removal triggers a new pipeline run via `cancel-in-progress`, so all other cleanup must be done first
 
-For **parallel dispatch** (Architect + UX Designer), spawn both sequentially, then merge their outputs into properly formatted comments.
+For **parallel dispatch** (Architect + UX Designer), spawn both sequentially, then merge their outputs into properly formatted comments. Complete ALL cleanup (PM status, project status, Action Required, assignees) before removing either agent label.
 
 ### Implementation Agents (Backend Dev, Frontend Dev, DevOps)
 
