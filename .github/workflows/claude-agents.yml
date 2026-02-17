@@ -72,10 +72,60 @@ jobs:
           additional_permissions: |
             actions: read
           claude_args: |
-            --model claude-sonnet-4-5-20250929 --allowedTools "Bash" "Read" "Write" "Edit" "Glob" "Grep"
+            --model claude-sonnet-4-5-20250929 --allowedTools "Bash" "Read" "Write" "Edit" "Glob" "Grep" "Task"
           prompt: |
-            Read and follow .claude/skills/agent-pipeline/SKILL.md for pipeline protocols.
-            Read and follow ${{ steps.agent.outputs.file }} for your role.
-            Work on ${{ steps.agent.outputs.type }} #${{ steps.agent.outputs.number }}
+            You are a coordinator for the Shadowbrook agent pipeline. Your job is to
+            gather context, then spawn the specialist agent as a subagent to perform the work.
 
+            ## Context
+            Agent: ${{ steps.agent.outputs.name }}
+            Agent File: ${{ steps.agent.outputs.file }}
+            Issue: #${{ steps.agent.outputs.number }}
             Title: ${{ steps.agent.outputs.title }}
+            Type: ${{ steps.agent.outputs.type }}
+            Run ID: ${{ github.run_id }}
+            Run Link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            ## Step 1: Gather Context
+            Before spawning the agent, collect everything it will need:
+
+            a) Read the agent-pipeline protocol:
+               - Read `.claude/skills/agent-pipeline/SKILL.md` — this is the shared contract
+                 for comment format, handoff rules, and observability. The subagent does NOT
+                 have this preloaded, so you must include it in the Task prompt.
+
+            b) Read the issue and its comments:
+               Use `gh issue view ${{ steps.agent.outputs.number }}` and
+               `gh api repos/${{ github.repository }}/issues/${{ steps.agent.outputs.number }}/comments`
+               to collect:
+               - Issue body and acceptance criteria
+               - PM Status comment (body starts with `## PM Status`)
+               - Dev Task List comment (body starts with `## Dev Task List`), if present
+               - Architect's technical plan and/or UX interaction spec, if present
+               - The most recent PM routing comment (explains why this agent was dispatched)
+               - If this is a re-dispatch after changes requested, include the review feedback
+
+            ## Step 2: Spawn the Specialist Agent
+            Use the Task tool to spawn the `${{ steps.agent.outputs.name }}` subagent.
+            The subagent's model, tools, and hooks are defined in its agent file and will
+            be applied automatically.
+
+            In your Task prompt, pass the agent everything it needs to begin work immediately:
+            - The full agent-pipeline protocol from Step 1a (paste the content, not a file path)
+            - The issue number, title, and full body
+            - All relevant issue context gathered in Step 1b (paste the actual content, not links)
+            - The run link for comment footers: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            - A clear summary of what the agent should do and what pipeline phase it is in
+
+            ## Step 3: Verify and Report
+            After the subagent completes, check:
+            - Did it post a handback comment on the issue?
+            - Did it remove the `agent/${{ steps.agent.outputs.name }}` label?
+            If either is missing, do it on the agent's behalf.
+
+            Write a summary to $GITHUB_STEP_SUMMARY:
+            | Field | Value |
+            |-------|-------|
+            | Agent | ${{ steps.agent.outputs.name }} |
+            | Issue | #${{ steps.agent.outputs.number }} — ${{ steps.agent.outputs.title }} |
+            | Outcome | {what the agent did} |

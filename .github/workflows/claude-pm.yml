@@ -69,15 +69,28 @@ jobs:
           additional_permissions: |
             actions: read
           claude_args: |
-            --model claude-opus-4-6 --allowedTools "Bash" "Read" "Write" "Edit" "Glob" "Grep"
+            --model claude-opus-4-6 --allowedTools "Bash" "Read" "Write" "Edit" "Glob" "Grep" "Task"
           prompt: |
-            Read and follow .claude/skills/agent-pipeline/SKILL.md for pipeline protocols.
-            Read and follow .claude/agents/project-manager.md for your role.
+            You are the Project Manager for the Shadowbrook agent pipeline.
 
+            ## Context
             Event: ${{ github.event_name }}
             Action: ${{ github.event.action || 'N/A' }}
+            Run ID: ${{ github.run_id }}
+            Run Link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-            Analyze the current state and take appropriate action based on your role definition.
-            If this is a scheduled run, perform your cron duties (scan for stalled work, check backlog, update status comments).
-            If this is a check_suite event, CI has completed. Check the result and associated PR, then act according to the CI Gate section of your role definition.
-            If this is an event, respond to the specific event appropriately.
+            ## Instructions
+            1. Read .claude/agents/project-manager.md for your full role definition and status management IDs.
+            2. Read .claude/skills/agent-pipeline/SKILL.md for pipeline protocols, comment format, and handoff rules.
+            3. Use Explore subagents (via the Task tool) when gathering context that produces verbose output:
+               - Scanning issue comments across multiple issues (cron runs)
+               - Reading CI logs and PR review details
+               - Checking multiple issues for stalled work
+               This keeps your main context clean for decision-making and routing.
+            4. Analyze the situation and take appropriate action per your role definition.
+
+            For scheduled runs: perform cron duties (standup, stalled work scan, backlog processing).
+            For check_suite events: CI completed — check result and associated PR.
+            For all other events: respond to the specific trigger.
+
+            Use the Run ID and Run Link above in all comment footers — never read environment variables for these.

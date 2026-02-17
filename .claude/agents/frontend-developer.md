@@ -4,8 +4,6 @@ description: Frontend developer for implementing React/TypeScript UI features. U
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 memory: project
-skills:
-  - agent-pipeline
 hooks:
   Stop:
     - hooks:
