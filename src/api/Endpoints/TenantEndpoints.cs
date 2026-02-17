@@ -35,10 +35,9 @@ public static partial class TenantEndpoints
         if (string.IsNullOrWhiteSpace(request.ContactPhone))
             return Results.BadRequest(new { error = "ContactPhone is required." });
 
-        // Check for duplicate organization name (case-insensitive)
+        // Check for duplicate organization name (case-insensitive via column collation)
         var existingTenant = await db.Tenants
-            .FirstOrDefaultAsync(t => EF.Functions.Collate(t.OrganizationName, "NOCASE")
-                == EF.Functions.Collate(request.OrganizationName, "NOCASE"));
+            .FirstOrDefaultAsync(t => t.OrganizationName == request.OrganizationName);
 
         if (existingTenant is not null)
             return Results.Conflict(new { error = "A tenant with this organization name already exists." });

@@ -18,9 +18,10 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        var isSqlite = Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite";
         modelBuilder.Entity<Tenant>()
             .Property(t => t.OrganizationName)
-            .UseCollation("NOCASE");
+            .UseCollation(isSqlite ? "NOCASE" : "Latin1_General_CI_AS");
 
         modelBuilder.Entity<Tenant>()
             .HasIndex(t => t.OrganizationName)
