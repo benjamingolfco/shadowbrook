@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Data;
 using Shadowbrook.Api.Endpoints;
 using Shadowbrook.Api.Services;
@@ -7,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHealthChecks();
 builder.Services.AddOpenApi();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
 builder.Services.AddCors(options =>
 {
@@ -59,8 +62,18 @@ if (app.Environment.EnvironmentName != "Testing")
 }
 
 app.UseCors();
+app.UseMiddleware<TenantClaimMiddleware>();
 
 app.MapHealthChecks("/health");
+
+if (app.Environment.EnvironmentName == "Testing")
+{
+    app.MapGet("/debug/current-user", (ICurrentUser currentUser) =>
+    {
+        return Results.Ok(new { TenantId = currentUser.TenantId });
+    });
+}
+
 app.MapTenantEndpoints();
 app.MapCourseEndpoints();
 app.MapTeeSheetEndpoints();
