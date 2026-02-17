@@ -353,7 +353,32 @@ When a PR is merged (`pull_request` closed with `merged: true`):
 
 On scheduled runs (every 6 hours UTC — 6am, noon, 6pm, midnight CST):
 
-**Morning standup (first run of the day only — 6am CST / 12:00 UTC):** Update the **body** of the pinned standup issue #144 with the latest pipeline summary. Editing the body keeps the summary visible at the top of the issue.
+### 1. Corrective Actions (run every cron cycle)
+
+Do all maintenance and corrective work first so the standup reflects the current state, not stale state.
+
+**Stalled work:** Scan issues with `agent/*` labels. If no agent comment within 24h, post a ping and retrigger by removing/re-adding the label.
+
+**Awaiting Owner reminders:** Scan `Awaiting Owner` issues. If 48h+ with no owner response, post an **Action Required** comment reminding `@aarongbenjamin`.
+
+**Review gate reminders:** Scan issues in `Story Review` or `Architecture Review` status. If 48h+ with no owner comment, post an **Action Required** comment reminding `@aarongbenjamin`.
+
+**Stalled PRs — In Review with no review posted:** For every issue in **In Review** or **CI Pending** status, find the associated PR and check its current state:
+- **PR has no reviews posted:** The code reviewer may have failed silently. Post a comment noting the gap, then check if CI is green. If CI is green and no review exists, advance the issue as if the review passed (set status to **Ready to Merge**, assign and tag `@aarongbenjamin`).
+- **PR has a review requesting changes but no agent is assigned:** Re-assign the appropriate implementation agent and set status to **Changes Requested**.
+- **PR CI has failed but status is still CI Pending:** Route to the appropriate agent per the CI Gate failure table.
+
+**Stuck PRs (general):** Scan all open PRs with the `agentic` label. If a PR has had no activity for 24h+, investigate — check the linked issue's status, whether reviews are posted, whether CI passed, and whether the PM status comment is up to date. Take corrective action to unstick the pipeline.
+
+**Backlog processing:** Scan `Ready` issues with no agent label. Pick the highest priority issue and assign the appropriate agent.
+
+**PM status comment refresh:** Update all PM status comments on active issues to reflect current state.
+
+### 2. Morning Standup (first run of the day only — 6am CST / 12:00 UTC)
+
+Post the standup **after** corrective actions so it reflects the corrected pipeline state.
+
+Update the **body** of the pinned standup issue #144 with the latest pipeline summary. Editing the body keeps the summary visible at the top of the issue.
 
 ```bash
 gh issue edit 144 --body "$(cat <<'STANDUP'
@@ -378,23 +403,6 @@ STANDUP
 ```
 
 Omit sections with zero items. "Needs Your Attention" includes issues assigned to `@aarongbenjamin` (Story Review, Architecture Review, Ready to Merge, Awaiting Owner). To determine if this is the first run of the day, read the issue body — if the date in the heading matches today, skip the standup.
-
-**Stalled work:** Scan issues with `agent/*` labels. If no agent comment within 24h, post a ping and retrigger by removing/re-adding the label.
-
-**Awaiting Owner reminders:** Scan `Awaiting Owner` issues. If 48h+ with no owner response, post an **Action Required** comment reminding `@aarongbenjamin`.
-
-**Review gate reminders:** Scan issues in `Story Review` or `Architecture Review` status. If 48h+ with no owner comment, post an **Action Required** comment reminding `@aarongbenjamin`.
-
-**Stalled PRs — In Review with no review posted:** For every issue in **In Review** or **CI Pending** status, find the associated PR and check its current state:
-- **PR has no reviews posted:** The code reviewer may have failed silently. Post a comment noting the gap, then check if CI is green. If CI is green and no review exists, advance the issue as if the review passed (set status to **Ready to Merge**, assign and tag `@aarongbenjamin`).
-- **PR has a review requesting changes but no agent is assigned:** Re-assign the appropriate implementation agent and set status to **Changes Requested**.
-- **PR CI has failed but status is still CI Pending:** Route to the appropriate agent per the CI Gate failure table.
-
-**Stuck PRs (general):** Scan all open PRs with the `agentic` label. If a PR has had no activity for 24h+, investigate — check the linked issue's status, whether reviews are posted, whether CI passed, and whether the PM status comment is up to date. Take corrective action to unstick the pipeline.
-
-**Backlog processing:** Scan `Ready` issues with no agent label. Pick the highest priority issue and assign the appropriate agent.
-
-**PM status comment refresh:** Update all PM status comments on active issues to reflect current state.
 
 ---
 
