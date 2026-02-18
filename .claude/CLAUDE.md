@@ -28,7 +28,7 @@ Course operators know their course best. Ship with sensible defaults, but every 
 
 ## Tech Stack
 - Backend: .NET 10, EF Core 10, OpenAPI, minimal APIs (not controllers)
-- Database: SQLite for dev (auto-created via EnsureCreated), SQL Server for production
+- Database: SQL Server (local via `docker compose up db -d`, EF Core migrations)
 - Frontend: React 19, TypeScript 5.9, Vite 7, React Router, TanStack Query, React Hook Form + Zod, Tailwind CSS, shadcn/ui
 - Package manager: pnpm (never npm or yarn)
 - SMS: ITextMessageService abstraction (Twilio planned)
@@ -56,6 +56,9 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - Prefer unit tests before integration tests
 - Prefer running single tests over full suites for speed
 - `dotnet-ef` tool path: `export PATH="$PATH:/home/aaron/.dotnet/tools"`
+- Add migration: `dotnet ef migrations add <Name> --project src/api`
+- Check pending: `dotnet ef migrations has-pending-model-changes --project src/api`
+- See `.claude/rules/backend/ef-migrations.md` for full migration conventions
 
 ## Branching
 

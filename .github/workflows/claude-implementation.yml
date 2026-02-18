@@ -98,7 +98,7 @@ jobs:
 
             ## Step 4: Create or Update PR
             After all agents have completed:
-            - If no PR exists: create one with `gh pr create`. The title should summarize all work done. The body should cover all agents' contributions with a test plan.
+            - If no PR exists: create one with `gh pr create --label agentic`. The title should summarize all work done. The body should cover all agents' contributions with a test plan.
             - If a PR already exists: update the title and body with `gh pr edit` to reflect the current state of all work.
             - Link the PR to the issue (include "Closes #${{ steps.issue.outputs.number }}" in the body).
 
