@@ -140,7 +140,7 @@ public class TenantCourseIsolationTests : IClassFixture<TestWebApplicationFactor
     }
 
     [Fact]
-    public async Task CreateCourse_WithoutTenantHeader_ReturnsBadRequest()
+    public async Task CreateCourse_WithoutTenantHeaderOrBody_ReturnsBadRequest()
     {
         // Act
         var response = await _client.PostAsJsonAsync("/courses", new { Name = "No Tenant Course" });
@@ -148,7 +148,23 @@ public class TenantCourseIsolationTests : IClassFixture<TestWebApplicationFactor
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.Contains("X-Tenant-Id header is required", error!.Error);
+        Assert.Contains("TenantId is required", error!.Error);
+    }
+
+    [Fact]
+    public async Task CreateCourse_WithTenantIdInBody_Succeeds()
+    {
+        // Arrange
+        var tenantId = await CreateTestTenantAsync("Body Tenant");
+
+        // Act - Create course with TenantId in body (no header)
+        var response = await _client.PostAsJsonAsync("/courses", new { Name = "Body Tenant Course", TenantId = tenantId });
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var course = await response.Content.ReadFromJsonAsync<CourseResponse>();
+        Assert.NotNull(course);
+        Assert.Equal("Body Tenant Course", course!.Name);
     }
 
     [Fact]

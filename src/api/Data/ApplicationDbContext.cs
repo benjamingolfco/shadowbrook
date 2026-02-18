@@ -37,17 +37,13 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(c => c.TenantId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Add tenant scoping query filter
+        // Add tenant scoping query filter - only filter when a tenant context exists
         modelBuilder.Entity<Course>()
             .HasQueryFilter(c => _currentUser == null || _currentUser.TenantId == null || c.TenantId == _currentUser.TenantId);
 
         // Add indexes for Course
         modelBuilder.Entity<Course>()
             .HasIndex(c => c.TenantId);
-
-        modelBuilder.Entity<Course>()
-            .Property(c => c.Name)
-            .UseCollation(isSqlite ? "NOCASE" : "Latin1_General_CI_AS");
 
         modelBuilder.Entity<Course>()
             .HasIndex(c => new { c.TenantId, c.Name })

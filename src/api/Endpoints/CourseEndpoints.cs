@@ -28,25 +28,25 @@ public static class CourseEndpoints
         if (string.IsNullOrWhiteSpace(request.Name))
             return Results.BadRequest(new { error = "Name is required." });
 
-        if (!currentUser.HasTenantId)
-            return Results.BadRequest(new { error = "X-Tenant-Id header is required." });
-
-        var tenantId = currentUser.TenantId!.Value;
+        // Derive TenantId from X-Tenant-Id header, fallback to request.TenantId
+        var tenantId = currentUser.TenantId ?? request.TenantId;
+        if (tenantId is null)
+            return Results.BadRequest(new { error = "TenantId is required (via X-Tenant-Id header or request body)." });
 
         // Validate that the tenant exists
-        var tenantExists = await db.Tenants.AnyAsync(t => t.Id == tenantId);
+        var tenantExists = await db.Tenants.AnyAsync(t => t.Id == tenantId.Value);
         if (!tenantExists)
             return Results.BadRequest(new { error = "Tenant does not exist." });
 
         // Check for duplicate course name within this tenant
-        var duplicateExists = await db.Courses.AnyAsync(c => c.TenantId == tenantId && c.Name == request.Name);
+        var duplicateExists = await db.Courses.AnyAsync(c => c.TenantId == tenantId.Value && c.Name == request.Name);
         if (duplicateExists)
             return Results.Conflict(new { error = "A course with this name already exists for this tenant." });
 
         var course = new Course
         {
             Id = Guid.NewGuid(),
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             Name = request.Name,
             StreetAddress = request.StreetAddress,
             City = request.City,
@@ -66,13 +66,8 @@ public static class CourseEndpoints
 
     private static async Task<IResult> GetAllCourses(ApplicationDbContext db, ICurrentUser currentUser)
     {
-        IQueryable<Course> query = db.Courses;
-
-        // Admin path (no tenant header) should return all courses
-        if (!currentUser.HasTenantId)
-            query = query.IgnoreQueryFilters();
-
-        var courses = await query.ToListAsync();
+        // Query filter automatically scopes to tenant when TenantId is present
+        var courses = await db.Courses.ToListAsync();
         return Results.Ok(courses);
     }
 
@@ -165,6 +160,7 @@ public static class CourseEndpoints
 
 public record CreateCourseRequest(
     string Name,
+    Guid? TenantId = null,
     string? StreetAddress = null,
     string? City = null,
     string? State = null,
