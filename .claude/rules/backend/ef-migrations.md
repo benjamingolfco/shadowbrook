@@ -68,6 +68,7 @@ Bundles are self-contained executables that apply pending migrations — no SDK 
 
 ## Common Pitfalls
 
+- **Never write migration files by hand** — always use `dotnet ef migrations add`. The generated Designer.cs and ModelSnapshot.cs contain serialized model state that EF uses to diff for the next migration. Hand-editing these files will corrupt the migration chain.
 - **Never call `EnsureCreated()` before `Migrate()`** — `EnsureCreated` bypasses the migration history table and `Migrate` will fail
 - **Never delete migrations that have been applied to a shared database** — downstream migrations depend on them
 - **Always check the `Down()` method** — EF generates it automatically but it may not be correct for data-preserving rollbacks
