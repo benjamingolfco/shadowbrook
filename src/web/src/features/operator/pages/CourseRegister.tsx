@@ -46,7 +46,7 @@ export default function CourseRegister() {
   function onSubmit(data: CourseRegisterFormData) {
     // Filter out empty optional fields
     const payload = Object.fromEntries(
-      Object.entries(data).filter(([_, value]) => value !== '')
+      Object.entries(data).filter(([, value]) => value !== '')
     ) as CourseRegisterFormData;
 
     registerMutation.mutate(payload, {
