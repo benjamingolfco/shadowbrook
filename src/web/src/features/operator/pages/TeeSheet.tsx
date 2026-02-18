@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { useCourses } from '@/features/operator/hooks/useTeeTimeSettings';
 import { useTeeSheet } from '@/features/operator/hooks/useTeeSheet';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -19,6 +21,7 @@ import {
 } from '@/components/ui/table';
 
 export default function TeeSheet() {
+  const navigate = useNavigate();
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
 
@@ -44,10 +47,15 @@ export default function TeeSheet() {
   if (!coursesQuery.data || coursesQuery.data.length === 0) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-bold">Tee Sheet</h1>
-        <p className="mt-2 text-muted-foreground">
-          No courses registered yet. Register a course first.
-        </p>
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+          <h1 className="text-3xl font-bold mb-2">Welcome to Shadowbrook</h1>
+          <p className="text-muted-foreground mb-6 max-w-md">
+            Get started by registering your first golf course to manage tee times, bookings, and settings.
+          </p>
+          <Button onClick={() => navigate('/operator/register-course')}>
+            Register Your Course
+          </Button>
+        </div>
       </div>
     );
   }

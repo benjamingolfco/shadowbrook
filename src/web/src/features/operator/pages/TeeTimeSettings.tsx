@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -36,6 +37,7 @@ const teeTimeSettingsSchema = z.object({
 type TeeTimeSettingsFormData = z.infer<typeof teeTimeSettingsSchema>;
 
 export default function TeeTimeSettings() {
+  const navigate = useNavigate();
   const coursesQuery = useCourses();
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
 
@@ -99,10 +101,15 @@ export default function TeeTimeSettings() {
   if (!coursesQuery.data || coursesQuery.data.length === 0) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Tee Time Settings</h1>
-        <p className="text-muted-foreground">
-          No courses registered yet. Register a course first.
-        </p>
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+          <h1 className="text-3xl font-bold mb-2">No Courses Registered</h1>
+          <p className="text-muted-foreground mb-6 max-w-md">
+            Register a course before configuring tee time settings.
+          </p>
+          <Button onClick={() => navigate('/operator/register-course')}>
+            Register Your Course
+          </Button>
+        </div>
       </div>
     );
   }
