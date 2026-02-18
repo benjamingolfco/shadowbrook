@@ -56,6 +56,15 @@ export default function OperatorLayout() {
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <NavLink to="/operator/register-course">
+                  {({ isActive }) => (
+                    <span className={isActive ? 'font-semibold' : ''}>Register Course</span>
+                  )}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>

@@ -15,7 +15,10 @@ public class TeeTimeSettingsTests : IClassFixture<TestWebApplicationFactory>
     private async Task<Guid> CreateCourse()
     {
         var tenantId = await CreateTestTenantAsync();
-        var response = await _client.PostAsJsonAsync("/courses", new { TenantId = tenantId, Name = "Test Course" });
+        var request = new HttpRequestMessage(HttpMethod.Post, "/courses");
+        request.Headers.Add("X-Tenant-Id", tenantId.ToString());
+        request.Content = JsonContent.Create(new { Name = "Test Course" });
+        var response = await _client.SendAsync(request);
         var course = await response.Content.ReadFromJsonAsync<CourseResponse>();
         return course!.Id;
     }

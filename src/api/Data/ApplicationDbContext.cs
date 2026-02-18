@@ -1,13 +1,17 @@
 using Microsoft.EntityFrameworkCore;
+using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Models;
 
 namespace Shadowbrook.Api.Data;
 
 public class ApplicationDbContext : DbContext
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    private readonly ICurrentUser? _currentUser;
+
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ICurrentUser? currentUser = null)
         : base(options)
     {
+        _currentUser = currentUser;
     }
 
     public DbSet<Tenant> Tenants => Set<Tenant>();
@@ -32,6 +36,18 @@ public class ApplicationDbContext : DbContext
             .WithMany(t => t.Courses)
             .HasForeignKey(c => c.TenantId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Add tenant scoping query filter - only filter when a tenant context exists
+        modelBuilder.Entity<Course>()
+            .HasQueryFilter(c => _currentUser == null || _currentUser.TenantId == null || c.TenantId == _currentUser.TenantId);
+
+        // Add indexes for Course
+        modelBuilder.Entity<Course>()
+            .HasIndex(c => c.TenantId);
+
+        modelBuilder.Entity<Course>()
+            .HasIndex(c => new { c.TenantId, c.Name })
+            .IsUnique();
 
         modelBuilder.Entity<Booking>()
             .HasOne(b => b.Course)

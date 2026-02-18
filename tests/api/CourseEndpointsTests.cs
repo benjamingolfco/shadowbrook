@@ -18,9 +18,14 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetAllCourses_ReturnsOk()
     {
         var tenantId = await CreateTestTenantAsync();
-        await _client.PostAsJsonAsync("/courses", new { TenantId = tenantId, Name = "Test Course" });
+        var request = new HttpRequestMessage(HttpMethod.Post, "/courses");
+        request.Headers.Add("X-Tenant-Id", tenantId.ToString());
+        request.Content = JsonContent.Create(new { Name = "Test Course" });
+        await _client.SendAsync(request);
 
-        var response = await _client.GetAsync("/courses");
+        var getRequest = new HttpRequestMessage(HttpMethod.Get, "/courses");
+        getRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
+        var response = await _client.SendAsync(getRequest);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -33,10 +38,15 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetCourseById_WhenExists_ReturnsOk()
     {
         var tenantId = await CreateTestTenantAsync();
-        var createResponse = await _client.PostAsJsonAsync("/courses", new { TenantId = tenantId, Name = "Lookup Course" });
+        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
+        createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
+        createRequest.Content = JsonContent.Create(new { Name = "Lookup Course" });
+        var createResponse = await _client.SendAsync(createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
-        var response = await _client.GetAsync($"/courses/{created!.Id}");
+        var getRequest = new HttpRequestMessage(HttpMethod.Get, $"/courses/{created!.Id}");
+        getRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
+        var response = await _client.SendAsync(getRequest);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -47,7 +57,10 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task GetCourseById_WhenNotExists_ReturnsNotFound()
     {
-        var response = await _client.GetAsync($"/courses/{Guid.NewGuid()}");
+        var tenantId = await CreateTestTenantAsync();
+        var request = new HttpRequestMessage(HttpMethod.Get, $"/courses/{Guid.NewGuid()}");
+        request.Headers.Add("X-Tenant-Id", tenantId.ToString());
+        var response = await _client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -56,9 +69,10 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
     public async Task PostCourse_ReturnsCreated()
     {
         var tenantId = await CreateTestTenantAsync();
-        var request = new
+        var request = new HttpRequestMessage(HttpMethod.Post, "/courses");
+        request.Headers.Add("X-Tenant-Id", tenantId.ToString());
+        request.Content = JsonContent.Create(new
         {
-            TenantId = tenantId,
             Name = "Braemar Golf Course",
             StreetAddress = "6364 John Harris Dr",
             City = "Edina",
@@ -66,9 +80,9 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
             ZipCode = "55439",
             ContactEmail = "pro@braemargolf.com",
             ContactPhone = "952-826-6799"
-        };
+        });
 
-        var response = await _client.PostAsJsonAsync("/courses", request);
+        var response = await _client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
@@ -81,9 +95,12 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task PostCourse_WithoutName_ReturnsBadRequest()
     {
-        var request = new { StreetAddress = "123 Main St" };
+        var tenantId = await CreateTestTenantAsync();
+        var request = new HttpRequestMessage(HttpMethod.Post, "/courses");
+        request.Headers.Add("X-Tenant-Id", tenantId.ToString());
+        request.Content = JsonContent.Create(new { StreetAddress = "123 Main St" });
 
-        var response = await _client.PostAsJsonAsync("/courses", request);
+        var response = await _client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
