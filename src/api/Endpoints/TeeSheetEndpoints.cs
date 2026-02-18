@@ -27,7 +27,7 @@ public static class TeeSheetEndpoints
         if (!DateOnly.TryParseExact(date, "yyyy-MM-dd", out var dateOnly))
             return Results.BadRequest(new { error = "date must be in yyyy-MM-dd format." });
 
-        var course = await db.Courses.FindAsync(courseId.Value);
+        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId.Value);
         if (course is null)
             return Results.NotFound(new { error = "Course not found." });
 

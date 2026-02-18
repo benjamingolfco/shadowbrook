@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Data;
 using Shadowbrook.Api.Models;
 
@@ -21,20 +22,31 @@ public static class CourseEndpoints
 
     private static async Task<IResult> CreateCourse(
         CreateCourseRequest request,
-        ApplicationDbContext db)
+        ApplicationDbContext db,
+        ICurrentUser currentUser)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
             return Results.BadRequest(new { error = "Name is required." });
 
+        if (!currentUser.HasTenantId)
+            return Results.BadRequest(new { error = "X-Tenant-Id header is required." });
+
+        var tenantId = currentUser.TenantId!.Value;
+
         // Validate that the tenant exists
-        var tenantExists = await db.Tenants.AnyAsync(t => t.Id == request.TenantId);
+        var tenantExists = await db.Tenants.AnyAsync(t => t.Id == tenantId);
         if (!tenantExists)
             return Results.BadRequest(new { error = "Tenant does not exist." });
+
+        // Check for duplicate course name within this tenant
+        var duplicateExists = await db.Courses.AnyAsync(c => c.TenantId == tenantId && c.Name == request.Name);
+        if (duplicateExists)
+            return Results.Conflict(new { error = "A course with this name already exists for this tenant." });
 
         var course = new Course
         {
             Id = Guid.NewGuid(),
-            TenantId = request.TenantId,
+            TenantId = tenantId,
             Name = request.Name,
             StreetAddress = request.StreetAddress,
             City = request.City,
@@ -52,15 +64,21 @@ public static class CourseEndpoints
         return Results.Created($"/courses/{course.Id}", course);
     }
 
-    private static async Task<IResult> GetAllCourses(ApplicationDbContext db)
+    private static async Task<IResult> GetAllCourses(ApplicationDbContext db, ICurrentUser currentUser)
     {
-        var courses = await db.Courses.ToListAsync();
+        IQueryable<Course> query = db.Courses;
+
+        // Admin path (no tenant header) should return all courses
+        if (!currentUser.HasTenantId)
+            query = query.IgnoreQueryFilters();
+
+        var courses = await query.ToListAsync();
         return Results.Ok(courses);
     }
 
     private static async Task<IResult> GetCourseById(Guid id, ApplicationDbContext db)
     {
-        var course = await db.Courses.FindAsync(id);
+        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
         return course is null ? Results.NotFound() : Results.Ok(course);
     }
 
@@ -71,7 +89,7 @@ public static class CourseEndpoints
         TeeTimeSettingsRequest request,
         ApplicationDbContext db)
     {
-        var course = await db.Courses.FindAsync(id);
+        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
         if (course is null)
             return Results.NotFound();
 
@@ -96,7 +114,7 @@ public static class CourseEndpoints
 
     private static async Task<IResult> GetTeeTimeSettings(Guid id, ApplicationDbContext db)
     {
-        var course = await db.Courses.FindAsync(id);
+        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
         if (course is null)
             return Results.NotFound();
 
@@ -114,7 +132,7 @@ public static class CourseEndpoints
         PricingRequest request,
         ApplicationDbContext db)
     {
-        var course = await db.Courses.FindAsync(id);
+        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
         if (course is null)
             return Results.NotFound();
 
@@ -134,7 +152,7 @@ public static class CourseEndpoints
 
     private static async Task<IResult> GetPricing(Guid id, ApplicationDbContext db)
     {
-        var course = await db.Courses.FindAsync(id);
+        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
         if (course is null)
             return Results.NotFound();
 
@@ -146,7 +164,6 @@ public static class CourseEndpoints
 }
 
 public record CreateCourseRequest(
-    Guid TenantId,
     string Name,
     string? StreetAddress = null,
     string? City = null,

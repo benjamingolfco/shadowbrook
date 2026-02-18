@@ -57,7 +57,10 @@ public class TeeSheetEndpointsTests : IClassFixture<TestWebApplicationFactory>
     {
         // Arrange - Create course with tee time settings
         var tenantId = await CreateTestTenantAsync();
-        var createResponse = await _client.PostAsJsonAsync("/courses", new { TenantId = tenantId, Name = "Test Course" });
+        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
+        createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
+        createRequest.Content = JsonContent.Create(new { Name = "Test Course" });
+        var createResponse = await _client.SendAsync(createRequest);
         var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
         await _client.PutAsJsonAsync($"/courses/{course!.Id}/tee-time-settings", new
@@ -86,7 +89,10 @@ public class TeeSheetEndpointsTests : IClassFixture<TestWebApplicationFactory>
     {
         // Arrange - Create course with tee time settings
         var tenantId = await CreateTestTenantAsync();
-        var createResponse = await _client.PostAsJsonAsync("/courses", new { TenantId = tenantId, Name = "Test Course" });
+        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
+        createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
+        createRequest.Content = JsonContent.Create(new { Name = "Test Course" });
+        var createResponse = await _client.SendAsync(createRequest);
         var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
         await _client.PutAsJsonAsync($"/courses/{course!.Id}/tee-time-settings", new
@@ -127,7 +133,10 @@ public class TeeSheetEndpointsTests : IClassFixture<TestWebApplicationFactory>
     {
         // Arrange
         var tenantId = await CreateTestTenantAsync();
-        var createResponse = await _client.PostAsJsonAsync("/courses", new { TenantId = tenantId, Name = "Test Course" });
+        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
+        createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
+        createRequest.Content = JsonContent.Create(new { Name = "Test Course" });
+        var createResponse = await _client.SendAsync(createRequest);
         var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
         await _client.PutAsJsonAsync($"/courses/{course!.Id}/tee-time-settings", new
@@ -162,7 +171,10 @@ public class TeeSheetEndpointsTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetTeeSheet_TeeTimeSettingsNotConfigured_ReturnsNotFound()
     {
         var tenantId = await CreateTestTenantAsync();
-        var createResponse = await _client.PostAsJsonAsync("/courses", new { TenantId = tenantId, Name = "Test Course" });
+        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
+        createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
+        createRequest.Content = JsonContent.Create(new { Name = "Test Course" });
+        var createResponse = await _client.SendAsync(createRequest);
         var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
         var response = await _client.GetAsync($"/tee-sheets?courseId={course!.Id}&date=2026-02-07");
@@ -174,7 +186,10 @@ public class TeeSheetEndpointsTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetTeeSheet_InvalidDateFormat_ReturnsBadRequest()
     {
         var tenantId = await CreateTestTenantAsync();
-        var createResponse = await _client.PostAsJsonAsync("/courses", new { TenantId = tenantId, Name = "Test Course" });
+        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
+        createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
+        createRequest.Content = JsonContent.Create(new { Name = "Test Course" });
+        var createResponse = await _client.SendAsync(createRequest);
         var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
         var response = await _client.GetAsync($"/tee-sheets?courseId={course!.Id}&date=02-07-2026");
@@ -202,7 +217,10 @@ public class TeeSheetEndpointsTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetTeeSheet_EmptyTeeSheet_ReturnsAllOpenSlots()
     {
         var tenantId = await CreateTestTenantAsync();
-        var createResponse = await _client.PostAsJsonAsync("/courses", new { TenantId = tenantId, Name = "Test Course" });
+        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
+        createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
+        createRequest.Content = JsonContent.Create(new { Name = "Test Course" });
+        var createResponse = await _client.SendAsync(createRequest);
         var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
         await _client.PutAsJsonAsync($"/courses/{course!.Id}/tee-time-settings", new
@@ -227,7 +245,10 @@ public class TeeSheetEndpointsTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetTeeSheet_FullyBookedTeeSheet_ReturnsAllBookedSlots()
     {
         var tenantId = await CreateTestTenantAsync();
-        var createResponse = await _client.PostAsJsonAsync("/courses", new { TenantId = tenantId, Name = "Test Course" });
+        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
+        createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
+        createRequest.Content = JsonContent.Create(new { Name = "Test Course" });
+        var createResponse = await _client.SendAsync(createRequest);
         var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
         await _client.PutAsJsonAsync($"/courses/{course!.Id}/tee-time-settings", new
