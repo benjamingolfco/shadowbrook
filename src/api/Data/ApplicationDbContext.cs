@@ -22,11 +22,6 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        var isSqlite = Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite";
-        modelBuilder.Entity<Tenant>()
-            .Property(t => t.OrganizationName)
-            .UseCollation(isSqlite ? "NOCASE" : "Latin1_General_CI_AS");
-
         modelBuilder.Entity<Tenant>()
             .HasIndex(t => t.OrganizationName)
             .IsUnique();
@@ -44,10 +39,6 @@ public class ApplicationDbContext : DbContext
         // Add indexes for Course
         modelBuilder.Entity<Course>()
             .HasIndex(c => c.TenantId);
-
-        modelBuilder.Entity<Course>()
-            .Property(c => c.Name)
-            .UseCollation(isSqlite ? "NOCASE" : "Latin1_General_CI_AS");
 
         modelBuilder.Entity<Course>()
             .HasIndex(c => new { c.TenantId, c.Name })
