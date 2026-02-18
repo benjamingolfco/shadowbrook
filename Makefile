@@ -1,4 +1,4 @@
-.PHONY: help dev api web build test lint clean down logs
+.PHONY: help dev db api web build test lint clean down logs
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -9,7 +9,10 @@ dev: ## Run API (Docker) + frontend dev server
 	@echo "API logs: make logs"
 	pnpm --dir src/web dev
 
-api: ## Run the .NET API natively (SQLite)
+db: ## Start SQL Server container
+	docker compose up db -d
+
+api: ## Run the .NET API natively (requires SQL Server: make db)
 	dotnet run --project src/api
 
 web: ## Run the Vite dev server
