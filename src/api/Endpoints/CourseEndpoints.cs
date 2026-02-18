@@ -38,11 +38,12 @@ public static class CourseEndpoints
         if (tenant is null)
             return Results.BadRequest(new { error = "Tenant does not exist." });
 
-        // Check for duplicate course name within the tenant (case-insensitive)
+        // Check for duplicate course name within the tenant (case-insensitive).
+        // The Name column has case-insensitive collation (NOCASE for SQLite, Latin1_General_CI_AS
+        // for SQL Server), so a simple equality check is already case-insensitive at the DB level.
         var duplicateExists = await db.Courses
             .IgnoreQueryFilters()
-            .AnyAsync(c => c.TenantId == tenantId.Value &&
-                          EF.Functions.Like(c.Name, request.Name));
+            .AnyAsync(c => c.TenantId == tenantId.Value && c.Name == request.Name);
         if (duplicateExists)
             return Results.Conflict(new { error = "A course with this name already exists for this tenant." });
 

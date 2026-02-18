@@ -188,6 +188,26 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
+    public async Task PostCourse_DuplicateName_WithSqlWildcards_ReturnsConflict()
+    {
+        // Regression: EF.Functions.Like treated % and _ as SQL wildcards, causing false
+        // positives/negatives. Equality check via == is correct; collation handles case.
+        var (tenantId, _) = await CreateTestTenantAsync();
+
+        var request1 = new HttpRequestMessage(HttpMethod.Post, "/courses");
+        request1.Headers.Add("X-Tenant-Id", tenantId.ToString());
+        request1.Content = JsonContent.Create(new { Name = "Pine%Valley" });
+        await _client.SendAsync(request1);
+
+        var request2 = new HttpRequestMessage(HttpMethod.Post, "/courses");
+        request2.Headers.Add("X-Tenant-Id", tenantId.ToString());
+        request2.Content = JsonContent.Create(new { Name = "Pine%Valley" });
+        var response = await _client.SendAsync(request2);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
     public async Task PostCourse_SameNameDifferentTenant_ReturnsCreated()
     {
         var (tenantId1, _) = await CreateTestTenantAsync();
