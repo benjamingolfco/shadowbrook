@@ -52,16 +52,25 @@ export default function CourseList() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Registered</TableHead>
+                <TableHead>Tenant</TableHead>
+                <TableHead className="hidden md:table-cell">Location</TableHead>
+                <TableHead className="hidden md:table-cell">Contact</TableHead>
+                <TableHead className="hidden md:table-cell">Registered</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {courses.map((course: Course) => (
                 <TableRow key={course.id}>
-                  <TableCell className="font-semibold">{course.name}</TableCell>
                   <TableCell>
+                    <div className="font-semibold">{course.name}</div>
+                    <div className="md:hidden text-sm text-muted-foreground">
+                      {course.tenantName || '—'}
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {course.tenantName || '—'}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <div className="space-y-0.5">
                       {course.streetAddress && (
                         <div className="text-sm">{course.streetAddress}</div>
@@ -75,7 +84,7 @@ export default function CourseList() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <div className="space-y-0.5">
                       {course.contactEmail && (
                         <div className="text-sm">{course.contactEmail}</div>
@@ -85,7 +94,7 @@ export default function CourseList() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm">
+                  <TableCell className="hidden md:table-cell text-sm">
                     {new Date(course.createdAt).toLocaleDateString()}
                   </TableCell>
                 </TableRow>
