@@ -1,19 +1,25 @@
 name: Shadowbrook Implementation
 
 on:
-  issues:
-    types: [labeled]
+  pull_request:
+    types: [opened, closed, synchronize]
+  pull_request_review:
+    types: [submitted]
+  check_suite:
+    types: [completed]
+  schedule:
+    - cron: '0 */2 * * *'  # Every 2 hours
 
 jobs:
-  dispatch:
-    # Only one implementation run per issue at a time
+  sprint:
     concurrency:
-      group: impl-${{ github.event.issue.number }}
+      group: sprint-${{ github.event.pull_request.number || github.event.check_suite.id || 'cron' }}
       cancel-in-progress: false
-    # Run only when the agent/implement label is added to an agentic issue
     if: |
-      github.event.label.name == 'agent/implement' &&
-      contains(github.event.issue.labels.*.name, 'agentic')
+      (github.event_name == 'schedule') ||
+      (github.event_name == 'pull_request') ||
+      (github.event_name == 'pull_request_review') ||
+      (github.event_name == 'check_suite' && github.event.check_suite.pull_requests[0])
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -34,13 +40,7 @@ jobs:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - name: Set issue context
-        id: issue
-        run: |
-          echo "number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
-          echo "title=${{ github.event.issue.title }}" >> $GITHUB_OUTPUT
-
-      - name: Run Implementation Coordinator
+      - name: Run Sprint Manager
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -52,56 +52,74 @@ jobs:
           claude_args: |
             --model claude-sonnet-4-5-20250929 --allowedTools "Bash" "Read" "Write" "Edit" "Glob" "Grep" "Task"
           prompt: |
-            You are the implementation coordinator for the Shadowbrook agent pipeline.
+            You are the Sprint Manager for the Shadowbrook agent pipeline.
 
             ## Context
-            Issue: #${{ steps.issue.outputs.number }} — ${{ steps.issue.outputs.title }}
+            Event: ${{ github.event_name }}
+            Action: ${{ github.event.action || 'N/A' }}
             Run ID: ${{ github.run_id }}
             Run Link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-            ## Step 1: Gather Context
-            Read the pipeline protocol:
-            - Read `.claude/skills/agent-pipeline/SKILL.md` for comment format and role icons.
+            ## Instructions
+            1. Read `.claude/agents/sprint-manager.md` for your role definition, dispatch logic, and status IDs.
+            2. Read `.claude/skills/agent-pipeline/SKILL.md` for pipeline protocols and comment format.
+            3. Analyze the triggering event and take appropriate action.
 
-            Read the issue and its comments:
-            - Issue body and acceptance criteria
-            - Architect's technical plan and UX interaction spec (in the Issue Plan comment)
-            - Dev Task List (all agent sections)
-            - PM's routing comment (why implementation was dispatched)
-            - Review feedback if this is a re-dispatch after CI failure or code review changes
+            ## Event Handling
 
-            ## Step 2: Set Up Branch and PR
-            Check if a branch and PR already exist for this issue (re-dispatch case):
-            - Look for an existing branch matching `issue/${{ steps.issue.outputs.number }}-*`
-            - If a branch exists, check it out and pull latest. If a PR exists, note its number.
-            - If no branch exists, create one from main: `issue/{number}-{slug}` where slug is a short kebab-case summary of the issue title.
+            ### Cron (schedule)
+            - Query sprint issues in the current iteration that are Ready and unblocked
+            - Dispatch one unblocked issue: Architect for detailed plan → implementation agents → PR
+            - Check for sprint completion (all issues Done)
 
-            ## Step 3: Run Implementation Agents
-            Read the Dev Task List from the Issue Plan comment. Determine which agent sections have unchecked items.
+            ### pull_request:closed (merged)
+            - Find the linked issue from the PR body or branch name
+            - Verify the issue is marked Done
+            - Query what this issue was blocking (merge cascade)
+            - Dispatch newly-unblocked sprint issues
+            - Update Current Sprint Overview
 
-            Run agents **sequentially** in this order (skip agents with no unchecked items):
-            1. **Backend Developer** (`subagent_type: "backend"`)
-            2. **Frontend Developer** (`subagent_type: "frontend"`)
-            3. **DevOps Engineer** (`subagent_type: "devops"`)
+            ### pull_request:opened / pull_request:synchronize
+            - Check if the PR is linked to a sprint issue (has `agentic` label)
+            - If not a sprint PR, skip entirely
+            - If sprint PR, update status as needed
 
-            For each agent:
-            - Spawn via the Task tool
-            - In the Task prompt, include:
-              - Issue context, technical plan, and UX spec
-              - The specific Dev Task items for this agent (only unchecked items)
-              - Tell the agent to implement on the current branch, commit, and push
-              - Tell the agent NOT to create branches or PRs — the coordinator handles that
-              - Tell the agent to return: files changed, tasks completed, summary
-            - Do NOT include SKILL.md — agents don't need pipeline protocol
-            - After the agent returns, post a handback comment using the agent's role icon and run link footer
-            - Check off completed items in the Dev Task List comment
+            ### pull_request_review:submitted
+            - Check if the PR has the `agentic` label; skip if not
+            - If review passes (comment, no request-changes): set Ready to Merge, tag owner
+            - If review requests changes: re-dispatch implementation agent with feedback
 
-            ## Step 4: Create or Update PR
-            After all agents have completed:
-            - If no PR exists: create one with `gh pr create --label agentic`. The title should summarize all work done. The body should cover all agents' contributions with a test plan.
-            - If a PR already exists: update the title and body with `gh pr edit` to reflect the current state of all work.
-            - Link the PR to the issue (include "Closes #${{ steps.issue.outputs.number }}" in the body).
+            ### check_suite:completed
+            - Check if the PR is linked to a sprint issue
+            - If CI passes: set In Review
+            - If CI fails: re-dispatch implementation agent with failure details
 
-            ## Step 5: Cleanup
-            1. Remove the `agent/implement` label
-            2. Write GITHUB_STEP_SUMMARY table summarizing all agents that ran, tasks completed, and PR number
+            ## Spawning Agents
+            When spawning agents (architect, backend, frontend, devops):
+
+            1. Gather all issue context the agent needs.
+            2. Spawn the agent using the Task tool with appropriate subagent_type.
+               In the Task prompt, include:
+               - All issue context (paste it — agent should not need GitHub API calls)
+               - For Architect: instruct for DETAILED implementation plan (file-by-file, test strategy)
+               - For implementation agents: include the Architect's detailed plan and specific Dev Task items
+               - Tell implementation agents to work on the current branch, commit, and push
+               - Tell agents NOT to create branches or PRs
+               - Do NOT include SKILL.md — agents don't need pipeline protocol
+            3. When the agent returns:
+               - Format and post handback comment (role icon, run link footer)
+               - Update Issue Plan comment
+               - Check off completed Dev Task items
+               - Advance to next phase
+
+            ## PR Creation
+            After all implementation agents complete:
+            - Create PR with `gh pr create --label agentic`
+            - Include "Closes #{issue_number}" in the body
+            - Set status to CI Pending
+
+            ## General
+            - Use Explore subagents (Task with subagent_type "Explore") for verbose context gathering.
+            - Use the Run ID and Run Link above in all comment footers — never read environment variables for these.
+            - Skip PRs without the `agentic` label (owner's manual PRs).
+            - Dispatch one issue per workflow run.

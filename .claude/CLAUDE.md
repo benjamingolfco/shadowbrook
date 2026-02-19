@@ -93,7 +93,28 @@ Repo: `benjamingolfco/shadowbrook` | Project: #1 under `benjamingolfco` org
 Notes:
 - Use `-F` (not `-f`) for integer fields (e.g., `sub_issue_id`)
 - Issue types: Task, Bug, Feature, User Story
-- Project fields: Status (Triage/Needs Story/Story Review/Needs Architecture/Architecture Review/Ready/Implementing/CI Pending/In Review/Changes Requested/Ready to Merge/Awaiting Owner/Done), Priority (P0/P1/P2), Size (XS-XL)
+- Project fields: Status (Backlog/Needs Story/Story Review/Needs Architecture/Architecture Review/Ready/Implementing/CI Pending/In Review/Changes Requested/Ready to Merge/Done), Priority (P0/P1/P2), Size (XS-XL)
+
+### GitHub Issue Dependencies
+
+GitHub native issue dependencies for tracking blocked-by/blocking relationships:
+
+| Action | Command |
+|--------|---------|
+| List blockers | `gh api repos/benjamingolfco/shadowbrook/issues/{N}/dependencies/blocked_by` |
+| Add blocker | `gh api repos/benjamingolfco/shadowbrook/issues/{N}/dependencies/blocked_by -X POST -F issue_id={blocking_issue_node_id}` |
+| List what this blocks | `gh api repos/benjamingolfco/shadowbrook/issues/{N}/dependencies/blocking` |
+| Remove blocker | `gh api repos/benjamingolfco/shadowbrook/issues/{N}/dependencies/blocked_by/{dependency_id} -X DELETE` |
+
+### Milestones & Iterations
+
+- **Milestones** define roadmap scope — the planning workflow only processes issues in the active milestone (earliest-due open milestone)
+- **Iterations** define sprint scope — the implementation workflow only works on issues in the current iteration (GitHub Projects Iteration field)
+- **Dependencies** define execution order — the implementation workflow dispatches unblocked issues first
+
+### Story Points
+
+The Architect estimates story points using the Fibonacci sequence (1, 2, 3, 5, 8, 13, 21) during the planning phase. Points are added to the Issue Plan comment and used for sprint capacity planning.
 
 ### Issue Labels
 
@@ -104,23 +125,21 @@ Notes:
 | `v1` | Core MVP — must ship for launch |
 | `v2` | Enhanced — post-MVP improvements |
 | `v3` | Future — long-term roadmap items |
-| `agentic` | Issue is managed by the automated agent pipeline (required for agents to process it) |
-| `agent/business-analyst` | Assign issue to Business Analyst agent |
-| `agent/architect` | Assign issue to Architect agent |
-| `agent/ux-designer` | Assign issue to UX Designer agent |
-| `agent/implement` | Dispatch implementation (coordinator runs backend, frontend, devops as needed) |
+| `agent/ignore` | Escape hatch — both workflows skip issues with this label |
 
-Apply audience labels based on who benefits — many features get **both** `golfers love` and `course operators love` (see "Features Both Golfers AND Courses Will Love" in the roadmap). Always apply exactly one version label (`v1`, `v2`, or `v3`) based on the roadmap tier. The `agentic` label opts an issue into the automated pipeline — without it, agents ignore the issue. Agent `agent/*` labels are managed by the pipeline — see below.
+Apply audience labels based on who benefits — many features get **both** `golfers love` and `course operators love` (see "Features Both Golfers AND Courses Will Love" in the roadmap). Always apply exactly one version label (`v1`, `v2`, or `v3`) based on the roadmap tier.
 
 ## Agent Pipeline
 
-This project uses an automated multi-agent pipeline via GitHub Actions.
+This project uses an automated multi-agent pipeline via GitHub Actions, split into two workflows — **Planning** (Backlog → Ready) and **Implementation** (in-sprint execution).
+
 See `.claude/skills/agent-pipeline/SKILL.md` for the full protocol.
 
 - **Workflow files:**
-  - `.github/workflows/claude-pipeline.yml` — event-driven PM + inline planning agents
-  - `.github/workflows/claude-implementation.yml` — implementation agent dispatch
-  - `.github/workflows/claude-cron.yml` — scheduled maintenance
+  - `.github/workflows/claude-planning.yml` — planning pipeline + cron (backlog processing, story refinement, architecture review, sprint planning)
+  - `.github/workflows/claude-implementation.yml` — sprint execution (architecture detail, implementation, CI, review, merge cascade)
   - `.github/workflows/claude-code-review.yml` — standalone code review on all PRs
+- **Agent manager instructions:** `.claude/agents/planning-manager.md`, `.claude/agents/sprint-manager.md`
 - **Agent definitions:** `.claude/agents/*.md`
-- **Pipeline statuses:** Triage → Needs Story → **Story Review** → Needs Architecture → **Architecture Review** → Ready → Implementing → CI Pending → In Review → Changes Requested → **Ready to Merge** → Done
+- **Pipeline statuses:** Backlog → Needs Story → **Story Review** → Needs Architecture → **Architecture Review** → **Ready** → Implementing → CI Pending → In Review → Changes Requested → **Ready to Merge** → Done
+- **Sprint gate:** Ready — issues wait here until assigned to an iteration for sprint execution
