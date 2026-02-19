@@ -6,18 +6,19 @@ user-invocable: false
 
 # Agent Pipeline Protocol
 
-Multi-agent system for automating the Shadowbrook development workflow on GitHub Actions.
+Multi-agent system for automating the Shadowbrook development workflow on GitHub Actions. The pipeline is split into two workflows — **Planning** (new issues → Ready) and **Implementation** (in-sprint execution).
 
 ## Architecture
 
-### Workflow Model
+### Two-Workflow Model
 
 | Workflow | File | Triggers | Concurrency |
 |----------|------|----------|-------------|
-| **Shadowbrook Pipeline** | `claude-pipeline.yml` | issues, issue_comment, pull_request, pull_request_review, pull_request_review_comment, check_suite | `pipeline-{issue}`, cancel-in-progress: true |
-| **Shadowbrook Implementation** | `claude-implementation.yml` | issues:labeled (`agent/implement` only) | `impl-{issue}`, cancel-in-progress: false |
-| **Shadowbrook Cron** | `claude-cron.yml` | schedule (every 6h) | `cron`, cancel-in-progress: true |
+| **Shadowbrook Planning** | `claude-planning.yml` | issues, issue_comment, schedule (every 6h) | `planning-{issue}`, cancel-in-progress: true |
+| **Shadowbrook Implementation** | `claude-implementation.yml` | workflow_dispatch, pull_request, pull_request_review, check_suite, schedule (every 2h) | `sprint-{issue\|pr\|event}`, cancel-in-progress: false |
 | **Claude Code Review** | `claude-code-review.yml` | pull_request | `review-{pr}`, cancel-in-progress: true |
+
+**Unchanged:** `owner-gate.yml`, `pr.yml`
 
 ### Agent Responsibility Split
 
@@ -25,12 +26,12 @@ Multi-agent system for automating the Shadowbrook development workflow on GitHub
 
 **What planning agents DO:**
 - Receive issue context via Task prompt
-- Produce their work product (refined story, technical plan, interaction spec)
+- Produce their work product (refined story, lightweight technical review, interaction spec)
 - Return the work product as text in their Task response
 
 **What implementation agents DO:**
-- Receive issue context and task list via Task prompt
-- Write code, run tests, commit, and push to the branch (created by the coordinator)
+- Receive issue context, detailed implementation plan, and task list via Task prompt
+- Write code, run tests, commit, and push to the branch (created by the Sprint Manager)
 - Return a summary (files changed, tasks completed)
 
 **What agents DON'T DO:**
@@ -40,99 +41,182 @@ Multi-agent system for automating the Shadowbrook development workflow on GitHub
 - Write GITHUB_STEP_SUMMARY
 - Know about pipeline protocol, comment format, or handoff rules
 
-**The PM (pipeline/cron workflows) and coordinator (implementation workflow) handle ALL GitHub interactions:**
+**The managers (Planning Manager and Sprint Manager) handle ALL GitHub interactions:**
 - Formatting and posting comments (with role icons, run link footers)
-- Adding/removing labels
-- Pinning comments
-- Writing GITHUB_STEP_SUMMARY
 - Updating the Issue Plan comment
 - Managing project status fields
+- Writing GITHUB_STEP_SUMMARY
+- Managing Sprint Overview issues
 
-### Why Implementation Needs a Separate Workflow
+### Why Two Workflows?
 
-Implementation agents take 10-20+ minutes. During execution they create PRs — GitHub events that retrigger workflows. With `cancel-in-progress: true`, those events would cancel the running agent. Implementation agents must run in a separate workflow with `cancel-in-progress: false`.
+**Planning** is lightweight and event-driven — runs inline with the Planning Manager, handles story refinement, reviews, and sprint planning. Uses `cancel-in-progress: true` since re-triggering should restart the work.
+
+**Implementation** is long-running — Architect plans, then dev agents write code, create PRs. Uses `cancel-in-progress: false` because canceling mid-implementation loses work. The cron job is a lightweight dispatcher that finds all unblocked sprint issues and triggers a separate `workflow_dispatch` run for each — enabling parallel execution across multiple issues. Merge events also cascade dispatch to newly-unblocked issues.
 
 ---
 
-## Agent Labels
+## Opt-Out Model
 
-Labels are the routing mechanism. The PM adds a label to assign work; the PM or coordinator removes it when done. **Only issues with the `agentic` label are processed by the pipeline.** The `agentic` label is added by the product owner to opt an issue into automated management.
+All issues in the active milestone are managed by default — no opt-in label required. Issues with the `agent/ignore` label are skipped by both workflows.
 
-| Label | Agent | Responsibility |
-|-------|-------|----------------|
-| `agent/business-analyst` | Business Analyst | Refines stories, defines acceptance criteria |
-| `agent/architect` | Architect | Plans technical approach, selects patterns |
-| `agent/ux-designer` | UX Designer | Designs interaction specs for UI stories |
-| `agent/implement` | Implementation Coordinator | Runs all implementation agents (backend, frontend, devops) sequentially |
+The `agentic` label is used **only on PRs** — the Sprint Manager adds it when creating PRs (`gh pr create --label agentic`). The owner-gate workflow checks for this label on PRs to require owner approval. Owner's manual PRs don't have the label and auto-pass the gate.
 
-For planning agents (BA, Architect, UX Designer), labels serve as **observability markers** — the PM adds the label before spawning the agent via Task, and removes it after posting the agent's output.
+---
 
-For implementation, a single `agent/implement` label **triggers the implementation workflow**. The coordinator reads the Dev Task List and runs all needed agents (backend → frontend → devops) in one workflow run. It also handles branch creation and PR creation/updates.
+## Scoping Hierarchy
+
+```
+Milestones   →  What gets planned (roadmap scope)
+Iterations   →  What gets implemented (sprint scope)
+Dependencies →  Execution order within a sprint
+```
+
+- **Milestones** — Planning workflow only processes issues in the active milestone (earliest-due open milestone)
+- **Iterations** — GitHub Projects native Iteration field. Implementation only works on current iteration issues.
+- **Dependencies** — GitHub native issue dependencies (blocked-by/blocking). Drive execution order automatically.
 
 ---
 
 ## Project Statuses
 
-The PM sets the project status field to reflect where each issue is in the pipeline.
+Issues with **no status set** are the backlog — new/untouched issues that the planning cron picks up and classifies.
 
-| Status | Meaning |
-|--------|---------|
-| Triage | New issue, not yet assessed |
-| Needs Story | Requires BA refinement before work can begin |
-| Story Review | BA finished; awaiting product owner review of user story and acceptance criteria |
-| Needs Architecture | Story approved by owner; needs technical design |
-| Architecture Review | Architect finished; awaiting product owner review of technical plan |
-| Ready | Plan approved by owner; fully specified and ready for implementation |
-| Implementing | An agent is actively writing code |
-| CI Pending | Code pushed, waiting for CI to pass |
-| In Review | PR open and assigned to code reviewer |
-| Changes Requested | Reviewer requested changes; implementation agent re-assigned |
-| Ready to Merge | CI green + code review approved; awaiting product owner PR approval |
-| Awaiting Owner | Blocked on human input from the product owner |
-| Done | Merged and complete |
+| Status | Meaning | Workflow |
+|--------|---------|----------|
+| Needs Story | BA refining the user story | Planning |
+| Story Review | Owner reviewing story | Planning |
+| Needs Architecture | Architect doing lightweight review (concerns, notes, points). UX Designer adding UI/UX notes. | Planning |
+| Architecture Review | Owner reviewing architectural notes and UI/UX guidance | Planning |
+| **Ready** | Fully reviewed. **The sprint gate.** Waits for iteration assignment. | Planning |
+| Implementing | In sprint — Architect writes detailed impl plan, then dev agents write code. | Implementation |
+| CI Pending | Code pushed, waiting for CI | Implementation |
+| In Review | PR open, code review in progress | Implementation |
+| Changes Requested | Code review requested changes | Implementation |
+| Ready to Merge | CI green + review approved, waiting for owner PR approval | Implementation |
+| Awaiting Owner | Blocked on human input — escalation or repeated failures | Either |
+| Done | Merged and complete | Implementation |
+
+**Key design points:**
+- **Ready** is the sprint gate — issues wait here until assigned to an iteration
+- Architecture in planning = **lightweight review** (concerns, patterns, story points)
+- Architecture in sprint = **detailed implementation plan** (file-by-file, just-in-time)
+- Status IDs for `gh project item-edit` are in CLAUDE.md § GitHub Project Management
+
+---
+
+## Two-Phase Architecture
+
+The Architect's work is split across workflows:
+
+| Phase | Workflow | Depth | Output |
+|-------|----------|-------|--------|
+| **Architectural Review** | Planning | Lightweight | Technical notes: patterns, data model concerns, API design direction, risks, story points estimate. |
+| **Implementation Plan** | Implementation | Detailed | File-by-file plan: what to create, what to modify, exact approach, test strategy. May be written as a plan file on the issue branch. |
+
+**Why split?**
+- Lightweight review during planning gives the owner early visibility into technical concerns
+- Detailed planning just-in-time in the sprint means plans are always fresh (no staleness)
+- Owner can influence direction during Architecture Review before implementation details are locked in
+
+---
+
+## Story Points
+
+The Architect suggests **story points** using the Fibonacci sequence (1, 2, 3, 5, 8, 13, 21) after reviewing each issue's technical complexity. Points are added to the Issue Plan comment.
+
+The planning workflow uses story points for **sprint capacity planning:**
+- Each sprint has a **velocity** (total points the team can complete, learned over time)
+- When suggesting issues for the next sprint, the planning workflow fills up to the team's velocity
+- Points measure relative complexity, not time
+
+---
 
 ## Product Owner Review Gates
 
-The pipeline pauses at three checkpoints for product owner review. The PM sets the appropriate status, assigns the issue to the product owner (`gh issue edit {number} --add-assignee aarongbenjamin`), and tags them with an **Action Required** comment. When the owner responds and the issue leaves the review gate, the PM unassigns them (`gh issue edit {number} --remove-assignee aarongbenjamin`). The same assign/unassign pattern applies to **Awaiting Owner** escalations. This lets the owner filter by "assigned to me" to see exactly what needs their attention.
+The pipeline pauses at three checkpoints for product owner review. The manager (Planning Manager or Sprint Manager, depending on phase) sets the appropriate status, assigns the issue to the product owner (`gh issue edit {number} --add-assignee aarongbenjamin`), and tags them with an **Action Required** comment. When the owner responds, the manager unassigns them.
 
 ### Gate 1: Story Review
 
-After the BA refines the user story and acceptance criteria, the PM sets status to **Story Review**, assigns the product owner to the issue, and tags them. The owner reviews the story for completeness, correctness, and alignment with product goals.
+After the BA refines the user story, the Planning Manager sets status to **Story Review** and tags the owner.
 
-- **Owner approves:** Comments with approval (e.g., "story approved", "looks good", "approved"). PM advances to **Needs Architecture**. If the story involves UI changes, PM assigns both the Architect (`agent/architect`) and UX Designer (`agent/ux-designer`) in parallel. If backend-only, PM assigns only the Architect.
-- **Owner requests changes:** Comments with feedback. PM sets status back to **Needs Story** and re-assigns the BA with the owner's feedback.
+- **Owner approves:** Planning Manager advances to **Needs Architecture**.
+- **Owner requests changes:** Planning Manager re-dispatches the BA with feedback.
 
 ### Gate 2: Architecture Review
 
-After the Architect posts the technical plan (and the UX Designer posts the interaction spec, if dispatched), the PM sets status to **Architecture Review**, assigns the product owner, and tags them. The owner reviews the plan (and spec) for alignment with product goals, scope, and technical direction.
+After the Architect posts the lightweight technical review (and the UX Designer posts the interaction spec, if dispatched), the Planning Manager sets status to **Architecture Review** and tags the owner.
 
-- **Owner approves:** Comments with approval. PM advances to **Ready**.
-- **Owner requests changes:** Comments with feedback. PM sets status back to **Needs Architecture** and re-assigns the architect with the owner's feedback.
+- **Owner approves:** Planning Manager sets status to **Ready**.
+- **Owner requests changes:** Planning Manager re-dispatches the Architect with feedback.
 
 ### Gate 3: PR Approval
 
-After CI passes and the code reviewer approves, the PM sets status to **Ready to Merge**, assigns the product owner, and tags them. The owner reviews the PR on GitHub, approves it, and merges it manually.
+After CI passes and the code reviewer approves, the Sprint Manager sets status to **Ready to Merge** and tags the owner. The owner reviews the PR on GitHub, approves it, and merges it manually.
 
-- **Owner approves and merges the PR:** PM detects the merge and sets status to **Done**.
-- **Owner requests changes on the PR:** PM routes back to the implementation agent.
+**The Sprint Manager must NEVER enable auto-merge or merge the PR. Only the product owner merges.**
 
-**The PM must NEVER enable auto-merge or merge the PR. Only the product owner merges.**
+---
 
-### Detecting Owner Approval
+## Sprint Overview Issues
 
-The PM detects owner approval by scanning issue comments for messages from `@aarongbenjamin` (not from a `[bot]` user) on issues in `Story Review` or `Architecture Review` status. The PM interprets the comment as approval or change request based on its content.
+Two pinned issues, managed by the planning workflow:
+
+### Current Sprint Overview
+
+Shows execution status of the active sprint:
+
+```markdown
+## Sprint Overview — Iteration {title}
+
+**Phase:** Active | Complete
+**Iteration:** {title} ({start_date} — {end_date})
+**Velocity:** {total points} / {capacity}
+
+### Sprint Issues
+- #{N} — {story title} · {points}pt · **{status}**
+
+### History
+- Sprint started · [Run #N](link)
+- #{N} dispatched · [Run #N](link)
+- Sprint complete — all issues done · [Run #N](link)
+```
+
+### Next Sprint Overview
+
+Planning workspace for the upcoming sprint:
+
+```markdown
+## Sprint Overview — Next Sprint
+
+**Phase:** Planning | Review
+**Target Iteration:** {title}
+**Capacity:** {velocity} points
+
+### Suggested Issues (by priority)
+- #{N} — {story title} · {points}pt · Ready ✓
+
+### Backlog Highlights
+- {observations about backlog items}
+
+### Questions / Concerns
+- {items needing owner input}
+
+### History
+- Next sprint planning started · [Run #N](link)
+```
+
+---
 
 ## Comment Format
 
-All comments posted by the PM/coordinator use a structured format with role icons for instant visual recognition and clear action callouts.
+All comments posted by the managers (Planning Manager / Sprint Manager) use a structured format with role icons and clear action callouts.
 
 ### Role Icons
 
-Every comment heading starts with the agent's role icon:
-
 | Icon | Role |
 |------|------|
-| 📋 | Project Manager |
+| 📋 | Planning Manager / Sprint Manager |
 | 📝 | Business Analyst |
 | 🏗️ | Architect |
 | 🎯 | UX Designer |
@@ -142,26 +226,22 @@ Every comment heading starts with the agent's role icon:
 
 ### Comment Patterns
 
-**1. Action Required — PM notifying the product owner (PM only)**
-
-Used exclusively by the PM when the product owner needs to take action. The `> **Action Required**` callout and `@aarongbenjamin` @mention must be present so the owner gets notified.
+**1. Action Required — Manager notifying the product owner**
 
 ```markdown
-### 📋 Project Manager → @aarongbenjamin
+### 📋 Planning Manager → @aarongbenjamin
 
 > **Action Required:** Review the user story and comment to approve or request changes.
 
 The BA refined the story with 6 acceptance criteria covering pricing setup, validation, and display.
 
-[View the BA's story refinement](#link-to-comment)
+[View the Issue Plan](#link-to-comment)
 
 ---
 _Run: [#91](https://github.com/org/repo/actions/runs/12345)_
 ```
 
-**2. Agent Work Output — PM posting agent's deliverable**
-
-Used by the PM/coordinator when posting an agent's work product (technical plan, story refinement, interaction spec). The PM formats the output with the agent's role icon.
+**2. Agent Work Output — Manager posting agent's deliverable**
 
 ```markdown
 ### 📝 Business Analyst — Story Refinement for #6
@@ -172,28 +252,16 @@ Used by the PM/coordinator when posting an agent's work product (technical plan,
 _Run: [#89](https://github.com/org/repo/actions/runs/12345)_
 ```
 
-```markdown
-### 🏗️ Architect — Technical Plan for #6
-
-{agent's technical plan content}
-
----
-_Run: [#93](https://github.com/org/repo/actions/runs/12345)_
-```
-
-**3. Handback — coordinator reporting implementation completion**
-
-Used by the implementation coordinator when an implementation agent finishes.
+**3. Handback — Sprint Manager reporting implementation completion**
 
 ```markdown
-### ⚙️ Backend Developer → Project Manager
+### ⚙️ Backend Developer → Sprint Manager
 
 Implemented flat-rate pricing feature for #6.
 
 **What was done:**
 - Created `src/api/Models/Pricing.cs` with flat-rate entity
 - Added PUT/GET endpoints at `/courses/{id}/pricing`
-- Wrote 4 integration tests
 
 **PR:** #42
 
@@ -201,35 +269,29 @@ Implemented flat-rate pricing feature for #6.
 _Run: [#95](https://github.com/org/repo/actions/runs/12345)_
 ```
 
-**4. Routing — PM assigning work to an implementation agent**
-
-Used when the PM routes work to an implementation agent. The agent is triggered by the label, not the comment — the comment is for the audit trail.
+**4. Routing — Manager assigning work**
 
 ```markdown
-### 📋 Project Manager → Backend Developer
+### 📋 Sprint Manager → Backend Developer
 
-Owner approved the technical plan. Implement the flat-rate pricing feature following the architect's design.
+Implement the flat-rate pricing feature following the architect's detailed plan.
 
 **Implementation scope:**
 - Modify `src/api/Models/Course.cs` to add `FlatRatePrice` property
 - Create PUT/GET endpoints at `/courses/{id}/pricing`
 
-See the [Architect's technical plan](#link-to-comment) for full details.
-
 ---
 _Run: [#98](https://github.com/org/repo/actions/runs/12345)_
 ```
 
-**5. Question Escalation — PM routing an agent's question**
-
-Used when an agent returned a question in its Task response that the PM needs to route.
+**5. Question Escalation — Manager routing an agent's question**
 
 ```markdown
-### ⚙️ Backend Developer → Architect
+### ⚙️ Backend Developer → @aarongbenjamin
 
-> **Question:** Should we allow $0.00 as a valid flat-rate price (free rounds), or require a minimum above zero?
+> **Action Required:** Question from the Backend Developer on #{number}.
 
-This affects the validation logic in the PUT endpoint. The acceptance criteria say "positive number" but $0 could be intentional for promotional rounds.
+> **Question:** Should we allow $0.00 as a valid flat-rate price?
 
 ---
 _Run: [#95](https://github.com/org/repo/actions/runs/12345)_
@@ -237,13 +299,13 @@ _Run: [#95](https://github.com/org/repo/actions/runs/12345)_
 
 ### @mention Rules
 
-- **Only the PM** @mentions the product owner (`@aarongbenjamin`). Agents never @mention anyone.
-- **Never @mention** agents — they are triggered by labels, not mentions.
+- **Only the managers** @mention the product owner (`@aarongbenjamin`). Agents never @mention anyone.
+- **Never @mention** agents — they are triggered by workflow dispatch, not mentions.
 - The `> **Action Required:**` callout must appear on every comment where someone needs to act.
 
 ### Run Link Footer
 
-Every comment ends with a run link footer for traceability. The PM and coordinator receive the Run ID and Run Link as workflow context variables and use them directly.
+Every comment ends with a run link footer for traceability:
 
 ```
 ---
@@ -254,13 +316,9 @@ _Run: [#12345](https://github.com/org/repo/actions/runs/12345)_
 
 ## Issue Plan Comment
 
-The PM creates and maintains **one pinned comment** on every active issue — the Issue Plan. This is the single source of truth for the issue's status, all agent deliverables, and the implementation task list. The PM edits it in place as the issue progresses — never creates separate comments for agent output.
-
-Use the "Pin issue comment" command from CLAUDE.md § GitHub Project Management. Pinning is idempotent — calling it on an already-pinned comment is safe. **Pin the comment immediately after creating it.**
+The Planning Manager creates and maintains **one pinned comment** on every active issue — the Issue Plan. This is the single source of truth for the issue's status, all agent deliverables, and the implementation task list.
 
 ### Format
-
-The Issue Plan starts minimal at triage and grows as each phase adds content. Sections are added in order — never remove earlier sections.
 
 ```markdown
 ## Issue Plan
@@ -270,122 +328,139 @@ The Issue Plan starts minimal at triage and grows as each phase adds content. Se
 ### Story
 {refined story and acceptance criteria from BA — added after BA completes}
 
-### Technical Plan
-{architect's plan — added after architect completes}
+### Technical Review
+{architect's lightweight review — concerns, patterns, risks, story points — added during planning}
+
+**Story Points:** {N}
 
 ### Interaction Spec
-{UX designer's spec — added after UX designer completes, omit if no UI}
+{UX designer's spec — added during planning, omit if no UI}
+
+### Implementation Plan
+{architect's detailed file-by-file plan — added during sprint execution}
 
 ### Dev Tasks
 #### Backend Developer
 - [ ] Create Tenant entity with org name and contact fields
 - [ ] Implement POST /tenants endpoint with validation
-- [ ] Write integration tests
 
 #### Frontend Developer
 - [ ] Create Tenant TypeScript type and API hooks
 - [ ] Build TenantCreate page (registration form)
 
 ### History
-- Triaged as P1/M, routed to BA · [Run #10](link)
+- Classified as P1/M, routed to BA · [Run #10](link)
 - BA refined story with 5 acceptance criteria · [Run #12](link)
 - Owner approved story · [Run #13](link)
-- Architect designed endpoint structure · [Run #14](link)
-- Owner approved plan, dev tasks created · [Run #16](link)
-- Backend agent assigned · [Run #17](link)
+- Architect reviewed: 5pt, endpoint extension pattern · [Run #14](link)
+- Owner approved architecture, status: Ready · [Run #16](link)
+- Sprint dispatched, Architect writing impl plan · [Run #20](link)
+- Implementation complete, PR #42 opened · [Run #22](link)
 ```
 
 ### Section Lifecycle
 
-| Phase | What the PM adds to the Issue Plan |
+| Phase | What the manager adds to the Issue Plan |
 |-------|------------------------------------|
-| Triage | Create comment with Phase line + History entry. Pin it. |
+| New (no status) | Create comment with Phase line + History entry. Pin it. |
 | Needs Story → Story Review | Add `### Story` section with BA's refined story. Update Phase. |
-| Needs Architecture → Architecture Review | Add `### Technical Plan` and optionally `### Interaction Spec`. Update Phase. |
-| Architecture Review → Ready | Add `### Dev Tasks` section (extracted from plan + spec). Update Phase. |
-| Implementing | Update Phase + Agent. Check off dev task items as agents complete them. |
+| Needs Architecture → Architecture Review | Add `### Technical Review` and optionally `### Interaction Spec`. Update Phase. |
+| Architecture Review → Ready | Update Phase. Dev Tasks added later during sprint execution. |
+| Implementing (sprint start) | Add `### Implementation Plan` with Architect's detailed plan. Add `### Dev Tasks`. Update Phase. |
+| Implementing (agents working) | Check off dev task items as agents complete them. |
 | CI Pending / In Review / etc. | Update Phase. Add PR link. |
 | Done | Update Phase to Done. Final History entry. |
 
 ## Handoff Protocol
 
-All routing flows through the PM. Agents **never** hand off directly to other agents.
+All routing flows through the managers. Agents **never** hand off directly to other agents.
 
-### Planning Agent Flow (single PM run)
+### Planning Agent Flow (Planning Manager)
 
 ```
-PM analyzes event → determines BA/architect/UX needed
-  → adds agent/{name} label (observability)
+Planning Manager analyzes event → determines BA/architect/UX needed
   → gathers issue context
   → spawns agent via Task (issue context + specialist instructions)
   → agent returns work product text
-  → PM adds output to Issue Plan comment (appropriate section)
-  → PM removes label, updates status
-  → PM advances to next phase
+  → Planning Manager adds output to Issue Plan comment (appropriate section)
+  → Planning Manager updates status, tags owner if entering review gate
+  → Planning Manager advances to next phase
 ```
 
 ### Architect + UX Parallel Flow
 
 ```
-PM spawns architect → returns technical plan
-PM spawns UX designer → returns interaction spec
-PM merges both outputs:
-  → adds Technical Plan + Interaction Spec sections to Issue Plan
+Planning Manager spawns architect → returns lightweight technical review + story points
+Planning Manager spawns UX designer → returns interaction spec
+Planning Manager merges both outputs:
+  → adds Technical Review + Interaction Spec sections to Issue Plan
   → sets status to Architecture Review, tags owner
-Owner approves → PM adds Dev Tasks section to Issue Plan, sets Ready
+Owner approves → Planning Manager sets Ready
 ```
 
-### Implementation Agent Flow (separate workflow)
+### Sprint Execution Flow (Sprint Manager)
 
 ```
-Coordinator gathers context (Issue Plan comment — story, technical plan, dev tasks)
-  → creates branch (or checks out existing branch for re-dispatches)
-  → reads Dev Task List, determines which agents have unchecked items
+Sprint Manager finds unblocked Ready issue in current iteration
+  → creates branch (or checks out existing branch)
+  → spawns Architect for detailed implementation plan
+  → Architect returns file-by-file plan
+  → Sprint Manager adds Implementation Plan + Dev Tasks to Issue Plan
   → for each agent (backend → frontend → devops):
       → spawns agent via Task (context + unchecked tasks for this agent)
       → agent implements on the branch, commits, pushes
       → agent returns: files changed, tasks completed, summary
-      → coordinator posts handback comment (role icon, run link)
-      → coordinator checks off completed Dev Task items
-  → creates PR (or updates existing PR) with complete summary of all work
-  → removes agent/implement label
-  → writes GITHUB_STEP_SUMMARY
+      → Sprint Manager posts handback comment, checks off Dev Tasks
+  → creates PR with `agentic` label (or updates existing PR)
+  → sets status to CI Pending
+```
+
+### Merge Cascade Flow
+
+```
+PR merged → Sprint Manager detects
+  → verifies linked issue is Done
+  → queries: what was this issue blocking?
+  → for each blocked sprint issue: check if ALL blockers now Done
+  → if unblocked → triggers workflow_dispatch for parallel execution
+  → updates Current Sprint Overview
 ```
 
 ### Routing Summary
 
-| Current Phase | Trigger | PM/Coordinator Action |
-|---------------|---------|----------------------|
-| Needs Story | BA returns via Task | Add Story section to Issue Plan, set Story Review, tag owner |
-| Story Review | Owner approves | Spawn architect (+ UX if UI), set Needs Architecture |
-| Story Review | Owner requests changes | Spawn BA again with feedback |
-| Needs Architecture | Architect + UX return | Add Technical Plan + Interaction Spec sections to Issue Plan, set Architecture Review, tag owner |
-| Architecture Review | Owner approves | Add Dev Tasks section to Issue Plan, set Ready, add `agent/implement` label |
-| Ready | — | Add `agent/implement` label, set Implementing |
-| Implementing | Coordinator finishes | All tasks checked, set CI Pending |
-| CI Pending | CI passes | Set In Review |
-| CI Pending | CI fails | Add `agent/implement` label, set Implementing |
-| In Review | Review passes | Set Ready to Merge, tag owner |
-| In Review | Review requests changes | Add `agent/implement` label, set Changes Requested |
-| Changes Requested | Impl agent returns | Set CI Pending |
+| Current Phase | Trigger | Action |
+|---------------|---------|--------|
+| No status (new) | Cron scan | Classify, create Issue Plan, route to Needs Story (Planning) |
+| Needs Story | BA returns | Add Story section, set Story Review, tag owner (Planning) |
+| Story Review | Owner approves | Spawn Architect (+UX), set Needs Architecture (Planning) |
+| Story Review | Owner requests changes | Re-spawn BA with feedback (Planning) |
+| Needs Architecture | Architect + UX return | Add Technical Review + Interaction Spec, set Architecture Review, tag owner (Planning) |
+| Architecture Review | Owner approves | Set Ready (Planning) |
+| Architecture Review | Owner requests changes | Re-spawn Architect with feedback (Planning) |
+| Ready (in iteration) | Cron / dependency unblock | Spawn Architect for detailed plan, then implement (Sprint) |
+| Implementing | Agents complete | Create/update PR, set CI Pending (Sprint) |
+| CI Pending | CI passes | Set In Review (Sprint) |
+| CI Pending | CI fails | Re-dispatch agent, set Implementing (Sprint) |
+| In Review | Review passes | Set Ready to Merge, tag owner (Sprint) |
+| In Review | Review requests changes | Re-dispatch agent, set Changes Requested (Sprint) |
+| Changes Requested | Agent fixes | Set CI Pending (Sprint) |
+| Ready to Merge | Owner merges | Set Done, trigger merge cascade (Sprint) |
 
 ## Inter-Agent Questions
 
-When an agent encounters ambiguity, it includes the question in its Task response. The PM/coordinator:
+When an agent encounters ambiguity, it includes the question in its Task response. The Planning Manager or Sprint Manager:
 - Answers it if possible (from existing context)
 - Escalates to product owner if not (posts an Action Required comment)
 - Routes to another agent if appropriate (spawns the target agent with the question)
-
-Each round-trip through PM counts toward the **3 round-trip limit** (see Escalation Rules).
 
 ## Escalation Rules
 
 | Condition | Action |
 |-----------|--------|
-| 3 round-trips between agents on the same issue without phase progression | PM escalates to product owner (`Awaiting Owner`), assigns them to the issue |
-| Agent hasn't commented within 24h of assignment | PM pings the issue and retriggers the agent workflow |
-| Issue in `Awaiting Owner` for 48h+ | PM posts an **Action Required** reminder to `@aarongbenjamin` |
-| Agent explicitly states it is blocked | PM immediately escalates with an **Action Required** comment to `@aarongbenjamin` |
+| 3 round-trips between agents on the same issue without phase progression | Manager escalates to product owner with Action Required comment |
+| Agent hasn't produced output within expected time | Manager pings and re-spawns the agent |
+| Issue stalled for 48h+ in any review gate | Planning Manager posts Action Required reminder to `@aarongbenjamin` |
+| Agent explicitly states it is blocked | Manager immediately escalates with Action Required comment |
 
 ## Guardrails
 
@@ -393,31 +468,29 @@ Each round-trip through PM counts toward the **3 round-trip limit** (see Escalat
 - Agents must **never** enable auto-merge on PRs.
 - Agents must **never** submit formal GitHub PR approvals (`gh pr review --approve`).
 - Only the **product owner** approves and merges PRs.
-- PM will **not** pick up new work while unresolved escalations await the product owner.
 
 ---
 
 ## Dev Tasks Section
 
-The `### Dev Tasks` section of the Issue Plan tracks all implementation work grouped by agent. It serves as the contract between the architect's plan and the PM's routing logic.
+The `### Dev Tasks` section of the Issue Plan tracks all implementation work grouped by agent.
 
 ### When It's Added
 
-The PM adds the Dev Tasks section to the Issue Plan **after the owner approves the architecture** (not before). This avoids creating task lists that get thrown away if the owner requests changes. The PM extracts backend tasks from the Architect's plan and frontend tasks from the UX Designer's spec.
+The Sprint Manager adds the Dev Tasks section **during sprint execution** — after the Architect writes the detailed implementation plan. This keeps Dev Tasks fresh and based on the just-in-time plan.
 
 ### Rules
 
 - Group tasks by implementation agent (`#### Backend Developer`, `#### Frontend Developer`, `#### DevOps Engineer`).
-- Each item should be a concrete, verifiable deliverable — not a vague description.
-- The coordinator checks off items as implementation agents complete them.
-- Implementation agents must **not** add new items. If scope expands, the coordinator escalates to the PM.
-- The PM reads the Dev Tasks section after each implementation handback to determine what to dispatch next.
+- Each item should be a concrete, verifiable deliverable.
+- The Sprint Manager checks off items as implementation agents complete them.
+- Implementation agents must **not** add new items. If scope expands, the Sprint Manager escalates.
 
 ---
 
 ## UX Designer Output Format
 
-The UX Designer produces an interaction spec with this structure (returned via Task, posted by PM):
+The UX Designer produces an interaction spec with this structure (returned via Task, posted by the Planning Manager):
 
 ```markdown
 ### 🎯 UX Designer — Interaction Spec for #{number}
@@ -447,19 +520,23 @@ Omit sections that are not applicable.
 
 ## Observability
 
-Three layers provide full traceability from high-level status down to individual actions.
+Three layers provide full traceability.
 
 ### 1. Comment Footers
 
-Every comment posted by PM/coordinator includes a run link footer linking back to the GitHub Actions run.
+Every comment posted by the Planning Manager or Sprint Manager includes a run link footer linking back to the GitHub Actions run.
 
 ### 2. Issue Plan Comment
 
 The Issue Plan comment's **History** section accumulates a log of every agent action on the issue, including run links.
 
-### 3. GitHub Actions Job Summary
+### 3. Sprint Overview Issues
 
-The implementation coordinator writes a summary table to `$GITHUB_STEP_SUMMARY` after each agent run:
+Current and Next Sprint Overview issues provide sprint-level visibility into progress, velocity, and blocked items.
+
+### 4. GitHub Actions Job Summary
+
+The Sprint Manager writes a summary table to `$GITHUB_STEP_SUMMARY` after each agent run:
 
 ```markdown
 ## Agent Run Summary

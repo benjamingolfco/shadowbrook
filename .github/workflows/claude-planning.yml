@@ -1,14 +1,22 @@
-name: Shadowbrook Cron
+name: Shadowbrook Planning
 
 on:
+  issues:
+    types: [opened, labeled, unlabeled]
+  issue_comment:
+    types: [created]
   schedule:
-    - cron: '0 0,6,12,18 * * *' # Every 6 hours UTC (midnight, 6am, noon, 6pm CST offset)
+    - cron: '0 0,6,12,18 * * *'  # Every 6 hours UTC
 
 jobs:
-  cron:
+  planning:
     concurrency:
-      group: cron
+      group: planning-${{ github.event.issue.number || 'cron' }}
       cancel-in-progress: true
+    if: |
+      (github.event_name == 'schedule') ||
+      (github.event_name == 'issues' && !contains(github.event.issue.labels.*.name, 'agent/ignore')) ||
+      (github.event_name == 'issue_comment' && !endsWith(github.event.comment.user.login, '[bot]') && !contains(github.event.issue.labels.*.name, 'agent/ignore'))
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -29,7 +37,14 @@ jobs:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - name: Run PM Cron
+      - name: Acknowledge comment
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh api repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions -X POST -f content="eyes"
+
+      - name: Run Planning Manager
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -41,42 +56,40 @@ jobs:
           claude_args: |
             --model claude-opus-4-6 --allowedTools "Bash" "Read" "Write" "Edit" "Glob" "Grep" "Task"
           prompt: |
-            You are the Project Manager for the Shadowbrook agent pipeline, running scheduled maintenance.
+            You are the Planning Manager for the Shadowbrook agent pipeline.
 
             ## Context
-            Event: schedule
+            Event: ${{ github.event_name }}
+            Action: ${{ github.event.action || 'N/A' }}
             Run ID: ${{ github.run_id }}
             Run Link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
             ## Instructions
-            1. Read `.claude/agents/project-manager.md` for your role definition, cron duties, and status IDs.
+            1. Read `.claude/agents/planning-manager.md` for your role definition, routing logic, and status IDs.
             2. Read `.claude/skills/agent-pipeline/SKILL.md` for pipeline protocols and comment format.
-            3. Perform scheduled maintenance duties: standup, stalled work scan, backlog processing.
+            3. Analyze the triggering event and take appropriate action.
 
             ## Spawning Planning Agents
-            When routing to a planning agent (business-analyst, architect, ux-designer) during backlog processing:
+            When routing to a planning agent (business-analyst, architect, ux-designer):
 
-            1. Add the `agent/{name}` label for observability.
-            2. Gather all issue context the agent needs (body, acceptance criteria, PM status,
+            1. Gather all issue context the agent needs (body, acceptance criteria, PM status,
                prior comments, review feedback if re-dispatch).
-            3. Spawn the agent using the Task tool with subagent_type matching the agent name.
+            2. Spawn the agent using the Task tool with subagent_type matching the agent name.
                In the Task prompt, include:
                - All issue context (paste it — agent should not need GitHub API calls)
                - Clear instructions on what to produce and return
+               - For Architect during planning: instruct for LIGHTWEIGHT review (concerns, patterns, story points) — NOT detailed implementation plan
                - Do NOT include SKILL.md — agents don't need pipeline protocol
-            4. When the agent returns its work product:
+            3. When the agent returns its work product:
                - Format it as a proper comment (role icon, run link footer per SKILL.md patterns)
                - Post the comment on the issue
-               - Pin the comment if it's a Dev Task List
-               - Remove the agent label
+               - Update the Issue Plan comment with the agent's output in the appropriate section
+               - Pin the Issue Plan comment if newly created
                - Update PM status comment
                - Advance to the next pipeline phase
 
-            ## Implementation Agents
-            To dispatch implementation, add the single `agent/implement` label. The implementation coordinator handles branch creation, runs all needed agents (backend → frontend → devops) sequentially, and creates/updates the PR.
-            - Add the `agent/implement` label to trigger the implementation workflow.
-            - Post a routing comment with implementation context, update PM status, then finish.
-            - Do NOT spawn implementation agents via Task. Do NOT use individual agent labels.
+            For parallel dispatch (architect + UX designer), spawn both sequentially,
+            then merge their outputs into properly formatted comments.
 
             ## General
             - Use Explore subagents (Task with subagent_type "Explore") for verbose context gathering.
