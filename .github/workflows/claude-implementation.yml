@@ -48,11 +48,12 @@ jobs:
 
           # Server-side filter: all issues in the current iteration.
           # Fetch status so we can exclude owner-gated statuses client-side.
+          # Limit 500 — well above any realistic sprint size.
           ITEMS=$(gh api graphql -f query='
             query {
               organization(login: "benjamingolfco") {
                 projectV2(number: 1) {
-                  items(first: 100, query: "iteration:@current") {
+                  items(first: 500, query: "iteration:@current") {
                     nodes {
                       fieldValueByName(name: "Status") {
                         ... on ProjectV2ItemFieldSingleSelectValue {
@@ -71,7 +72,9 @@ jobs:
 
           echo "::endgroup::"
 
-          # Extract open issue numbers, excluding statuses that need owner action
+          # Extract open issue numbers, excluding statuses that need owner action.
+          # ⚠️ These status names must match the GitHub Project configuration exactly.
+          # See CLAUDE.md § Project Field IDs for the canonical list.
           # Done = completed, Ready to Merge = waiting for owner merge,
           # Awaiting Owner = waiting for owner input
           ACTIONABLE=$(echo "$ITEMS" | jq -r '
@@ -97,7 +100,10 @@ jobs:
           for ISSUE_NUM in $ACTIONABLE; do
             echo "::group::Checking dependencies for #$ISSUE_NUM"
 
-            BLOCKERS=$(gh api "repos/benjamingolfco/shadowbrook/issues/$ISSUE_NUM/dependencies/blocked_by" 2>/dev/null || echo '[]')
+            if ! BLOCKERS=$(gh api "repos/benjamingolfco/shadowbrook/issues/$ISSUE_NUM/dependencies/blocked_by" 2>&1); then
+              echo "::warning::Failed to fetch dependencies for #$ISSUE_NUM: $BLOCKERS — treating as unblocked"
+              BLOCKERS='[]'
+            fi
             OPEN_BLOCKERS=$(echo "$BLOCKERS" | jq '[.[] | select(.state == "open")] | length')
 
             if [ "$OPEN_BLOCKERS" -gt 0 ]; then
