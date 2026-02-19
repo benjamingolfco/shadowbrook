@@ -43,21 +43,15 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "::group::Querying project for sprint issues"
+          echo "::group::Querying project for Ready issues in current iteration"
 
-          # Query all project items with their Status, Iteration, and issue number
+          # Server-side filter: only Ready issues in the current iteration
           ITEMS=$(gh api graphql -f query='
             query {
               organization(login: "benjamingolfco") {
                 projectV2(number: 1) {
-                  items(first: 100) {
+                  items(first: 100, query: "status:Ready iteration:@current") {
                     nodes {
-                      status: fieldValueByName(name: "Status") {
-                        ... on ProjectV2ItemFieldSingleSelectValue { name }
-                      }
-                      iteration: fieldValueByName(name: "Iteration") {
-                        ... on ProjectV2ItemFieldIterationValue { title startDate duration }
-                      }
                       content {
                         ... on Issue { number state }
                       }
@@ -70,21 +64,11 @@ jobs:
 
           echo "::endgroup::"
 
-          # Find the current iteration (date range contains today)
-          TODAY=$(date +%Y-%m-%d)
-          echo "Today: $TODAY"
-
-          # Filter for Ready issues in the current iteration
-          READY_ISSUES=$(echo "$ITEMS" | jq -r --arg today "$TODAY" '
+          # Extract open issue numbers (filter out closed/PRs)
+          READY_ISSUES=$(echo "$ITEMS" | jq -r '
             .data.organization.projectV2.items.nodes[]
             | select(.content.number != null)
             | select(.content.state == "OPEN")
-            | select(.status.name == "Ready")
-            | select(.iteration != null)
-            | select(
-                (.iteration.startDate <= $today) and
-                ((.iteration.startDate | strptime("%Y-%m-%d") | mktime) + (.iteration.duration * 86400) | strftime("%Y-%m-%d")) > $today
-              )
             | .content.number
           ')
 
