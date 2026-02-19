@@ -186,19 +186,19 @@ On scheduled runs (every 6 hours UTC — 6am, noon, 6pm, midnight CST):
 
 Do all maintenance and corrective work first so the standup reflects the current state.
 
-**Stalled work:** Scan issues in Needs Story or Needs Architecture with no agent comment within 24h. Post a ping and re-spawn the agent.
+**Stalled work:** Query issues in Needs Story or Needs Architecture status. The project `items` GraphQL connection supports server-side filtering via the `query` argument (e.g., `query: "status:\"Needs Story\""`). If no agent comment within 24h, post a ping and re-spawn the agent.
 
-**Review gate reminders:** Scan issues in Story Review or Architecture Review. If 48h+ with no owner comment, post an Action Required reminder to `@aarongbenjamin`.
+**Review gate reminders:** Query issues in Story Review or Architecture Review (e.g., `query: "status:\"Story Review\""`). If 48h+ with no owner comment, post an Action Required reminder to `@aarongbenjamin`.
 
 **Issue Plan refresh:** Update all Issue Plan comments on active issues to reflect current state.
 
 ### 2. New Issue Processing (every cron cycle)
 
-Scan issues in the active milestone that have no status set. Process the top **5-10 highest priority** issues per cycle — classify, create Issue Plan, and route to Needs Story.
+Query issues in the active milestone that have no status set (use `query: "no:status"`). Process the top **5-10 highest priority** issues per cycle — classify, create Issue Plan, and route to Needs Story.
 
 ### 3. Next Sprint Planning (every cron cycle)
 
-Review Ready issues. Suggest issues for the next sprint based on:
+Query Ready issues (use `query: "status:Ready"`). Suggest issues for the next sprint based on:
 - Priority (P0 → P1 → P2)
 - Story points and velocity (fill up to team capacity)
 - Dependencies (group related issues)

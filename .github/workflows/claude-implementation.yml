@@ -18,8 +18,9 @@ on:
 
 jobs:
   # ──────────────────────────────────────────────────────────────────────
-  # Cron dispatcher — finds all unblocked sprint issues and triggers
+  # Cron dispatcher — finds all actionable sprint issues and triggers
   # a separate workflow_dispatch run for each (parallel execution).
+  # Catches Ready issues AND stalled issues (failed runs, missed events).
   # ──────────────────────────────────────────────────────────────────────
   find-work:
     if: github.event_name == 'schedule'
@@ -43,15 +44,21 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "::group::Querying project for Ready issues in current iteration"
+          echo "::group::Querying project for all issues in current iteration"
 
-          # Server-side filter: only Ready issues in the current iteration
+          # Server-side filter: all issues in the current iteration.
+          # Fetch status so we can exclude owner-gated statuses client-side.
           ITEMS=$(gh api graphql -f query='
             query {
               organization(login: "benjamingolfco") {
                 projectV2(number: 1) {
-                  items(first: 100, query: "status:Ready iteration:@current") {
+                  items(first: 100, query: "iteration:@current") {
                     nodes {
+                      fieldValueByName(name: "Status") {
+                        ... on ProjectV2ItemFieldSingleSelectValue {
+                          name
+                        }
+                      }
                       content {
                         ... on Issue { number state }
                       }
@@ -64,24 +71,30 @@ jobs:
 
           echo "::endgroup::"
 
-          # Extract open issue numbers (filter out closed/PRs)
-          READY_ISSUES=$(echo "$ITEMS" | jq -r '
+          # Extract open issue numbers, excluding statuses that need owner action
+          # Done = completed, Ready to Merge = waiting for owner merge,
+          # Awaiting Owner = waiting for owner input
+          ACTIONABLE=$(echo "$ITEMS" | jq -r '
             .data.organization.projectV2.items.nodes[]
             | select(.content.number != null)
             | select(.content.state == "OPEN")
+            | select(.fieldValueByName.name != null)
+            | select(.fieldValueByName.name != "Done"
+                and .fieldValueByName.name != "Ready to Merge"
+                and .fieldValueByName.name != "Awaiting Owner")
             | .content.number
           ')
 
-          if [ -z "$READY_ISSUES" ]; then
-            echo "No Ready issues in current iteration."
+          if [ -z "$ACTIONABLE" ]; then
+            echo "No actionable issues in current iteration."
             exit 0
           fi
 
-          echo "Ready issues in current iteration: $READY_ISSUES"
+          echo "Actionable issues in current iteration: $ACTIONABLE"
 
           # Check dependencies for each — dispatch only unblocked ones
           DISPATCHED=0
-          for ISSUE_NUM in $READY_ISSUES; do
+          for ISSUE_NUM in $ACTIONABLE; do
             echo "::group::Checking dependencies for #$ISSUE_NUM"
 
             BLOCKERS=$(gh api "repos/benjamingolfco/shadowbrook/issues/$ISSUE_NUM/dependencies/blocked_by" 2>/dev/null || echo '[]')
@@ -161,9 +174,12 @@ jobs:
 
             ### workflow_dispatch (issue dispatch)
             Issue Number is provided above. This is a sprint dispatch for a specific issue.
+            The issue may be at any actionable status (Ready, Implementing, CI Pending, Changes Requested, In Review).
             - Read the issue and its Issue Plan comment
-            - Run the full sprint flow: Architect detailed plan → implementation agents → PR
-            - See sprint-manager.md § Per-Issue Sprint Flow
+            - Check the issue's current project status
+            - Route based on status — see sprint-manager.md § Status-Based Routing
+            - For Ready issues: run the full sprint flow (Architect → implementation → PR)
+            - For other statuses: resume from where the issue stalled
 
             ### pull_request:closed (merged)
             - Find the linked issue from the PR body or branch name

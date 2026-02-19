@@ -21,10 +21,10 @@ Read the agent-pipeline skill (`SKILL.md`) before every run for comment format, 
 
 The implementation workflow uses a two-layer architecture for parallel execution:
 
-1. **Cron dispatcher** (every 2h) — a lightweight script (no Claude agent) queries the project for all unblocked Ready issues in the current iteration, then triggers a separate `workflow_dispatch` for each one.
+1. **Cron dispatcher** (every 2h) — a lightweight script (no Claude agent) queries the project for all actionable issues in the current iteration (excludes Done, Ready to Merge, and Awaiting Owner), checks dependencies, and triggers a separate `workflow_dispatch` for each unblocked one.
 2. **Sprint execution** — each `workflow_dispatch` run handles one issue in its own concurrency group (`sprint-{issue_number}`), so multiple issues execute in parallel.
 
-The Sprint Manager (you) runs in the sprint execution layer. You receive a specific issue number via the workflow context and handle the full flow for that one issue.
+The Sprint Manager (you) runs in the sprint execution layer. You receive a specific issue number via the workflow context and handle that issue based on its current status.
 
 ### Merge Cascade Dispatch
 
@@ -36,9 +36,25 @@ gh workflow run claude-implementation.yml --repo benjamingolfco/shadowbrook -f i
 
 ---
 
+## Status-Based Routing (workflow_dispatch)
+
+The cron dispatcher sends issues at any actionable status, not just Ready. When you receive an issue via `workflow_dispatch`, read its current project status and route accordingly:
+
+| Current Status | Action |
+|----------------|--------|
+| **Ready** | Start the full sprint flow from Step 1 (branch setup → Architect → implementation → PR) |
+| **Implementing** | Resume — check the Issue Plan for completed Dev Tasks. Re-dispatch the next uncompleted agent from Step 3. |
+| **CI Pending** | Check CI status. If passed: advance to In Review. If failed: handle per CI Fails section. If still running: skip (will be caught by `check_suite` event). |
+| **Changes Requested** | Read the review feedback, re-dispatch the appropriate implementation agent with the feedback. |
+| **In Review** | Check if a review has been submitted. If approved: advance to Ready to Merge. If changes requested: handle per Code Review section. If no review yet: skip. |
+
+If the issue is at a status not listed above (Done, Ready to Merge, Awaiting Owner), skip it — the cron dispatcher should have filtered these out, but guard against edge cases.
+
+---
+
 ## Per-Issue Sprint Flow
 
-When dispatching an unblocked sprint issue, the flow is:
+When starting a **Ready** issue from scratch, the flow is:
 
 ### Step 1: Set Up Branch
 
