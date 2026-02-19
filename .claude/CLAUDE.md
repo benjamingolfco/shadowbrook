@@ -93,7 +93,47 @@ Repo: `benjamingolfco/shadowbrook` | Project: #1 under `benjamingolfco` org
 Notes:
 - Use `-F` (not `-f`) for integer fields (e.g., `sub_issue_id`)
 - Issue types: Task, Bug, Feature, User Story
-- Project fields: Status (Backlog/Needs Story/Story Review/Needs Architecture/Architecture Review/Ready/Implementing/CI Pending/In Review/Changes Requested/Ready to Merge/Done), Priority (P0/P1/P2), Size (XS-XL)
+
+### Project Field IDs
+
+**Status field:** `PVTSSF_lADOD3a3vs4BOVqOzg9EexU`
+
+Issues with **no status set** are the backlog — new/untouched issues.
+
+| Status | Option ID |
+|--------|-----------|
+| Needs Story | `4e3e5768` |
+| Story Review | `8d427c9e` |
+| Needs Architecture | `c7611935` |
+| Architecture Review | `8039d58d` |
+| Ready | `e82ffa87` |
+| Implementing | `40275ace` |
+| CI Pending | `7acb30e5` |
+| In Review | `663d782f` |
+| Changes Requested | `c3f67294` |
+| Ready to Merge | `4aef6ef4` |
+| Awaiting Owner | `4fd57247` |
+| Done | `b9a85561` |
+
+**Priority field:** `PVTSSF_lADOD3a3vs4BOVqOzg9Ee2Y`
+
+| Priority | Option ID |
+|----------|-----------|
+| P0 | `3c18c090` |
+| P1 | `9b7578d1` |
+| P2 | `969fb3b8` |
+
+**Size field:** `PVTSSF_lADOD3a3vs4BOVqOzg9Ee2c`
+
+| Size | Option ID |
+|------|-----------|
+| XS | `370e9b19` |
+| S | `e55bf2b0` |
+| M | `83ebb89c` |
+| L | `f8aa8288` |
+| XL | `4482bca2` |
+
+**Iteration field:** `PVTIF_lADOD3a3vs4BOVqOzg9Ee2k`
 
 ### GitHub Issue Dependencies
 
@@ -131,7 +171,7 @@ Apply audience labels based on who benefits — many features get **both** `golf
 
 ## Agent Pipeline
 
-This project uses an automated multi-agent pipeline via GitHub Actions, split into two workflows — **Planning** (Backlog → Ready) and **Implementation** (in-sprint execution).
+This project uses an automated multi-agent pipeline via GitHub Actions, split into two workflows — **Planning** (new issues → Ready) and **Implementation** (in-sprint execution).
 
 See `.claude/skills/agent-pipeline/SKILL.md` for the full protocol.
 
@@ -141,5 +181,5 @@ See `.claude/skills/agent-pipeline/SKILL.md` for the full protocol.
   - `.github/workflows/claude-code-review.yml` — standalone code review on all PRs
 - **Agent manager instructions:** `.claude/agents/planning-manager.md`, `.claude/agents/sprint-manager.md`
 - **Agent definitions:** `.claude/agents/*.md`
-- **Pipeline statuses:** Backlog → Needs Story → **Story Review** → Needs Architecture → **Architecture Review** → **Ready** → Implementing → CI Pending → In Review → Changes Requested → **Ready to Merge** → Done
+- **Pipeline statuses:** (no status) → Needs Story → **Story Review** → Needs Architecture → **Architecture Review** → **Ready** → Implementing → CI Pending → In Review → Changes Requested → **Ready to Merge** → Done
 - **Sprint gate:** Ready — issues wait here until assigned to an iteration for sprint execution

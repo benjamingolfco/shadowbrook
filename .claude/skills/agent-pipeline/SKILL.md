@@ -6,7 +6,7 @@ user-invocable: false
 
 # Agent Pipeline Protocol
 
-Multi-agent system for automating the Shadowbrook development workflow on GitHub Actions. The pipeline is split into two workflows — **Planning** (Backlog → Ready) and **Implementation** (in-sprint execution).
+Multi-agent system for automating the Shadowbrook development workflow on GitHub Actions. The pipeline is split into two workflows — **Planning** (new issues → Ready) and **Implementation** (in-sprint execution).
 
 ## Architecture
 
@@ -80,9 +80,10 @@ Dependencies →  Execution order within a sprint
 
 ## Project Statuses
 
+Issues with **no status set** are the backlog — new/untouched issues that the planning cron picks up and classifies.
+
 | Status | Meaning | Workflow |
 |--------|---------|----------|
-| **Backlog** | New issue, untouched. Planning cron classifies and routes. | Planning |
 | Needs Story | BA refining the user story | Planning |
 | Story Review | Owner reviewing story | Planning |
 | Needs Architecture | Architect doing lightweight review (concerns, notes, points). UX Designer adding UI/UX notes. | Planning |
@@ -93,14 +94,14 @@ Dependencies →  Execution order within a sprint
 | In Review | PR open, code review in progress | Implementation |
 | Changes Requested | Code review requested changes | Implementation |
 | Ready to Merge | CI green + review approved, waiting for owner PR approval | Implementation |
+| Awaiting Owner | Blocked on human input — escalation or repeated failures | Either |
 | Done | Merged and complete | Implementation |
 
-**Key differences from previous model:**
-- **Backlog** replaces Triage (no separate triage step)
+**Key design points:**
 - **Ready** is the sprint gate — issues wait here until assigned to an iteration
 - Architecture in planning = **lightweight review** (concerns, patterns, story points)
 - Architecture in sprint = **detailed implementation plan** (file-by-file, just-in-time)
-- No `Awaiting Owner` status — questions are escalated via Action Required comments; the pipeline stalls on that issue until the owner responds
+- Status IDs for `gh project item-edit` are in CLAUDE.md § GitHub Project Management
 
 ---
 
@@ -361,7 +362,7 @@ The Planning Manager creates and maintains **one pinned comment** on every activ
 
 | Phase | What the manager adds to the Issue Plan |
 |-------|------------------------------------|
-| Backlog | Create comment with Phase line + History entry. Pin it. |
+| New (no status) | Create comment with Phase line + History entry. Pin it. |
 | Needs Story → Story Review | Add `### Story` section with BA's refined story. Update Phase. |
 | Needs Architecture → Architecture Review | Add `### Technical Review` and optionally `### Interaction Spec`. Update Phase. |
 | Architecture Review → Ready | Update Phase. Dev Tasks added later during sprint execution. |
@@ -429,7 +430,7 @@ PR merged → Sprint Manager detects
 
 | Current Phase | Trigger | Action |
 |---------------|---------|--------|
-| Backlog | Cron scan | Classify, create Issue Plan, route to Needs Story (Planning) |
+| No status (new) | Cron scan | Classify, create Issue Plan, route to Needs Story (Planning) |
 | Needs Story | BA returns | Add Story section, set Story Review, tag owner (Planning) |
 | Story Review | Owner approves | Spawn Architect (+UX), set Needs Architecture (Planning) |
 | Story Review | Owner requests changes | Re-spawn BA with feedback (Planning) |
