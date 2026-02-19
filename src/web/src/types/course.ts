@@ -1,6 +1,8 @@
 export interface Course {
   id: string;
   name: string;
+  tenantId: string;
+  tenantName?: string;
   streetAddress?: string;
   city?: string;
   state?: string;
