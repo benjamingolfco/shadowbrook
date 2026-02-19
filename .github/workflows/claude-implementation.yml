@@ -1,6 +1,12 @@
 name: Shadowbrook Implementation
 
 on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to dispatch for sprint execution'
+        required: true
+        type: string
   pull_request:
     types: [opened, closed, synchronize]
   pull_request_review:
@@ -11,22 +17,123 @@ on:
     - cron: '0 */2 * * *'  # Every 2 hours
 
 jobs:
+  # ──────────────────────────────────────────────────────────────────────
+  # Cron dispatcher — finds all unblocked sprint issues and triggers
+  # a separate workflow_dispatch run for each (parallel execution).
+  # ──────────────────────────────────────────────────────────────────────
+  find-work:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      actions: write
+      id-token: write
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Find and dispatch unblocked sprint issues
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          echo "::group::Querying project for sprint issues"
+
+          # Query all project items with their Status, Iteration, and issue number
+          ITEMS=$(gh api graphql -f query='
+            query {
+              organization(login: "benjamingolfco") {
+                projectV2(number: 1) {
+                  items(first: 100) {
+                    nodes {
+                      status: fieldValueByName(name: "Status") {
+                        ... on ProjectV2ItemFieldSingleSelectValue { name }
+                      }
+                      iteration: fieldValueByName(name: "Iteration") {
+                        ... on ProjectV2ItemFieldIterationValue { title startDate duration }
+                      }
+                      content {
+                        ... on Issue { number state }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ')
+
+          echo "::endgroup::"
+
+          # Find the current iteration (date range contains today)
+          TODAY=$(date +%Y-%m-%d)
+          echo "Today: $TODAY"
+
+          # Filter for Ready issues in the current iteration
+          READY_ISSUES=$(echo "$ITEMS" | jq -r --arg today "$TODAY" '
+            .data.organization.projectV2.items.nodes[]
+            | select(.content.number != null)
+            | select(.content.state == "OPEN")
+            | select(.status.name == "Ready")
+            | select(.iteration != null)
+            | select(
+                (.iteration.startDate <= $today) and
+                ((.iteration.startDate | strptime("%Y-%m-%d") | mktime) + (.iteration.duration * 86400) | strftime("%Y-%m-%d")) > $today
+              )
+            | .content.number
+          ')
+
+          if [ -z "$READY_ISSUES" ]; then
+            echo "No Ready issues in current iteration."
+            exit 0
+          fi
+
+          echo "Ready issues in current iteration: $READY_ISSUES"
+
+          # Check dependencies for each — dispatch only unblocked ones
+          DISPATCHED=0
+          for ISSUE_NUM in $READY_ISSUES; do
+            echo "::group::Checking dependencies for #$ISSUE_NUM"
+
+            BLOCKERS=$(gh api "repos/benjamingolfco/shadowbrook/issues/$ISSUE_NUM/dependencies/blocked_by" 2>/dev/null || echo '[]')
+            OPEN_BLOCKERS=$(echo "$BLOCKERS" | jq '[.[] | select(.state == "open")] | length')
+
+            if [ "$OPEN_BLOCKERS" -gt 0 ]; then
+              echo "#$ISSUE_NUM is blocked by $OPEN_BLOCKERS open issue(s) — skipping"
+            else
+              echo "#$ISSUE_NUM is unblocked — dispatching"
+              gh workflow run claude-implementation.yml \
+                --repo benjamingolfco/shadowbrook \
+                -f issue_number="$ISSUE_NUM"
+              DISPATCHED=$((DISPATCHED + 1))
+            fi
+
+            echo "::endgroup::"
+          done
+
+          echo "Dispatched $DISPATCHED issue(s) for sprint execution."
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Sprint execution — handles one issue (workflow_dispatch) or
+  # one PR/CI/review event. Each issue runs in its own concurrency group.
+  # ──────────────────────────────────────────────────────────────────────
   sprint:
+    if: github.event_name != 'schedule'
     concurrency:
-      group: sprint-${{ github.event.pull_request.number || github.event.check_suite.id || 'cron' }}
+      group: sprint-${{ inputs.issue_number || github.event.pull_request.number || github.event.check_suite.id || 'event' }}
       cancel-in-progress: false
-    if: |
-      (github.event_name == 'schedule') ||
-      (github.event_name == 'pull_request') ||
-      (github.event_name == 'pull_request_review') ||
-      (github.event_name == 'check_suite' && github.event.check_suite.pull_requests[0])
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
       issues: write
       id-token: write
-      actions: read
+      actions: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -48,7 +155,7 @@ jobs:
           allowed_bots: "benjamingolfco-claude-agent[bot]"
           show_full_output: true
           additional_permissions: |
-            actions: read
+            actions: write
           claude_args: |
             --model claude-sonnet-4-5-20250929 --allowedTools "Bash" "Read" "Write" "Edit" "Glob" "Grep" "Task"
           prompt: |
@@ -57,6 +164,7 @@ jobs:
             ## Context
             Event: ${{ github.event_name }}
             Action: ${{ github.event.action || 'N/A' }}
+            Issue Number: ${{ inputs.issue_number || 'N/A' }}
             Run ID: ${{ github.run_id }}
             Run Link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
@@ -67,16 +175,18 @@ jobs:
 
             ## Event Handling
 
-            ### Cron (schedule)
-            - Query sprint issues in the current iteration that are Ready and unblocked
-            - Dispatch one unblocked issue: Architect for detailed plan → implementation agents → PR
-            - Check for sprint completion (all issues Done)
+            ### workflow_dispatch (issue dispatch)
+            Issue Number is provided above. This is a sprint dispatch for a specific issue.
+            - Read the issue and its Issue Plan comment
+            - Run the full sprint flow: Architect detailed plan → implementation agents → PR
+            - See sprint-manager.md § Per-Issue Sprint Flow
 
             ### pull_request:closed (merged)
             - Find the linked issue from the PR body or branch name
             - Verify the issue is marked Done
             - Query what this issue was blocking (merge cascade)
-            - Dispatch newly-unblocked sprint issues
+            - For each newly-unblocked sprint issue, trigger a new dispatch:
+              `gh workflow run claude-implementation.yml -f issue_number={N}`
             - Update Current Sprint Overview
 
             ### pull_request:opened / pull_request:synchronize
@@ -118,8 +228,15 @@ jobs:
             - Include "Closes #{issue_number}" in the body
             - Set status to CI Pending
 
+            ## Dispatching Parallel Work
+            When you discover newly-unblocked issues (e.g., during merge cascade),
+            trigger a separate workflow run for each:
+            ```
+            gh workflow run claude-implementation.yml --repo benjamingolfco/shadowbrook -f issue_number={N}
+            ```
+            This runs each issue in its own parallel workflow.
+
             ## General
             - Use Explore subagents (Task with subagent_type "Explore") for verbose context gathering.
             - Use the Run ID and Run Link above in all comment footers — never read environment variables for these.
             - Skip PRs without the `agentic` label (owner's manual PRs).
-            - Dispatch one issue per workflow run.

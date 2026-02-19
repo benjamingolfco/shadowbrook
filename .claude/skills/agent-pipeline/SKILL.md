@@ -15,7 +15,7 @@ Multi-agent system for automating the Shadowbrook development workflow on GitHub
 | Workflow | File | Triggers | Concurrency |
 |----------|------|----------|-------------|
 | **Shadowbrook Planning** | `claude-planning.yml` | issues, issue_comment, schedule (every 6h) | `planning-{issue}`, cancel-in-progress: true |
-| **Shadowbrook Implementation** | `claude-implementation.yml` | pull_request, pull_request_review, check_suite, schedule (every 2h) | `sprint-{pr\|cron}`, cancel-in-progress: false |
+| **Shadowbrook Implementation** | `claude-implementation.yml` | workflow_dispatch, pull_request, pull_request_review, check_suite, schedule (every 2h) | `sprint-{issue\|pr\|event}`, cancel-in-progress: false |
 | **Claude Code Review** | `claude-code-review.yml` | pull_request | `review-{pr}`, cancel-in-progress: true |
 
 **Unchanged:** `owner-gate.yml`, `pr.yml`
@@ -52,7 +52,7 @@ Multi-agent system for automating the Shadowbrook development workflow on GitHub
 
 **Planning** is lightweight and event-driven — runs inline with the Planning Manager, handles story refinement, reviews, and sprint planning. Uses `cancel-in-progress: true` since re-triggering should restart the work.
 
-**Implementation** is long-running — Architect plans, then dev agents write code, create PRs. Uses `cancel-in-progress: false` because canceling mid-implementation loses work. Triggered by cron (every 2h) and PR/review/CI events.
+**Implementation** is long-running — Architect plans, then dev agents write code, create PRs. Uses `cancel-in-progress: false` because canceling mid-implementation loses work. The cron job is a lightweight dispatcher that finds all unblocked sprint issues and triggers a separate `workflow_dispatch` run for each — enabling parallel execution across multiple issues. Merge events also cascade dispatch to newly-unblocked issues.
 
 ---
 
@@ -422,7 +422,7 @@ PR merged → Sprint Manager detects
   → verifies linked issue is Done
   → queries: what was this issue blocking?
   → for each blocked sprint issue: check if ALL blockers now Done
-  → if unblocked → dispatch on this run or next cron cycle
+  → if unblocked → triggers workflow_dispatch for parallel execution
   → updates Current Sprint Overview
 ```
 
