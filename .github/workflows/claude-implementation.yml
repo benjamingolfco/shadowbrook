@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       issue_number:
-        description: 'Issue number to dispatch for sprint execution'
-        required: true
+        description: 'Issue number to dispatch for sprint execution (leave empty to run find-work)'
+        required: false
         type: string
   pull_request:
     types: [opened, closed, synchronize]
@@ -23,7 +23,7 @@ jobs:
   # Catches Ready issues AND stalled issues (failed runs, missed events).
   # ──────────────────────────────────────────────────────────────────────
   find-work:
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.issue_number == '')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -127,7 +127,7 @@ jobs:
   # ──────────────────────────────────────────────────────────────────────
   sprint:
     if: >-
-      github.event_name == 'workflow_dispatch'
+      (github.event_name == 'workflow_dispatch' && inputs.issue_number != '')
       || github.event_name == 'check_suite'
       || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'agentic'))
       || (github.event_name == 'pull_request_review' && contains(github.event.pull_request.labels.*.name, 'agentic'))
