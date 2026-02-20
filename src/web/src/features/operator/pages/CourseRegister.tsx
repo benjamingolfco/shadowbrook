@@ -30,8 +30,12 @@ type CourseRegisterFormData = z.infer<typeof courseRegisterSchema>;
 export default function CourseRegister() {
   const navigate = useNavigate();
   const { tenant } = useTenantContext();
-  // tenant is non-null here: CourseRegister only renders inside TenantGate which guards against null tenant
-  const registerMutation = useRegisterCourse(tenant!.id);
+
+  if (!tenant) {
+    throw new Error('Tenant must be selected to register a course');
+  }
+
+  const registerMutation = useRegisterCourse(tenant.id);
 
   const form = useForm<CourseRegisterFormData>({
     resolver: zodResolver(courseRegisterSchema),
