@@ -48,12 +48,12 @@ jobs:
 
           # Server-side filter: all issues in the current iteration.
           # Fetch status so we can exclude owner-gated statuses client-side.
-          # Limit 500 — well above any realistic sprint size.
+          # Limit 100 — max allowed by GitHub GraphQL API.
           ITEMS=$(gh api graphql -f query='
             query {
               organization(login: "benjamingolfco") {
                 projectV2(number: 1) {
-                  items(first: 500, query: "iteration:@current") {
+                  items(first: 100, query: "iteration:@current") {
                     nodes {
                       fieldValueByName(name: "Status") {
                         ... on ProjectV2ItemFieldSingleSelectValue {
