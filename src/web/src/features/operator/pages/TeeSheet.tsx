@@ -13,10 +13,13 @@ import {
 
 export default function TeeSheet() {
   const { course } = useCourseContext();
-  const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
 
-  // course is guaranteed non-null by CourseGate in index.tsx
-  const teeSheetQuery = useTeeSheet(course!.id, selectedDate);
+  if (!course) {
+    throw new Error('Course must be selected to view the tee sheet');
+  }
+
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
+  const teeSheetQuery = useTeeSheet(course.id, selectedDate);
 
   return (
     <div className="p-6">
