@@ -42,7 +42,8 @@ export default function TeeTimeSettings() {
     throw new Error('Course must be selected to view tee time settings');
   }
 
-  const settingsQuery = useTeeTimeSettings(course.id);
+  const courseId = course.id;
+  const settingsQuery = useTeeTimeSettings(courseId);
   const updateMutation = useUpdateTeeTimeSettings();
 
   const form = useForm<TeeTimeSettingsFormData>({
@@ -67,7 +68,7 @@ export default function TeeTimeSettings() {
 
   function onSubmit(data: TeeTimeSettingsFormData) {
     updateMutation.mutate(
-      { courseId: course.id, data },
+      { courseId, data },
       {
         onSuccess: () => {
           // Success feedback handled by mutation state
