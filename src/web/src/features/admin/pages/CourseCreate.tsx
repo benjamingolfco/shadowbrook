@@ -60,7 +60,7 @@ export default function CourseCreate() {
   const createCourseMutation = useMutation({
     mutationFn: (data: CourseFormData) => api.post<Course>('/courses', data),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.courses.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.courses.all() });
       form.reset();
       navigate('/admin/courses');
     },

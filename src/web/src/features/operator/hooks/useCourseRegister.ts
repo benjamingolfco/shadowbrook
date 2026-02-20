@@ -13,7 +13,7 @@ export interface RegisterCourseRequest {
   contactPhone?: string;
 }
 
-export function useRegisterCourse() {
+export function useRegisterCourse(tenantId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -31,7 +31,7 @@ export function useRegisterCourse() {
     },
     onSuccess: () => {
       // Invalidate courses list to refresh with new course
-      void queryClient.invalidateQueries({ queryKey: queryKeys.courses.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.courses.all(tenantId) });
     },
   });
 }

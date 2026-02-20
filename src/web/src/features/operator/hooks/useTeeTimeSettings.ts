@@ -3,9 +3,9 @@ import { api } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-keys';
 import type { Course, TeeTimeSettings } from '@/types/course';
 
-export function useCourses() {
+export function useCourses(tenantId: string) {
   return useQuery({
-    queryKey: queryKeys.courses.all,
+    queryKey: queryKeys.courses.all(tenantId),
     queryFn: () => api.get<Course[]>('/courses'),
   });
 }
