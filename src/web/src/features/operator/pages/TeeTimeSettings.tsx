@@ -38,8 +38,11 @@ type TeeTimeSettingsFormData = z.infer<typeof teeTimeSettingsSchema>;
 export default function TeeTimeSettings() {
   const { course } = useCourseContext();
 
-  // course is guaranteed non-null by CourseGate in index.tsx
-  const settingsQuery = useTeeTimeSettings(course!.id);
+  if (!course) {
+    throw new Error('Course must be selected to view tee time settings');
+  }
+
+  const settingsQuery = useTeeTimeSettings(course.id);
   const updateMutation = useUpdateTeeTimeSettings();
 
   const form = useForm<TeeTimeSettingsFormData>({
@@ -64,7 +67,7 @@ export default function TeeTimeSettings() {
 
   function onSubmit(data: TeeTimeSettingsFormData) {
     updateMutation.mutate(
-      { courseId: course!.id, data },
+      { courseId: course.id, data },
       {
         onSuccess: () => {
           // Success feedback handled by mutation state
