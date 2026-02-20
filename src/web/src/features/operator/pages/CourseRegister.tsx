@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
 import { useNavigate } from 'react-router';
+import { useTenantContext } from '../context/TenantContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -28,7 +29,13 @@ type CourseRegisterFormData = z.infer<typeof courseRegisterSchema>;
 
 export default function CourseRegister() {
   const navigate = useNavigate();
-  const registerMutation = useRegisterCourse();
+  const { tenant } = useTenantContext();
+
+  if (!tenant) {
+    throw new Error('Tenant must be selected to register a course');
+  }
+
+  const registerMutation = useRegisterCourse(tenant.id);
 
   const form = useForm<CourseRegisterFormData>({
     resolver: zodResolver(courseRegisterSchema),

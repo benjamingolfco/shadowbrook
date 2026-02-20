@@ -13,7 +13,7 @@ export interface RegisterCourseRequest {
   contactPhone?: string;
 }
 
-export function useRegisterCourse() {
+export function useRegisterCourse(tenantId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -30,8 +30,10 @@ export function useRegisterCourse() {
       }
     },
     onSuccess: () => {
-      // Invalidate courses list to refresh with new course
-      void queryClient.invalidateQueries({ queryKey: queryKeys.courses.all });
+      // Invalidate courses list to refresh with new course.
+      // Use tenant-scoped key when available, otherwise invalidate all courses.
+      const queryKey = tenantId ? queryKeys.courses.all(tenantId) : ['courses'];
+      void queryClient.invalidateQueries({ queryKey });
     },
   });
 }

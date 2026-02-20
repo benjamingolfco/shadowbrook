@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,10 +20,10 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import {
-  useCourses,
   useTeeTimeSettings,
   useUpdateTeeTimeSettings,
 } from '../hooks/useTeeTimeSettings';
+import { useCourseContext } from '../context/CourseContext';
 
 const teeTimeSettingsSchema = z.object({
   teeTimeIntervalMinutes: z.number().refine((val) => [8, 10, 12].includes(val), {
@@ -37,14 +36,14 @@ const teeTimeSettingsSchema = z.object({
 type TeeTimeSettingsFormData = z.infer<typeof teeTimeSettingsSchema>;
 
 export default function TeeTimeSettings() {
-  const navigate = useNavigate();
-  const coursesQuery = useCourses();
-  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
+  const { course } = useCourseContext();
 
-  // Derive the effective course ID (use first course if none selected yet)
-  const effectiveCourseId = selectedCourseId || coursesQuery.data?.[0]?.id || '';
+  if (!course) {
+    throw new Error('Course must be selected to view tee time settings');
+  }
 
-  const settingsQuery = useTeeTimeSettings(effectiveCourseId || undefined);
+  const courseId = course.id;
+  const settingsQuery = useTeeTimeSettings(courseId);
   const updateMutation = useUpdateTeeTimeSettings();
 
   const form = useForm<TeeTimeSettingsFormData>({
@@ -68,49 +67,13 @@ export default function TeeTimeSettings() {
   }, [settingsQuery.data, form]);
 
   function onSubmit(data: TeeTimeSettingsFormData) {
-    if (!effectiveCourseId) return;
-
     updateMutation.mutate(
-      { courseId: effectiveCourseId, data },
+      { courseId, data },
       {
         onSuccess: () => {
-          // Success feedback handled by mutation
+          // Success feedback handled by mutation state
         },
       }
-    );
-  }
-
-  if (coursesQuery.isLoading) {
-    return (
-      <div className="p-6">
-        <p className="text-muted-foreground">Loading courses...</p>
-      </div>
-    );
-  }
-
-  if (coursesQuery.isError) {
-    return (
-      <div className="p-6">
-        <div className="text-destructive">
-          Error loading courses: {coursesQuery.error.message}
-        </div>
-      </div>
-    );
-  }
-
-  if (!coursesQuery.data || coursesQuery.data.length === 0) {
-    return (
-      <div className="p-6">
-        <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-          <h1 className="text-3xl font-bold mb-2">No Courses Registered</h1>
-          <p className="text-muted-foreground mb-6 max-w-md">
-            Register a course before configuring tee time settings.
-          </p>
-          <Button onClick={() => navigate('/operator/register-course')}>
-            Register Your Course
-          </Button>
-        </div>
-      </div>
     );
   }
 
@@ -118,25 +81,6 @@ export default function TeeTimeSettings() {
     <div className="p-6 max-w-2xl">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Tee Time Settings</h1>
-      </div>
-
-      <div className="mb-6">
-        <label className="text-sm font-medium mb-2 block">Course *</label>
-        <Select
-          value={effectiveCourseId}
-          onValueChange={(value) => setSelectedCourseId(value)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a course" />
-          </SelectTrigger>
-          <SelectContent>
-            {coursesQuery.data.map((course) => (
-              <SelectItem key={course.id} value={course.id}>
-                {course.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       {settingsQuery.isLoading && (
@@ -219,7 +163,7 @@ export default function TeeTimeSettings() {
             </div>
           )}
 
-          <Button type="submit" disabled={updateMutation.isPending || !effectiveCourseId}>
+          <Button type="submit" disabled={updateMutation.isPending}>
             {updateMutation.isPending ? 'Saving...' : 'Save Settings'}
           </Button>
         </form>
