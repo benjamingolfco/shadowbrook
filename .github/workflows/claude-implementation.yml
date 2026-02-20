@@ -126,7 +126,11 @@ jobs:
   # one PR/CI/review event. Each issue runs in its own concurrency group.
   # ──────────────────────────────────────────────────────────────────────
   sprint:
-    if: github.event_name != 'schedule'
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || github.event_name == 'check_suite'
+      || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'agentic'))
+      || (github.event_name == 'pull_request_review' && contains(github.event.pull_request.labels.*.name, 'agentic'))
     concurrency:
       group: sprint-${{ inputs.issue_number || github.event.pull_request.number || github.event.check_suite.id || 'event' }}
       cancel-in-progress: false
