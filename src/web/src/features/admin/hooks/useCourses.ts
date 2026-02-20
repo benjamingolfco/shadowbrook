@@ -5,7 +5,7 @@ import type { Course } from '@/types/course';
 
 export function useCourses() {
   return useQuery({
-    queryKey: queryKeys.courses.all,
+    queryKey: queryKeys.courses.all(),
     queryFn: () => api.get<Course[]>('/courses'),
   });
 }

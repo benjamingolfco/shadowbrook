@@ -1,6 +1,6 @@
 export const queryKeys = {
   courses: {
-    all: ['courses'] as const,
+    all: (tenantId?: string) => (tenantId ? (['courses', tenantId] as const) : (['courses'] as const)),
     detail: (id: string) => ['courses', id] as const,
     settings: (id: string) => ['courses', id, 'settings'] as const,
     pricing: (id: string) => ['courses', id, 'pricing'] as const,
