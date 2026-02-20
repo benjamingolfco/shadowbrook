@@ -11,9 +11,11 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { useTenantContext } from '@/features/operator/context/TenantContext';
+import { useCourseContext } from '@/features/operator/context/CourseContext';
 
 export default function OperatorLayout() {
   const { tenant, clearTenant } = useTenantContext();
+  const { course, clearCourse } = useCourseContext();
 
   return (
     <SidebarProvider>
@@ -26,12 +28,25 @@ export default function OperatorLayout() {
             >
               {tenant?.organizationName ?? 'Shadowbrook'}
             </h1>
+            {course && (
+              <p
+                className="max-w-[200px] truncate text-sm text-muted-foreground"
+                title={course.name}
+              >
+                {course.name}
+              </p>
+            )}
             <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-700/10">
               Operator
             </span>
             {tenant && (
               <Button variant="ghost" size="sm" onClick={clearTenant}>
                 Change Organization
+              </Button>
+            )}
+            {course && (
+              <Button variant="ghost" size="sm" onClick={clearCourse}>
+                Change Course
               </Button>
             )}
           </div>

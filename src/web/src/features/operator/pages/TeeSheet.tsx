@@ -1,16 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { useCourses } from '@/features/operator/hooks/useTeeTimeSettings';
 import { useTeeSheet } from '@/features/operator/hooks/useTeeSheet';
+import { useCourseContext } from '../context/CourseContext';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -21,69 +12,18 @@ import {
 } from '@/components/ui/table';
 
 export default function TeeSheet() {
-  const navigate = useNavigate();
-  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
+  const { course } = useCourseContext();
   const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
 
-  const coursesQuery = useCourses();
-  const teeSheetQuery = useTeeSheet(selectedCourseId || undefined, selectedDate);
-
-  // Set first course as default when courses load
-  if (coursesQuery.data && coursesQuery.data.length > 0 && !selectedCourseId) {
-    const firstCourse = coursesQuery.data[0];
-    if (firstCourse) {
-      setSelectedCourseId(firstCourse.id);
-    }
-  }
-
-  if (coursesQuery.isLoading) {
-    return (
-      <div className="p-6">
-        <p>Loading courses...</p>
-      </div>
-    );
-  }
-
-  if (!coursesQuery.data || coursesQuery.data.length === 0) {
-    return (
-      <div className="p-6">
-        <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-          <h1 className="text-3xl font-bold mb-2">Welcome to Shadowbrook</h1>
-          <p className="text-muted-foreground mb-6 max-w-md">
-            Get started by registering your first golf course to manage tee times, bookings, and settings.
-          </p>
-          <Button onClick={() => navigate('/operator/register-course')}>
-            Register Your Course
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  // course is guaranteed non-null by CourseGate in index.tsx
+  const teeSheetQuery = useTeeSheet(course!.id, selectedDate);
 
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold">Tee Sheet</h1>
       <p className="text-muted-foreground">View the day's tee time bookings</p>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <label htmlFor="course-select" className="text-sm font-medium">
-            Course
-          </label>
-          <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
-            <SelectTrigger id="course-select">
-              <SelectValue placeholder="Select a course" />
-            </SelectTrigger>
-            <SelectContent>
-              {coursesQuery.data.map((course) => (
-                <SelectItem key={course.id} value={course.id}>
-                  {course.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
+      <div className="mt-6">
         <div className="space-y-2">
           <label htmlFor="date-input" className="text-sm font-medium">
             Date
@@ -93,7 +33,7 @@ export default function TeeSheet() {
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+            className="flex h-9 w-full max-w-xs rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           />
         </div>
       </div>

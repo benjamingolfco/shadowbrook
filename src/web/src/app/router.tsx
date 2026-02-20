@@ -18,7 +18,7 @@ function RoleRedirect() {
 
   const routes = {
     admin: '/admin/courses',
-    operator: '/operator/tee-sheet',
+    operator: '/operator',
     golfer: '/golfer/tee-times',
   };
 
