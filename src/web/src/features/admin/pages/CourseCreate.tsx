@@ -4,7 +4,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { useNavigate, Link } from 'react-router';
 import { api } from '@/lib/api-client';
-import { queryKeys } from '@/lib/query-keys';
 import type { Course } from '@/types/course';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,7 +59,7 @@ export default function CourseCreate() {
   const createCourseMutation = useMutation({
     mutationFn: (data: CourseFormData) => api.post<Course>('/courses', data),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.courses.all() });
+      void queryClient.invalidateQueries({ queryKey: ['courses'] });
       form.reset();
       navigate('/admin/courses');
     },

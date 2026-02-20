@@ -30,8 +30,10 @@ export function useRegisterCourse(tenantId?: string) {
       }
     },
     onSuccess: () => {
-      // Invalidate courses list to refresh with new course
-      void queryClient.invalidateQueries({ queryKey: queryKeys.courses.all(tenantId) });
+      // Invalidate courses list to refresh with new course.
+      // Use tenant-scoped key when available, otherwise invalidate all courses.
+      const queryKey = tenantId ? queryKeys.courses.all(tenantId) : ['courses'];
+      void queryClient.invalidateQueries({ queryKey });
     },
   });
 }

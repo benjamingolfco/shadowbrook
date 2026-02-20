@@ -18,8 +18,7 @@ export default function CoursePortfolio() {
   const navigate = useNavigate();
   const { tenant } = useTenantContext();
   const { selectCourse } = useCourseContext();
-  // tenant is non-null here: CoursePortfolio only renders inside TenantGate which guards against null tenant
-  const coursesQuery = useCourses(tenant!.id);
+  const coursesQuery = useCourses(tenant?.id);
   const hasAutoSelected = useRef(false);
 
   useEffect(() => {
