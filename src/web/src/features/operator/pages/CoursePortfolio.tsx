@@ -6,6 +6,7 @@ import { useTenantContext } from '../context/TenantContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardAction } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 import type { Course } from '@/types/course';
 
 function formatLocation(course: Course): string {
@@ -115,6 +116,8 @@ export default function CoursePortfolio() {
               <CardHeader>
                 <CardTitle className="text-base">{course.name}</CardTitle>
                 <CardDescription>{formatLocation(course)}</CardDescription>
+                {/* TODO: Derive status from settings completeness in future story */}
+                <Badge variant="success">Active</Badge>
                 <CardAction>
                   <Button variant="outline" tabIndex={-1} aria-hidden={true}>
                     Manage
