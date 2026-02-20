@@ -14,7 +14,7 @@ on:
   check_suite:
     types: [completed]
   schedule:
-    - cron: '0 12-23 * * *'  # Every hour, 6am–5pm CST
+    - cron: '0 0-3,6,15-23 * * *'  # Every hour 9am–9pm CST + midnight CST
 
 jobs:
   # ──────────────────────────────────────────────────────────────────────
