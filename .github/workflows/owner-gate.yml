@@ -11,6 +11,10 @@ on:
   pull_request_review:
     types: [submitted]
 
+concurrency:
+  group: owner-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   owner-gate:
     name: owner-approval
