@@ -1,5 +1,5 @@
 import { useAuth, type Role } from '../hooks/useAuth';
-import { useTenantContext } from '@/features/operator/context/TenantContext';
+import { useTenantContextOptional } from '@/features/operator/context/TenantContext';
 
 const roleLabels: Record<Role, string> = {
   admin: 'Admin',
@@ -11,7 +11,7 @@ const roleOrder: Role[] = ['admin', 'operator', 'golfer'];
 
 export function DevRoleSwitcher() {
   const { role, setRole } = useAuth();
-  const { clearTenant } = useTenantContext();
+  const tenantContext = useTenantContextOptional();
 
   return (
     <div className="fixed bottom-4 left-4 z-50 flex gap-2">
@@ -27,12 +27,14 @@ export function DevRoleSwitcher() {
         ))}
       </select>
 
-      <button
-        onClick={clearTenant}
-        className="rounded-md bg-gray-800 px-3 py-2 text-xs font-medium text-white shadow-lg transition hover:bg-gray-700"
-      >
-        Change Org
-      </button>
+      {role === 'operator' && tenantContext && (
+        <button
+          onClick={tenantContext.clearTenant}
+          className="rounded-md bg-gray-800 px-3 py-2 text-xs font-medium text-white shadow-lg transition hover:bg-gray-700"
+        >
+          Change Org
+        </button>
+      )}
     </div>
   );
 }

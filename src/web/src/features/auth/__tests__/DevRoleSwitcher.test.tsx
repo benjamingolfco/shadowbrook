@@ -2,13 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, act } from '@/test/test-utils';
 import { DevRoleSwitcher } from '../components/DevRoleSwitcher';
 import { useAuth } from '../hooks/useAuth';
-import { useTenantContext } from '@/features/operator/context/TenantContext';
+import { useTenantContextOptional } from '@/features/operator/context/TenantContext';
 
 vi.mock('../hooks/useAuth');
 vi.mock('@/features/operator/context/TenantContext');
 
 const mockUseAuth = vi.mocked(useAuth);
-const mockUseTenantContext = vi.mocked(useTenantContext);
+const mockUseTenantContextOptional = vi.mocked(useTenantContextOptional);
 
 const mockSetRole = vi.fn();
 const mockClearTenant = vi.fn();
@@ -25,7 +25,7 @@ beforeEach(() => {
     setRole: mockSetRole,
   });
 
-  mockUseTenantContext.mockReturnValue({
+  mockUseTenantContextOptional.mockReturnValue({
     tenant: { id: 'tenant-1', organizationName: 'Pine Valley Golf Club' },
     selectTenant: vi.fn(),
     clearTenant: mockClearTenant,
@@ -33,7 +33,7 @@ beforeEach(() => {
 });
 
 describe('DevRoleSwitcher', () => {
-  it('renders the Change Org button', () => {
+  it('renders the Change Org button when role is operator and tenant context is available', () => {
     render(<DevRoleSwitcher />);
 
     expect(screen.getByRole('button', { name: 'Change Org' })).toBeInTheDocument();
@@ -71,5 +71,45 @@ describe('DevRoleSwitcher', () => {
     });
 
     expect(mockSetRole).toHaveBeenCalledWith('golfer');
+  });
+
+  it('does not render the Change Org button when role is admin', () => {
+    mockUseAuth.mockReturnValue({
+      user: null,
+      role: 'admin',
+      isAuthenticated: true,
+      login: vi.fn(),
+      logout: vi.fn(),
+      setRole: mockSetRole,
+    });
+    mockUseTenantContextOptional.mockReturnValue(undefined);
+
+    render(<DevRoleSwitcher />);
+
+    expect(screen.queryByRole('button', { name: 'Change Org' })).not.toBeInTheDocument();
+  });
+
+  it('does not render the Change Org button when role is golfer', () => {
+    mockUseAuth.mockReturnValue({
+      user: null,
+      role: 'golfer',
+      isAuthenticated: true,
+      login: vi.fn(),
+      logout: vi.fn(),
+      setRole: mockSetRole,
+    });
+    mockUseTenantContextOptional.mockReturnValue(undefined);
+
+    render(<DevRoleSwitcher />);
+
+    expect(screen.queryByRole('button', { name: 'Change Org' })).not.toBeInTheDocument();
+  });
+
+  it('does not render the Change Org button when role is operator but tenant context is unavailable', () => {
+    mockUseTenantContextOptional.mockReturnValue(undefined);
+
+    render(<DevRoleSwitcher />);
+
+    expect(screen.queryByRole('button', { name: 'Change Org' })).not.toBeInTheDocument();
   });
 });
