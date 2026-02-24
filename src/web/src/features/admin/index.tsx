@@ -4,6 +4,7 @@ import CourseList from './pages/CourseList';
 import CourseCreate from './pages/CourseCreate';
 import TenantList from './pages/TenantList';
 import TenantCreate from './pages/TenantCreate';
+import TenantDetail from './pages/TenantDetail';
 
 export default function AdminFeature() {
   return (
@@ -13,6 +14,7 @@ export default function AdminFeature() {
         <Route path="courses/new" element={<CourseCreate />} />
         <Route path="tenants" element={<TenantList />} />
         <Route path="tenants/new" element={<TenantCreate />} />
+        <Route path="tenants/:id" element={<TenantDetail />} />
         <Route path="*" element={<Navigate to="courses" replace />} />
       </Route>
     </Routes>
