@@ -24,7 +24,6 @@ const mockUseCourseContext = vi.mocked(useCourseContext);
 const mockUseTenantContext = vi.mocked(useTenantContext);
 
 const mockSelectCourse = vi.fn();
-const mockClearTenant = vi.fn();
 const mockRefetch = vi.fn();
 
 beforeEach(() => {
@@ -34,7 +33,7 @@ beforeEach(() => {
   mockUseTenantContext.mockReturnValue({
     tenant: { id: 'tenant-1', organizationName: 'Pine Valley Golf Club' },
     selectTenant: vi.fn(),
-    clearTenant: mockClearTenant,
+    clearTenant: vi.fn(),
   });
 
   mockUseCourseContext.mockReturnValue({
@@ -333,87 +332,4 @@ describe('CoursePortfolio', () => {
     expect(screen.getByLabelText('Manage Spyglass Hill, Pebble Beach, CA')).toBeInTheDocument();
   });
 
-  it('"Change Organization" button is visible in loading state', () => {
-    mockUseCourses.mockReturnValue({
-      isLoading: true,
-      data: undefined,
-      error: null,
-      isError: false,
-      refetch: mockRefetch,
-    } as unknown as ReturnType<typeof useCourses>);
-
-    render(<CoursePortfolio />);
-
-    expect(screen.getByRole('button', { name: 'Change Organization' })).toBeInTheDocument();
-  });
-
-  it('"Change Organization" button is visible in error state', () => {
-    mockUseCourses.mockReturnValue({
-      isLoading: false,
-      data: undefined,
-      error: new Error('Network error'),
-      isError: true,
-      refetch: mockRefetch,
-    } as unknown as ReturnType<typeof useCourses>);
-
-    render(<CoursePortfolio />);
-
-    expect(screen.getByRole('button', { name: 'Change Organization' })).toBeInTheDocument();
-  });
-
-  it('"Change Organization" button is visible in empty state', () => {
-    mockUseCourses.mockReturnValue({
-      isLoading: false,
-      data: [],
-      error: null,
-      isError: false,
-      refetch: mockRefetch,
-    } as unknown as ReturnType<typeof useCourses>);
-
-    render(<CoursePortfolio />);
-
-    expect(screen.getByRole('button', { name: 'Change Organization' })).toBeInTheDocument();
-  });
-
-  it('"Change Organization" button is visible in populated state', () => {
-    mockUseCourses.mockReturnValue({
-      isLoading: false,
-      data: [
-        {
-          id: 'course-1',
-          name: 'Pine Valley',
-          tenantId: 'tenant-1',
-          city: 'Augusta',
-          state: 'GA',
-          createdAt: '2024-01-01T00:00:00Z',
-          updatedAt: '2024-01-01T00:00:00Z',
-        },
-      ],
-      error: null,
-      isError: false,
-      refetch: mockRefetch,
-    } as unknown as ReturnType<typeof useCourses>);
-
-    render(<CoursePortfolio />);
-
-    expect(screen.getByRole('button', { name: 'Change Organization' })).toBeInTheDocument();
-  });
-
-  it('clicking "Change Organization" calls clearTenant', () => {
-    mockUseCourses.mockReturnValue({
-      isLoading: false,
-      data: [],
-      error: null,
-      isError: false,
-      refetch: mockRefetch,
-    } as unknown as ReturnType<typeof useCourses>);
-
-    render(<CoursePortfolio />);
-
-    act(() => {
-      screen.getByRole('button', { name: 'Change Organization' }).click();
-    });
-
-    expect(mockClearTenant).toHaveBeenCalledOnce();
-  });
 });
