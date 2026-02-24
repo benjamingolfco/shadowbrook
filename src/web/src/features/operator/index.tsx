@@ -12,7 +12,6 @@ function CourseGate() {
   const { course } = useCourseContext();
   const location = useLocation();
 
-  // Allow register-course route without a course selected
   if (!course) {
     if (location.pathname === '/operator/register-course') {
       return (
@@ -23,7 +22,13 @@ function CourseGate() {
         </Routes>
       );
     }
-    return <CoursePortfolio />;
+    return (
+      <Routes>
+        <Route element={<OperatorLayout />}>
+          <Route path="*" element={<CoursePortfolio />} />
+        </Route>
+      </Routes>
+    );
   }
 
   return (

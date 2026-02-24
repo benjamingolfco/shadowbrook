@@ -13,13 +13,18 @@ import {
 
 export default function TeeSheet() {
   const { course } = useCourseContext();
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
+  const teeSheetQuery = useTeeSheet(course?.id, selectedDate);
 
   if (!course) {
-    throw new Error('Course must be selected to view the tee sheet');
+    return (
+      <div className="flex h-full items-center justify-center p-6">
+        <p className="text-muted-foreground">
+          Select a course from the sidebar to view the tee sheet.
+        </p>
+      </div>
+    );
   }
-
-  const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
-  const teeSheetQuery = useTeeSheet(course.id, selectedDate);
 
   return (
     <div className="p-6">

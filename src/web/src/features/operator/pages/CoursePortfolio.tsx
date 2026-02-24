@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
-import { useCourses } from '@/features/operator/hooks/useTeeTimeSettings';
+import { useCourses } from '@/features/operator/hooks/useCourses';
 import { useCourseContext } from '../context/CourseContext';
 import { useTenantContext } from '../context/TenantContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardAction } from '@/components/ui/card';
@@ -42,7 +42,7 @@ export default function CoursePortfolio() {
 
   if (coursesQuery.isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <div className="w-full max-w-3xl space-y-6 p-8">
           <h1 className="text-2xl font-bold">Select a Course</h1>
           <p className="text-muted-foreground">Showing courses for {tenant?.organizationName}.</p>
@@ -63,7 +63,7 @@ export default function CoursePortfolio() {
 
   if (coursesQuery.isError) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <div className="w-full max-w-3xl space-y-6 p-8">
           <h1 className="text-2xl font-bold">Select a Course</h1>
           <p className="text-destructive">Error loading courses: {coursesQuery.error.message}</p>
@@ -77,7 +77,7 @@ export default function CoursePortfolio() {
 
   if (!coursesQuery.data || coursesQuery.data.length === 0) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <div className="w-full max-w-3xl space-y-6 p-8 text-center">
           <h1 className="text-2xl font-bold">Select a Course</h1>
           <p className="text-base font-medium">Get started by adding your first course</p>
@@ -93,7 +93,7 @@ export default function CoursePortfolio() {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center">
+    <div className="flex h-full items-center justify-center">
       <div className="w-full max-w-3xl space-y-6 p-8">
         <h1 className="text-2xl font-bold">Select a Course</h1>
         <p className="text-muted-foreground">Showing courses for {tenant?.organizationName}.</p>

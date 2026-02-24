@@ -36,15 +36,7 @@ const teeTimeSettingsSchema = z.object({
 type TeeTimeSettingsFormData = z.infer<typeof teeTimeSettingsSchema>;
 
 export default function TeeTimeSettings() {
-  const { course } = useCourseContext();
-
-  if (!course) {
-    throw new Error('Course must be selected to view tee time settings');
-  }
-
-  const courseId = course.id;
-  const settingsQuery = useTeeTimeSettings(courseId);
-  const updateMutation = useUpdateTeeTimeSettings();
+  const { course, registerDirtyForm, unregisterDirtyForm } = useCourseContext();
 
   const form = useForm<TeeTimeSettingsFormData>({
     resolver: zodResolver(teeTimeSettingsSchema),
@@ -54,6 +46,22 @@ export default function TeeTimeSettings() {
       lastTeeTime: '18:00',
     },
   });
+
+  const settingsQuery = useTeeTimeSettings(course?.id);
+  const updateMutation = useUpdateTeeTimeSettings();
+
+  const formIsDirty = form.formState.isDirty;
+
+  useEffect(() => {
+    if (formIsDirty) {
+      registerDirtyForm('tee-time-settings');
+    } else {
+      unregisterDirtyForm('tee-time-settings');
+    }
+    return () => {
+      unregisterDirtyForm('tee-time-settings');
+    };
+  }, [formIsDirty, registerDirtyForm, unregisterDirtyForm]);
 
   // When settings load for the selected course, reset the form
   useEffect(() => {
@@ -65,6 +73,18 @@ export default function TeeTimeSettings() {
       });
     }
   }, [settingsQuery.data, form]);
+
+  if (!course) {
+    return (
+      <div className="flex h-full items-center justify-center p-6">
+        <p className="text-muted-foreground">
+          Select a course from the sidebar to configure settings.
+        </p>
+      </div>
+    );
+  }
+
+  const courseId = course.id;
 
   function onSubmit(data: TeeTimeSettingsFormData) {
     updateMutation.mutate(
