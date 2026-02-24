@@ -8,6 +8,7 @@ import {
   SidebarMenuButton,
   SidebarProvider,
   SidebarInset,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { useTenantContext } from '@/features/operator/context/TenantContext';
@@ -84,6 +85,9 @@ export default function OperatorLayout() {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
+        <header className="flex h-12 items-center gap-2 border-b px-4 md:hidden">
+          <SidebarTrigger />
+        </header>
         <Outlet />
       </SidebarInset>
     </SidebarProvider>
