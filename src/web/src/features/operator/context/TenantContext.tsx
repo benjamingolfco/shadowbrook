@@ -64,3 +64,12 @@ export function useTenantContext() {
   }
   return context;
 }
+
+/**
+ * Safe variant that returns undefined when called outside a TenantProvider.
+ * Use this when the component may render outside operator routes.
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export function useTenantContextOptional(): TenantContextValue | undefined {
+  return useContext(TenantContext);
+}
