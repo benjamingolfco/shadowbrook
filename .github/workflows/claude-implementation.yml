@@ -7,6 +7,8 @@ on:
         description: 'Issue number to dispatch for sprint execution (leave empty to run find-work)'
         required: false
         type: string
+  issue_comment:
+    types: [created]
   pull_request:
     types: [opened, closed, synchronize]
   pull_request_review:
@@ -129,10 +131,11 @@ jobs:
     if: >-
       (github.event_name == 'workflow_dispatch' && inputs.issue_number != '')
       || github.event_name == 'check_suite'
+      || (github.event_name == 'issue_comment' && github.event.issue.pull_request && !endsWith(github.event.comment.user.login, '[bot]') && contains(github.event.issue.labels.*.name, 'agentic'))
       || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'agentic'))
       || (github.event_name == 'pull_request_review' && contains(github.event.pull_request.labels.*.name, 'agentic'))
     concurrency:
-      group: sprint-${{ inputs.issue_number || github.event.pull_request.number || github.event.check_suite.id || 'event' }}
+      group: sprint-${{ inputs.issue_number || github.event.issue.number || github.event.pull_request.number || github.event.check_suite.id || 'event' }}
       cancel-in-progress: false
     runs-on: ubuntu-latest
     permissions:
@@ -153,6 +156,13 @@ jobs:
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Acknowledge comment
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh api repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions -X POST -f content="eyes"
 
       - name: Run Sprint Manager
         uses: anthropics/claude-code-action@v1
@@ -190,6 +200,12 @@ jobs:
             - Route based on status — see sprint-manager.md § Status-Based Routing
             - For Ready issues: run the full sprint flow (Architect → implementation → PR)
             - For other statuses: resume from where the issue stalled
+
+            ### issue_comment (PR comment)
+            A human commented on a PR with the `agentic` label.
+            - The PR number is `${{ github.event.issue.number }}`
+            - Read the comment and the PR context
+            - Treat this as owner/reviewer feedback — re-dispatch implementation agent with the comment as instructions
 
             ### pull_request:closed (merged)
             - Find the linked issue from the PR body or branch name
