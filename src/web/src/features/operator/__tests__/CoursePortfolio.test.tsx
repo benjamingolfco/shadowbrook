@@ -334,4 +334,5 @@ describe('CoursePortfolio', () => {
     expect(screen.getByLabelText('Manage Pine Valley, Augusta, GA')).toBeInTheDocument();
     expect(screen.getByLabelText('Manage Spyglass Hill, Pebble Beach, CA')).toBeInTheDocument();
   });
+
 });
