@@ -221,6 +221,40 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
+    [Fact]
+    public async Task GetTenantById_WithCourses_ReturnsCourseLocationData()
+    {
+        // Create tenant
+        var createTenantResponse = await _client.PostAsJsonAsync("/tenants", new
+        {
+            OrganizationName = "Location Test Tenant " + Guid.NewGuid(),
+            ContactName = "Test Contact",
+            ContactEmail = "test@location.com",
+            ContactPhone = "555-0000"
+        });
+        var tenant = await createTenantResponse.Content.ReadFromJsonAsync<TenantResponse>();
+
+        // Create course with location data
+        await _client.PostAsJsonAsync("/courses", new
+        {
+            Name = "Location Course",
+            TenantId = tenant!.Id,
+            City = "Scottsdale",
+            State = "AZ"
+        });
+
+        // Fetch tenant detail
+        var response = await _client.GetAsync($"/tenants/{tenant.Id}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var detail = await response.Content.ReadFromJsonAsync<TenantDetailResponse>();
+        Assert.NotNull(detail);
+        Assert.Single(detail!.Courses);
+        Assert.Equal("Location Course", detail.Courses[0].Name);
+        Assert.Equal("Scottsdale", detail.Courses[0].City);
+        Assert.Equal("AZ", detail.Courses[0].State);
+    }
+
     private record TenantResponse(
         Guid Id,
         string OrganizationName,
@@ -250,5 +284,5 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
         DateTimeOffset CreatedAt,
         DateTimeOffset UpdatedAt);
 
-    private record CourseInfo(Guid Id, string Name);
+    private record CourseInfo(Guid Id, string Name, string? City, string? State);
 }
