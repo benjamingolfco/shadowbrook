@@ -8,6 +8,7 @@ import {
   SidebarMenuButton,
   SidebarProvider,
   SidebarInset,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 
 export default function AdminLayout() {
@@ -46,6 +47,9 @@ export default function AdminLayout() {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
+        <header className="flex h-12 items-center gap-2 border-b px-4 md:hidden">
+          <SidebarTrigger />
+        </header>
         <Outlet />
       </SidebarInset>
     </SidebarProvider>
