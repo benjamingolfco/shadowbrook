@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, act } from '@/test/test-utils';
 import CoursePortfolio from '../pages/CoursePortfolio';
-import { useCourses } from '@/features/operator/hooks/useTeeTimeSettings';
+import { useCourses } from '@/features/operator/hooks/useCourses';
 import { useCourseContext } from '../context/CourseContext';
 import { useTenantContext } from '../context/TenantContext';
 
-vi.mock('@/features/operator/hooks/useTeeTimeSettings');
+vi.mock('@/features/operator/hooks/useCourses');
 vi.mock('../context/CourseContext');
 vi.mock('../context/TenantContext');
 
@@ -40,6 +40,9 @@ beforeEach(() => {
     course: null,
     selectCourse: mockSelectCourse,
     clearCourse: vi.fn(),
+    isDirty: false,
+    registerDirtyForm: vi.fn(),
+    unregisterDirtyForm: vi.fn(),
   });
 });
 

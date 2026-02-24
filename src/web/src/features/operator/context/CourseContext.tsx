@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 
 export interface SelectedCourse {
   id: string;
@@ -9,6 +9,9 @@ interface CourseContextValue {
   course: SelectedCourse | null;
   selectCourse: (course: SelectedCourse) => void;
   clearCourse: () => void;
+  isDirty: boolean;
+  registerDirtyForm: (formId: string) => void;
+  unregisterDirtyForm: (formId: string) => void;
 }
 
 const CourseContext = createContext<CourseContextValue | undefined>(undefined);
@@ -42,19 +45,37 @@ export function CourseProvider({ children, tenantId }: CourseProviderProps) {
     }
   });
 
+  const [dirtyForms, setDirtyForms] = useState<Set<string>>(new Set());
+
+  const isDirty = dirtyForms.size > 0;
+
+  const registerDirtyForm = useCallback((formId: string) => {
+    setDirtyForms((prev) => new Set(prev).add(formId));
+  }, []);
+
+  const unregisterDirtyForm = useCallback((formId: string) => {
+    setDirtyForms((prev) => {
+      const next = new Set(prev);
+      next.delete(formId);
+      return next;
+    });
+  }, []);
+
   const selectCourse = (newCourse: SelectedCourse) => {
     setCourse(newCourse);
+    setDirtyForms(new Set());
     const stored: StoredCourseState = { course: newCourse, tenantId };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
   };
 
   const clearCourse = () => {
     setCourse(null);
+    setDirtyForms(new Set());
     localStorage.removeItem(STORAGE_KEY);
   };
 
   return (
-    <CourseContext.Provider value={{ course, selectCourse, clearCourse }}>
+    <CourseContext.Provider value={{ course, selectCourse, clearCourse, isDirty, registerDirtyForm, unregisterDirtyForm }}>
       {children}
     </CourseContext.Provider>
   );

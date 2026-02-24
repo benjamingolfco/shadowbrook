@@ -4,12 +4,13 @@ import { CourseProvider, useCourseContext } from '../context/CourseContext';
 
 // Consumer component that exposes context values for testing
 function TestConsumer() {
-  const { course, selectCourse, clearCourse } = useCourseContext();
+  const { course, selectCourse, clearCourse, isDirty, registerDirtyForm, unregisterDirtyForm } = useCourseContext();
 
   return (
     <div>
       <span data-testid="course-id">{course?.id ?? 'null'}</span>
       <span data-testid="course-name">{course?.name ?? 'null'}</span>
+      <span data-testid="is-dirty">{String(isDirty)}</span>
       <button
         onClick={() => selectCourse({ id: 'course-1', name: 'Pine Valley' })}
         data-testid="select-btn"
@@ -18,6 +19,18 @@ function TestConsumer() {
       </button>
       <button onClick={() => clearCourse()} data-testid="clear-btn">
         Clear Course
+      </button>
+      <button onClick={() => registerDirtyForm('form-1')} data-testid="register-dirty-btn">
+        Register Dirty
+      </button>
+      <button onClick={() => unregisterDirtyForm('form-1')} data-testid="unregister-dirty-btn">
+        Unregister Dirty
+      </button>
+      <button onClick={() => registerDirtyForm('form-2')} data-testid="register-dirty-2-btn">
+        Register Dirty 2
+      </button>
+      <button onClick={() => unregisterDirtyForm('form-2')} data-testid="unregister-dirty-2-btn">
+        Unregister Dirty 2
       </button>
     </div>
   );
@@ -140,5 +153,97 @@ describe('CourseContext', () => {
     renderWithProvider('tenant-99');
 
     expect(screen.getByTestId('course-id').textContent).toBe('null');
+  });
+
+  // Dirty form tracking tests
+  it('isDirty is false when no forms are registered', () => {
+    renderWithProvider();
+
+    expect(screen.getByTestId('is-dirty').textContent).toBe('false');
+  });
+
+  it('registerDirtyForm makes isDirty true', () => {
+    renderWithProvider();
+
+    act(() => {
+      screen.getByTestId('register-dirty-btn').click();
+    });
+
+    expect(screen.getByTestId('is-dirty').textContent).toBe('true');
+  });
+
+  it('unregisterDirtyForm makes isDirty false when last form unregistered', () => {
+    renderWithProvider();
+
+    act(() => {
+      screen.getByTestId('register-dirty-btn').click();
+    });
+
+    expect(screen.getByTestId('is-dirty').textContent).toBe('true');
+
+    act(() => {
+      screen.getByTestId('unregister-dirty-btn').click();
+    });
+
+    expect(screen.getByTestId('is-dirty').textContent).toBe('false');
+  });
+
+  it('multiple dirty forms tracked independently', () => {
+    renderWithProvider();
+
+    act(() => {
+      screen.getByTestId('register-dirty-btn').click();
+    });
+    act(() => {
+      screen.getByTestId('register-dirty-2-btn').click();
+    });
+
+    expect(screen.getByTestId('is-dirty').textContent).toBe('true');
+
+    act(() => {
+      screen.getByTestId('unregister-dirty-btn').click();
+    });
+
+    // Still dirty because form-2 is still registered
+    expect(screen.getByTestId('is-dirty').textContent).toBe('true');
+
+    act(() => {
+      screen.getByTestId('unregister-dirty-2-btn').click();
+    });
+
+    // Now both are unregistered
+    expect(screen.getByTestId('is-dirty').textContent).toBe('false');
+  });
+
+  it('selectCourse clears dirty forms', () => {
+    renderWithProvider();
+
+    act(() => {
+      screen.getByTestId('register-dirty-btn').click();
+    });
+
+    expect(screen.getByTestId('is-dirty').textContent).toBe('true');
+
+    act(() => {
+      screen.getByTestId('select-btn').click();
+    });
+
+    expect(screen.getByTestId('is-dirty').textContent).toBe('false');
+  });
+
+  it('clearCourse clears dirty forms', () => {
+    renderWithProvider();
+
+    act(() => {
+      screen.getByTestId('register-dirty-btn').click();
+    });
+
+    expect(screen.getByTestId('is-dirty').textContent).toBe('true');
+
+    act(() => {
+      screen.getByTestId('clear-btn').click();
+    });
+
+    expect(screen.getByTestId('is-dirty').textContent).toBe('false');
   });
 });
