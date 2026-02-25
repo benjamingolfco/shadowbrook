@@ -20,6 +20,8 @@ Both scenarios share infrastructure: a per-course daily waitlist, golfer entries
 
 ## 2. Data Model
 
+This section describes the **end-goal data model** for the complete waitlist system. Not all entities are created in the same story — see Section 6 for the phased implementation scope.
+
 ### 2.1 Entity Definitions
 
 #### CourseWaitlist
@@ -29,7 +31,7 @@ The daily waitlist container for a course. One per course per day. Created lazil
 ```
 CourseWaitlist
   Id              Guid, PK
-  CourseId         Guid, FK → Course, required
+  CourseId         Guid, FK -> Course, required
   Date            DateOnly, required
   CreatedAt       DateTimeOffset
   UpdatedAt       DateTimeOffset
@@ -47,7 +49,7 @@ An operator-initiated request to fill a specific tee time. When an operator adds
 ```
 WaitlistRequest
   Id                    Guid, PK
-  CourseWaitlistId      Guid, FK → CourseWaitlist, required
+  CourseWaitlistId      Guid, FK -> CourseWaitlist, required
   TeeTime               TimeOnly, required
   GolfersNeeded         int, required (1-4)
   Status                string, required (default: "Pending")
@@ -69,6 +71,47 @@ WaitlistRequest
 
 **On uniqueness:** We do NOT enforce a unique constraint on `(CourseWaitlistId, TeeTime)` because an operator might cancel a request and create a new one for the same time, or there could be partial-fill scenarios where a second request is created for remaining slots. Status-based filtering handles this.
 
+#### GolferWaitlistEntry
+
+A golfer's presence on a course's daily waitlist. Represents "I am available to play at this course today." This is the owner's proposed entity with refinements.
+
+```
+GolferWaitlistEntry
+  Id                  Guid, PK
+  CourseWaitlistId    Guid, FK -> CourseWaitlist, required
+  GolferId            Guid?, FK -> Golfer, nullable (end-goal: required once Golfer entity exists)
+  GolferName          string, required (denormalized from Golfer; interim identifier before GolferId)
+  GolferPhone         string, required (denormalized from Golfer; interim identifier before GolferId)
+  WaitingFrom         TimeOnly, required
+  WaitingUntil        TimeOnly, nullable (null = "until close")
+  IsWalkUp            bool, required (default: false)
+  IsReady             bool, required (default: true)
+  JoinedAt            DateTimeOffset, required
+  RemovedAt           DateTimeOffset, nullable
+  CreatedAt           DateTimeOffset
+  UpdatedAt           DateTimeOffset
+
+  Index: (CourseWaitlistId, IsWalkUp, IsReady)
+  Index: (CourseWaitlistId, GolferPhone)
+  Index: (CourseWaitlistId, GolferId) — added when GolferId becomes non-nullable
+```
+
+**Key design decisions:**
+
+1. **GolferId FK is the end-goal.** The `Golfer` entity does not exist in the system yet. When it is introduced (in the golfer sign-up story), `GolferWaitlistEntry` will be created with a `GolferId` FK. Initially the FK is nullable to allow for a transition period, but the end-goal is for it to be required (non-nullable) once all golfer-facing flows go through authenticated accounts. `GolferName` and `GolferPhone` remain as **denormalized copies** — they are always populated regardless of whether `GolferId` is set. This ensures SMS delivery (which needs the phone number) and operator display (which needs the name) never require a join to the `Golfer` table. The denormalized fields also provide resilience: if a golfer deletes their account, historical waitlist records retain context.
+
+2. **Interim state before the Golfer entity exists.** When `GolferWaitlistEntry` is first created (in the golfer join-waitlist story), the `Golfer` table may or may not exist yet. If it does not, `GolferId` is simply null and `GolferName` + `GolferPhone` serve as the primary identifiers. When the `Golfer` entity is introduced, a migration adds the FK constraint and backfills `GolferId` from phone number matching (E.164 normalized). The existing `Booking` entity follows this same pattern today — `Booking.GolferName` is a string with no golfer FK, and it will gain a `GolferId` in the same migration wave.
+
+3. **Composite key vs surrogate key.** The owner proposed `(golferId, courseWaitlistId)` as a composite primary key. Because a golfer could theoretically leave and rejoin the waitlist on the same day (with different time windows), we use a surrogate `Id` (Guid) as PK. A unique constraint on `(CourseWaitlistId, GolferPhone)` prevents duplicate active entries, enforced at the application level by checking `RemovedAt IS NULL`. Once `GolferId` is available, the uniqueness check shifts to `(CourseWaitlistId, GolferId)`.
+
+4. **WaitingFrom / WaitingUntil vs time window.** These fields define the golfer's availability window. For walk-up golfers, `WaitingFrom` is "now" and `WaitingUntil` might be null (they will stay as long as needed). For remote waitlist golfers, these define their preferred time window (e.g., "I want to play between 8am and 10am"). The query to match golfers to a request filters: `WaitingFrom <= request.TeeTime AND (WaitingUntil IS NULL OR WaitingUntil >= request.TeeTime)`.
+
+5. **IsReady flag.** The owner included this for the walk-up scenario — a golfer might join the waitlist but then step away (eating lunch, in the middle of a lesson). `IsReady = false` means "don't notify me right now." Defaults to `true`.
+
+6. **RemovedAt instead of deletion.** Soft-delete via `RemovedAt` timestamp allows audit trail and prevents re-notification of golfers who already left the waitlist. Active entries are those where `RemovedAt IS NULL`.
+
+7. **Renamed from owner's proposal.** `waitingTill` becomes `WaitingUntil` for consistency with .NET naming conventions (PascalCase) and clarity (`Until` is more standard than `Till`).
+
 #### WaitlistRequestAcceptance
 
 Tracks which golfer accepted a specific waitlist request. Replaces the owner's proposed `CourseWalkupWaitlistRequestGolfer`.
@@ -76,8 +119,8 @@ Tracks which golfer accepted a specific waitlist request. Replaces the owner's p
 ```
 WaitlistRequestAcceptance
   Id                      Guid, PK
-  WaitlistRequestId       Guid, FK → WaitlistRequest, required
-  GolferWaitlistEntryId   Guid, FK → GolferWaitlistEntry, required
+  WaitlistRequestId       Guid, FK -> WaitlistRequest, required
+  GolferWaitlistEntryId   Guid, FK -> GolferWaitlistEntry, required
   AcceptedAt              DateTimeOffset, required
   CreatedAt               DateTimeOffset
 
@@ -94,43 +137,6 @@ WaitlistRequestAcceptance
 - It describes the *action* (an acceptance), not just a junction
 - It is not walk-up-specific
 - It is clearer about what the record represents
-
-#### GolferWaitlistEntry
-
-A golfer's presence on a course's daily waitlist. Represents "I am available to play at this course today." This is the owner's proposed entity with refinements.
-
-```
-GolferWaitlistEntry
-  Id                  Guid, PK
-  CourseWaitlistId    Guid, FK → CourseWaitlist, required
-  GolferName          string, required
-  GolferPhone         string, required
-  WaitingFrom         TimeOnly, required
-  WaitingUntil        TimeOnly, nullable (null = "until close")
-  IsWalkUp            bool, required (default: false)
-  IsReady             bool, required (default: true)
-  JoinedAt            DateTimeOffset, required
-  RemovedAt           DateTimeOffset, nullable
-  CreatedAt           DateTimeOffset
-  UpdatedAt           DateTimeOffset
-
-  Index: (CourseWaitlistId, IsWalkUp, IsReady)
-  Index: (CourseWaitlistId, GolferPhone)
-```
-
-**Key design decisions:**
-
-1. **No GolferId FK — using GolferName + GolferPhone instead.** There is no `Golfer` entity in the system yet. The existing `Booking` entity uses `GolferName` (string) without a golfer FK. To stay consistent with the current codebase and avoid building a Golfer entity prematurely, we use `GolferName` + `GolferPhone`. The phone number is essential because SMS is the communication channel. When a `Golfer` entity is introduced later, a migration adds the FK and backfills from phone number matching.
-
-2. **Composite key vs surrogate key.** The owner proposed `(golferId, courseWaitlistId)` as a composite primary key. Since we don't have a `GolferId`, and because a golfer could theoretically leave and rejoin the waitlist on the same day (with different time windows), we use a surrogate `Id` (Guid) as PK. A unique constraint on `(CourseWaitlistId, GolferPhone)` prevents duplicate active entries, enforced at the application level by checking `RemovedAt IS NULL`.
-
-3. **WaitingFrom / WaitingUntil vs time window.** These fields define the golfer's availability window. For walk-up golfers, `WaitingFrom` is "now" and `WaitingUntil` might be null (they will stay as long as needed). For remote waitlist golfers, these define their preferred time window (e.g., "I want to play between 8am and 10am"). The query to match golfers to a request filters: `WaitingFrom <= request.TeeTime AND (WaitingUntil IS NULL OR WaitingUntil >= request.TeeTime)`.
-
-4. **IsReady flag.** The owner included this for the walk-up scenario — a golfer might join the waitlist but then step away (eating lunch, in the middle of a lesson). `IsReady = false` means "don't notify me right now." Defaults to `true`.
-
-5. **RemovedAt instead of deletion.** Soft-delete via `RemovedAt` timestamp allows audit trail and prevents re-notification of golfers who already left the waitlist. Active entries are those where `RemovedAt IS NULL`.
-
-6. **Renamed from owner's proposal.** `waitingTill` becomes `WaitingUntil` for consistency with .NET naming conventions (PascalCase) and clarity (`Until` is more standard than `Till`).
 
 ### 2.2 Modified Entities
 
@@ -153,6 +159,7 @@ Tenant
         ├── Booking (existing)
         └── CourseWaitlist (one per date)
               ├── GolferWaitlistEntry (many per waitlist)
+              │     ├── Golfer? (FK — nullable until Golfer entity exists)
               │     └── WaitlistRequestAcceptance (many — one per accepted request)
               └── WaitlistRequest (many per waitlist, one per tee time request)
                     └── WaitlistRequestAcceptance (many — one per accepting golfer)
@@ -160,12 +167,23 @@ Tenant
 
 `WaitlistRequestAcceptance` is a junction between `WaitlistRequest` and `GolferWaitlistEntry`.
 
-### 2.4 Not Modeled Yet (Future Stories)
+### 2.4 Future Entities and Migrations
 
-- **Golfer entity** — When golfer accounts are built, `GolferWaitlistEntry` gains a `GolferId` FK and the `GolferName`/`GolferPhone` fields become denormalized copies.
+- **Golfer entity** — Created in the golfer sign-up story. `GolferWaitlistEntry.GolferId` FK points to this. `Booking` will also gain a `GolferId` FK in the same migration. Phone numbers normalized to E.164 from day one to ensure clean backfill.
 - **TeeTime entity** — When tee times are persisted (not computed), `WaitlistRequest.TeeTime` (TimeOnly) gains a parallel `TeeTimeId` FK.
 - **Waitlist configuration** — Per-course settings like acceptance window duration (default 15 min), max waitlist size, walk-up discount percentage. These belong on a `WaitlistSettings` entity or on `Course` directly. Deferred to #175.
 - **WaitlistOffer** — Tracks individual SMS offers sent to golfers (offered at, expires at, response). Needed for the 15-minute rolling offer flow in #3. Not needed for #180.
+
+### 2.5 Phased Table Creation
+
+The data model above is the end-goal. Tables are created incrementally as stories require them:
+
+| Story | Tables Created | Fields Added |
+|-------|---------------|--------------|
+| #180 (operator waitlist trigger) | `CourseWaitlists`, `WaitlistRequests` | `Course.WaitlistEnabled` |
+| Golfer joins waitlist (future) | `GolferWaitlistEntries` | — |
+| Golfer accepts offer (future) | `WaitlistRequestAcceptances` | — |
+| Golfer accounts (future) | `Golfers` | `GolferWaitlistEntry.GolferId`, `Booking.GolferId` |
 
 ---
 
@@ -255,7 +273,7 @@ The owner flagged atomicity as critical. Key scenarios:
 
 2. **Accepting an offer** — Must create `WaitlistRequestAcceptance`, update `WaitlistRequest.Status` (if all slots filled), and soft-delete the golfer's other waitlist entries. This requires a transaction scope. The in-process event model handles this naturally. With a message broker, this becomes an eventual consistency concern that needs idempotent handlers.
 
-3. **Golfer accepts a tee time anywhere** — The owner noted: "when a golfer accepts a teetime anywhere, all their waitlist entries for that day need to be removed." This is a cross-aggregate operation. The `WaitlistOfferAccepted` event handler queries all `GolferWaitlistEntry` rows for that golfer (by phone) on that date across all courses and soft-deletes them. With in-process events, this can be within the same transaction. With a broker, this is eventually consistent (acceptable — the worst case is a golfer gets an SMS for a slot they already filled, which they can ignore).
+3. **Golfer accepts a tee time anywhere** — The owner noted: "when a golfer accepts a teetime anywhere, all their waitlist entries for that day need to be removed." This is a cross-aggregate operation. The `WaitlistOfferAccepted` event handler queries all `GolferWaitlistEntry` rows for that golfer (by `GolferId` or by phone if `GolferId` is not yet available) on that date across all courses and soft-deletes them. With in-process events, this can be within the same transaction. With a broker, this is eventually consistent (acceptable — the worst case is a golfer gets an SMS for a slot they already filled, which they can ignore).
 
 ---
 
@@ -267,41 +285,42 @@ These are the endpoints needed for the operator-facing story:
 
 ```
 GET  /courses/{courseId}/waitlist?date=yyyy-MM-dd
-  → Returns waitlist summary and all requests for the given date
-  → Response: { courseWaitlistId, date, totalGolfersOnWaitlist, requests: [...] }
-  → 200 OK, 404 if course not found, 400 if waitlist not enabled
+  -> Returns waitlist summary and all requests for the given date
+  -> Response: { courseWaitlistId, date, totalGolfersOnWaitlist, requests: [...] }
+  -> 200 OK, 404 if course not found, 400 if waitlist not enabled
 
 POST /courses/{courseId}/waitlist/requests
-  → Operator adds a tee time to the waitlist
-  → Body: { teeTime: "HH:mm", golfersNeeded: 1-4 }
-  → Creates CourseWaitlist if not exists, then WaitlistRequest
-  → Publishes WaitlistRequestCreated event
-  → 201 Created, 400 validation errors, 404 course not found, 409 if active request exists for that time
+  -> Operator adds a tee time to the waitlist
+  -> Body: { teeTime: "HH:mm", golfersNeeded: 1-4 }
+  -> Creates CourseWaitlist if not exists, then WaitlistRequest
+  -> Publishes WaitlistRequestCreated event
+  -> 201 Created, 400 validation errors, 404 course not found, 409 if active request exists for that time
 
 GET  /courses/{courseId}/waitlist-settings
-  → Returns { waitlistEnabled: bool }
-  → 200 OK
+  -> Returns { waitlistEnabled: bool }
+  -> 200 OK
 
 PUT  /courses/{courseId}/waitlist-settings
-  → Body: { waitlistEnabled: bool }
-  → 200 OK
+  -> Body: { waitlistEnabled: bool }
+  -> 200 OK
 ```
 
 ### 4.2 Future Endpoints (Not in #180 Scope)
 
 ```
 POST /courses/{courseId}/waitlist/join
-  → Golfer joins the waitlist (golfer-facing, future story)
-  → Body: { golferName, golferPhone, waitingFrom, waitingUntil?, isWalkUp }
+  -> Golfer joins the waitlist (golfer-facing, future story)
+  -> Body: { golferName, golferPhone, waitingFrom, waitingUntil?, isWalkUp }
+  -> Once Golfer entity exists: authenticated, GolferId derived from session
 
 DELETE /courses/{courseId}/waitlist/entries/{entryId}
-  → Golfer or operator removes an entry
+  -> Golfer or operator removes an entry
 
 POST /courses/{courseId}/waitlist/requests/{requestId}/accept
-  → Golfer accepts a waitlist offer (SMS-triggered, future story)
+  -> Golfer accepts a waitlist offer (SMS-triggered, future story)
 
 GET  /courses/{courseId}/waitlist/entries
-  → Operator views all golfers on the waitlist for a date
+  -> Operator views all golfers on the waitlist for a date
 ```
 
 ---
@@ -311,7 +330,7 @@ GET  /courses/{courseId}/waitlist/entries
 ### 5.1 Walk-Up Waitlist (Issue #180 + Future Golfer Story)
 
 1. **Operator enables waitlist** — `PUT /courses/{id}/waitlist-settings { waitlistEnabled: true }`
-2. **Golfer arrives at course, joins walk-up waitlist** — (future story) Creates `GolferWaitlistEntry` with `IsWalkUp = true`, `IsReady = true`
+2. **Golfer arrives at course, joins walk-up waitlist** — (future story) Creates `GolferWaitlistEntry` with `IsWalkUp = true`, `IsReady = true`, `GolferId` set if golfer has an account
 3. **Operator sees open 9:20 AM slot** — `POST /courses/{id}/waitlist/requests { teeTime: "09:20", golfersNeeded: 2 }`
 4. **System creates** `CourseWaitlist` (if needed) + `WaitlistRequest` (status: Pending)
 5. **`WaitlistRequestCreated` event fires** — Handler queries `GolferWaitlistEntry` where `IsWalkUp = true AND IsReady = true AND WaitingFrom <= 09:20 AND (WaitingUntil IS NULL OR WaitingUntil >= 09:20)`, ordered by `JoinedAt` ASC (FIFO)
@@ -322,7 +341,7 @@ GET  /courses/{courseId}/waitlist/entries
 ### 5.2 Remote/SMS Waitlist (Issue #3 — Future)
 
 1. **Golfer browses and sees a full tee sheet for Saturday 8-10 AM**
-2. **Golfer joins waitlist** — Creates `GolferWaitlistEntry` with `IsWalkUp = false`, `WaitingFrom = 08:00`, `WaitingUntil = 10:00`
+2. **Golfer joins waitlist** — Creates `GolferWaitlistEntry` with `IsWalkUp = false`, `WaitingFrom = 08:00`, `WaitingUntil = 10:00`, `GolferId` set from authenticated session
 3. **Another golfer cancels their 8:40 AM booking** — `BookingCancelled` event fires
 4. **Handler creates** `WaitlistRequest` for the freed 8:40 slot, `GolfersNeeded` based on cancelled booking's player count
 5. **`WaitlistRequestCreated` event fires** — Same handler as walk-up, but now matches remote golfers (the `IsWalkUp` flag is not used for filtering which golfers to notify — both walk-up and remote golfers in the matching time window are eligible)
@@ -360,22 +379,23 @@ Issue #180 is scoped to the **operator view only**. Based on the acceptance crit
 
 ### What Does NOT Get Built (Future Stories)
 
-- `GolferWaitlistEntry` entity (no golfer-facing join flow yet)
-- `WaitlistRequestAcceptance` entity (no acceptance flow yet)
+- `GolferWaitlistEntry` table (created when the golfer join-waitlist story is built)
+- `WaitlistRequestAcceptance` table (created when the golfer acceptance story is built)
+- `Golfer` table (created when the golfer account/sign-up story is built)
 - SMS notification handlers
 - Golfer-facing endpoints
 - Offer timeout/cascade logic
 - Cross-waitlist cleanup on acceptance
 
-This is intentional — the operator can create waitlist requests and see them in the UI. The "N pending" status reflects that no golfer has accepted yet (because the golfer-side is not built). When the golfer stories are implemented, the same data model supports the full flow without schema changes.
+This is intentional — the operator can create waitlist requests and see them in the UI. The "N pending" status reflects that no golfer has accepted yet (because the golfer-side is not built). When the golfer stories are implemented, the same data model supports the full flow without schema changes to the tables created in #180.
 
 ---
 
 ## 7. Risks and Concerns
 
-### 7.1 No Golfer Entity
+### 7.1 Golfer Entity Timing
 
-The biggest structural gap. The current system has `Booking.GolferName` (a string) and no concept of a golfer account. The `GolferWaitlistEntry` design uses `GolferName` + `GolferPhone` to stay consistent. Risk: when a Golfer entity is introduced, the backfill from phone numbers to golfer IDs must handle duplicates and formatting differences. Mitigation: normalize phone numbers to E.164 format from day one.
+The end-goal data model includes `GolferId` on `GolferWaitlistEntry`, but the `Golfer` entity does not exist yet. The golfer join-waitlist story may arrive before the golfer accounts story. If so, `GolferWaitlistEntry` is created with `GolferId` as nullable and `GolferName` + `GolferPhone` as the primary identifiers. When the `Golfer` entity is introduced, a migration adds the FK constraint and backfills from phone number matching. **Mitigation:** Normalize phone numbers to E.164 format from day one to ensure clean backfill. The same migration that introduces `Golfer` should also add `GolferId` to the existing `Booking` entity for consistency.
 
 ### 7.2 Tee Time Validation
 
@@ -415,12 +435,14 @@ Per project principles, "If a downstream system is slow or down, the core flow s
 
 ## 9. Migration Plan
 
-For issue #180, the migration adds:
+### Migration for #180: `AddWaitlistEntities`
 
 - `CourseWaitlists` table
 - `WaitlistRequests` table
 - `WaitlistEnabled` column on `Courses`
 
-The `GolferWaitlistEntry` and `WaitlistRequestAcceptance` tables are NOT created in this migration — they ship with the golfer-facing stories.
+### Future Migrations (Not in #180)
 
-Migration name: `AddWaitlistEntities`
+- `AddGolferWaitlistEntries` — Creates `GolferWaitlistEntries` table with `GolferId` nullable, `GolferName`, `GolferPhone` required. Ships with the golfer join-waitlist story.
+- `AddWaitlistRequestAcceptances` — Creates `WaitlistRequestAcceptances` table. Ships with the golfer acceptance story.
+- `AddGolferEntity` — Creates `Golfers` table, adds `GolferId` FK to `Booking` and makes `GolferWaitlistEntry.GolferId` non-nullable with backfill. Ships with the golfer accounts story.
