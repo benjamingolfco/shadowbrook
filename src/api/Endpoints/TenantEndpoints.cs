@@ -101,7 +101,7 @@ public static partial class TenantEndpoints
             tenant.ContactName,
             tenant.ContactEmail,
             tenant.ContactPhone,
-            tenant.Courses.Select(c => new CourseInfo(c.Id, c.Name)).ToList(),
+            tenant.Courses.Select(c => new CourseInfo(c.Id, c.Name, c.City, c.State)).ToList(),
             tenant.CreatedAt,
             tenant.UpdatedAt);
 
@@ -152,4 +152,4 @@ public record TenantDetailResponse(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
-public record CourseInfo(Guid Id, string Name);
+public record CourseInfo(Guid Id, string Name, string? City, string? State);

@@ -13,5 +13,7 @@ export interface TenantDetail extends Tenant {
   courses: Array<{
     id: string;
     name: string;
+    city: string | null;
+    state: string | null;
   }>;
 }

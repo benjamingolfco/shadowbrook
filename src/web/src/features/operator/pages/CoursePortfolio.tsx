@@ -117,7 +117,7 @@ export default function CoursePortfolio() {
                 <CardTitle className="text-base">{course.name}</CardTitle>
                 <CardDescription>{formatLocation(course)}</CardDescription>
                 {/* TODO: Derive status from settings completeness in future story */}
-                <Badge variant="success">Active</Badge>
+                <Badge variant="success" className="w-fit">Active</Badge>
                 <CardAction>
                   <Button variant="outline" tabIndex={-1} aria-hidden={true}>
                     Manage

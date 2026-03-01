@@ -17,7 +17,7 @@ function RoleRedirect() {
   const { role } = useAuth();
 
   const routes = {
-    admin: '/admin/courses',
+    admin: '/admin/tenants',
     operator: '/operator',
     golfer: '/golfer/tee-times',
   };
