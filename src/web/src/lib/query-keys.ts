@@ -12,4 +12,8 @@ export const queryKeys = {
   teeSheets: {
     byDate: (courseId: string, date: string) => ['tee-sheets', courseId, date] as const,
   },
+  waitlist: {
+    byDate: (courseId: string, date: string) => ['waitlist', courseId, date] as const,
+    settings: (courseId: string) => ['waitlist', courseId, 'settings'] as const,
+  },
 };

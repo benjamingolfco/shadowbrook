@@ -52,6 +52,15 @@ export default function OperatorLayout() {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
+                <NavLink to="/operator/waitlist">
+                  {({ isActive }) => (
+                    <span className={isActive ? 'font-semibold' : ''}>Waitlist</span>
+                  )}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
                 <NavLink to="/operator/settings">
                   {({ isActive }) => (
                     <span className={isActive ? 'font-semibold' : ''}>Settings</span>
