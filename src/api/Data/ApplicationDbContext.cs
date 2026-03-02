@@ -17,6 +17,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<Booking> Bookings => Set<Booking>();
+    public DbSet<CourseWaitlist> CourseWaitlists => Set<CourseWaitlist>();
+    public DbSet<Golfer> Golfers => Set<Golfer>();
+    public DbSet<GolferWaitlistEntry> GolferWaitlistEntries => Set<GolferWaitlistEntry>();
+    public DbSet<WalkUpCode> WalkUpCodes => Set<WalkUpCode>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -52,5 +56,57 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<Booking>()
             .HasIndex(b => new { b.CourseId, b.Date, b.Time });
+
+        // CourseWaitlist
+        modelBuilder.Entity<CourseWaitlist>()
+            .HasOne(w => w.Course)
+            .WithMany()
+            .HasForeignKey(w => w.CourseId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CourseWaitlist>()
+            .HasIndex(w => new { w.CourseId, w.Date })
+            .IsUnique();
+
+        // Golfer — unique by phone (primary lookup key for find-or-create)
+        modelBuilder.Entity<Golfer>()
+            .HasIndex(g => g.Phone)
+            .IsUnique();
+
+        // GolferWaitlistEntry
+        modelBuilder.Entity<GolferWaitlistEntry>()
+            .HasOne(e => e.CourseWaitlist)
+            .WithMany()
+            .HasForeignKey(e => e.CourseWaitlistId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GolferWaitlistEntry>()
+            .HasOne(e => e.Golfer)
+            .WithMany()
+            .HasForeignKey(e => e.GolferId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<GolferWaitlistEntry>()
+            .HasIndex(e => new { e.CourseWaitlistId, e.GolferId });
+
+        modelBuilder.Entity<GolferWaitlistEntry>()
+            .HasIndex(e => new { e.CourseWaitlistId, e.GolferPhone });
+
+        modelBuilder.Entity<GolferWaitlistEntry>()
+            .HasIndex(e => new { e.CourseWaitlistId, e.IsWalkUp, e.IsReady });
+
+        // WalkUpCode — codes are globally unique per day
+        modelBuilder.Entity<WalkUpCode>()
+            .HasOne(w => w.Course)
+            .WithMany()
+            .HasForeignKey(w => w.CourseId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WalkUpCode>()
+            .HasIndex(w => new { w.Code, w.Date })
+            .IsUnique();
+
+        modelBuilder.Entity<WalkUpCode>()
+            .HasIndex(w => new { w.CourseId, w.Date });
     }
 }
