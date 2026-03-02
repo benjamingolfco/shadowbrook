@@ -8,6 +8,7 @@ import RoleGuard from '@/features/auth/components/RoleGuard';
 const AdminFeature = lazy(() => import('@/features/admin'));
 const OperatorFeature = lazy(() => import('@/features/operator'));
 const GolferFeature = lazy(() => import('@/features/golfer'));
+const WalkUpFeature = lazy(() => import('@/features/walkup'));
 
 function LazyFeature({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<div className="p-6 text-muted-foreground">Loading...</div>}>{children}</Suspense>;
@@ -58,6 +59,12 @@ export const router = createBrowserRouter([
           <LazyFeature><GolferFeature /></LazyFeature>
         </RoleGuard>
       </AuthGuard>
+    ),
+  },
+  {
+    path: '/join/*',
+    element: (
+      <LazyFeature><WalkUpFeature /></LazyFeature>
     ),
   },
 ]);
