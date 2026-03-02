@@ -1,3 +1,5 @@
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Data;
@@ -12,6 +14,45 @@ builder.Services.AddHealthChecks();
 builder.Services.AddOpenApi();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+
+// Rate limiting — per-IP limits to protect public unauthenticated endpoints.
+// PermitLimit is read from configuration so tests can override it via IConfiguration.
+var verifyPermitLimit = builder.Configuration.GetValue("RateLimiting:WalkUpVerify:PermitLimit", defaultValue: 10);
+var verifyWindowSeconds = builder.Configuration.GetValue("RateLimiting:WalkUpVerify:WindowSeconds", defaultValue: 300);
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.Headers.RetryAfter =
+            context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter)
+                ? ((int)retryAfter.TotalSeconds).ToString()
+                : verifyWindowSeconds.ToString();
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            new { error = "Too many verification attempts. Please wait a few minutes before trying again." },
+            cancellationToken);
+    };
+
+    // Per-IP fixed window — protects the 4-digit code (10,000 combination) enumeration surface.
+    // X-Forwarded-For is preferred so the real client IP is used when behind a load balancer.
+    options.AddPolicy(WalkUpEndpoints.RateLimitPolicyName, httpContext =>
+    {
+        var ip = httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+                 ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                 ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: ip,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = verifyPermitLimit,
+                Window = TimeSpan.FromSeconds(verifyWindowSeconds),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            });
+    });
+});
 
 builder.Services.AddCors(options =>
 {
@@ -55,6 +96,7 @@ if (app.Environment.EnvironmentName != "Testing")
 }
 
 app.UseCors();
+app.UseRateLimiter();
 app.UseMiddleware<TenantClaimMiddleware>();
 
 app.MapHealthChecks("/health");

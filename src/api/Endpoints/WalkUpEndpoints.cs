@@ -8,12 +8,19 @@ namespace Shadowbrook.Api.Endpoints;
 
 public static class WalkUpEndpoints
 {
+    /// <summary>
+    /// Rate limit policy name for the verify endpoint.
+    /// Defined here so the policy registration in Program.cs and the endpoint stay in sync.
+    /// </summary>
+    public const string RateLimitPolicyName = "walkup-verify";
+
     public static void MapWalkUpEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/walkup");
 
         // Public endpoints — no tenant header required, no auth
-        group.MapPost("verify", VerifyCode);
+        // /verify is rate-limited per IP to prevent 4-digit code enumeration (10,000 combinations)
+        group.MapPost("verify", VerifyCode).RequireRateLimiting(RateLimitPolicyName);
         group.MapPost("join", JoinWaitlist);
     }
 
