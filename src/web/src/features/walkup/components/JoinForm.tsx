@@ -19,7 +19,7 @@ const joinFormSchema = z.object({
   phone: z
     .string()
     .min(1, 'Phone number is required')
-    .regex(/^[\d\s\-\(\)\+]+$/, 'Please enter a valid phone number')
+    .regex(/^[\d\s\-()+]+$/, 'Please enter a valid phone number')
     .refine(
       (val) => val.replace(/\D/g, '').length >= 10,
       'Phone number must be at least 10 digits',
