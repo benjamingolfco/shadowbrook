@@ -15,9 +15,11 @@ public class Course
     public TimeOnly? FirstTeeTime { get; set; }
     public TimeOnly? LastTeeTime { get; set; }
     public decimal? FlatRatePrice { get; set; }
+    public bool? WaitlistEnabled { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 
     // Navigation
     public Tenant? Tenant { get; set; }
+    public ICollection<CourseWaitlist> CourseWaitlists { get; set; } = new List<CourseWaitlist>();
 }
