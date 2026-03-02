@@ -69,7 +69,9 @@ Cast in components: `const errorWithStatus = err as Error & { status?: number }`
 
 ## Build/Lint Notes
 
-- node_modules may not be installed in CI sandbox — lint/test must run via `make lint` / `make test`
+- node_modules may not be installed in sandbox — install first: `cd src/web && npm install`
+- After install, use `npm --prefix src/web run lint` and `npm --prefix src/web run build`
 - pnpm available via `/usr/local/lib/node_modules/corepack/shims/pnpm` if corepack is enabled
-- Test command: `pnpm --dir src/web test`
-- Lint command: `pnpm --dir src/web lint`
+- Test command: `npm --prefix src/web run test`
+- Lint command: `npm --prefix src/web run lint`
+- **Regex pitfall:** `no-useless-escape` — inside character classes `[...]`, do NOT escape `(`, `)`, `+`. Write `/^[\d\s\-()+]+$/` not `/^[\d\s\-\(\)\+]+$/`
