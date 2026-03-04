@@ -2,17 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@/test/test-utils';
 import Waitlist from '../pages/Waitlist';
 import { useCourseContext } from '../context/CourseContext';
-import {
-  useWaitlistSettings,
-  useWaitlist,
-  useCreateWaitlistRequest,
-} from '../hooks/useWaitlist';
+import { useWaitlist, useCreateWaitlistRequest } from '../hooks/useWaitlist';
 
 vi.mock('../context/CourseContext');
 vi.mock('../hooks/useWaitlist');
 
 const mockUseCourseContext = vi.mocked(useCourseContext);
-const mockUseWaitlistSettings = vi.mocked(useWaitlistSettings);
 const mockUseWaitlist = vi.mocked(useWaitlist);
 const mockUseCreateWaitlistRequest = vi.mocked(useCreateWaitlistRequest);
 
@@ -25,20 +20,6 @@ const defaultMutationReturn = {
   isError: false,
   error: null,
 } as unknown as ReturnType<typeof useCreateWaitlistRequest>;
-
-const enabledSettingsReturn = {
-  data: { waitlistEnabled: true },
-  isLoading: false,
-  isError: false,
-  error: null,
-} as unknown as ReturnType<typeof useWaitlistSettings>;
-
-const disabledSettingsReturn = {
-  data: { waitlistEnabled: false },
-  isLoading: false,
-  isError: false,
-  error: null,
-} as unknown as ReturnType<typeof useWaitlistSettings>;
 
 const emptyWaitlistReturn = {
   data: { courseWaitlistId: null, date: '2026-03-02', totalGolfersPending: 0, requests: [] },
@@ -59,7 +40,6 @@ beforeEach(() => {
     unregisterDirtyForm: vi.fn(),
   });
 
-  mockUseWaitlistSettings.mockReturnValue(enabledSettingsReturn);
   mockUseWaitlist.mockReturnValue(emptyWaitlistReturn);
   mockUseCreateWaitlistRequest.mockReturnValue(defaultMutationReturn);
 });
@@ -82,26 +62,7 @@ describe('Waitlist', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows feature disabled callout when waitlist is not enabled', () => {
-    mockUseWaitlistSettings.mockReturnValue(disabledSettingsReturn);
-
-    render(<Waitlist />);
-
-    expect(
-      screen.getByText('Waitlist is not enabled for this course.'),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText('Enable the waitlist in course settings to use this feature.'),
-    ).toBeInTheDocument();
-  });
-
   it('shows loading skeletons while loading', () => {
-    mockUseWaitlistSettings.mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      isError: false,
-      error: null,
-    } as unknown as ReturnType<typeof useWaitlistSettings>);
     mockUseWaitlist.mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -113,6 +74,13 @@ describe('Waitlist', () => {
 
     const skeletons = document.querySelectorAll('[data-slot="skeleton"]');
     expect(skeletons.length).toBeGreaterThan(0);
+  });
+
+  it('shows add to waitlist form by default', () => {
+    render(<Waitlist />);
+
+    expect(screen.getByRole('heading', { name: 'Add to Waitlist' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add to Waitlist' })).toBeInTheDocument();
   });
 
   it('shows summary card with total golfers pending', () => {
