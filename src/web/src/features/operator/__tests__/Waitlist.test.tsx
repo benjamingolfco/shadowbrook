@@ -2,12 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@/test/test-utils';
 import Waitlist from '../pages/Waitlist';
 import { useCourseContext } from '../context/CourseContext';
-import { useWaitlist, useCreateWaitlistRequest } from '../hooks/useWaitlist';
+import { useWaitlistSettings, useWaitlist, useCreateWaitlistRequest } from '../hooks/useWaitlist';
 
 vi.mock('../context/CourseContext');
 vi.mock('../hooks/useWaitlist');
 
 const mockUseCourseContext = vi.mocked(useCourseContext);
+const mockUseWaitlistSettings = vi.mocked(useWaitlistSettings);
 const mockUseWaitlist = vi.mocked(useWaitlist);
 const mockUseCreateWaitlistRequest = vi.mocked(useCreateWaitlistRequest);
 
@@ -40,6 +41,13 @@ beforeEach(() => {
     unregisterDirtyForm: vi.fn(),
   });
 
+  mockUseWaitlistSettings.mockReturnValue({
+    data: { waitlistEnabled: true },
+    isLoading: false,
+    isError: false,
+    error: null,
+  } as unknown as ReturnType<typeof useWaitlistSettings>);
+
   mockUseWaitlist.mockReturnValue(emptyWaitlistReturn);
   mockUseCreateWaitlistRequest.mockReturnValue(defaultMutationReturn);
 });
@@ -62,10 +70,33 @@ describe('Waitlist', () => {
     ).toBeInTheDocument();
   });
 
+  it('shows feature disabled callout when waitlist is not enabled', () => {
+    mockUseWaitlistSettings.mockReturnValue({
+      data: { waitlistEnabled: false },
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as unknown as ReturnType<typeof useWaitlistSettings>);
+
+    render(<Waitlist />);
+
+    expect(screen.getByText('Waitlist is not enabled for this course.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Enable the waitlist in course settings to use this feature.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Add to Waitlist' })).not.toBeInTheDocument();
+  });
+
   it('shows loading skeletons while loading', () => {
-    mockUseWaitlist.mockReturnValue({
+    mockUseWaitlistSettings.mockReturnValue({
       data: undefined,
       isLoading: true,
+      isError: false,
+      error: null,
+    } as unknown as ReturnType<typeof useWaitlistSettings>);
+    mockUseWaitlist.mockReturnValue({
+      data: undefined,
+      isLoading: false,
       isError: false,
       error: null,
     } as unknown as ReturnType<typeof useWaitlist>);

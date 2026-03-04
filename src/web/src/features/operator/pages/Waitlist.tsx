@@ -31,7 +31,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useCourseContext } from '../context/CourseContext';
-import { useWaitlist, useCreateWaitlistRequest } from '../hooks/useWaitlist';
+import { useWaitlistSettings, useWaitlist, useCreateWaitlistRequest } from '../hooks/useWaitlist';
 
 const addWaitlistRequestSchema = z.object({
   teeTime: z.string().min(1, 'Tee time is required'),
@@ -60,7 +60,10 @@ export default function Waitlist() {
   const { course } = useCourseContext();
   const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
 
-  const waitlistQuery = useWaitlist(course?.id, selectedDate);
+  const settingsQuery = useWaitlistSettings(course?.id);
+  const waitlistEnabled = settingsQuery.data?.waitlistEnabled === true;
+
+  const waitlistQuery = useWaitlist(course?.id, selectedDate, waitlistEnabled);
   const createMutation = useCreateWaitlistRequest();
 
   const form = useForm<AddWaitlistRequestFormData>({
@@ -100,7 +103,7 @@ export default function Waitlist() {
     );
   }
 
-  const isLoading = waitlistQuery.isLoading;
+  const isLoading = settingsQuery.isLoading || (waitlistEnabled && waitlistQuery.isLoading);
   const waitlistData = waitlistQuery.data;
 
   return (
@@ -117,7 +120,14 @@ export default function Waitlist() {
         </div>
       )}
 
-      {!isLoading && (
+      {!isLoading && !waitlistEnabled && (
+        <div className="mt-6 rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 text-center">
+          <p className="text-muted-foreground">Waitlist is not enabled for this course.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Enable the waitlist in course settings to use this feature.</p>
+        </div>
+      )}
+
+      {!isLoading && waitlistEnabled && (
         <>
           <div className="mt-6">
             <div className="space-y-2">
