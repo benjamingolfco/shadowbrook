@@ -1,0 +1,287 @@
+import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  useWalkUpWaitlistToday,
+  useOpenWalkUpWaitlist,
+  useCloseWalkUpWaitlist,
+} from '../hooks/useWalkUpWaitlist';
+import { useCourseContext } from '../context/CourseContext';
+import type { WalkUpWaitlistEntry } from '@/types/waitlist';
+
+function formatJoinedAt(joinedAt: string): string {
+  const date = new Date(joinedAt);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function QueueTable({ entries }: { entries: WalkUpWaitlistEntry[] }) {
+  if (entries.length === 0) {
+    return (
+      <p className="text-muted-foreground text-sm py-4">
+        No golfers have joined yet. Share the short code with walk-up golfers.
+      </p>
+    );
+  }
+
+  return (
+    <div>
+      <p className="text-sm text-muted-foreground mb-2">
+        {entries.length} golfer{entries.length !== 1 ? 's' : ''} in queue
+      </p>
+      {/* Desktop table */}
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12">#</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Joined At</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {entries.map((entry, index) => (
+              <TableRow key={entry.id}>
+                <TableCell>{index + 1}</TableCell>
+                <TableCell>{entry.golferName}</TableCell>
+                <TableCell>{formatJoinedAt(entry.joinedAt)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      {/* Mobile stacked cards */}
+      <div className="md:hidden space-y-2">
+        {entries.map((entry, index) => (
+          <div
+            key={entry.id}
+            className="flex items-center justify-between rounded-md border p-3 text-sm"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-muted-foreground font-mono w-6 text-right">
+                {index + 1}
+              </span>
+              <span className="font-medium">{entry.golferName}</span>
+            </div>
+            <span className="text-muted-foreground">{formatJoinedAt(entry.joinedAt)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function WalkUpWaitlist() {
+  const { course } = useCourseContext();
+  const [copied, setCopied] = useState(false);
+
+  const todayQuery = useWalkUpWaitlistToday(course?.id);
+  const openMutation = useOpenWalkUpWaitlist();
+  const closeMutation = useCloseWalkUpWaitlist();
+
+  if (!course) {
+    return (
+      <div className="flex h-full items-center justify-center p-6">
+        <p className="text-muted-foreground">
+          Select a course from the sidebar to manage the walk-up waitlist.
+        </p>
+      </div>
+    );
+  }
+
+  const courseId = course.id;
+
+  function handleCopyCode(shortCode: string) {
+    void navigator.clipboard.writeText(shortCode).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  function handleOpen() {
+    openMutation.mutate({ courseId });
+  }
+
+  function handleClose() {
+    closeMutation.mutate({ courseId });
+  }
+
+  // Loading state
+  if (todayQuery.isLoading) {
+    return (
+      <div className="p-6 max-w-2xl" aria-label="Loading walk-up waitlist">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Walk-Up Waitlist</h1>
+        </div>
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+      </div>
+    );
+  }
+
+  if (todayQuery.isError) {
+    return (
+      <div className="p-6 max-w-2xl">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Walk-Up Waitlist</h1>
+        </div>
+        <p className="text-destructive text-sm">
+          Error loading waitlist: {todayQuery.error.message}
+        </p>
+      </div>
+    );
+  }
+
+  const { waitlist, entries } = todayQuery.data ?? { waitlist: null, entries: [] };
+
+  // Inactive state — no waitlist opened today
+  if (!waitlist) {
+    const openError = openMutation.error as (Error & { status?: number }) | null;
+    const is409 = openError?.status === 409;
+
+    return (
+      <div className="p-6 max-w-2xl">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Walk-Up Waitlist</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Open the waitlist to allow walk-up golfers to join the queue today.
+          </p>
+        </div>
+
+        {is409 && (
+          <p className="text-destructive text-sm mb-4">
+            Waitlist is already open for today.
+          </p>
+        )}
+
+        {openMutation.isError && !is409 && (
+          <p className="text-destructive text-sm mb-4">
+            Error: {openError?.message}
+          </p>
+        )}
+
+        <Button onClick={handleOpen} disabled={openMutation.isPending}>
+          {openMutation.isPending ? 'Opening...' : 'Open Waitlist'}
+        </Button>
+      </div>
+    );
+  }
+
+  // Closed state
+  if (waitlist.status === 'Closed') {
+    return (
+      <div className="p-6 max-w-2xl">
+        <div className="mb-6 flex items-center gap-3">
+          <h1 className="text-2xl font-bold">Walk-Up Waitlist</h1>
+          <Badge variant="secondary">Closed</Badge>
+        </div>
+
+        <div className="mb-6">
+          <p className="text-sm text-muted-foreground mb-1">Short Code</p>
+          <p className="text-4xl sm:text-6xl font-mono tracking-widest font-bold">
+            {waitlist.shortCode.split('').join(' ')}
+          </p>
+        </div>
+
+        {entries.length > 0 && (
+          <div>
+            <h2 className="text-lg font-semibold mb-3">Queue</h2>
+            <QueueTable entries={entries} />
+          </div>
+        )}
+
+        {entries.length === 0 && (
+          <p className="text-muted-foreground text-sm">No golfers joined before the waitlist closed.</p>
+        )}
+      </div>
+    );
+  }
+
+  // Active state (Open)
+  return (
+    <div className="p-6 max-w-2xl">
+      <div className="mb-6 flex items-center gap-3">
+        <h1 className="text-2xl font-bold">Walk-Up Waitlist</h1>
+        <Badge variant="success">Open</Badge>
+      </div>
+
+      <div className="mb-6">
+        <p className="text-sm text-muted-foreground mb-1">Short Code</p>
+        <div className="flex items-end gap-4">
+          <p className="text-4xl sm:text-6xl font-mono tracking-widest font-bold">
+            {waitlist.shortCode.split('').join(' ')}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleCopyCode(waitlist.shortCode)}
+            className="mb-1"
+          >
+            {copied ? 'Copied!' : 'Copy Code'}
+          </Button>
+        </div>
+        <p className="text-sm text-muted-foreground mt-2">
+          Share this code with walk-up golfers to let them join the queue.
+        </p>
+      </div>
+
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-3">Queue</h2>
+        <QueueTable entries={entries} />
+      </div>
+
+      {closeMutation.isError && (
+        <p className="text-destructive text-sm mb-4">
+          Error closing waitlist: {(closeMutation.error as Error).message}
+        </p>
+      )}
+
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="destructive" disabled={closeMutation.isPending}>
+            {closeMutation.isPending ? 'Closing...' : 'Close Waitlist'}
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Close Walk-Up Waitlist?</AlertDialogTitle>
+            <AlertDialogDescription>
+              No new golfers will be able to join. Existing entries will be preserved.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel autoFocus>Keep Open</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleClose}
+            >
+              Close Waitlist
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
