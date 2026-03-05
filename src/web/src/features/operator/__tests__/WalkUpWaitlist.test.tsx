@@ -228,6 +228,21 @@ describe('WalkUpWaitlist', () => {
     expect(screen.getAllByText('Bob Jones').length).toBeGreaterThan(0);
   });
 
+  it('renders error state with retry button when query fails', () => {
+    mockUseWalkUpWaitlistToday.mockReturnValue({
+      isLoading: false,
+      isError: true,
+      data: undefined,
+      error: new Error('Failed to fetch'),
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+    render(<WalkUpWaitlist />);
+
+    expect(screen.getByText(/Error loading waitlist: Failed to fetch/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+  });
+
   it('shows 409 error message when waitlist is already open', () => {
     const error = Object.assign(new Error('Waitlist is already open for today.'), { status: 409 });
 
