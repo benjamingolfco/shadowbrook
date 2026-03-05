@@ -147,12 +147,9 @@ export default function WalkUpWaitlist() {
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Walk-Up Waitlist</h1>
         </div>
-        <p className="text-destructive text-sm mb-4">
+        <p className="text-destructive text-sm">
           Error loading waitlist: {todayQuery.error.message}
         </p>
-        <Button variant="outline" onClick={() => void todayQuery.refetch()}>
-          Retry
-        </Button>
       </div>
     );
   }

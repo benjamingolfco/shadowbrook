@@ -228,7 +228,7 @@ describe('WalkUpWaitlist', () => {
     expect(screen.getAllByText('Bob Jones').length).toBeGreaterThan(0);
   });
 
-  it('renders error state with retry button when query fails', () => {
+  it('renders error state when query fails', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: true,
@@ -240,7 +240,7 @@ describe('WalkUpWaitlist', () => {
     render(<WalkUpWaitlist />);
 
     expect(screen.getByText(/Error loading waitlist: Failed to fetch/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   });
 
   it('shows 409 error message when waitlist is already open', () => {
