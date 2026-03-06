@@ -18,6 +18,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<CourseWaitlist> CourseWaitlists => Set<CourseWaitlist>();
+    public DbSet<WaitlistRequest> WaitlistRequests => Set<WaitlistRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -54,6 +55,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Booking>()
             .HasIndex(b => new { b.CourseId, b.Date, b.Time });
 
+        // CourseWaitlist configuration
         modelBuilder.Entity<CourseWaitlist>()
             .HasOne(w => w.Course)
             .WithMany(c => c.Waitlists)
@@ -74,5 +76,18 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<CourseWaitlist>()
             .Property(w => w.Status)
             .HasMaxLength(10);
+
+        // WaitlistRequest configuration
+        modelBuilder.Entity<WaitlistRequest>()
+            .HasOne(wr => wr.CourseWaitlist)
+            .WithMany(cw => cw.WaitlistRequests)
+            .HasForeignKey(wr => wr.CourseWaitlistId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WaitlistRequest>()
+            .HasIndex(wr => new { wr.CourseWaitlistId, wr.TeeTime });
+
+        modelBuilder.Entity<WaitlistRequest>()
+            .HasIndex(wr => new { wr.CourseWaitlistId, wr.Status });
     }
 }

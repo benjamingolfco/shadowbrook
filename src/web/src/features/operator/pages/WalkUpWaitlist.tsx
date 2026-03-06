@@ -1,7 +1,27 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod/v4';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import {
   Table,
   TableBody,
@@ -26,12 +46,36 @@ import {
   useOpenWalkUpWaitlist,
   useCloseWalkUpWaitlist,
 } from '../hooks/useWalkUpWaitlist';
+import { useWaitlist, useCreateWaitlistRequest } from '../hooks/useWaitlist';
 import { useCourseContext } from '../context/CourseContext';
 import type { WalkUpWaitlistEntry } from '@/types/waitlist';
+
+const addWaitlistRequestSchema = z.object({
+  teeTime: z.string().min(1, 'Tee time is required'),
+  golfersNeeded: z.number().min(1, 'At least 1 golfer needed').max(4, 'Maximum 4 golfers'),
+});
+
+type AddWaitlistRequestFormData = z.infer<typeof addWaitlistRequestSchema>;
+
+function getTodayDate(): string {
+  const today = new Date();
+  const isoString = today.toISOString().split('T')[0];
+  return isoString ?? '';
+}
 
 function formatJoinedAt(joinedAt: string): string {
   const date = new Date(joinedAt);
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatTime(timeString: string): string {
+  const parts = timeString.split(':');
+  const hours = parts[0] ?? '0';
+  const minutes = parts[1] ?? '00';
+  const hour = parseInt(hours, 10);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  return `${displayHour}:${minutes} ${ampm}`;
 }
 
 function QueueTable({ entries }: { entries: WalkUpWaitlistEntry[] }) {
@@ -86,6 +130,181 @@ function QueueTable({ entries }: { entries: WalkUpWaitlistEntry[] }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+interface TeeTimeRequestsSectionProps {
+  courseId: string;
+  readOnly: boolean;
+}
+
+function TeeTimeRequestsSection({ courseId, readOnly }: TeeTimeRequestsSectionProps) {
+  const todayDate = getTodayDate();
+  const waitlistQuery = useWaitlist(courseId, todayDate);
+  const createMutation = useCreateWaitlistRequest();
+
+  const form = useForm<AddWaitlistRequestFormData>({
+    resolver: zodResolver(addWaitlistRequestSchema),
+    defaultValues: {
+      teeTime: '',
+      golfersNeeded: 1,
+    },
+  });
+
+  function onSubmit(data: AddWaitlistRequestFormData) {
+    createMutation.mutate(
+      {
+        courseId,
+        data: {
+          date: todayDate,
+          teeTime: data.teeTime,
+          golfersNeeded: data.golfersNeeded,
+        },
+      },
+      {
+        onSuccess: () => {
+          form.reset({ teeTime: '', golfersNeeded: 1 });
+        },
+      },
+    );
+  }
+
+  const waitlistData = waitlistQuery.data;
+
+  if (waitlistQuery.isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-24 w-full max-w-xs" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h2 className="text-lg font-semibold mb-3">Tee Time Requests</h2>
+
+      {waitlistData && (
+        <Card className="w-fit min-w-48 mb-4">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Golfers Pending
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{waitlistData.totalGolfersPending}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {!readOnly && (
+        <div className="mb-4">
+          <h3 className="text-base font-medium mb-2">Add to Waitlist</h3>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <div className="flex flex-col gap-4 md:flex-row md:items-end">
+                <FormField
+                  control={form.control}
+                  name="teeTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tee Time</FormLabel>
+                      <FormControl>
+                        <Input type="time" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="golfersNeeded"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Golfers Needed</FormLabel>
+                      <Select
+                        value={String(field.value)}
+                        onValueChange={(v) => field.onChange(Number(v))}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-[120px]">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="1">1</SelectItem>
+                          <SelectItem value="2">2</SelectItem>
+                          <SelectItem value="3">3</SelectItem>
+                          <SelectItem value="4">4</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? 'Adding...' : 'Add to Waitlist'}
+                </Button>
+              </div>
+
+              {createMutation.isSuccess && (
+                <p className="mt-3 text-sm text-green-600" role="status">
+                  Tee time added to waitlist.
+                </p>
+              )}
+              {createMutation.isError && (
+                <p className="mt-3 text-sm text-destructive" role="alert">
+                  {createMutation.error instanceof Error
+                    ? createMutation.error.message
+                    : 'Failed to add tee time to waitlist.'}
+                </p>
+              )}
+            </form>
+          </Form>
+        </div>
+      )}
+
+      {waitlistQuery.isError && (
+        <p className="text-sm text-destructive mb-4">
+          {waitlistQuery.error instanceof Error
+            ? waitlistQuery.error.message
+            : 'Failed to load waitlist entries'}
+        </p>
+      )}
+
+      {waitlistData && waitlistData.requests.length === 0 && (
+        <p className="text-muted-foreground text-sm">
+          No tee time requests for today.
+        </p>
+      )}
+
+      {waitlistData && waitlistData.requests.length > 0 && (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Tee Time</TableHead>
+              <TableHead>Golfers Needed</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {waitlistData.requests.map((request) => (
+              <TableRow key={request.id}>
+                <TableCell className="font-semibold">
+                  {formatTime(request.teeTime)}
+                </TableCell>
+                <TableCell>{request.golfersNeeded}</TableCell>
+                <TableCell>
+                  <Badge variant="muted">{request.golfersNeeded} pending</Badge>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 }
@@ -205,9 +424,13 @@ export default function WalkUpWaitlist() {
           </p>
         </div>
 
+        <div className="mb-6">
+          <TeeTimeRequestsSection courseId={courseId} readOnly />
+        </div>
+
         {entries.length > 0 && (
           <div>
-            <h2 className="text-lg font-semibold mb-3">Queue</h2>
+            <h2 className="text-lg font-semibold mb-3">Golfer Queue</h2>
             <QueueTable entries={entries} />
           </div>
         )}
@@ -248,7 +471,11 @@ export default function WalkUpWaitlist() {
       </div>
 
       <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-3">Queue</h2>
+        <TeeTimeRequestsSection courseId={courseId} readOnly={false} />
+      </div>
+
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-3">Golfer Queue</h2>
         <QueueTable entries={entries} />
       </div>
 

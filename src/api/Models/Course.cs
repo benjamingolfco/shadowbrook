@@ -15,6 +15,7 @@ public class Course
     public TimeOnly? FirstTeeTime { get; set; }
     public TimeOnly? LastTeeTime { get; set; }
     public decimal? FlatRatePrice { get; set; }
+    public bool? WaitlistEnabled { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 

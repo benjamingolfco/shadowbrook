@@ -36,8 +36,8 @@ function CourseGate() {
     <Routes>
       <Route element={<OperatorLayout />}>
         <Route path="tee-sheet" element={<TeeSheet />} />
-        <Route path="settings" element={<TeeTimeSettings />} />
         <Route path="waitlist" element={<WalkUpWaitlist />} />
+        <Route path="settings" element={<TeeTimeSettings />} />
         <Route path="register-course" element={<CourseRegister />} />
         <Route path="*" element={<Navigate to="tee-sheet" replace />} />
       </Route>

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Data;
 using Shadowbrook.Api.Endpoints;
+using Shadowbrook.Api.Events;
 using Shadowbrook.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,6 +38,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 builder.Services.AddScoped<ITextMessageService, ConsoleTextMessageService>();
+builder.Services.AddScoped<IDomainEventPublisher, InProcessDomainEventPublisher>();
 
 var app = builder.Build();
 
@@ -67,5 +69,6 @@ app.MapTenantEndpoints();
 app.MapCourseEndpoints();
 app.MapTeeSheetEndpoints();
 app.MapWalkUpWaitlistEndpoints();
+app.MapWaitlistEndpoints();
 
 app.Run();

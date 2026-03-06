@@ -7,14 +7,18 @@ import {
   useOpenWalkUpWaitlist,
   useCloseWalkUpWaitlist,
 } from '../hooks/useWalkUpWaitlist';
+import { useWaitlist, useCreateWaitlistRequest } from '../hooks/useWaitlist';
 
 vi.mock('../context/CourseContext');
 vi.mock('../hooks/useWalkUpWaitlist');
+vi.mock('../hooks/useWaitlist');
 
 const mockUseCourseContext = vi.mocked(useCourseContext);
 const mockUseWalkUpWaitlistToday = vi.mocked(useWalkUpWaitlistToday);
 const mockUseOpenWalkUpWaitlist = vi.mocked(useOpenWalkUpWaitlist);
 const mockUseCloseWalkUpWaitlist = vi.mocked(useCloseWalkUpWaitlist);
+const mockUseWaitlist = vi.mocked(useWaitlist);
+const mockUseCreateWaitlistRequest = vi.mocked(useCreateWaitlistRequest);
 
 const mockCourse = { id: 'course-1', name: 'Pine Valley' };
 
@@ -41,6 +45,21 @@ const mockEntries = [
 
 const mockOpenMutate = vi.fn();
 const mockCloseMutate = vi.fn();
+
+const defaultWaitlistMutationReturn = {
+  mutate: vi.fn(),
+  isPending: false,
+  isSuccess: false,
+  isError: false,
+  error: null,
+} as unknown as ReturnType<typeof useCreateWaitlistRequest>;
+
+const emptyWaitlistReturn = {
+  data: { courseWaitlistId: null, date: '2026-03-05', totalGolfersPending: 0, requests: [] },
+  isLoading: false,
+  isError: false,
+  error: null,
+} as unknown as ReturnType<typeof useWaitlist>;
 
 function defaultCourseContext() {
   mockUseCourseContext.mockReturnValue({
@@ -80,6 +99,8 @@ beforeEach(() => {
   defaultCourseContext();
   defaultOpenMutation();
   defaultCloseMutation();
+  mockUseWaitlist.mockReturnValue(emptyWaitlistReturn);
+  mockUseCreateWaitlistRequest.mockReturnValue(defaultWaitlistMutationReturn);
 });
 
 describe('WalkUpWaitlist', () => {
@@ -107,6 +128,20 @@ describe('WalkUpWaitlist', () => {
     render(<WalkUpWaitlist />);
 
     expect(screen.getByRole('button', { name: 'Open Waitlist' })).toBeInTheDocument();
+  });
+
+  it('does not show tee time requests section in inactive state', () => {
+    mockUseWalkUpWaitlistToday.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: { waitlist: null, entries: [] },
+      error: null,
+    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+    render(<WalkUpWaitlist />);
+
+    expect(screen.queryByText('Tee Time Requests')).not.toBeInTheDocument();
+    expect(screen.queryByText('Add to Waitlist')).not.toBeInTheDocument();
   });
 
   it('renders open state with short code displayed', () => {
@@ -264,5 +299,196 @@ describe('WalkUpWaitlist', () => {
     render(<WalkUpWaitlist />);
 
     expect(screen.getByText('Waitlist is already open for today.')).toBeInTheDocument();
+  });
+
+  // Tee time request section tests
+  describe('Tee Time Requests section', () => {
+    it('shows tee time requests section with form when waitlist is open', () => {
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: openWaitlist, entries: [] },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+      render(<WalkUpWaitlist />);
+
+      expect(screen.getByText('Tee Time Requests')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Add to Waitlist' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Add to Waitlist' })).toBeInTheDocument();
+    });
+
+    it('shows tee time requests section without form when waitlist is closed', () => {
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: closedWaitlist, entries: [] },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+      render(<WalkUpWaitlist />);
+
+      expect(screen.getByText('Tee Time Requests')).toBeInTheDocument();
+      expect(screen.queryByText('Add to Waitlist')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Add to Waitlist' })).not.toBeInTheDocument();
+    });
+
+    it('shows summary card with total golfers pending', () => {
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: openWaitlist, entries: [] },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+      mockUseWaitlist.mockReturnValue({
+        data: {
+          courseWaitlistId: 'wl-1',
+          date: '2026-03-05',
+          totalGolfersPending: 7,
+          requests: [],
+        },
+        isLoading: false,
+        isError: false,
+        error: null,
+      } as unknown as ReturnType<typeof useWaitlist>);
+
+      render(<WalkUpWaitlist />);
+
+      expect(screen.getByText('Total Golfers Pending')).toBeInTheDocument();
+      expect(screen.getByText('7')).toBeInTheDocument();
+    });
+
+    it('shows tee time entries table with formatted times and pending badges', () => {
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: openWaitlist, entries: [] },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+      mockUseWaitlist.mockReturnValue({
+        data: {
+          courseWaitlistId: 'wl-1',
+          date: '2026-03-05',
+          totalGolfersPending: 5,
+          requests: [
+            { id: 'req-1', teeTime: '08:00', golfersNeeded: 2, status: 'Pending' },
+            { id: 'req-2', teeTime: '09:30', golfersNeeded: 3, status: 'Pending' },
+          ],
+        },
+        isLoading: false,
+        isError: false,
+        error: null,
+      } as unknown as ReturnType<typeof useWaitlist>);
+
+      render(<WalkUpWaitlist />);
+
+      expect(screen.getByText('8:00 AM')).toBeInTheDocument();
+      expect(screen.getByText('9:30 AM')).toBeInTheDocument();
+      expect(screen.getByText('2 pending')).toBeInTheDocument();
+      expect(screen.getByText('3 pending')).toBeInTheDocument();
+    });
+
+    it('shows empty state when no tee time requests', () => {
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: openWaitlist, entries: [] },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+      render(<WalkUpWaitlist />);
+
+      expect(screen.getByText('No tee time requests for today.')).toBeInTheDocument();
+    });
+
+    it('disables add button during mutation', () => {
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: openWaitlist, entries: [] },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+      mockUseCreateWaitlistRequest.mockReturnValue({
+        mutate: vi.fn(),
+        isPending: true,
+        isSuccess: false,
+        isError: false,
+        error: null,
+      } as unknown as ReturnType<typeof useCreateWaitlistRequest>);
+
+      render(<WalkUpWaitlist />);
+
+      const button = screen.getByRole('button', { name: 'Adding...' });
+      expect(button).toBeDisabled();
+    });
+
+    it('shows success message after adding tee time', () => {
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: openWaitlist, entries: [] },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+      mockUseCreateWaitlistRequest.mockReturnValue({
+        mutate: vi.fn(),
+        isPending: false,
+        isSuccess: true,
+        isError: false,
+        error: null,
+      } as unknown as ReturnType<typeof useCreateWaitlistRequest>);
+
+      render(<WalkUpWaitlist />);
+
+      const successMsg = screen.getByRole('status');
+      expect(successMsg).toHaveTextContent('Tee time added to waitlist.');
+    });
+
+    it('shows error message after failed tee time submission', () => {
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: openWaitlist, entries: [] },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+      mockUseCreateWaitlistRequest.mockReturnValue({
+        mutate: vi.fn(),
+        isPending: false,
+        isSuccess: false,
+        isError: true,
+        error: new Error('An active waitlist request already exists for this tee time.'),
+      } as unknown as ReturnType<typeof useCreateWaitlistRequest>);
+
+      render(<WalkUpWaitlist />);
+
+      const errorMsg = screen.getByRole('alert');
+      expect(errorMsg).toHaveTextContent(
+        'An active waitlist request already exists for this tee time.',
+      );
+    });
+
+    it('shows waitlist fetch error in tee time section', () => {
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: openWaitlist, entries: [] },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+      mockUseWaitlist.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: true,
+        error: new Error('Network error'),
+      } as unknown as ReturnType<typeof useWaitlist>);
+
+      render(<WalkUpWaitlist />);
+
+      expect(screen.getByText('Network error')).toBeInTheDocument();
+    });
   });
 });
