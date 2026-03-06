@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
@@ -26,7 +25,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { useCreateWaitlistRequest } from '../hooks/useWaitlist';
 
@@ -44,11 +42,12 @@ function getTodayDate(): string {
 }
 
 interface AddTeeTimeRequestDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   courseId: string;
 }
 
-export function AddTeeTimeRequestDialog({ courseId }: AddTeeTimeRequestDialogProps) {
-  const [open, setOpen] = useState(false);
+export function AddTeeTimeRequestDialog({ open, onOpenChange, courseId }: AddTeeTimeRequestDialogProps) {
   const createMutation = useCreateWaitlistRequest();
   const todayDate = getTodayDate();
 
@@ -73,14 +72,14 @@ export function AddTeeTimeRequestDialog({ courseId }: AddTeeTimeRequestDialogPro
       {
         onSuccess: () => {
           form.reset({ teeTime: '', golfersNeeded: 1 });
-          setOpen(false);
+          onOpenChange(false);
         },
       },
     );
   }
 
   function handleOpenChange(nextOpen: boolean) {
-    setOpen(nextOpen);
+    onOpenChange(nextOpen);
     if (!nextOpen) {
       form.reset({ teeTime: '', golfersNeeded: 1 });
       createMutation.reset();
@@ -89,9 +88,6 @@ export function AddTeeTimeRequestDialog({ courseId }: AddTeeTimeRequestDialogPro
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant="outline">Add Tee Time Request</Button>
-      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Tee Time Request</DialogTitle>

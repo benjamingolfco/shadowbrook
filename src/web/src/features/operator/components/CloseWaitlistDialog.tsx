@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -8,22 +7,17 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
 interface CloseWaitlistDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
-  isPending: boolean;
 }
 
-export function CloseWaitlistDialog({ onConfirm, isPending }: CloseWaitlistDialogProps) {
+export function CloseWaitlistDialog({ open, onOpenChange, onConfirm }: CloseWaitlistDialogProps) {
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="destructive" disabled={isPending}>
-          {isPending ? 'Closing...' : 'Close Waitlist'}
-        </Button>
-      </AlertDialogTrigger>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Close Walk-Up Waitlist?</AlertDialogTitle>

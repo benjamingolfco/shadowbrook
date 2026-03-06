@@ -1,5 +1,3 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,29 +7,22 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
 interface OpenWaitlistDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
-  isPending: boolean;
 }
 
-export function OpenWaitlistDialog({ onConfirm, isPending }: OpenWaitlistDialogProps) {
-  const [open, setOpen] = useState(false);
-
+export function OpenWaitlistDialog({ open, onOpenChange, onConfirm }: OpenWaitlistDialogProps) {
   function handleConfirm() {
     onConfirm();
-    setOpen(false);
+    onOpenChange(false);
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>
-        <Button disabled={isPending}>
-          {isPending ? 'Opening...' : 'Open Waitlist'}
-        </Button>
-      </AlertDialogTrigger>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Open Walk-Up Waitlist</AlertDialogTitle>

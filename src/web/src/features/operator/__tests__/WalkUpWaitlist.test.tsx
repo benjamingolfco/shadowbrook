@@ -175,7 +175,7 @@ describe('WalkUpWaitlist', () => {
     expect(screen.queryByRole('button', { name: 'Close Waitlist' })).not.toBeInTheDocument();
   });
 
-  it('calls open mutation when Open Waitlist button is clicked and confirmed', async () => {
+  it('opens confirmation dialog and calls open mutation when confirmed', async () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
@@ -185,7 +185,7 @@ describe('WalkUpWaitlist', () => {
 
     render(<WalkUpWaitlist />);
 
-    // Click the trigger button to open the confirmation dialog
+    // Click the action button to open the confirmation dialog
     fireEvent.click(screen.getByRole('button', { name: 'Open Waitlist' }));
 
     // Wait for the confirmation dialog to appear
@@ -233,7 +233,7 @@ describe('WalkUpWaitlist', () => {
 
     render(<WalkUpWaitlist />);
 
-    // Open the dialog via the trigger button
+    // Open the dialog via the action button
     fireEvent.click(screen.getByRole('button', { name: 'Close Waitlist' }));
 
     await waitFor(() => {

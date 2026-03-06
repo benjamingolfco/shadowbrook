@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { PageHeader } from '@/components/layout/PageHeader';
+import type { PageAction } from '@/components/layout/PageHeader';
 import {
   useWalkUpWaitlistToday,
   useOpenWalkUpWaitlist,
@@ -182,6 +183,9 @@ function TeeTimeRequestsSection({ courseId }: TeeTimeRequestsSectionProps) {
 export default function WalkUpWaitlist() {
   const { course } = useCourseContext();
   const [copied, setCopied] = useState(false);
+  const [openDialogOpen, setOpenDialogOpen] = useState(false);
+  const [addRequestDialogOpen, setAddRequestDialogOpen] = useState(false);
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
 
   const todayQuery = useWalkUpWaitlistToday(course?.id);
   const openMutation = useOpenWalkUpWaitlist();
@@ -246,16 +250,30 @@ export default function WalkUpWaitlist() {
     const openError = openMutation.error as (Error & { status?: number }) | null;
     const is409 = openError?.status === 409;
 
+    const actions: PageAction[] = [
+      {
+        id: 'open-waitlist',
+        label: 'Open Waitlist',
+        description: 'Open the walk-up waitlist for today',
+        onClick: () => setOpenDialogOpen(true),
+        disabled: openMutation.isPending,
+        disabledLabel: 'Opening...',
+      },
+    ];
+
     return (
       <div className="p-6 max-w-2xl">
-        <PageHeader
-          title="Walk-Up Waitlist"
-          actions={<OpenWaitlistDialog onConfirm={handleOpen} isPending={openMutation.isPending} />}
-        >
+        <PageHeader title="Walk-Up Waitlist" actions={actions}>
           <p className="text-muted-foreground text-sm">
             Open the waitlist to allow walk-up golfers to join the queue today.
           </p>
         </PageHeader>
+
+        <OpenWaitlistDialog
+          open={openDialogOpen}
+          onOpenChange={setOpenDialogOpen}
+          onConfirm={handleOpen}
+        />
 
         {is409 && (
           <p className="text-destructive text-sm mb-4">
@@ -301,17 +319,28 @@ export default function WalkUpWaitlist() {
   }
 
   // Active state (Open)
+  const activeActions: PageAction[] = [
+    {
+      id: 'add-request',
+      label: 'Add Tee Time Request',
+      description: 'Add a tee time request to the waitlist',
+      variant: 'outline',
+      onClick: () => setAddRequestDialogOpen(true),
+    },
+    {
+      id: 'close-waitlist',
+      label: 'Close Waitlist',
+      description: 'Close the waitlist for today',
+      variant: 'destructive',
+      onClick: () => setCloseDialogOpen(true),
+      disabled: closeMutation.isPending,
+      disabledLabel: 'Closing...',
+    },
+  ];
+
   return (
     <div className="p-6 max-w-2xl">
-      <PageHeader
-        title="Walk-Up Waitlist"
-        actions={
-          <>
-            <AddTeeTimeRequestDialog courseId={courseId} />
-            <CloseWaitlistDialog onConfirm={handleClose} isPending={closeMutation.isPending} />
-          </>
-        }
-      >
+      <PageHeader title="Walk-Up Waitlist" actions={activeActions}>
         <div className="flex items-center gap-3 flex-wrap">
           <Badge variant="success">Open</Badge>
           <span className="font-mono font-bold tracking-widest">
@@ -326,6 +355,18 @@ export default function WalkUpWaitlist() {
           </Button>
         </div>
       </PageHeader>
+
+      <AddTeeTimeRequestDialog
+        open={addRequestDialogOpen}
+        onOpenChange={setAddRequestDialogOpen}
+        courseId={courseId}
+      />
+
+      <CloseWaitlistDialog
+        open={closeDialogOpen}
+        onOpenChange={setCloseDialogOpen}
+        onConfirm={handleClose}
+      />
 
       {closeMutation.isError && (
         <p className="text-destructive text-sm mb-4">
