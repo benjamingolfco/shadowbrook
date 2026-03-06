@@ -124,13 +124,34 @@ public static class WaitlistEndpoints
 
         if (courseWaitlist is null)
         {
+            // Generate a unique 4-digit short code for the date
+            string? shortCode = null;
+            for (var attempt = 0; attempt < 10; attempt++)
+            {
+                var candidate = Random.Shared.Next(0, 10000).ToString("D4");
+                var taken = await db.CourseWaitlists
+                    .AnyAsync(w => w.ShortCode == candidate && w.Date == parsedDate);
+                if (!taken)
+                {
+                    shortCode = candidate;
+                    break;
+                }
+            }
+
+            if (shortCode is null)
+                return Results.Problem("Unable to generate a unique short code.", statusCode: 500);
+
+            var now = DateTimeOffset.UtcNow;
             courseWaitlist = new CourseWaitlist
             {
                 Id = Guid.NewGuid(),
                 CourseId = courseId,
                 Date = parsedDate,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow
+                ShortCode = shortCode,
+                Status = "Open",
+                OpenedAt = now,
+                CreatedAt = now,
+                UpdatedAt = now
             };
             db.CourseWaitlists.Add(courseWaitlist);
         }

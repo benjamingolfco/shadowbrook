@@ -25,7 +25,11 @@ export function TenantProvider({ children }: TenantProviderProps) {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
-        return JSON.parse(stored) as SelectedTenant;
+        const parsed = JSON.parse(stored) as SelectedTenant;
+        // Set immediately so the api-client module variable is ready before
+        // any child component's useEffect fires and triggers data fetching.
+        setActiveTenantId(parsed.id);
+        return parsed;
       } catch {
         return null;
       }

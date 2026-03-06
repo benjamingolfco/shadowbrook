@@ -12,8 +12,8 @@ using Shadowbrook.Api.Data;
 namespace Shadowbrook.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260302012525_AddWaitlistEntities")]
-    partial class AddWaitlistEntities
+    [Migration("20260305152835_AddCourseWaitlist")]
+    partial class AddCourseWaitlist
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -106,9 +106,6 @@ namespace Shadowbrook.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<bool?>("WaitlistEnabled")
-                        .HasColumnType("bit");
-
                     b.Property<string>("ZipCode")
                         .HasColumnType("nvarchar(max)");
 
@@ -128,6 +125,9 @@ namespace Shadowbrook.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset?>("ClosedAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<Guid>("CourseId")
                         .HasColumnType("uniqueidentifier");
 
@@ -137,6 +137,19 @@ namespace Shadowbrook.Api.Migrations
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
+                    b.Property<DateTimeOffset>("OpenedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ShortCode")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -144,6 +157,8 @@ namespace Shadowbrook.Api.Migrations
 
                     b.HasIndex("CourseId", "Date")
                         .IsUnique();
+
+                    b.HasIndex("ShortCode", "Date");
 
                     b.ToTable("CourseWaitlists");
                 });
@@ -184,40 +199,6 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("Tenants");
                 });
 
-            modelBuilder.Entity("Shadowbrook.Api.Models.WaitlistRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CourseWaitlistId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<int>("GolfersNeeded")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<TimeOnly>("TeeTime")
-                        .HasColumnType("time");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CourseWaitlistId", "Status");
-
-                    b.HasIndex("CourseWaitlistId", "TeeTime");
-
-                    b.ToTable("WaitlistRequests");
-                });
-
             modelBuilder.Entity("Shadowbrook.Api.Models.Booking", b =>
                 {
                     b.HasOne("Shadowbrook.Api.Models.Course", "Course")
@@ -243,7 +224,7 @@ namespace Shadowbrook.Api.Migrations
             modelBuilder.Entity("Shadowbrook.Api.Models.CourseWaitlist", b =>
                 {
                     b.HasOne("Shadowbrook.Api.Models.Course", "Course")
-                        .WithMany("CourseWaitlists")
+                        .WithMany("Waitlists")
                         .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -251,25 +232,9 @@ namespace Shadowbrook.Api.Migrations
                     b.Navigation("Course");
                 });
 
-            modelBuilder.Entity("Shadowbrook.Api.Models.WaitlistRequest", b =>
-                {
-                    b.HasOne("Shadowbrook.Api.Models.CourseWaitlist", "CourseWaitlist")
-                        .WithMany("WaitlistRequests")
-                        .HasForeignKey("CourseWaitlistId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CourseWaitlist");
-                });
-
             modelBuilder.Entity("Shadowbrook.Api.Models.Course", b =>
                 {
-                    b.Navigation("CourseWaitlists");
-                });
-
-            modelBuilder.Entity("Shadowbrook.Api.Models.CourseWaitlist", b =>
-                {
-                    b.Navigation("WaitlistRequests");
+                    b.Navigation("Waitlists");
                 });
 
             modelBuilder.Entity("Shadowbrook.Api.Models.Tenant", b =>

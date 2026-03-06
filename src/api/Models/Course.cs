@@ -21,5 +21,5 @@ public class Course
 
     // Navigation
     public Tenant? Tenant { get; set; }
-    public ICollection<CourseWaitlist> CourseWaitlists { get; set; } = new List<CourseWaitlist>();
+    public ICollection<CourseWaitlist>? Waitlists { get; set; }
 }

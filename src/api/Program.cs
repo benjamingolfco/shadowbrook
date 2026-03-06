@@ -68,6 +68,7 @@ if (app.Environment.EnvironmentName == "Testing")
 app.MapTenantEndpoints();
 app.MapCourseEndpoints();
 app.MapTeeSheetEndpoints();
+app.MapWalkUpWaitlistEndpoints();
 app.MapWaitlistEndpoints();
 
 app.Run();

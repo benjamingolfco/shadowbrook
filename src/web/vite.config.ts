@@ -16,6 +16,7 @@ export default defineConfig({
     proxy: {
       '/courses': 'http://localhost:5221',
       '/tee-sheets': 'http://localhost:5221',
+      '/tenants': 'http://localhost:5221',
       '/health': 'http://localhost:5221',
     },
   },
