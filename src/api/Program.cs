@@ -39,6 +39,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddScoped<ITextMessageService, ConsoleTextMessageService>();
 builder.Services.AddScoped<IDomainEventPublisher, InProcessDomainEventPublisher>();
+builder.Services.AddScoped<IDomainEventHandler<GolferJoinedWaitlist>, GolferJoinedWaitlistSmsHandler>();
 
 var app = builder.Build();
 
@@ -70,5 +71,6 @@ app.MapCourseEndpoints();
 app.MapTeeSheetEndpoints();
 app.MapWalkUpWaitlistEndpoints();
 app.MapWaitlistEndpoints();
+app.MapWalkupJoinEndpoints();
 
 app.Run();

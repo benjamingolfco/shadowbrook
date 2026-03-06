@@ -217,6 +217,43 @@ public class WalkUpWaitlistEndpointsTests : IClassFixture<TestWebApplicationFact
     }
 
     // -------------------------------------------------------------------------
+    // Entry visibility
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task Today_WithGolferEntries_ReturnsEntriesInQueue()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+        await PostOpenAsync(courseId);
+
+        // Get the short code so we can join via /walkup/join
+        var todayBeforeJoin = await GetTodayAsync(courseId);
+        var todayBody = await todayBeforeJoin.Content.ReadFromJsonAsync<WalkUpWaitlistTodayResponse>();
+        var shortCode = todayBody!.Waitlist!.ShortCode;
+
+        // Verify the code and join
+        var verifyResponse = await _client.PostAsJsonAsync("/walkup/verify", new { Code = shortCode });
+        var verifyBody = await verifyResponse.Content.ReadFromJsonAsync<VerifyCodeResponse>();
+
+        await _client.PostAsJsonAsync("/walkup/join", new
+        {
+            CourseWaitlistId = verifyBody!.CourseWaitlistId,
+            FirstName = "Jane",
+            LastName = "Golfer",
+            Phone = "555-444-5555"
+        });
+
+        // Operator view should now show the entry
+        var response = await GetTodayAsync(courseId);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<WalkUpWaitlistTodayResponse>();
+        Assert.NotNull(body);
+        Assert.Single(body!.Entries);
+        Assert.Equal("Jane Golfer", body.Entries[0].GolferName);
+    }
+
+    // -------------------------------------------------------------------------
     // Tenant isolation
     // -------------------------------------------------------------------------
 
@@ -313,4 +350,5 @@ public class WalkUpWaitlistEndpointsTests : IClassFixture<TestWebApplicationFact
     private record ErrorResponse(string Error);
     private record CourseIdResponse(Guid Id);
     private record TenantIdResponse(Guid Id);
+    private record VerifyCodeResponse(Guid CourseWaitlistId, string CourseName, string ShortCode);
 }

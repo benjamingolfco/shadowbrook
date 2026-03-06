@@ -19,6 +19,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<CourseWaitlist> CourseWaitlists => Set<CourseWaitlist>();
     public DbSet<WaitlistRequest> WaitlistRequests => Set<WaitlistRequest>();
+    public DbSet<Golfer> Golfers => Set<Golfer>();
+    public DbSet<GolferWaitlistEntry> GolferWaitlistEntries => Set<GolferWaitlistEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -89,5 +91,52 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<WaitlistRequest>()
             .HasIndex(wr => new { wr.CourseWaitlistId, wr.Status });
+
+        // Golfer configuration
+        modelBuilder.Entity<Golfer>()
+            .HasIndex(g => g.Phone)
+            .IsUnique();
+
+        modelBuilder.Entity<Golfer>()
+            .Property(g => g.Phone)
+            .HasMaxLength(20);
+
+        modelBuilder.Entity<Golfer>()
+            .Property(g => g.FirstName)
+            .HasMaxLength(100);
+
+        modelBuilder.Entity<Golfer>()
+            .Property(g => g.LastName)
+            .HasMaxLength(100);
+
+        // GolferWaitlistEntry configuration
+        modelBuilder.Entity<GolferWaitlistEntry>()
+            .HasOne(e => e.CourseWaitlist)
+            .WithMany(cw => cw.GolferWaitlistEntries)
+            .HasForeignKey(e => e.CourseWaitlistId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GolferWaitlistEntry>()
+            .HasOne(e => e.Golfer)
+            .WithMany()
+            .HasForeignKey(e => e.GolferId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GolferWaitlistEntry>()
+            .HasIndex(e => new { e.CourseWaitlistId, e.GolferPhone });
+
+        modelBuilder.Entity<GolferWaitlistEntry>()
+            .HasIndex(e => new { e.CourseWaitlistId, e.GolferId });
+
+        modelBuilder.Entity<GolferWaitlistEntry>()
+            .HasIndex(e => new { e.CourseWaitlistId, e.IsWalkUp, e.IsReady });
+
+        modelBuilder.Entity<GolferWaitlistEntry>()
+            .Property(e => e.GolferName)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<GolferWaitlistEntry>()
+            .Property(e => e.GolferPhone)
+            .HasMaxLength(20);
     }
 }
