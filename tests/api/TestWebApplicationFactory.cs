@@ -22,16 +22,15 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
                 .ToList();
 
             foreach (var descriptor in descriptorsToRemove)
+            {
                 services.Remove(descriptor);
+            }
 
             // Share a single connection so the in-memory database persists across scopes
             var connection = new Microsoft.Data.Sqlite.SqliteConnection("DataSource=:memory:");
             connection.Open();
 
-            services.AddDbContext<ApplicationDbContext>(options =>
-            {
-                options.UseSqlite(connection);
-            });
+            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(connection));
         });
 
         builder.UseEnvironment("Testing");

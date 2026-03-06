@@ -3,16 +3,10 @@ using System.Net.Http.Json;
 
 namespace Shadowbrook.Api.Tests;
 
-public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
+public class TenantEndpointsTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
 {
-    private readonly HttpClient _client;
-    private readonly TestWebApplicationFactory _factory;
-
-    public TenantEndpointsTests(TestWebApplicationFactory factory)
-    {
-        _factory = factory;
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient client = factory.CreateClient();
+    private readonly TestWebApplicationFactory factory = factory;
 
     [Fact]
     public async Task PostTenant_WithValidData_ReturnsCreated()
@@ -25,7 +19,7 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
             ContactPhone = "555-1234"
         };
 
-        var response = await _client.PostAsJsonAsync("/tenants", request);
+        var response = await this.client.PostAsJsonAsync("/tenants", request);
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
@@ -48,7 +42,7 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
             ContactPhone = "555-1234"
         };
 
-        var response = await _client.PostAsJsonAsync("/tenants", request);
+        var response = await this.client.PostAsJsonAsync("/tenants", request);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -63,7 +57,7 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
             ContactPhone = "555-1234"
         };
 
-        var response = await _client.PostAsJsonAsync("/tenants", request);
+        var response = await this.client.PostAsJsonAsync("/tenants", request);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -78,7 +72,7 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
             ContactPhone = "555-1234"
         };
 
-        var response = await _client.PostAsJsonAsync("/tenants", request);
+        var response = await this.client.PostAsJsonAsync("/tenants", request);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -93,7 +87,7 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
             ContactEmail = "test@test.com"
         };
 
-        var response = await _client.PostAsJsonAsync("/tenants", request);
+        var response = await this.client.PostAsJsonAsync("/tenants", request);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -109,7 +103,7 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
             ContactPhone = "555-1234"
         };
 
-        var response = await _client.PostAsJsonAsync("/tenants", request);
+        var response = await this.client.PostAsJsonAsync("/tenants", request);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -125,9 +119,9 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
             ContactPhone = "555-1234"
         };
 
-        await _client.PostAsJsonAsync("/tenants", request);
+        await this.client.PostAsJsonAsync("/tenants", request);
 
-        var duplicateResponse = await _client.PostAsJsonAsync("/tenants", request);
+        var duplicateResponse = await this.client.PostAsJsonAsync("/tenants", request);
 
         Assert.Equal(HttpStatusCode.Conflict, duplicateResponse.StatusCode);
     }
@@ -143,7 +137,7 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
             ContactPhone = "555-1234"
         };
 
-        await _client.PostAsJsonAsync("/tenants", request1);
+        await this.client.PostAsJsonAsync("/tenants", request1);
 
         var request2 = new
         {
@@ -153,7 +147,7 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
             ContactPhone = "555-5678"
         };
 
-        var response = await _client.PostAsJsonAsync("/tenants", request2);
+        var response = await this.client.PostAsJsonAsync("/tenants", request2);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -161,7 +155,7 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task GetAllTenants_ReturnsAllTenantsWithCourseCount()
     {
-        await _client.PostAsJsonAsync("/tenants", new
+        await this.client.PostAsJsonAsync("/tenants", new
         {
             OrganizationName = "Tenant 1",
             ContactName = "Contact 1",
@@ -169,7 +163,7 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
             ContactPhone = "555-0001"
         });
 
-        var response = await _client.GetAsync("/tenants");
+        var response = await this.client.GetAsync("/tenants");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -182,7 +176,7 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task GetAllTenants_WithNoTenants_ReturnsEmptyArray()
     {
-        var response = await _client.GetAsync("/tenants");
+        var response = await this.client.GetAsync("/tenants");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -193,7 +187,7 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task GetTenantById_WithValidId_ReturnsOkWithCourses()
     {
-        var createResponse = await _client.PostAsJsonAsync("/tenants", new
+        var createResponse = await this.client.PostAsJsonAsync("/tenants", new
         {
             OrganizationName = "Lookup Tenant",
             ContactName = "Test Contact",
@@ -203,7 +197,7 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
 
         var created = await createResponse.Content.ReadFromJsonAsync<TenantResponse>();
 
-        var response = await _client.GetAsync($"/tenants/{created!.Id}");
+        var response = await this.client.GetAsync($"/tenants/{created!.Id}");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -216,7 +210,7 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task GetTenantById_WithInvalidId_ReturnsNotFound()
     {
-        var response = await _client.GetAsync($"/tenants/{Guid.NewGuid()}");
+        var response = await this.client.GetAsync($"/tenants/{Guid.NewGuid()}");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -225,7 +219,7 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetTenantById_WithCourses_ReturnsCourseLocationData()
     {
         // Create tenant
-        var createTenantResponse = await _client.PostAsJsonAsync("/tenants", new
+        var createTenantResponse = await this.client.PostAsJsonAsync("/tenants", new
         {
             OrganizationName = "Location Test Tenant " + Guid.NewGuid(),
             ContactName = "Test Contact",
@@ -235,7 +229,7 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var tenant = await createTenantResponse.Content.ReadFromJsonAsync<TenantResponse>();
 
         // Create course with location data
-        await _client.PostAsJsonAsync("/courses", new
+        await this.client.PostAsJsonAsync("/courses", new
         {
             Name = "Location Course",
             TenantId = tenant!.Id,
@@ -244,7 +238,7 @@ public class TenantEndpointsTests : IClassFixture<TestWebApplicationFactory>
         });
 
         // Fetch tenant detail
-        var response = await _client.GetAsync($"/tenants/{tenant.Id}");
+        var response = await this.client.GetAsync($"/tenants/{tenant.Id}");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var detail = await response.Content.ReadFromJsonAsync<TenantDetailResponse>();

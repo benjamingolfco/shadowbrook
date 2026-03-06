@@ -3,16 +3,10 @@ using System.Net.Http.Json;
 
 namespace Shadowbrook.Api.Tests;
 
-public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
+public class CourseEndpointsTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
 {
-    private readonly HttpClient _client;
-    private readonly TestWebApplicationFactory _factory;
-
-    public CourseEndpointsTests(TestWebApplicationFactory factory)
-    {
-        _factory = factory;
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient client = factory.CreateClient();
+    private readonly TestWebApplicationFactory factory = factory;
 
     [Fact]
     public async Task GetAllCourses_ReturnsOk()
@@ -21,11 +15,11 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var request = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request.Headers.Add("X-Tenant-Id", tenantId.ToString());
         request.Content = JsonContent.Create(new { Name = "Test Course" });
-        await _client.SendAsync(request);
+        await this.client.SendAsync(request);
 
         var getRequest = new HttpRequestMessage(HttpMethod.Get, "/courses");
         getRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        var response = await _client.SendAsync(getRequest);
+        var response = await this.client.SendAsync(getRequest);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -41,12 +35,12 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
         createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
         createRequest.Content = JsonContent.Create(new { Name = "Test Course for Tenant Info" });
-        var createResponse = await _client.SendAsync(createRequest);
+        var createResponse = await this.client.SendAsync(createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
         var getRequest = new HttpRequestMessage(HttpMethod.Get, "/courses");
         getRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        var response = await _client.SendAsync(getRequest);
+        var response = await this.client.SendAsync(getRequest);
         var courses = await response.Content.ReadFromJsonAsync<List<CourseResponse>>();
 
         Assert.NotNull(courses);
@@ -63,12 +57,12 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
         createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
         createRequest.Content = JsonContent.Create(new { Name = "Lookup Course" });
-        var createResponse = await _client.SendAsync(createRequest);
+        var createResponse = await this.client.SendAsync(createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
         var getRequest = new HttpRequestMessage(HttpMethod.Get, $"/courses/{created!.Id}");
         getRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        var response = await _client.SendAsync(getRequest);
+        var response = await this.client.SendAsync(getRequest);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -83,12 +77,12 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
         createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
         createRequest.Content = JsonContent.Create(new { Name = "Lookup Course with Tenant Info" });
-        var createResponse = await _client.SendAsync(createRequest);
+        var createResponse = await this.client.SendAsync(createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
         var getRequest = new HttpRequestMessage(HttpMethod.Get, $"/courses/{created!.Id}");
         getRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        var response = await _client.SendAsync(getRequest);
+        var response = await this.client.SendAsync(getRequest);
         var course = await response.Content.ReadFromJsonAsync<CourseResponse>();
 
         Assert.NotNull(course);
@@ -103,7 +97,7 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var (tenantId, _) = await CreateTestTenantAsync();
         var request = new HttpRequestMessage(HttpMethod.Get, $"/courses/{Guid.NewGuid()}");
         request.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        var response = await _client.SendAsync(request);
+        var response = await this.client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -125,7 +119,7 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
             ContactPhone = "952-826-6799"
         });
 
-        var response = await _client.SendAsync(httpRequest);
+        var response = await this.client.SendAsync(httpRequest);
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
@@ -146,7 +140,7 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
         request.Headers.Add("X-Tenant-Id", tenantId.ToString());
         request.Content = JsonContent.Create(new { StreetAddress = "123 Main St" });
 
-        var response = await _client.SendAsync(request);
+        var response = await this.client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -159,12 +153,12 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var request1 = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request1.Headers.Add("X-Tenant-Id", tenantId.ToString());
         request1.Content = JsonContent.Create(new { Name = "Duplicate Course" });
-        await _client.SendAsync(request1);
+        await this.client.SendAsync(request1);
 
         var request2 = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request2.Headers.Add("X-Tenant-Id", tenantId.ToString());
         request2.Content = JsonContent.Create(new { Name = "Duplicate Course" });
-        var response = await _client.SendAsync(request2);
+        var response = await this.client.SendAsync(request2);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -177,12 +171,12 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var request1 = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request1.Headers.Add("X-Tenant-Id", tenantId.ToString());
         request1.Content = JsonContent.Create(new { Name = "Pine Valley" });
-        await _client.SendAsync(request1);
+        await this.client.SendAsync(request1);
 
         var request2 = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request2.Headers.Add("X-Tenant-Id", tenantId.ToString());
         request2.Content = JsonContent.Create(new { Name = "PINE VALLEY" });
-        var response = await _client.SendAsync(request2);
+        var response = await this.client.SendAsync(request2);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -197,12 +191,12 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var request1 = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request1.Headers.Add("X-Tenant-Id", tenantId.ToString());
         request1.Content = JsonContent.Create(new { Name = "Pine%Valley" });
-        await _client.SendAsync(request1);
+        await this.client.SendAsync(request1);
 
         var request2 = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request2.Headers.Add("X-Tenant-Id", tenantId.ToString());
         request2.Content = JsonContent.Create(new { Name = "Pine%Valley" });
-        var response = await _client.SendAsync(request2);
+        var response = await this.client.SendAsync(request2);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -216,12 +210,12 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var request1 = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request1.Headers.Add("X-Tenant-Id", tenantId1.ToString());
         request1.Content = JsonContent.Create(new { Name = "Shared Name Course" });
-        await _client.SendAsync(request1);
+        await this.client.SendAsync(request1);
 
         var request2 = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request2.Headers.Add("X-Tenant-Id", tenantId2.ToString());
         request2.Content = JsonContent.Create(new { Name = "Shared Name Course" });
-        var response = await _client.SendAsync(request2);
+        var response = await this.client.SendAsync(request2);
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
@@ -229,7 +223,7 @@ public class CourseEndpointsTests : IClassFixture<TestWebApplicationFactory>
     private async Task<(Guid Id, string OrganizationName)> CreateTestTenantAsync()
     {
         var orgName = $"Test Tenant {Guid.NewGuid()}";
-        var response = await _client.PostAsJsonAsync("/tenants", new
+        var response = await this.client.PostAsJsonAsync("/tenants", new
         {
             OrganizationName = orgName,
             ContactName = "Test Contact",

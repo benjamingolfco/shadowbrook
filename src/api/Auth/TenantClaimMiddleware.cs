@@ -2,14 +2,9 @@ using System.Security.Claims;
 
 namespace Shadowbrook.Api.Auth;
 
-public class TenantClaimMiddleware
+public class TenantClaimMiddleware(RequestDelegate next)
 {
-    private readonly RequestDelegate _next;
-
-    public TenantClaimMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
+    private readonly RequestDelegate next = next;
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -24,6 +19,6 @@ public class TenantClaimMiddleware
             }
         }
 
-        await _next(context);
+        await this.next(context);
     }
 }

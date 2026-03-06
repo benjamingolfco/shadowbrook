@@ -21,19 +21,29 @@ public static partial class TenantEndpoints
         ApplicationDbContext db)
     {
         if (string.IsNullOrWhiteSpace(request.OrganizationName))
+        {
             return Results.BadRequest(new { error = "OrganizationName is required." });
+        }
 
         if (string.IsNullOrWhiteSpace(request.ContactName))
+        {
             return Results.BadRequest(new { error = "ContactName is required." });
+        }
 
         if (string.IsNullOrWhiteSpace(request.ContactEmail))
+        {
             return Results.BadRequest(new { error = "ContactEmail is required." });
+        }
 
         if (!IsValidEmail(request.ContactEmail))
+        {
             return Results.BadRequest(new { error = "ContactEmail must be a valid email address." });
+        }
 
         if (string.IsNullOrWhiteSpace(request.ContactPhone))
+        {
             return Results.BadRequest(new { error = "ContactPhone is required." });
+        }
 
         // Check for duplicate organization name (case-insensitive)
         var normalizedName = request.OrganizationName.ToLower();
@@ -41,7 +51,9 @@ public static partial class TenantEndpoints
             .FirstOrDefaultAsync(t => t.OrganizationName.ToLower() == normalizedName);
 
         if (existingTenant is not null)
+        {
             return Results.Conflict(new { error = "A tenant with this organization name already exists." });
+        }
 
         var tenant = new Tenant
         {
@@ -93,7 +105,9 @@ public static partial class TenantEndpoints
             .FirstOrDefaultAsync(t => t.Id == id);
 
         if (tenant is null)
+        {
             return Results.NotFound();
+        }
 
         var response = new TenantDetailResponse(
             tenant.Id,
@@ -111,10 +125,7 @@ public static partial class TenantEndpoints
     [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase)]
     private static partial Regex EmailRegex();
 
-    private static bool IsValidEmail(string email)
-    {
-        return EmailRegex().IsMatch(email);
-    }
+    private static bool IsValidEmail(string email) => EmailRegex().IsMatch(email);
 }
 
 public record CreateTenantRequest(

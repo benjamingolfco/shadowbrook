@@ -4,18 +4,13 @@ namespace Shadowbrook.Api.Services;
 /// Development stub that logs messages to console instead of sending real SMS.
 /// Replace with a Twilio implementation when ready.
 /// </summary>
-public class ConsoleTextMessageService : ITextMessageService
+public class ConsoleTextMessageService(ILogger<ConsoleTextMessageService> logger) : ITextMessageService
 {
-    private readonly ILogger<ConsoleTextMessageService> _logger;
-
-    public ConsoleTextMessageService(ILogger<ConsoleTextMessageService> logger)
-    {
-        _logger = logger;
-    }
+    private readonly ILogger<ConsoleTextMessageService> logger = logger;
 
     public Task SendAsync(string toPhoneNumber, string message, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("[SMS] To: {PhoneNumber} | Message: {Message}", toPhoneNumber, message);
+        this.logger.LogInformation("[SMS] To: {PhoneNumber} | Message: {Message}", toPhoneNumber, message);
         return Task.CompletedTask;
     }
 }

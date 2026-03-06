@@ -26,17 +26,23 @@ public static class CourseEndpoints
         ICurrentUser currentUser)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
+        {
             return Results.BadRequest(new { error = "Name is required." });
+        }
 
         // Derive TenantId from X-Tenant-Id header, fallback to request.TenantId
         var tenantId = currentUser.TenantId ?? request.TenantId;
         if (tenantId is null)
+        {
             return Results.BadRequest(new { error = "TenantId is required (via X-Tenant-Id header or request body)." });
+        }
 
         // Validate that the tenant exists
         var tenant = await db.Tenants.FindAsync(tenantId.Value);
         if (tenant is null)
+        {
             return Results.BadRequest(new { error = "Tenant does not exist." });
+        }
 
         // Check for duplicate course name within the tenant (case-insensitive).
         // ToLower() translates to LOWER() in SQL, providing portable case-insensitivity
@@ -46,7 +52,9 @@ public static class CourseEndpoints
             .IgnoreQueryFilters()
             .AnyAsync(c => c.TenantId == tenantId.Value && c.Name.ToLower() == normalizedName);
         if (duplicateExists)
+        {
             return Results.Conflict(new { error = "A course with this name already exists for this tenant." });
+        }
 
         var course = new Course
         {
@@ -124,7 +132,7 @@ public static class CourseEndpoints
         return course is null ? Results.NotFound() : Results.Ok(course);
     }
 
-    private static readonly int[] AllowedIntervals = [8, 10, 12];
+    private static readonly int[] allowedIntervals = [8, 10, 12];
 
     private static async Task<IResult> UpdateTeeTimeSettings(
         Guid id,
@@ -133,13 +141,19 @@ public static class CourseEndpoints
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
         if (course is null)
+        {
             return Results.NotFound();
+        }
 
-        if (!AllowedIntervals.Contains(request.TeeTimeIntervalMinutes))
+        if (!allowedIntervals.Contains(request.TeeTimeIntervalMinutes))
+        {
             return Results.BadRequest(new { error = "Interval must be 8, 10, or 12 minutes." });
+        }
 
         if (request.FirstTeeTime >= request.LastTeeTime)
+        {
             return Results.BadRequest(new { error = "First tee time must be before last tee time." });
+        }
 
         course.TeeTimeIntervalMinutes = request.TeeTimeIntervalMinutes;
         course.FirstTeeTime = request.FirstTeeTime;
@@ -158,10 +172,14 @@ public static class CourseEndpoints
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
         if (course is null)
+        {
             return Results.NotFound();
+        }
 
         if (course.TeeTimeIntervalMinutes is null || course.FirstTeeTime is null || course.LastTeeTime is null)
+        {
             return Results.Ok(new { });
+        }
 
         return Results.Ok(new TeeTimeSettingsResponse(
             course.TeeTimeIntervalMinutes.Value,
@@ -176,13 +194,19 @@ public static class CourseEndpoints
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
         if (course is null)
+        {
             return Results.NotFound();
+        }
 
         if (request.FlatRatePrice < 0)
+        {
             return Results.BadRequest(new { error = "Price must be greater than or equal to 0." });
+        }
 
         if (request.FlatRatePrice > 10000)
+        {
             return Results.BadRequest(new { error = "Price must be less than or equal to 10000." });
+        }
 
         course.FlatRatePrice = request.FlatRatePrice;
         course.UpdatedAt = DateTimeOffset.UtcNow;
@@ -196,10 +220,14 @@ public static class CourseEndpoints
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
         if (course is null)
+        {
             return Results.NotFound();
+        }
 
         if (course.FlatRatePrice is null)
+        {
             return Results.Ok(new { });
+        }
 
         return Results.Ok(new PricingResponse(course.FlatRatePrice.Value));
     }
