@@ -1,27 +1,8 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod/v4';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import {
   Table,
   TableBody,
@@ -30,32 +11,19 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import { PageHeader } from '@/components/layout/PageHeader';
+import type { PageAction } from '@/components/layout/PageHeader';
 import {
   useWalkUpWaitlistToday,
   useOpenWalkUpWaitlist,
   useCloseWalkUpWaitlist,
 } from '../hooks/useWalkUpWaitlist';
-import { useWaitlist, useCreateWaitlistRequest } from '../hooks/useWaitlist';
+import { useWaitlist } from '../hooks/useWaitlist';
 import { useCourseContext } from '../context/CourseContext';
+import { OpenWaitlistDialog } from '../components/OpenWaitlistDialog';
+import { AddTeeTimeRequestDialog } from '../components/AddTeeTimeRequestDialog';
+import { CloseWaitlistDialog } from '../components/CloseWaitlistDialog';
 import type { WalkUpWaitlistEntry } from '@/types/waitlist';
-
-const addWaitlistRequestSchema = z.object({
-  teeTime: z.string().min(1, 'Tee time is required'),
-  golfersNeeded: z.number().min(1, 'At least 1 golfer needed').max(4, 'Maximum 4 golfers'),
-});
-
-type AddWaitlistRequestFormData = z.infer<typeof addWaitlistRequestSchema>;
 
 function getTodayDate(): string {
   const today = new Date();
@@ -136,39 +104,11 @@ function QueueTable({ entries }: { entries: WalkUpWaitlistEntry[] }) {
 
 interface TeeTimeRequestsSectionProps {
   courseId: string;
-  readOnly: boolean;
 }
 
-function TeeTimeRequestsSection({ courseId, readOnly }: TeeTimeRequestsSectionProps) {
+function TeeTimeRequestsSection({ courseId }: TeeTimeRequestsSectionProps) {
   const todayDate = getTodayDate();
   const waitlistQuery = useWaitlist(courseId, todayDate);
-  const createMutation = useCreateWaitlistRequest();
-
-  const form = useForm<AddWaitlistRequestFormData>({
-    resolver: zodResolver(addWaitlistRequestSchema),
-    defaultValues: {
-      teeTime: '',
-      golfersNeeded: 1,
-    },
-  });
-
-  function onSubmit(data: AddWaitlistRequestFormData) {
-    createMutation.mutate(
-      {
-        courseId,
-        data: {
-          date: todayDate,
-          teeTime: data.teeTime,
-          golfersNeeded: data.golfersNeeded,
-        },
-      },
-      {
-        onSuccess: () => {
-          form.reset({ teeTime: '', golfersNeeded: 1 });
-        },
-      },
-    );
-  }
 
   const waitlistData = waitlistQuery.data;
 
@@ -196,75 +136,6 @@ function TeeTimeRequestsSection({ courseId, readOnly }: TeeTimeRequestsSectionPr
             <p className="text-3xl font-bold">{waitlistData.totalGolfersPending}</p>
           </CardContent>
         </Card>
-      )}
-
-      {!readOnly && (
-        <div className="mb-4">
-          <h3 className="text-base font-medium mb-2">Add to Waitlist</h3>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="flex flex-col gap-4 md:flex-row md:items-end">
-                <FormField
-                  control={form.control}
-                  name="teeTime"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tee Time</FormLabel>
-                      <FormControl>
-                        <Input type="time" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="golfersNeeded"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Golfers Needed</FormLabel>
-                      <Select
-                        value={String(field.value)}
-                        onValueChange={(v) => field.onChange(Number(v))}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="w-[120px]">
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="1">1</SelectItem>
-                          <SelectItem value="2">2</SelectItem>
-                          <SelectItem value="3">3</SelectItem>
-                          <SelectItem value="4">4</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? 'Adding...' : 'Add to Waitlist'}
-                </Button>
-              </div>
-
-              {createMutation.isSuccess && (
-                <p className="mt-3 text-sm text-green-600" role="status">
-                  Tee time added to waitlist.
-                </p>
-              )}
-              {createMutation.isError && (
-                <p className="mt-3 text-sm text-destructive" role="alert">
-                  {createMutation.error instanceof Error
-                    ? createMutation.error.message
-                    : 'Failed to add tee time to waitlist.'}
-                </p>
-              )}
-            </form>
-          </Form>
-        </div>
       )}
 
       {waitlistQuery.isError && (
@@ -312,6 +183,9 @@ function TeeTimeRequestsSection({ courseId, readOnly }: TeeTimeRequestsSectionPr
 export default function WalkUpWaitlist() {
   const { course } = useCourseContext();
   const [copied, setCopied] = useState(false);
+  const [openDialogOpen, setOpenDialogOpen] = useState(false);
+  const [addRequestDialogOpen, setAddRequestDialogOpen] = useState(false);
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
 
   const todayQuery = useWalkUpWaitlistToday(course?.id);
   const openMutation = useOpenWalkUpWaitlist();
@@ -348,9 +222,7 @@ export default function WalkUpWaitlist() {
   if (todayQuery.isLoading) {
     return (
       <div className="p-6 max-w-2xl" aria-label="Loading walk-up waitlist">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Walk-Up Waitlist</h1>
-        </div>
+        <PageHeader title="Walk-Up Waitlist" />
         <div className="space-y-4">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-24 w-full" />
@@ -363,9 +235,7 @@ export default function WalkUpWaitlist() {
   if (todayQuery.isError) {
     return (
       <div className="p-6 max-w-2xl">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Walk-Up Waitlist</h1>
-        </div>
+        <PageHeader title="Walk-Up Waitlist" />
         <p className="text-destructive text-sm">
           Error loading waitlist: {todayQuery.error.message}
         </p>
@@ -380,14 +250,30 @@ export default function WalkUpWaitlist() {
     const openError = openMutation.error as (Error & { status?: number }) | null;
     const is409 = openError?.status === 409;
 
+    const actions: PageAction[] = [
+      {
+        id: 'open-waitlist',
+        label: 'Open Waitlist',
+        description: 'Open the walk-up waitlist for today',
+        onClick: () => setOpenDialogOpen(true),
+        disabled: openMutation.isPending,
+        disabledLabel: 'Opening...',
+      },
+    ];
+
     return (
       <div className="p-6 max-w-2xl">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Walk-Up Waitlist</h1>
-          <p className="text-muted-foreground text-sm mt-1">
+        <PageHeader title="Walk-Up Waitlist" actions={actions}>
+          <p className="text-muted-foreground text-sm">
             Open the waitlist to allow walk-up golfers to join the queue today.
           </p>
-        </div>
+        </PageHeader>
+
+        <OpenWaitlistDialog
+          open={openDialogOpen}
+          onOpenChange={setOpenDialogOpen}
+          onConfirm={handleOpen}
+        />
 
         {is409 && (
           <p className="text-destructive text-sm mb-4">
@@ -400,10 +286,6 @@ export default function WalkUpWaitlist() {
             Error: {openError?.message}
           </p>
         )}
-
-        <Button onClick={handleOpen} disabled={openMutation.isPending}>
-          {openMutation.isPending ? 'Opening...' : 'Open Waitlist'}
-        </Button>
       </div>
     );
   }
@@ -412,20 +294,14 @@ export default function WalkUpWaitlist() {
   if (waitlist.status === 'Closed') {
     return (
       <div className="p-6 max-w-2xl">
-        <div className="mb-6 flex items-center gap-3">
-          <h1 className="text-2xl font-bold">Walk-Up Waitlist</h1>
-          <Badge variant="secondary">Closed</Badge>
-        </div>
+        <PageHeader title="Walk-Up Waitlist">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">Closed</Badge>
+          </div>
+        </PageHeader>
 
         <div className="mb-6">
-          <p className="text-sm text-muted-foreground mb-1">Short Code</p>
-          <p className="text-4xl sm:text-6xl font-mono tracking-widest font-bold">
-            {waitlist.shortCode.split('').join(' ')}
-          </p>
-        </div>
-
-        <div className="mb-6">
-          <TeeTimeRequestsSection courseId={courseId} readOnly />
+          <TeeTimeRequestsSection courseId={courseId} />
         </div>
 
         {entries.length > 0 && (
@@ -443,41 +319,54 @@ export default function WalkUpWaitlist() {
   }
 
   // Active state (Open)
+  const activeActions: PageAction[] = [
+    {
+      id: 'add-request',
+      label: 'Add Tee Time Request',
+      description: 'Add a tee time request to the waitlist',
+      variant: 'outline',
+      onClick: () => setAddRequestDialogOpen(true),
+    },
+    {
+      id: 'close-waitlist',
+      label: 'Close Waitlist',
+      description: 'Close the waitlist for today',
+      variant: 'destructive',
+      onClick: () => setCloseDialogOpen(true),
+      disabled: closeMutation.isPending,
+      disabledLabel: 'Closing...',
+    },
+  ];
+
   return (
     <div className="p-6 max-w-2xl">
-      <div className="mb-6 flex items-center gap-3">
-        <h1 className="text-2xl font-bold">Walk-Up Waitlist</h1>
-        <Badge variant="success">Open</Badge>
-      </div>
-
-      <div className="mb-6">
-        <p className="text-sm text-muted-foreground mb-1">Short Code</p>
-        <div className="flex items-end gap-4">
-          <p className="text-4xl sm:text-6xl font-mono tracking-widest font-bold">
+      <PageHeader title="Walk-Up Waitlist" actions={activeActions}>
+        <div className="flex items-center gap-3 flex-wrap">
+          <Badge variant="success">Open</Badge>
+          <span className="font-mono font-bold tracking-widest">
             {waitlist.shortCode.split('').join(' ')}
-          </p>
+          </span>
           <Button
             variant="outline"
             size="sm"
             onClick={() => handleCopyCode(waitlist.shortCode)}
-            className="mb-1"
           >
             {copied ? 'Copied!' : 'Copy Code'}
           </Button>
         </div>
-        <p className="text-sm text-muted-foreground mt-2">
-          Share this code with walk-up golfers to let them join the queue.
-        </p>
-      </div>
+      </PageHeader>
 
-      <div className="mb-6">
-        <TeeTimeRequestsSection courseId={courseId} readOnly={false} />
-      </div>
+      <AddTeeTimeRequestDialog
+        open={addRequestDialogOpen}
+        onOpenChange={setAddRequestDialogOpen}
+        courseId={courseId}
+      />
 
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-3">Golfer Queue</h2>
-        <QueueTable entries={entries} />
-      </div>
+      <CloseWaitlistDialog
+        open={closeDialogOpen}
+        onOpenChange={setCloseDialogOpen}
+        onConfirm={handleClose}
+      />
 
       {closeMutation.isError && (
         <p className="text-destructive text-sm mb-4">
@@ -485,30 +374,14 @@ export default function WalkUpWaitlist() {
         </p>
       )}
 
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button variant="destructive" disabled={closeMutation.isPending}>
-            {closeMutation.isPending ? 'Closing...' : 'Close Waitlist'}
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Close Walk-Up Waitlist?</AlertDialogTitle>
-            <AlertDialogDescription>
-              No new golfers will be able to join. Existing entries will be preserved.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel autoFocus>Keep Open</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleClose}
-            >
-              Close Waitlist
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <div className="mb-6">
+        <TeeTimeRequestsSection courseId={courseId} />
+      </div>
+
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-3">Golfer Queue</h2>
+        <QueueTable entries={entries} />
+      </div>
     </div>
   );
 }
