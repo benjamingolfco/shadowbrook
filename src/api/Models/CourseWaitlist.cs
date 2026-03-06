@@ -15,4 +15,5 @@ public class CourseWaitlist
     // Navigation
     public Course? Course { get; set; }
     public ICollection<WaitlistRequest> WaitlistRequests { get; set; } = new List<WaitlistRequest>();
+    public ICollection<GolferWaitlistEntry> GolferWaitlistEntries { get; set; } = new List<GolferWaitlistEntry>();
 }

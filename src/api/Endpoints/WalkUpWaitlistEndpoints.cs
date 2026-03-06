@@ -106,10 +106,17 @@ public static class WalkUpWaitlistEndpoints
         var waitlist = await db.CourseWaitlists
             .FirstOrDefaultAsync(w => w.CourseId == courseId && w.Date == today);
 
+        var entries = waitlist is not null
+            ? (await db.GolferWaitlistEntries
+                .Where(e => e.CourseWaitlistId == waitlist.Id && e.RemovedAt == null)
+                .Select(e => new WalkUpWaitlistEntryResponse(e.Id, e.GolferName, e.JoinedAt))
+                .ToListAsync())
+                .OrderBy(e => e.JoinedAt)
+                .ToList()
+            : new List<WalkUpWaitlistEntryResponse>();
+
         var waitlistResponse = waitlist is not null ? ToResponse(waitlist) : null;
-        var todayResponse = new WalkUpWaitlistTodayResponse(
-            waitlistResponse,
-            new List<WalkUpWaitlistEntryResponse>());
+        var todayResponse = new WalkUpWaitlistTodayResponse(waitlistResponse, entries);
 
         return Results.Ok(todayResponse);
     }
