@@ -3,14 +3,9 @@ using System.Net.Http.Json;
 
 namespace Shadowbrook.Api.Tests;
 
-public class TenantClaimMiddlewareTests : IClassFixture<TestWebApplicationFactory>
+public class TenantClaimMiddlewareTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
 {
-    private readonly HttpClient _client;
-
-    public TenantClaimMiddlewareTests(TestWebApplicationFactory factory)
-    {
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient client = factory.CreateClient();
 
     [Fact]
     public async Task WithValidTenantIdHeader_ReturnsTenantId()
@@ -19,7 +14,7 @@ public class TenantClaimMiddlewareTests : IClassFixture<TestWebApplicationFactor
         var request = new HttpRequestMessage(HttpMethod.Get, "/debug/current-user");
         request.Headers.Add("X-Tenant-Id", expectedTenantId.ToString());
 
-        var response = await _client.SendAsync(request);
+        var response = await this.client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -31,7 +26,7 @@ public class TenantClaimMiddlewareTests : IClassFixture<TestWebApplicationFactor
     [Fact]
     public async Task WithoutTenantIdHeader_ReturnsNullTenantId()
     {
-        var response = await _client.GetAsync("/debug/current-user");
+        var response = await this.client.GetAsync("/debug/current-user");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -46,7 +41,7 @@ public class TenantClaimMiddlewareTests : IClassFixture<TestWebApplicationFactor
         var request = new HttpRequestMessage(HttpMethod.Get, "/debug/current-user");
         request.Headers.Add("X-Tenant-Id", "not-a-valid-guid");
 
-        var response = await _client.SendAsync(request);
+        var response = await this.client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 

@@ -4,15 +4,9 @@ using Shadowbrook.Api.Models;
 
 namespace Shadowbrook.Api.Data;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ICurrentUser? currentUser = null) : DbContext(options)
 {
-    private readonly ICurrentUser? _currentUser;
-
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ICurrentUser? currentUser = null)
-        : base(options)
-    {
-        _currentUser = currentUser;
-    }
+    private readonly ICurrentUser? currentUser = currentUser;
 
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Course> Courses => Set<Course>();
@@ -36,7 +30,7 @@ public class ApplicationDbContext : DbContext
 
         // Add tenant scoping query filter - only filter when a tenant context exists
         modelBuilder.Entity<Course>()
-            .HasQueryFilter(c => _currentUser == null || _currentUser.TenantId == null || c.TenantId == _currentUser.TenantId);
+            .HasQueryFilter(c => this.currentUser == null || this.currentUser.TenantId == null || c.TenantId == this.currentUser.TenantId);
 
         // Add indexes for Course
         modelBuilder.Entity<Course>()

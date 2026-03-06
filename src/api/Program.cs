@@ -12,9 +12,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
     {
         var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
         var originPattern = builder.Configuration["Cors:AllowedOriginPattern"];
@@ -30,8 +28,7 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins(origins).AllowAnyMethod().AllowAnyHeader();
         }
-    });
-});
+    }));
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -43,7 +40,9 @@ builder.Services.AddScoped<IDomainEventPublisher, InProcessDomainEventPublisher>
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
+{
     app.MapOpenApi();
+}
 
 if (app.Environment.EnvironmentName != "Testing")
 {
@@ -59,10 +58,7 @@ app.MapHealthChecks("/health");
 
 if (app.Environment.EnvironmentName == "Testing")
 {
-    app.MapGet("/debug/current-user", (ICurrentUser currentUser) =>
-    {
-        return Results.Ok(new { TenantId = currentUser.TenantId });
-    });
+    app.MapGet("/debug/current-user", (ICurrentUser currentUser) => Results.Ok(new { TenantId = currentUser.TenantId }));
 }
 
 app.MapTenantEndpoints();

@@ -23,7 +23,9 @@ public static class WaitlistEndpoints
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
         if (course is null)
+        {
             return Results.NotFound();
+        }
 
         return Results.Ok(new WaitlistSettingsResponse(course.WaitlistEnabled ?? false));
     }
@@ -35,7 +37,9 @@ public static class WaitlistEndpoints
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
         if (course is null)
+        {
             return Results.NotFound();
+        }
 
         course.WaitlistEnabled = request.WaitlistEnabled;
         course.UpdatedAt = DateTimeOffset.UtcNow;
@@ -52,14 +56,20 @@ public static class WaitlistEndpoints
     {
         if (string.IsNullOrWhiteSpace(date) ||
             !DateOnly.TryParseExact(date, "yyyy-MM-dd", out var parsedDate))
+        {
             return Results.BadRequest(new { error = "A valid date in yyyy-MM-dd format is required." });
+        }
 
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
         if (course is null)
+        {
             return Results.NotFound();
+        }
 
         if (course.WaitlistEnabled != true)
+        {
             return Results.BadRequest(new { error = "Waitlist is not enabled for this course." });
+        }
 
         var courseWaitlist = await db.CourseWaitlists
             .Include(cw => cw.WaitlistRequests)
@@ -102,21 +112,31 @@ public static class WaitlistEndpoints
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
         if (course is null)
+        {
             return Results.NotFound();
+        }
 
         if (course.WaitlistEnabled != true)
+        {
             return Results.BadRequest(new { error = "Waitlist is not enabled for this course." });
+        }
 
         if (string.IsNullOrWhiteSpace(request.Date) ||
             !DateOnly.TryParseExact(request.Date, "yyyy-MM-dd", out var parsedDate))
+        {
             return Results.BadRequest(new { error = "A valid date in yyyy-MM-dd format is required." });
+        }
 
         if (string.IsNullOrWhiteSpace(request.TeeTime) ||
             !TimeOnly.TryParseExact(request.TeeTime, new[] { "HH:mm", "HH:mm:ss" }, out var parsedTeeTime))
+        {
             return Results.BadRequest(new { error = "A valid tee time in HH:mm format is required." });
+        }
 
-        if (request.GolfersNeeded < 1 || request.GolfersNeeded > 4)
+        if (request.GolfersNeeded is < 1 or > 4)
+        {
             return Results.BadRequest(new { error = "Golfers needed must be between 1 and 4." });
+        }
 
         // Find or create CourseWaitlist for this course and date
         var courseWaitlist = await db.CourseWaitlists
@@ -139,7 +159,9 @@ public static class WaitlistEndpoints
             }
 
             if (shortCode is null)
+            {
                 return Results.Problem("Unable to generate a unique short code.", statusCode: 500);
+            }
 
             var now = DateTimeOffset.UtcNow;
             courseWaitlist = new CourseWaitlist
@@ -164,7 +186,9 @@ public static class WaitlistEndpoints
                 wr.Status == "Pending");
 
         if (duplicate)
+        {
             return Results.Conflict(new { error = "An active waitlist request already exists for this tee time." });
+        }
 
         var waitlistRequest = new WaitlistRequest
         {

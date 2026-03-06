@@ -19,7 +19,9 @@ public static class WalkUpWaitlistEndpoints
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
         if (course is null)
+        {
             return Results.NotFound(new { error = "Course not found." });
+        }
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -29,7 +31,9 @@ public static class WalkUpWaitlistEndpoints
         if (existing is not null)
         {
             if (existing.Status == "Open")
+            {
                 return Results.Conflict(new { error = "Walk-up waitlist is already open for today." });
+            }
 
             return Results.Conflict(new { error = "Walk-up waitlist was already used today." });
         }
@@ -49,7 +53,9 @@ public static class WalkUpWaitlistEndpoints
         }
 
         if (shortCode is null)
+        {
             return Results.Problem("Unable to generate a unique short code. Please try again.", statusCode: 500);
+        }
 
         var now = DateTimeOffset.UtcNow;
         var waitlist = new CourseWaitlist
@@ -75,7 +81,9 @@ public static class WalkUpWaitlistEndpoints
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
         if (course is null)
+        {
             return Results.NotFound(new { error = "Course not found." });
+        }
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -83,7 +91,9 @@ public static class WalkUpWaitlistEndpoints
             .FirstOrDefaultAsync(w => w.CourseId == courseId && w.Date == today && w.Status == "Open");
 
         if (waitlist is null)
+        {
             return Results.NotFound(new { error = "No open walk-up waitlist found for today." });
+        }
 
         var now = DateTimeOffset.UtcNow;
         waitlist.Status = "Closed";
@@ -99,7 +109,9 @@ public static class WalkUpWaitlistEndpoints
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
         if (course is null)
+        {
             return Results.NotFound(new { error = "Course not found." });
+        }
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
