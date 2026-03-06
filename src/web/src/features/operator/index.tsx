@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router';
 import OperatorLayout from '@/components/layout/OperatorLayout';
 import TeeSheet from './pages/TeeSheet';
 import TeeTimeSettings from './pages/TeeTimeSettings';
+import WalkUpWaitlist from './pages/WalkUpWaitlist';
 import CourseRegister from './pages/CourseRegister';
 import OrganizationSelect from './pages/OrganizationSelect';
 import CoursePortfolio from './pages/CoursePortfolio';
@@ -36,6 +37,7 @@ function CourseGate() {
       <Route element={<OperatorLayout />}>
         <Route path="tee-sheet" element={<TeeSheet />} />
         <Route path="settings" element={<TeeTimeSettings />} />
+        <Route path="waitlist" element={<WalkUpWaitlist />} />
         <Route path="register-course" element={<CourseRegister />} />
         <Route path="*" element={<Navigate to="tee-sheet" replace />} />
       </Route>
