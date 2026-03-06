@@ -7,7 +7,7 @@ import {
   useOpenWalkUpWaitlist,
   useCloseWalkUpWaitlist,
 } from '../hooks/useWalkUpWaitlist';
-import { useWaitlist, useCreateWaitlistRequest } from '../hooks/useWaitlist';
+import { useCreateWaitlistRequest } from '../hooks/useWaitlist';
 
 vi.mock('../context/CourseContext');
 vi.mock('../hooks/useWalkUpWaitlist');
@@ -17,7 +17,6 @@ const mockUseCourseContext = vi.mocked(useCourseContext);
 const mockUseWalkUpWaitlistToday = vi.mocked(useWalkUpWaitlistToday);
 const mockUseOpenWalkUpWaitlist = vi.mocked(useOpenWalkUpWaitlist);
 const mockUseCloseWalkUpWaitlist = vi.mocked(useCloseWalkUpWaitlist);
-const mockUseWaitlist = vi.mocked(useWaitlist);
 const mockUseCreateWaitlistRequest = vi.mocked(useCreateWaitlistRequest);
 
 const mockCourse = { id: 'course-1', name: 'Pine Valley' };
@@ -45,13 +44,6 @@ const mockEntries = [
 
 const mockOpenMutate = vi.fn();
 const mockCloseMutate = vi.fn();
-
-const emptyWaitlistReturn = {
-  data: { courseWaitlistId: null, date: '2026-03-05', totalGolfersPending: 0, requests: [] },
-  isLoading: false,
-  isError: false,
-  error: null,
-} as unknown as ReturnType<typeof useWaitlist>;
 
 function defaultCourseContext() {
   mockUseCourseContext.mockReturnValue({
@@ -103,7 +95,6 @@ beforeEach(() => {
   defaultOpenMutation();
   defaultCloseMutation();
   defaultCreateWaitlistRequest();
-  mockUseWaitlist.mockReturnValue(emptyWaitlistReturn);
 });
 
 describe('WalkUpWaitlist', () => {
@@ -133,7 +124,7 @@ describe('WalkUpWaitlist', () => {
     expect(screen.getByRole('button', { name: 'Open Waitlist' })).toBeInTheDocument();
   });
 
-  it('does not show tee time requests section in inactive state', () => {
+  it('does not show Add Tee Time Request button in inactive state', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
@@ -143,7 +134,6 @@ describe('WalkUpWaitlist', () => {
 
     render(<WalkUpWaitlist />);
 
-    expect(screen.queryByText('Tee Time Requests')).not.toBeInTheDocument();
     expect(screen.queryByText('Add Tee Time Request')).not.toBeInTheDocument();
   });
 
@@ -315,124 +305,29 @@ describe('WalkUpWaitlist', () => {
     expect(screen.getByText('Waitlist is already open for today.')).toBeInTheDocument();
   });
 
-  // Tee time request section tests
-  describe('Tee Time Requests section', () => {
-    it('shows tee time requests section with Add Tee Time Request button when waitlist is open', () => {
-      mockUseWalkUpWaitlistToday.mockReturnValue({
-        isLoading: false,
-        isError: false,
-        data: { waitlist: openWaitlist, entries: [] },
-        error: null,
-      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+  it('shows Add Tee Time Request button when waitlist is open', () => {
+    mockUseWalkUpWaitlistToday.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: { waitlist: openWaitlist, entries: [] },
+      error: null,
+    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
-      render(<WalkUpWaitlist />);
+    render(<WalkUpWaitlist />);
 
-      expect(screen.getByText('Tee Time Requests')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Add Tee Time Request' })).toBeInTheDocument();
-    });
+    expect(screen.getByRole('button', { name: 'Add Tee Time Request' })).toBeInTheDocument();
+  });
 
-    it('shows tee time requests section without Add Tee Time Request button when waitlist is closed', () => {
-      mockUseWalkUpWaitlistToday.mockReturnValue({
-        isLoading: false,
-        isError: false,
-        data: { waitlist: closedWaitlist, entries: [] },
-        error: null,
-      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+  it('does not show Add Tee Time Request button when waitlist is closed', () => {
+    mockUseWalkUpWaitlistToday.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: { waitlist: closedWaitlist, entries: [] },
+      error: null,
+    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
-      render(<WalkUpWaitlist />);
+    render(<WalkUpWaitlist />);
 
-      expect(screen.getByText('Tee Time Requests')).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: 'Add Tee Time Request' })).not.toBeInTheDocument();
-    });
-
-    it('shows summary card with total golfers pending', () => {
-      mockUseWalkUpWaitlistToday.mockReturnValue({
-        isLoading: false,
-        isError: false,
-        data: { waitlist: openWaitlist, entries: [] },
-        error: null,
-      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-      mockUseWaitlist.mockReturnValue({
-        data: {
-          courseWaitlistId: 'wl-1',
-          date: '2026-03-05',
-          totalGolfersPending: 7,
-          requests: [],
-        },
-        isLoading: false,
-        isError: false,
-        error: null,
-      } as unknown as ReturnType<typeof useWaitlist>);
-
-      render(<WalkUpWaitlist />);
-
-      expect(screen.getByText('Total Golfers Pending')).toBeInTheDocument();
-      expect(screen.getByText('7')).toBeInTheDocument();
-    });
-
-    it('shows tee time entries table with formatted times and pending badges', () => {
-      mockUseWalkUpWaitlistToday.mockReturnValue({
-        isLoading: false,
-        isError: false,
-        data: { waitlist: openWaitlist, entries: [] },
-        error: null,
-      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-      mockUseWaitlist.mockReturnValue({
-        data: {
-          courseWaitlistId: 'wl-1',
-          date: '2026-03-05',
-          totalGolfersPending: 5,
-          requests: [
-            { id: 'req-1', teeTime: '08:00', golfersNeeded: 2, status: 'Pending' },
-            { id: 'req-2', teeTime: '09:30', golfersNeeded: 3, status: 'Pending' },
-          ],
-        },
-        isLoading: false,
-        isError: false,
-        error: null,
-      } as unknown as ReturnType<typeof useWaitlist>);
-
-      render(<WalkUpWaitlist />);
-
-      expect(screen.getByText('8:00 AM')).toBeInTheDocument();
-      expect(screen.getByText('9:30 AM')).toBeInTheDocument();
-      expect(screen.getByText('2 pending')).toBeInTheDocument();
-      expect(screen.getByText('3 pending')).toBeInTheDocument();
-    });
-
-    it('shows empty state when no tee time requests', () => {
-      mockUseWalkUpWaitlistToday.mockReturnValue({
-        isLoading: false,
-        isError: false,
-        data: { waitlist: openWaitlist, entries: [] },
-        error: null,
-      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-      render(<WalkUpWaitlist />);
-
-      expect(screen.getByText('No tee time requests for today.')).toBeInTheDocument();
-    });
-
-    it('shows waitlist fetch error in tee time section', () => {
-      mockUseWalkUpWaitlistToday.mockReturnValue({
-        isLoading: false,
-        isError: false,
-        data: { waitlist: openWaitlist, entries: [] },
-        error: null,
-      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-      mockUseWaitlist.mockReturnValue({
-        data: undefined,
-        isLoading: false,
-        isError: true,
-        error: new Error('Network error'),
-      } as unknown as ReturnType<typeof useWaitlist>);
-
-      render(<WalkUpWaitlist />);
-
-      expect(screen.getByText('Network error')).toBeInTheDocument();
-    });
+    expect(screen.queryByRole('button', { name: 'Add Tee Time Request' })).not.toBeInTheDocument();
   });
 });

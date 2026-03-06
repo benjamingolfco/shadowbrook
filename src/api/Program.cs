@@ -69,6 +69,5 @@ app.MapTenantEndpoints();
 app.MapCourseEndpoints();
 app.MapTeeSheetEndpoints();
 app.MapWalkUpWaitlistEndpoints();
-app.MapWaitlistEndpoints();
 
 app.Run();
