@@ -186,8 +186,8 @@ function TeeTimeRequestsSection({ courseId, readOnly }: TeeTimeRequestsSectionPr
       <h2 className="text-lg font-semibold mb-3">Tee Time Requests</h2>
 
       {waitlistData && (
-        <Card className="w-fit mb-4">
-          <CardHeader>
+        <Card className="w-fit min-w-48 mb-4">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Golfers Pending
             </CardTitle>
