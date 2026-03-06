@@ -43,7 +43,12 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - infra/ — Azure deployment config (planned)
 
 ## Code Conventions
+- C#: `.editorconfig` at repo root defines all C# style rules (suggestion severity)
 - C#: file-scoped namespaces, nullable reference types, implicit usings
+- C#: prefer `var` over explicit types
+- C#: always use braces on control flow statements
+- C#: private fields use `camelCase` (no underscore prefix), qualified with `this.`
+- C#: prefer target-typed `new()` and primary constructors for DI classes
 - C#: minimal API endpoints in src/api/Endpoints/, extension method pattern (MapXxxEndpoints)
 - TypeScript: strict mode, ES modules, no CommonJS, path aliases (`@/*`)
 - Frontend: feature-based folders, TanStack Query for data fetching, RHF + Zod for forms (see `.claude/rules/frontend/react-conventions.md`)
