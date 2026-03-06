@@ -3,14 +3,9 @@ using System.Net.Http.Json;
 
 namespace Shadowbrook.Api.Tests;
 
-public class WalkUpWaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
+public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
 {
-    private readonly HttpClient _client;
-
-    public WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory)
-    {
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient client = factory.CreateClient();
 
     // -------------------------------------------------------------------------
     // POST /open
@@ -250,19 +245,19 @@ public class WalkUpWaitlistEndpointsTests : IClassFixture<TestWebApplicationFact
     private async Task<HttpResponseMessage> PostOpenAsync(Guid courseId)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, $"/courses/{courseId}/walkup-waitlist/open");
-        return await _client.SendAsync(request);
+        return await this.client.SendAsync(request);
     }
 
     private async Task<HttpResponseMessage> PostCloseAsync(Guid courseId)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, $"/courses/{courseId}/walkup-waitlist/close");
-        return await _client.SendAsync(request);
+        return await this.client.SendAsync(request);
     }
 
     private async Task<HttpResponseMessage> GetTodayAsync(Guid courseId)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, $"/courses/{courseId}/walkup-waitlist/today");
-        return await _client.SendAsync(request);
+        return await this.client.SendAsync(request);
     }
 
     private async Task<(Guid TenantId, Guid CourseId)> CreateTestCourseAsync()
@@ -272,7 +267,7 @@ public class WalkUpWaitlistEndpointsTests : IClassFixture<TestWebApplicationFact
         var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
         createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
         createRequest.Content = JsonContent.Create(new { Name = $"Test Course {Guid.NewGuid()}" });
-        var createResponse = await _client.SendAsync(createRequest);
+        var createResponse = await this.client.SendAsync(createRequest);
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         return (tenantId, course!.Id);
@@ -280,7 +275,7 @@ public class WalkUpWaitlistEndpointsTests : IClassFixture<TestWebApplicationFact
 
     private async Task<Guid> CreateTestTenantAsync()
     {
-        var response = await _client.PostAsJsonAsync("/tenants", new
+        var response = await this.client.PostAsJsonAsync("/tenants", new
         {
             OrganizationName = $"Test Tenant {Guid.NewGuid()}",
             ContactName = "Test Contact",

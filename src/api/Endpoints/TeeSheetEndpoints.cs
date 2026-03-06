@@ -19,20 +19,30 @@ public static class TeeSheetEndpoints
         ApplicationDbContext db)
     {
         if (courseId is null)
+        {
             return Results.BadRequest(new { error = "courseId query parameter is required." });
+        }
 
         if (string.IsNullOrWhiteSpace(date))
+        {
             return Results.BadRequest(new { error = "date query parameter is required." });
+        }
 
         if (!DateOnly.TryParseExact(date, "yyyy-MM-dd", out var dateOnly))
+        {
             return Results.BadRequest(new { error = "date must be in yyyy-MM-dd format." });
+        }
 
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId.Value);
         if (course is null)
+        {
             return Results.NotFound(new { error = "Course not found." });
+        }
 
         if (course.TeeTimeIntervalMinutes is null || course.FirstTeeTime is null || course.LastTeeTime is null)
+        {
             return Results.NotFound(new { error = "Tee time settings not configured for this course." });
+        }
 
         // Fetch all bookings for the course and date
         var bookings = await db.Bookings

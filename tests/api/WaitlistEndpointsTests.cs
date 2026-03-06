@@ -3,18 +3,13 @@ using System.Net.Http.Json;
 
 namespace Shadowbrook.Api.Tests;
 
-public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
+public class WaitlistEndpointsTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
 {
-    private readonly HttpClient _client;
-
-    public WaitlistEndpointsTests(TestWebApplicationFactory factory)
-    {
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient client = factory.CreateClient();
 
     private async Task<Guid> CreateTestTenantAsync()
     {
-        var response = await _client.PostAsJsonAsync("/tenants", new
+        var response = await this.client.PostAsJsonAsync("/tenants", new
         {
             OrganizationName = $"Test Tenant {Guid.NewGuid()}",
             ContactName = "Test Contact",
@@ -31,7 +26,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var request = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request.Headers.Add("X-Tenant-Id", tenantId.ToString());
         request.Content = JsonContent.Create(new { Name = $"Test Course {Guid.NewGuid()}" });
-        var response = await _client.SendAsync(request);
+        var response = await this.client.SendAsync(request);
 
         var course = await response.Content.ReadFromJsonAsync<CourseResponse>();
         return course!.Id;
@@ -39,7 +34,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
 
     private async Task EnableWaitlistAsync(Guid courseId)
     {
-        await _client.PutAsJsonAsync($"/courses/{courseId}/waitlist-settings", new
+        await this.client.PutAsJsonAsync($"/courses/{courseId}/waitlist-settings", new
         {
             WaitlistEnabled = true
         });
@@ -53,7 +48,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var tenantId = await CreateTestTenantAsync();
         var courseId = await CreateTestCourseAsync(tenantId);
 
-        var response = await _client.GetAsync($"/courses/{courseId}/waitlist-settings");
+        var response = await this.client.GetAsync($"/courses/{courseId}/waitlist-settings");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var settings = await response.Content.ReadFromJsonAsync<WaitlistSettingsResponse>();
@@ -67,7 +62,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var tenantId = await CreateTestTenantAsync();
         var courseId = await CreateTestCourseAsync(tenantId);
 
-        var putResponse = await _client.PutAsJsonAsync($"/courses/{courseId}/waitlist-settings", new
+        var putResponse = await this.client.PutAsJsonAsync($"/courses/{courseId}/waitlist-settings", new
         {
             WaitlistEnabled = true
         });
@@ -77,7 +72,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         Assert.True(putResult!.WaitlistEnabled);
 
         // Confirm GET reflects the change
-        var getResponse = await _client.GetAsync($"/courses/{courseId}/waitlist-settings");
+        var getResponse = await this.client.GetAsync($"/courses/{courseId}/waitlist-settings");
         var getResult = await getResponse.Content.ReadFromJsonAsync<WaitlistSettingsResponse>();
         Assert.True(getResult!.WaitlistEnabled);
     }
@@ -89,10 +84,10 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var courseId = await CreateTestCourseAsync(tenantId);
 
         // Enable first
-        await _client.PutAsJsonAsync($"/courses/{courseId}/waitlist-settings", new { WaitlistEnabled = true });
+        await this.client.PutAsJsonAsync($"/courses/{courseId}/waitlist-settings", new { WaitlistEnabled = true });
 
         // Then disable
-        var putResponse = await _client.PutAsJsonAsync($"/courses/{courseId}/waitlist-settings", new
+        var putResponse = await this.client.PutAsJsonAsync($"/courses/{courseId}/waitlist-settings", new
         {
             WaitlistEnabled = false
         });
@@ -105,7 +100,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task GetWaitlistSettings_CourseNotFound_Returns404()
     {
-        var response = await _client.GetAsync($"/courses/{Guid.NewGuid()}/waitlist-settings");
+        var response = await this.client.GetAsync($"/courses/{Guid.NewGuid()}/waitlist-settings");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -118,7 +113,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var tenantId = await CreateTestTenantAsync();
         var courseId = await CreateTestCourseAsync(tenantId);
 
-        var response = await _client.GetAsync($"/courses/{courseId}/waitlist?date=2026-03-02");
+        var response = await this.client.GetAsync($"/courses/{courseId}/waitlist?date=2026-03-02");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -130,7 +125,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var courseId = await CreateTestCourseAsync(tenantId);
         await EnableWaitlistAsync(courseId);
 
-        var response = await _client.GetAsync($"/courses/{courseId}/waitlist?date=2026-03-10");
+        var response = await this.client.GetAsync($"/courses/{courseId}/waitlist?date=2026-03-10");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var result = await response.Content.ReadFromJsonAsync<WaitlistResponse>();
@@ -148,20 +143,20 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         await EnableWaitlistAsync(courseId);
 
         // Add two requests for different tee times
-        await _client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
+        await this.client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
         {
             Date = "2026-03-11",
             TeeTime = "09:00",
             GolfersNeeded = 2
         });
-        await _client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
+        await this.client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
         {
             Date = "2026-03-11",
             TeeTime = "08:00",
             GolfersNeeded = 3
         });
 
-        var response = await _client.GetAsync($"/courses/{courseId}/waitlist?date=2026-03-11");
+        var response = await this.client.GetAsync($"/courses/{courseId}/waitlist?date=2026-03-11");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var result = await response.Content.ReadFromJsonAsync<WaitlistResponse>();
@@ -182,7 +177,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var courseId = await CreateTestCourseAsync(tenantId);
         await EnableWaitlistAsync(courseId);
 
-        var response = await _client.GetAsync($"/courses/{courseId}/waitlist");
+        var response = await this.client.GetAsync($"/courses/{courseId}/waitlist");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -194,7 +189,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var courseId = await CreateTestCourseAsync(tenantId);
         await EnableWaitlistAsync(courseId);
 
-        var response = await _client.GetAsync($"/courses/{courseId}/waitlist?date=03-02-2026");
+        var response = await this.client.GetAsync($"/courses/{courseId}/waitlist?date=03-02-2026");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -202,7 +197,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task GetWaitlist_CourseNotFound_Returns404()
     {
-        var response = await _client.GetAsync($"/courses/{Guid.NewGuid()}/waitlist?date=2026-03-02");
+        var response = await this.client.GetAsync($"/courses/{Guid.NewGuid()}/waitlist?date=2026-03-02");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -216,7 +211,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var courseId = await CreateTestCourseAsync(tenantId);
         await EnableWaitlistAsync(courseId);
 
-        var response = await _client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
+        var response = await this.client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
         {
             Date = "2026-03-15",
             TeeTime = "10:00",
@@ -231,7 +226,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal("Pending", result.Status);
 
         // Verify subsequent GET includes the new entry
-        var getResponse = await _client.GetAsync($"/courses/{courseId}/waitlist?date=2026-03-15");
+        var getResponse = await this.client.GetAsync($"/courses/{courseId}/waitlist?date=2026-03-15");
         var waitlist = await getResponse.Content.ReadFromJsonAsync<WaitlistResponse>();
         Assert.Single(waitlist!.Requests);
     }
@@ -242,7 +237,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var tenantId = await CreateTestTenantAsync();
         var courseId = await CreateTestCourseAsync(tenantId);
 
-        var response = await _client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
+        var response = await this.client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
         {
             Date = "2026-03-15",
             TeeTime = "10:00",
@@ -259,7 +254,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var courseId = await CreateTestCourseAsync(tenantId);
         await EnableWaitlistAsync(courseId);
 
-        var response = await _client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
+        var response = await this.client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
         {
             Date = "2026-03-15",
             TeeTime = "invalid",
@@ -277,7 +272,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         await EnableWaitlistAsync(courseId);
 
         // Test 0
-        var r0 = await _client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
+        var r0 = await this.client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
         {
             Date = "2026-03-15",
             TeeTime = "10:00",
@@ -286,7 +281,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.BadRequest, r0.StatusCode);
 
         // Test 5
-        var r5 = await _client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
+        var r5 = await this.client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
         {
             Date = "2026-03-15",
             TeeTime = "10:00",
@@ -295,7 +290,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.BadRequest, r5.StatusCode);
 
         // Test -1
-        var rNeg = await _client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
+        var rNeg = await this.client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
         {
             Date = "2026-03-15",
             TeeTime = "10:00",
@@ -312,7 +307,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         await EnableWaitlistAsync(courseId);
 
         // Create the first request
-        await _client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
+        await this.client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
         {
             Date = "2026-03-16",
             TeeTime = "11:00",
@@ -320,7 +315,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         });
 
         // Try to create a duplicate
-        var response = await _client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
+        var response = await this.client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
         {
             Date = "2026-03-16",
             TeeTime = "11:00",
@@ -337,7 +332,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var courseId = await CreateTestCourseAsync(tenantId);
         await EnableWaitlistAsync(courseId);
 
-        var r1 = await _client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
+        var r1 = await this.client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
         {
             Date = "2026-03-17",
             TeeTime = "08:30",
@@ -345,7 +340,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         });
         Assert.Equal(HttpStatusCode.Created, r1.StatusCode);
 
-        var r2 = await _client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
+        var r2 = await this.client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
         {
             Date = "2026-03-18",
             TeeTime = "08:30",
@@ -357,7 +352,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task CreateWaitlistRequest_CourseNotFound_Returns404()
     {
-        var response = await _client.PostAsJsonAsync($"/courses/{Guid.NewGuid()}/waitlist/requests", new
+        var response = await this.client.PostAsJsonAsync($"/courses/{Guid.NewGuid()}/waitlist/requests", new
         {
             Date = "2026-03-15",
             TeeTime = "10:00",
@@ -375,7 +370,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         await EnableWaitlistAsync(courseId);
 
         // Post with null date (string type defaults to null when not provided)
-        var response = await _client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
+        var response = await this.client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
         {
             Date = (string?)null,
             TeeTime = "10:00",
@@ -393,12 +388,12 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         await EnableWaitlistAsync(courseId);
 
         // Verify empty before
-        var beforeGet = await _client.GetAsync($"/courses/{courseId}/waitlist?date=2026-03-20");
+        var beforeGet = await this.client.GetAsync($"/courses/{courseId}/waitlist?date=2026-03-20");
         var beforeResult = await beforeGet.Content.ReadFromJsonAsync<WaitlistResponse>();
         Assert.Null(beforeResult!.CourseWaitlistId);
 
         // Create a request
-        await _client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
+        await this.client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
         {
             Date = "2026-03-20",
             TeeTime = "07:00",
@@ -406,7 +401,7 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         });
 
         // Verify CourseWaitlist was created
-        var afterGet = await _client.GetAsync($"/courses/{courseId}/waitlist?date=2026-03-20");
+        var afterGet = await this.client.GetAsync($"/courses/{courseId}/waitlist?date=2026-03-20");
         var afterResult = await afterGet.Content.ReadFromJsonAsync<WaitlistResponse>();
         Assert.NotNull(afterResult!.CourseWaitlistId);
     }
@@ -418,26 +413,26 @@ public class WaitlistEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var courseId = await CreateTestCourseAsync(tenantId);
         await EnableWaitlistAsync(courseId);
 
-        await _client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
+        await this.client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
         {
             Date = "2026-03-21",
             TeeTime = "07:00",
             GolfersNeeded = 1
         });
-        await _client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
+        await this.client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
         {
             Date = "2026-03-21",
             TeeTime = "07:10",
             GolfersNeeded = 4
         });
-        await _client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
+        await this.client.PostAsJsonAsync($"/courses/{courseId}/waitlist/requests", new
         {
             Date = "2026-03-21",
             TeeTime = "07:20",
             GolfersNeeded = 2
         });
 
-        var response = await _client.GetAsync($"/courses/{courseId}/waitlist?date=2026-03-21");
+        var response = await this.client.GetAsync($"/courses/{courseId}/waitlist?date=2026-03-21");
         var result = await response.Content.ReadFromJsonAsync<WaitlistResponse>();
 
         Assert.Equal(7, result!.TotalGolfersPending); // 1 + 4 + 2

@@ -3,14 +3,9 @@ using System.Net.Http.Json;
 
 namespace Shadowbrook.Api.Tests;
 
-public class TeeTimeSettingsTests : IClassFixture<TestWebApplicationFactory>
+public class TeeTimeSettingsTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
 {
-    private readonly HttpClient _client;
-
-    public TeeTimeSettingsTests(TestWebApplicationFactory factory)
-    {
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient client = factory.CreateClient();
 
     private async Task<Guid> CreateCourse()
     {
@@ -18,14 +13,14 @@ public class TeeTimeSettingsTests : IClassFixture<TestWebApplicationFactory>
         var request = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request.Headers.Add("X-Tenant-Id", tenantId.ToString());
         request.Content = JsonContent.Create(new { Name = "Test Course" });
-        var response = await _client.SendAsync(request);
+        var response = await this.client.SendAsync(request);
         var course = await response.Content.ReadFromJsonAsync<CourseResponse>();
         return course!.Id;
     }
 
     private async Task<Guid> CreateTestTenantAsync()
     {
-        var response = await _client.PostAsJsonAsync("/tenants", new
+        var response = await this.client.PostAsJsonAsync("/tenants", new
         {
             OrganizationName = $"Test Tenant {Guid.NewGuid()}",
             ContactName = "Test Contact",
@@ -42,7 +37,7 @@ public class TeeTimeSettingsTests : IClassFixture<TestWebApplicationFactory>
     {
         var courseId = await CreateCourse();
 
-        var response = await _client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
+        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
         {
             TeeTimeIntervalMinutes = 10,
             FirstTeeTime = "07:00",
@@ -63,7 +58,7 @@ public class TeeTimeSettingsTests : IClassFixture<TestWebApplicationFactory>
     {
         var courseId = await CreateCourse();
 
-        var response = await _client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
+        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
         {
             TeeTimeIntervalMinutes = 15,
             FirstTeeTime = "07:00",
@@ -78,7 +73,7 @@ public class TeeTimeSettingsTests : IClassFixture<TestWebApplicationFactory>
     {
         var courseId = await CreateCourse();
 
-        var response = await _client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
+        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
         {
             TeeTimeIntervalMinutes = 10,
             FirstTeeTime = "18:00",
@@ -93,7 +88,7 @@ public class TeeTimeSettingsTests : IClassFixture<TestWebApplicationFactory>
     {
         var courseId = await CreateCourse();
 
-        var response = await _client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
+        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
         {
             TeeTimeIntervalMinutes = 10,
             FirstTeeTime = "07:00",
@@ -106,7 +101,7 @@ public class TeeTimeSettingsTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task UpdateTeeTimeSettings_CourseNotFound_ReturnsNotFound()
     {
-        var response = await _client.PutAsJsonAsync($"/courses/{Guid.NewGuid()}/tee-time-settings", new
+        var response = await this.client.PutAsJsonAsync($"/courses/{Guid.NewGuid()}/tee-time-settings", new
         {
             TeeTimeIntervalMinutes = 10,
             FirstTeeTime = "07:00",
@@ -121,14 +116,14 @@ public class TeeTimeSettingsTests : IClassFixture<TestWebApplicationFactory>
     {
         var courseId = await CreateCourse();
 
-        await _client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
+        await this.client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
         {
             TeeTimeIntervalMinutes = 8,
             FirstTeeTime = "06:30",
             LastTeeTime = "17:30"
         });
 
-        var response = await _client.GetAsync($"/courses/{courseId}/tee-time-settings");
+        var response = await this.client.GetAsync($"/courses/{courseId}/tee-time-settings");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -143,7 +138,7 @@ public class TeeTimeSettingsTests : IClassFixture<TestWebApplicationFactory>
     {
         var courseId = await CreateCourse();
 
-        var response = await _client.GetAsync($"/courses/{courseId}/tee-time-settings");
+        var response = await this.client.GetAsync($"/courses/{courseId}/tee-time-settings");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }

@@ -3,14 +3,9 @@ using System.Net.Http.Json;
 
 namespace Shadowbrook.Api.Tests;
 
-public class CoursePricingTests : IClassFixture<TestWebApplicationFactory>
+public class CoursePricingTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
 {
-    private readonly HttpClient _client;
-
-    public CoursePricingTests(TestWebApplicationFactory factory)
-    {
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient client = factory.CreateClient();
 
     private async Task<Guid> CreateCourse()
     {
@@ -18,14 +13,14 @@ public class CoursePricingTests : IClassFixture<TestWebApplicationFactory>
         var request = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request.Headers.Add("X-Tenant-Id", tenantId.ToString());
         request.Content = JsonContent.Create(new { Name = "Test Course" });
-        var response = await _client.SendAsync(request);
+        var response = await this.client.SendAsync(request);
         var course = await response.Content.ReadFromJsonAsync<CourseResponse>();
         return course!.Id;
     }
 
     private async Task<Guid> CreateTestTenantAsync()
     {
-        var response = await _client.PostAsJsonAsync("/tenants", new
+        var response = await this.client.PostAsJsonAsync("/tenants", new
         {
             OrganizationName = $"Test Tenant {Guid.NewGuid()}",
             ContactName = "Test Contact",
@@ -43,7 +38,7 @@ public class CoursePricingTests : IClassFixture<TestWebApplicationFactory>
     {
         var courseId = await CreateCourse();
 
-        var response = await _client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
+        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
         {
             FlatRatePrice = 45.00m
         });
@@ -61,12 +56,12 @@ public class CoursePricingTests : IClassFixture<TestWebApplicationFactory>
     {
         var courseId = await CreateCourse();
 
-        await _client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
+        await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
         {
             FlatRatePrice = 45.00m
         });
 
-        var updateResponse = await _client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
+        var updateResponse = await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
         {
             FlatRatePrice = 50.00m
         });
@@ -77,7 +72,7 @@ public class CoursePricingTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(50.00m, body!.FlatRatePrice);
 
         // Verify GET reflects the update
-        var getResponse = await _client.GetAsync($"/courses/{courseId}/pricing");
+        var getResponse = await this.client.GetAsync($"/courses/{courseId}/pricing");
         var getBody = await getResponse.Content.ReadFromJsonAsync<PricingResponse>();
         Assert.Equal(50.00m, getBody!.FlatRatePrice);
     }
@@ -88,7 +83,7 @@ public class CoursePricingTests : IClassFixture<TestWebApplicationFactory>
     {
         var courseId = await CreateCourse();
 
-        var response = await _client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
+        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
         {
             FlatRatePrice = -10.00m
         });
@@ -105,7 +100,7 @@ public class CoursePricingTests : IClassFixture<TestWebApplicationFactory>
     {
         var courseId = await CreateCourse();
 
-        var response = await _client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
+        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
         {
             FlatRatePrice = 10001.00m
         });
@@ -122,7 +117,7 @@ public class CoursePricingTests : IClassFixture<TestWebApplicationFactory>
     {
         var courseId = await CreateCourse();
 
-        var response = await _client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
+        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
         {
             FlatRatePrice = 0.00m
         });
@@ -136,7 +131,7 @@ public class CoursePricingTests : IClassFixture<TestWebApplicationFactory>
     {
         var courseId = await CreateCourse();
 
-        var response = await _client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
+        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
         {
             FlatRatePrice = 10000.00m
         });
@@ -150,12 +145,12 @@ public class CoursePricingTests : IClassFixture<TestWebApplicationFactory>
     {
         var courseId = await CreateCourse();
 
-        await _client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
+        await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
         {
             FlatRatePrice = 75.50m
         });
 
-        var response = await _client.GetAsync($"/courses/{courseId}/pricing");
+        var response = await this.client.GetAsync($"/courses/{courseId}/pricing");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -169,7 +164,7 @@ public class CoursePricingTests : IClassFixture<TestWebApplicationFactory>
     {
         var courseId = await CreateCourse();
 
-        var response = await _client.GetAsync($"/courses/{courseId}/pricing");
+        var response = await this.client.GetAsync($"/courses/{courseId}/pricing");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
@@ -178,7 +173,7 @@ public class CoursePricingTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task UpdatePricing_CourseNotFound_ReturnsNotFound()
     {
-        var response = await _client.PutAsJsonAsync($"/courses/{Guid.NewGuid()}/pricing", new
+        var response = await this.client.PutAsJsonAsync($"/courses/{Guid.NewGuid()}/pricing", new
         {
             FlatRatePrice = 45.00m
         });
@@ -189,7 +184,7 @@ public class CoursePricingTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task GetPricing_CourseNotFound_ReturnsNotFound()
     {
-        var response = await _client.GetAsync($"/courses/{Guid.NewGuid()}/pricing");
+        var response = await this.client.GetAsync($"/courses/{Guid.NewGuid()}/pricing");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }

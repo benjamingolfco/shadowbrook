@@ -1,24 +1,23 @@
 namespace Shadowbrook.Api.Auth;
 
-public class CurrentUser : ICurrentUser
+public class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUser
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public CurrentUser(IHttpContextAccessor httpContextAccessor)
-    {
-        _httpContextAccessor = httpContextAccessor;
-    }
+    private readonly IHttpContextAccessor httpContextAccessor = httpContextAccessor;
 
     public Guid? TenantId
     {
         get
         {
-            var claim = _httpContextAccessor.HttpContext?.User.FindFirst("tenant_id");
+            var claim = this.httpContextAccessor.HttpContext?.User.FindFirst("tenant_id");
             if (claim == null)
+            {
                 return null;
+            }
 
             if (Guid.TryParse(claim.Value, out var tenantId))
+            {
                 return tenantId;
+            }
 
             return null;
         }

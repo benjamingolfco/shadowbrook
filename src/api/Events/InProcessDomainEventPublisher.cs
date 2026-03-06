@@ -1,23 +1,17 @@
 namespace Shadowbrook.Api.Events;
 
-public class InProcessDomainEventPublisher : IDomainEventPublisher
+public class InProcessDomainEventPublisher(
+    IServiceProvider serviceProvider,
+    ILogger<InProcessDomainEventPublisher> logger) : IDomainEventPublisher
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<InProcessDomainEventPublisher> _logger;
-
-    public InProcessDomainEventPublisher(
-        IServiceProvider serviceProvider,
-        ILogger<InProcessDomainEventPublisher> logger)
-    {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-    }
+    private readonly IServiceProvider serviceProvider = serviceProvider;
+    private readonly ILogger<InProcessDomainEventPublisher> logger = logger;
 
     public async Task PublishAsync<TEvent>(TEvent domainEvent, CancellationToken ct = default)
         where TEvent : IDomainEvent
     {
         var handlerType = typeof(IDomainEventHandler<>).MakeGenericType(typeof(TEvent));
-        var handlers = _serviceProvider.GetServices(handlerType);
+        var handlers = this.serviceProvider.GetServices(handlerType);
 
         foreach (var handler in handlers)
         {
@@ -27,7 +21,7 @@ public class InProcessDomainEventPublisher : IDomainEventPublisher
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Event handler {Handler} failed for {Event}",
+                this.logger.LogError(ex, "Event handler {Handler} failed for {Event}",
                     handler!.GetType().Name, typeof(TEvent).Name);
             }
         }
