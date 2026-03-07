@@ -24,3 +24,14 @@ paths:
 - Inline DTOs as records within endpoint files
 - `Results.*` return pattern (`Results.Ok()`, `Results.BadRequest()`, `Results.NotFound()`)
 - Multi-tenant scoping via `ICurrentUser.TenantId` and EF query filters
+- Endpoint filters for cross-cutting concerns on route groups (e.g., `CourseExistsFilter` validates course existence for all endpoints under `/courses/{courseId:guid}/...`). Add filters via `.AddEndpointFilter<T>()` on `MapGroup()`. Filters live in `Endpoints/Filters/`.
+
+## Domain-Driven Design
+
+- Domain model lives in `Shadowbrook.Domain` (zero dependencies — no EF, no ASP.NET)
+- Aggregates guard their own invariants and raise domain events via `AddDomainEvent()`
+- Repository interfaces defined in domain, implemented in `Infrastructure/Repositories/`
+- Domain service interfaces defined in domain (e.g., `IShortCodeGenerator`), implemented in `Infrastructure/Services/`
+- Domain exceptions (`DomainException` subclasses) break control flow; endpoints catch specific exceptions and map to HTTP status codes
+- EF entity type configurations in `Infrastructure/EntityTypeConfigurations/`
+- Domain events dispatched automatically via `ApplicationDbContext.SaveChangesAsync()` override

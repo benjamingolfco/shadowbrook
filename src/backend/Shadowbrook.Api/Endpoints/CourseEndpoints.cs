@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
+using Shadowbrook.Api.Endpoints.Filters;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Models;
 
@@ -14,10 +15,14 @@ public static class CourseEndpoints
         group.MapPost("", CreateCourse);
         group.MapGet("", GetAllCourses);
         group.MapGet("{id:guid}", GetCourseById);
-        group.MapPut("{id:guid}/tee-time-settings", UpdateTeeTimeSettings);
-        group.MapGet("{id:guid}/tee-time-settings", GetTeeTimeSettings);
-        group.MapPut("{id:guid}/pricing", UpdatePricing);
-        group.MapGet("{id:guid}/pricing", GetPricing);
+
+        var courseGroup = group.MapGroup("{id:guid}")
+            .AddEndpointFilter<CourseExistsFilter>();
+
+        courseGroup.MapPut("tee-time-settings", UpdateTeeTimeSettings);
+        courseGroup.MapGet("tee-time-settings", GetTeeTimeSettings);
+        courseGroup.MapPut("pricing", UpdatePricing);
+        courseGroup.MapGet("pricing", GetPricing);
     }
 
     private static async Task<IResult> CreateCourse(
@@ -140,10 +145,6 @@ public static class CourseEndpoints
         ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
-        if (course is null)
-        {
-            return Results.NotFound();
-        }
 
         if (!allowedIntervals.Contains(request.TeeTimeIntervalMinutes))
         {
@@ -155,7 +156,7 @@ public static class CourseEndpoints
             return Results.BadRequest(new { error = "First tee time must be before last tee time." });
         }
 
-        course.TeeTimeIntervalMinutes = request.TeeTimeIntervalMinutes;
+        course!.TeeTimeIntervalMinutes = request.TeeTimeIntervalMinutes;
         course.FirstTeeTime = request.FirstTeeTime;
         course.LastTeeTime = request.LastTeeTime;
         course.UpdatedAt = DateTimeOffset.UtcNow;
@@ -171,12 +172,8 @@ public static class CourseEndpoints
     private static async Task<IResult> GetTeeTimeSettings(Guid id, ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
-        if (course is null)
-        {
-            return Results.NotFound();
-        }
 
-        if (course.TeeTimeIntervalMinutes is null || course.FirstTeeTime is null || course.LastTeeTime is null)
+        if (course!.TeeTimeIntervalMinutes is null || course.FirstTeeTime is null || course.LastTeeTime is null)
         {
             return Results.Ok(new { });
         }
@@ -193,10 +190,6 @@ public static class CourseEndpoints
         ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
-        if (course is null)
-        {
-            return Results.NotFound();
-        }
 
         if (request.FlatRatePrice < 0)
         {
@@ -208,7 +201,7 @@ public static class CourseEndpoints
             return Results.BadRequest(new { error = "Price must be less than or equal to 10000." });
         }
 
-        course.FlatRatePrice = request.FlatRatePrice;
+        course!.FlatRatePrice = request.FlatRatePrice;
         course.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync();
@@ -219,12 +212,8 @@ public static class CourseEndpoints
     private static async Task<IResult> GetPricing(Guid id, ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
-        if (course is null)
-        {
-            return Results.NotFound();
-        }
 
-        if (course.FlatRatePrice is null)
+        if (course!.FlatRatePrice is null)
         {
             return Results.Ok(new { });
         }

@@ -1,5 +1,4 @@
-using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
+using Shadowbrook.Api.Endpoints.Filters;
 using Shadowbrook.Domain.WalkUpWaitlist;
 using Shadowbrook.Domain.WalkUpWaitlist.Exceptions;
 using WalkUpWaitlistEntity = Shadowbrook.Domain.WalkUpWaitlist.WalkUpWaitlist;
@@ -10,7 +9,8 @@ public static class WalkUpWaitlistEndpoints
 {
     public static void MapWalkUpWaitlistEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/courses/{courseId:guid}/walkup-waitlist");
+        var group = app.MapGroup("/courses/{courseId:guid}/walkup-waitlist")
+            .AddEndpointFilter<CourseExistsFilter>();
 
         group.MapPost("/open", OpenWaitlist);
         group.MapPost("/close", CloseWaitlist);
@@ -20,16 +20,9 @@ public static class WalkUpWaitlistEndpoints
 
     private static async Task<IResult> OpenWaitlist(
         Guid courseId,
-        ApplicationDbContext db,
         IWalkUpWaitlistRepository repo,
         IShortCodeGenerator shortCodeGenerator)
     {
-        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
-        if (course is null)
-        {
-            return Results.NotFound(new { error = "Course not found." });
-        }
-
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         var existing = await repo.GetByCourseDateAsync(courseId, today);
@@ -55,15 +48,8 @@ public static class WalkUpWaitlistEndpoints
 
     private static async Task<IResult> CloseWaitlist(
         Guid courseId,
-        ApplicationDbContext db,
         IWalkUpWaitlistRepository repo)
     {
-        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
-        if (course is null)
-        {
-            return Results.NotFound(new { error = "Course not found." });
-        }
-
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         var waitlist = await repo.GetOpenByCourseDateAsync(courseId, today);
@@ -82,15 +68,8 @@ public static class WalkUpWaitlistEndpoints
 
     private static async Task<IResult> GetToday(
         Guid courseId,
-        ApplicationDbContext db,
         IWalkUpWaitlistRepository repo)
     {
-        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
-        if (course is null)
-        {
-            return Results.NotFound(new { error = "Course not found." });
-        }
-
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         var waitlist = await repo.GetByCourseDateAsync(courseId, today);
@@ -106,15 +85,8 @@ public static class WalkUpWaitlistEndpoints
     private static async Task<IResult> CreateWaitlistRequest(
         Guid courseId,
         CreateWalkUpWaitlistRequestRequest request,
-        ApplicationDbContext db,
         IWalkUpWaitlistRepository repo)
     {
-        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
-        if (course is null)
-        {
-            return Results.NotFound();
-        }
-
         if (string.IsNullOrWhiteSpace(request.Date) ||
             !DateOnly.TryParseExact(request.Date, "yyyy-MM-dd", out var parsedDate))
         {
