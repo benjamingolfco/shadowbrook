@@ -1,4 +1,6 @@
-namespace Shadowbrook.Api.Events;
+using Shadowbrook.Domain.Common;
+
+namespace Shadowbrook.Api.Infrastructure.Events;
 
 public class InProcessDomainEventPublisher(
     IServiceProvider serviceProvider,

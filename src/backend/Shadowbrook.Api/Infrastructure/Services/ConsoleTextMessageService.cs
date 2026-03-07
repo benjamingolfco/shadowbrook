@@ -1,4 +1,4 @@
-namespace Shadowbrook.Api.Services;
+namespace Shadowbrook.Api.Infrastructure.Services;
 
 /// <summary>
 /// Development stub that logs messages to console instead of sending real SMS.

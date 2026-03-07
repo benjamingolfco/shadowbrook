@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
-using Shadowbrook.Api.Data;
+using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Models;
 
 namespace Shadowbrook.Api.Tests;

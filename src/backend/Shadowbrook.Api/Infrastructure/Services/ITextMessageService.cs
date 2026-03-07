@@ -1,4 +1,4 @@
-namespace Shadowbrook.Api.Services;
+namespace Shadowbrook.Api.Infrastructure.Services;
 
 public interface ITextMessageService
 {

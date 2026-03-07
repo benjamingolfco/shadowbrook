@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Models;
 
-namespace Shadowbrook.Api.Data;
+namespace Shadowbrook.Api.Infrastructure.Data;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ICurrentUser? currentUser = null) : DbContext(options)
 {

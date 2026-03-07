@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
-using Shadowbrook.Api.Data;
 using Shadowbrook.Api.Endpoints;
-using Shadowbrook.Api.Events;
-using Shadowbrook.Api.Services;
+using Shadowbrook.Api.Infrastructure.Data;
+using Shadowbrook.Api.Infrastructure.Events;
+using Shadowbrook.Api.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

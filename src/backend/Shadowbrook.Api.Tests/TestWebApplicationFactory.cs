@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Shadowbrook.Api.Data;
+using Shadowbrook.Api.Infrastructure.Data;
 
 namespace Shadowbrook.Api.Tests;
 

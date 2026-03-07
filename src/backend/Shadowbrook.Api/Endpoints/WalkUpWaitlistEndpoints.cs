@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Data;
-using Shadowbrook.Api.Events;
+using Shadowbrook.Api.Infrastructure.Data;
+using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Api.Models;
 
 namespace Shadowbrook.Api.Endpoints;

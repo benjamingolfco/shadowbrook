@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Data;
+using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Models;
 
 namespace Shadowbrook.Api.Endpoints;
