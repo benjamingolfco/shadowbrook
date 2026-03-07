@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Shadowbrook.Api.Endpoints.Filters;
 
@@ -15,8 +16,9 @@ public static class ValidationFilter
                 var paramType = parameters[i].ParameterType;
                 var validatorType = typeof(IValidator<>).MakeGenericType(paramType);
 
-                var hasValidator = filterFactoryContext.ApplicationServices
-                    .GetService(validatorType) is not null;
+                var serviceChecker = filterFactoryContext.ApplicationServices
+                    .GetRequiredService<IServiceProviderIsService>();
+                var hasValidator = serviceChecker.IsService(validatorType);
 
                 if (hasValidator)
                 {
