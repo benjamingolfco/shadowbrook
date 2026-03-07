@@ -32,6 +32,6 @@ paths:
 - Aggregates guard their own invariants and raise domain events via `AddDomainEvent()`
 - Repository interfaces defined in domain, implemented in `Infrastructure/Repositories/`
 - Domain service interfaces defined in domain (e.g., `IShortCodeGenerator`), implemented in `Infrastructure/Services/`
-- Domain exceptions (`DomainException` subclasses) break control flow; endpoints catch specific exceptions and map to HTTP status codes
+- Domain exceptions (`DomainException` subclasses) break control flow; the global exception handler in `Program.cs` maps them to HTTP status codes — do NOT catch `DomainException` in endpoints, let them propagate
 - EF entity type configurations in `Infrastructure/EntityTypeConfigurations/`
 - Domain events dispatched automatically via `ApplicationDbContext.SaveChangesAsync()` override

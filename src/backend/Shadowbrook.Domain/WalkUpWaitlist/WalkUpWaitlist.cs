@@ -21,8 +21,15 @@ public class WalkUpWaitlist : Entity
     private WalkUpWaitlist() { } // EF
 
     public static async Task<WalkUpWaitlist> OpenAsync(
-        Guid courseId, DateOnly date, IShortCodeGenerator shortCodeGenerator)
+        Guid courseId, DateOnly date, IShortCodeGenerator shortCodeGenerator,
+        IWalkUpWaitlistRepository repository)
     {
+        var existing = await repository.GetByCourseDateAsync(courseId, date);
+        if (existing is not null)
+        {
+            throw new WaitlistAlreadyExistsException(existing.Status);
+        }
+
         var shortCode = await shortCodeGenerator.GenerateAsync(date);
         var now = DateTimeOffset.UtcNow;
         return new WalkUpWaitlist

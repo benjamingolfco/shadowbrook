@@ -1,6 +1,5 @@
 using Shadowbrook.Api.Endpoints.Filters;
 using Shadowbrook.Domain.WalkUpWaitlist;
-using Shadowbrook.Domain.WalkUpWaitlist.Exceptions;
 using WalkUpWaitlistEntity = Shadowbrook.Domain.WalkUpWaitlist.WalkUpWaitlist;
 
 namespace Shadowbrook.Api.Endpoints;
@@ -25,19 +24,7 @@ public static class WalkUpWaitlistEndpoints
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-        var existing = await repo.GetByCourseDateAsync(courseId, today);
-
-        if (existing is not null)
-        {
-            if (existing.Status == WaitlistStatus.Open)
-            {
-                return Results.Conflict(new { error = "Walk-up waitlist is already open for today." });
-            }
-
-            return Results.Conflict(new { error = "Walk-up waitlist was already used today." });
-        }
-
-        var waitlist = await WalkUpWaitlistEntity.OpenAsync(courseId, today, shortCodeGenerator);
+        var waitlist = await WalkUpWaitlistEntity.OpenAsync(courseId, today, shortCodeGenerator, repo);
 
         repo.Add(waitlist);
         await repo.SaveAsync();
@@ -111,23 +98,16 @@ public static class WalkUpWaitlistEndpoints
             return Results.BadRequest(new { error = "No open walk-up waitlist found for this date." });
         }
 
-        try
-        {
-            var teeTimeRequest = waitlist.AddTeeTimeRequest(parsedTeeTime, request.GolfersNeeded);
-            await repo.SaveAsync();
+        var teeTimeRequest = waitlist.AddTeeTimeRequest(parsedTeeTime, request.GolfersNeeded);
+        await repo.SaveAsync();
 
-            var response = new WalkUpWaitlistRequestResponse(
-                teeTimeRequest.Id,
-                teeTimeRequest.TeeTime.ToString("HH:mm"),
-                teeTimeRequest.GolfersNeeded,
-                teeTimeRequest.Status.ToString());
+        var response = new WalkUpWaitlistRequestResponse(
+            teeTimeRequest.Id,
+            teeTimeRequest.TeeTime.ToString("HH:mm"),
+            teeTimeRequest.GolfersNeeded,
+            teeTimeRequest.Status.ToString());
 
-            return Results.Created($"/courses/{courseId}/walkup-waitlist/requests/{teeTimeRequest.Id}", response);
-        }
-        catch (DuplicateTeeTimeRequestException)
-        {
-            return Results.Conflict(new { error = "An active waitlist request already exists for this tee time." });
-        }
+        return Results.Created($"/courses/{courseId}/walkup-waitlist/requests/{teeTimeRequest.Id}", response);
     }
 
     private static WalkUpWaitlistResponse ToResponse(WalkUpWaitlistEntity w) =>

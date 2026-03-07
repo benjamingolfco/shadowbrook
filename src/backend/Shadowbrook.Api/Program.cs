@@ -5,7 +5,9 @@ using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Api.Infrastructure.Repositories;
 using Shadowbrook.Api.Infrastructure.Services;
+using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.WalkUpWaitlist;
+using Shadowbrook.Domain.WalkUpWaitlist.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,6 +56,21 @@ if (app.Environment.EnvironmentName != "Testing")
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.Migrate();
 }
+
+app.UseExceptionHandler(error => error.Run(async context =>
+{
+    var ex = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
+    if (ex is DomainException domainEx)
+    {
+        context.Response.StatusCode = domainEx switch
+        {
+            DuplicateTeeTimeRequestException => StatusCodes.Status409Conflict,
+            WaitlistAlreadyExistsException => StatusCodes.Status409Conflict,
+            _ => StatusCodes.Status400BadRequest
+        };
+        await context.Response.WriteAsJsonAsync(new { error = domainEx.Message });
+    }
+}));
 
 app.UseCors();
 app.UseMiddleware<TenantClaimMiddleware>();
