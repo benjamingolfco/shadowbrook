@@ -6,14 +6,11 @@ public class InProcessDomainEventPublisher(
     IServiceProvider serviceProvider,
     ILogger<InProcessDomainEventPublisher> logger) : IDomainEventPublisher
 {
-    private readonly IServiceProvider serviceProvider = serviceProvider;
-    private readonly ILogger<InProcessDomainEventPublisher> logger = logger;
-
     public async Task PublishAsync<TEvent>(TEvent domainEvent, CancellationToken ct = default)
         where TEvent : IDomainEvent
     {
         var handlerType = typeof(IDomainEventHandler<>).MakeGenericType(typeof(TEvent));
-        var handlers = this.serviceProvider.GetServices(handlerType);
+        var handlers = serviceProvider.GetServices(handlerType);
 
         foreach (var handler in handlers)
         {
@@ -23,8 +20,29 @@ public class InProcessDomainEventPublisher(
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, "Event handler {Handler} failed for {Event}",
+                logger.LogError(ex, "Event handler {Handler} failed for {Event}",
                     handler!.GetType().Name, typeof(TEvent).Name);
+            }
+        }
+    }
+
+    public async Task PublishAsync(IDomainEvent domainEvent, CancellationToken ct = default)
+    {
+        var eventType = domainEvent.GetType();
+        var handlerType = typeof(IDomainEventHandler<>).MakeGenericType(eventType);
+        var handlers = serviceProvider.GetServices(handlerType);
+
+        foreach (var handler in handlers)
+        {
+            try
+            {
+                var method = handlerType.GetMethod("HandleAsync");
+                await (Task)method!.Invoke(handler, [domainEvent, ct])!;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Event handler {Handler} failed for {Event}",
+                    handler!.GetType().Name, eventType.Name);
             }
         }
     }

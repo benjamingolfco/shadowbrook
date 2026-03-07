@@ -1,18 +1,48 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
+using Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
+using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Api.Models;
+using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.WalkUpWaitlist;
+using WalkUpWaitlistEntity = Shadowbrook.Domain.WalkUpWaitlist.WalkUpWaitlist;
 
 namespace Shadowbrook.Api.Infrastructure.Data;
 
-public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ICurrentUser? currentUser = null) : DbContext(options)
+public class ApplicationDbContext(
+    DbContextOptions<ApplicationDbContext> options,
+    ICurrentUser? currentUser = null,
+    IDomainEventPublisher? eventPublisher = null) : DbContext(options)
 {
-    private readonly ICurrentUser? currentUser = currentUser;
-
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<Booking> Bookings => Set<Booking>();
-    public DbSet<CourseWaitlist> CourseWaitlists => Set<CourseWaitlist>();
-    public DbSet<WaitlistRequest> WaitlistRequests => Set<WaitlistRequest>();
+    public DbSet<WalkUpWaitlistEntity> WalkUpWaitlists => Set<WalkUpWaitlistEntity>();
+    public DbSet<TeeTimeRequest> TeeTimeRequests => Set<TeeTimeRequest>();
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var result = await base.SaveChangesAsync(cancellationToken);
+
+        var domainEvents = ChangeTracker.Entries<Entity>()
+            .SelectMany(e => e.Entity.DomainEvents)
+            .ToList();
+
+        foreach (var entity in ChangeTracker.Entries<Entity>())
+        {
+            entity.Entity.ClearDomainEvents();
+        }
+
+        if (eventPublisher is not null)
+        {
+            foreach (var domainEvent in domainEvents)
+            {
+                await eventPublisher.PublishAsync(domainEvent, cancellationToken);
+            }
+        }
+
+        return result;
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -28,11 +58,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey(c => c.TenantId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Add tenant scoping query filter - only filter when a tenant context exists
         modelBuilder.Entity<Course>()
-            .HasQueryFilter(c => this.currentUser == null || this.currentUser.TenantId == null || c.TenantId == this.currentUser.TenantId);
+            .HasQueryFilter(c => currentUser == null || currentUser.TenantId == null || c.TenantId == currentUser.TenantId);
 
-        // Add indexes for Course
         modelBuilder.Entity<Course>()
             .HasIndex(c => c.TenantId);
 
@@ -49,39 +77,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Entity<Booking>()
             .HasIndex(b => new { b.CourseId, b.Date, b.Time });
 
-        // CourseWaitlist configuration
-        modelBuilder.Entity<CourseWaitlist>()
-            .HasOne(w => w.Course)
-            .WithMany(c => c.Waitlists)
-            .HasForeignKey(w => w.CourseId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<CourseWaitlist>()
-            .HasIndex(w => new { w.CourseId, w.Date })
-            .IsUnique();
-
-        modelBuilder.Entity<CourseWaitlist>()
-            .HasIndex(w => new { w.ShortCode, w.Date });
-
-        modelBuilder.Entity<CourseWaitlist>()
-            .Property(w => w.ShortCode)
-            .HasMaxLength(4);
-
-        modelBuilder.Entity<CourseWaitlist>()
-            .Property(w => w.Status)
-            .HasMaxLength(10);
-
-        // WaitlistRequest configuration
-        modelBuilder.Entity<WaitlistRequest>()
-            .HasOne(wr => wr.CourseWaitlist)
-            .WithMany(cw => cw.WaitlistRequests)
-            .HasForeignKey(wr => wr.CourseWaitlistId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<WaitlistRequest>()
-            .HasIndex(wr => new { wr.CourseWaitlistId, wr.TeeTime });
-
-        modelBuilder.Entity<WaitlistRequest>()
-            .HasIndex(wr => new { wr.CourseWaitlistId, wr.Status });
+        // Apply domain entity configurations
+        modelBuilder.ApplyConfiguration(new WalkUpWaitlistConfiguration());
+        modelBuilder.ApplyConfiguration(new TeeTimeRequestConfiguration());
     }
 }

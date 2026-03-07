@@ -54,7 +54,7 @@ namespace Shadowbrook.Api.Migrations
 
                     b.HasIndex("CourseId", "Date", "Time");
 
-                    b.ToTable("Bookings");
+                    b.ToTable("Bookings", (string)null);
                 });
 
             modelBuilder.Entity("Shadowbrook.Api.Models.Course", b =>
@@ -116,7 +116,7 @@ namespace Shadowbrook.Api.Migrations
                     b.HasIndex("TenantId", "Name")
                         .IsUnique();
 
-                    b.ToTable("Courses");
+                    b.ToTable("Courses", (string)null);
                 });
 
             modelBuilder.Entity("Shadowbrook.Api.Models.CourseWaitlist", b =>
@@ -160,7 +160,7 @@ namespace Shadowbrook.Api.Migrations
 
                     b.HasIndex("ShortCode", "Date");
 
-                    b.ToTable("CourseWaitlists");
+                    b.ToTable("CourseWaitlists", (string)null);
                 });
 
             modelBuilder.Entity("Shadowbrook.Api.Models.Tenant", b =>
@@ -196,7 +196,7 @@ namespace Shadowbrook.Api.Migrations
                     b.HasIndex("OrganizationName")
                         .IsUnique();
 
-                    b.ToTable("Tenants");
+                    b.ToTable("Tenants", (string)null);
                 });
 
             modelBuilder.Entity("Shadowbrook.Api.Models.WaitlistRequest", b =>
@@ -230,7 +230,7 @@ namespace Shadowbrook.Api.Migrations
 
                     b.HasIndex("CourseWaitlistId", "TeeTime");
 
-                    b.ToTable("WaitlistRequests");
+                    b.ToTable("WaitlistRequests", (string)null);
                 });
 
             modelBuilder.Entity("Shadowbrook.Api.Models.Booking", b =>

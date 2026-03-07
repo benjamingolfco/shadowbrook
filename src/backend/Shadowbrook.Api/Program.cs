@@ -3,7 +3,9 @@ using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Endpoints;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Events;
+using Shadowbrook.Api.Infrastructure.Repositories;
 using Shadowbrook.Api.Infrastructure.Services;
+using Shadowbrook.Domain.WalkUpWaitlist;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +38,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddScoped<ITextMessageService, ConsoleTextMessageService>();
 builder.Services.AddScoped<IDomainEventPublisher, InProcessDomainEventPublisher>();
+builder.Services.AddScoped<IWalkUpWaitlistRepository, WalkUpWaitlistRepository>();
+builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
 
 var app = builder.Build();
 

@@ -6,11 +6,9 @@ namespace Shadowbrook.Api.Infrastructure.Services;
 /// </summary>
 public class ConsoleTextMessageService(ILogger<ConsoleTextMessageService> logger) : ITextMessageService
 {
-    private readonly ILogger<ConsoleTextMessageService> logger = logger;
-
     public Task SendAsync(string toPhoneNumber, string message, CancellationToken cancellationToken = default)
     {
-        this.logger.LogInformation("[SMS] To: {PhoneNumber} | Message: {Message}", toPhoneNumber, message);
+        logger.LogInformation("[SMS] To: {PhoneNumber} | Message: {Message}", toPhoneNumber, message);
         return Task.CompletedTask;
     }
 }
