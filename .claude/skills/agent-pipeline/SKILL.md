@@ -260,7 +260,7 @@ _Run: [#89](https://github.com/org/repo/actions/runs/12345)_
 Implemented flat-rate pricing feature for #6.
 
 **What was done:**
-- Created `src/api/Models/Pricing.cs` with flat-rate entity
+- Created `src/backend/Shadowbrook.Api/Models/Pricing.cs` with flat-rate entity
 - Added PUT/GET endpoints at `/courses/{id}/pricing`
 
 **PR:** #42
@@ -277,7 +277,7 @@ _Run: [#95](https://github.com/org/repo/actions/runs/12345)_
 Implement the flat-rate pricing feature following the architect's detailed plan.
 
 **Implementation scope:**
-- Modify `src/api/Models/Course.cs` to add `FlatRatePrice` property
+- Modify `src/backend/Shadowbrook.Api/Models/Course.cs` to add `FlatRatePrice` property
 - Create PUT/GET endpoints at `/courses/{id}/pricing`
 
 ---
