@@ -22,7 +22,8 @@ build: ## Build everything
 	dotnet build shadowbrook.slnx
 	pnpm --dir src/web build
 
-test: ## Run API tests
+test: ## Run all backend tests
+	dotnet test src/backend/Shadowbrook.Domain.Tests
 	dotnet test src/backend/Shadowbrook.Api.Tests
 
 lint: ## Lint the frontend
