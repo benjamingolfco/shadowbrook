@@ -26,6 +26,17 @@ paths:
 - Multi-tenant scoping via `ICurrentUser.TenantId` and EF query filters
 - Endpoint filters for cross-cutting concerns on route groups (e.g., `CourseExistsFilter` validates course existence for all endpoints under `/courses/{courseId:guid}/...`). Add filters via `.AddEndpointFilter<T>()` on `MapGroup()`. Filters live in `Endpoints/Filters/`.
 
+## Request Validation
+
+- Use FluentValidation (`AbstractValidator<T>`) for request object validation — not manual `if` checks in handlers
+- Validators are auto-registered via `AddValidatorsFromAssemblyContaining<Program>()` in `Program.cs`
+- A generic `ValidationFilter` (`Endpoints/Filters/ValidationFilter.cs`) runs validation automatically before handlers execute — add it to route groups via `.AddValidationFilter()`
+- The filter discovers validators at startup (no per-request reflection) and short-circuits with `Results.BadRequest(new { error = "..." })` on failure
+- Validators live in the same file as their request record DTOs (inline pattern), or in a separate file if complex
+- Endpoints with `.AddValidationFilter()` can trust that the request body is valid — no need for manual validation of fields that have validator rules
+- For endpoints without the filter, inject `IValidator<T>` directly if needed
+- The filter is a no-op for request types without a registered validator, so it's safe to apply broadly
+
 ## Domain-Driven Design
 
 - Domain model lives in `Shadowbrook.Domain` (zero dependencies — no EF, no ASP.NET)

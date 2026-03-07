@@ -1,3 +1,4 @@
+using FluentValidation;
 using Shadowbrook.Api.Endpoints.Filters;
 using Shadowbrook.Domain.WalkUpWaitlist;
 using WalkUpWaitlistEntity = Shadowbrook.Domain.WalkUpWaitlist.WalkUpWaitlist;
@@ -9,7 +10,8 @@ public static class WalkUpWaitlistEndpoints
     public static void MapWalkUpWaitlistEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/courses/{courseId:guid}/walkup-waitlist")
-            .AddEndpointFilter<CourseExistsFilter>();
+            .AddEndpointFilter<CourseExistsFilter>()
+            .AddValidationFilter();
 
         group.MapPost("/open", OpenWaitlist);
         group.MapPost("/close", CloseWaitlist);
@@ -74,22 +76,8 @@ public static class WalkUpWaitlistEndpoints
         CreateWalkUpWaitlistRequestRequest request,
         IWalkUpWaitlistRepository repo)
     {
-        if (string.IsNullOrWhiteSpace(request.Date) ||
-            !DateOnly.TryParseExact(request.Date, "yyyy-MM-dd", out var parsedDate))
-        {
-            return Results.BadRequest(new { error = "A valid date in yyyy-MM-dd format is required." });
-        }
-
-        if (string.IsNullOrWhiteSpace(request.TeeTime) ||
-            !TimeOnly.TryParseExact(request.TeeTime, new[] { "HH:mm", "HH:mm:ss" }, out var parsedTeeTime))
-        {
-            return Results.BadRequest(new { error = "A valid tee time in HH:mm format is required." });
-        }
-
-        if (request.GolfersNeeded is < 1 or > 4)
-        {
-            return Results.BadRequest(new { error = "Golfers needed must be between 1 and 4." });
-        }
+        var parsedDate = DateOnly.ParseExact(request.Date, "yyyy-MM-dd");
+        var parsedTeeTime = TimeOnly.ParseExact(request.TeeTime, ["HH:mm", "HH:mm:ss"]);
 
         var waitlist = await repo.GetOpenByCourseDateAsync(courseId, parsedDate);
 
@@ -115,6 +103,26 @@ public static class WalkUpWaitlistEndpoints
 }
 
 public record CreateWalkUpWaitlistRequestRequest(string Date, string TeeTime, int GolfersNeeded);
+
+public class CreateWalkUpWaitlistRequestRequestValidator : AbstractValidator<CreateWalkUpWaitlistRequestRequest>
+{
+    public CreateWalkUpWaitlistRequestRequestValidator()
+    {
+        RuleFor(x => x.Date)
+            .NotEmpty().WithMessage("Date is required.")
+            .Must(d => DateOnly.TryParseExact(d, "yyyy-MM-dd", out _))
+            .WithMessage("A valid date in yyyy-MM-dd format is required.");
+
+        RuleFor(x => x.TeeTime)
+            .NotEmpty().WithMessage("Tee time is required.")
+            .Must(t => TimeOnly.TryParseExact(t, ["HH:mm", "HH:mm:ss"], out _))
+            .WithMessage("A valid tee time in HH:mm format is required.");
+
+        RuleFor(x => x.GolfersNeeded)
+            .InclusiveBetween(1, 4)
+            .WithMessage("Golfers needed must be between 1 and 4.");
+    }
+}
 
 public record WalkUpWaitlistRequestResponse(
     Guid Id,

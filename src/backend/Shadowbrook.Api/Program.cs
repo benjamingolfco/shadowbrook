@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Endpoints;
@@ -42,6 +43,7 @@ builder.Services.AddScoped<ITextMessageService, ConsoleTextMessageService>();
 builder.Services.AddScoped<IDomainEventPublisher, InProcessDomainEventPublisher>();
 builder.Services.AddScoped<IWalkUpWaitlistRepository, WalkUpWaitlistRepository>();
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
 
