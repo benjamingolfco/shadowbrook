@@ -13,7 +13,7 @@ db: ## Start SQL Server container
 	docker compose up db -d
 
 api: ## Run the .NET API natively (requires SQL Server: make db)
-	dotnet run --project src/api
+	dotnet run --project src/backend/Shadowbrook.Api
 
 web: ## Run the Vite dev server
 	pnpm --dir src/web dev
@@ -22,8 +22,9 @@ build: ## Build everything
 	dotnet build shadowbrook.slnx
 	pnpm --dir src/web build
 
-test: ## Run API tests
-	dotnet test tests/api
+test: ## Run all backend tests
+	dotnet test src/backend/Shadowbrook.Domain.Tests
+	dotnet test src/backend/Shadowbrook.Api.Tests
 
 lint: ## Lint the frontend
 	pnpm --dir src/web lint

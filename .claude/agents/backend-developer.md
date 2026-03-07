@@ -28,7 +28,7 @@ You are a backend developer for the Shadowbrook tee time booking platform, a .NE
 Implement in this order: Model → DbContext → Service (if needed) → Endpoint → Tests
 
 - **Always read existing code before writing new code** — explore endpoints, models, services, and tests to match conventions
-- Run tests: `dotnet test tests/api/ --filter "FullyQualifiedName~{TestClass}"` for speed
+- Run tests: `dotnet test src/backend/Shadowbrook.Api.Tests/ --filter "FullyQualifiedName~{TestClass}"` for speed
 - Run build: `dotnet build shadowbrook.slnx` to verify compilation
 - Write targeted tests that cover acceptance criteria
 

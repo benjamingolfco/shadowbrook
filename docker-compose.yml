@@ -19,7 +19,7 @@ services:
     container_name: shadowbrook-api
     build:
       context: .
-      dockerfile: src/api/Dockerfile
+      dockerfile: src/backend/Shadowbrook.Api/Dockerfile
       target: dev
     ports:
       - "5221:8080"
@@ -27,9 +27,10 @@ services:
       ConnectionStrings__DefaultConnection: "Server=db;Database=Shadowbrook;User Id=sa;Password=Dev@Password123!;TrustServerCertificate=True"
       Cors__AllowedOrigins__0: "http://localhost:3000"
     volumes:
-      - ./src/api:/app
-      - api_obj:/app/obj
-      - api_bin:/app/bin
+      - ./src/backend/Shadowbrook.Api:/app/Shadowbrook.Api
+      - ./src/backend/Shadowbrook.Domain:/app/Shadowbrook.Domain
+      - api_obj:/app/Shadowbrook.Api/obj
+      - api_bin:/app/Shadowbrook.Api/bin
     depends_on:
       db:
         condition: service_healthy

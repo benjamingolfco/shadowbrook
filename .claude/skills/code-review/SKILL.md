@@ -49,7 +49,7 @@ Review criteria for the Shadowbrook tee time booking platform. The Code Reviewer
 
 ## Review Style
 
-- **Be specific.** Reference exact file paths and line numbers. Don't say "the endpoint has an issue" — say "`src/api/Endpoints/BookingEndpoints.cs:42` — the null check on `courseId` is missing."
+- **Be specific.** Reference exact file paths and line numbers. Don't say "the endpoint has an issue" — say "`src/backend/Shadowbrook.Api/Endpoints/BookingEndpoints.cs:42` — the null check on `courseId` is missing."
 - **Explain WHY.** Don't just say "change this." Explain the risk or benefit.
 - **Distinguish severity.** Clearly mark items as:
   - **Blocker** — must fix before merge (correctness bugs, security issues, missing tests for critical paths)
