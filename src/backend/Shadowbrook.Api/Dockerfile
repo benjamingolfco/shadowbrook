@@ -6,9 +6,9 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dev
 WORKDIR /app
 RUN curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /vsdbg
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
-COPY src/api/Shadowbrook.Api.csproj ./
+COPY src/backend/Shadowbrook.Api/Shadowbrook.Api.csproj ./
 RUN dotnet restore
-COPY src/api/ ./
+COPY src/backend/Shadowbrook.Api/ ./
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Development
@@ -22,11 +22,11 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /app
 
 # Copy project files
-COPY src/api/Shadowbrook.Api.csproj ./
+COPY src/backend/Shadowbrook.Api/Shadowbrook.Api.csproj ./
 RUN dotnet restore Shadowbrook.Api.csproj
 
 # Copy source code
-COPY src/api/ ./
+COPY src/backend/Shadowbrook.Api/ ./
 
 # Build and publish API (framework-dependent deployment)
 RUN dotnet publish Shadowbrook.Api.csproj \

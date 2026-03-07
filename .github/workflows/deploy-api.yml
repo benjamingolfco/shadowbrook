@@ -51,7 +51,7 @@ jobs:
           az acr build \
             --registry ${{ env.ACR_NAME }} \
             --image ${{ env.IMAGE_NAME }}:${{ inputs.image-tag }} \
-            --file src/api/Dockerfile \
+            --file src/backend/Shadowbrook.Api/Dockerfile \
             .
 
       - name: Deploy to Container App

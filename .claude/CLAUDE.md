@@ -35,9 +35,9 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - Infra: Azure (planned)
 
 ## Project Structure
-- src/api/ — .NET Web API (minimal API endpoints, services, EF data context)
+- src/backend/Shadowbrook.Api/ — .NET Web API (minimal API endpoints, services, EF data context)
+- src/backend/Shadowbrook.Api.Tests/ — xUnit integration tests (TestWebApplicationFactory with SQLite in-memory)
 - src/web/ — React SPA
-- tests/api/ — xUnit integration tests (TestWebApplicationFactory with SQLite in-memory)
 - docs/ — Documentation
 - docs/plans/ — Design docs and implementation plans
 - infra/ — Azure deployment config (planned)
@@ -55,8 +55,8 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - Prefer unit tests before integration tests
 - Prefer running single tests over full suites for speed
 - `dotnet-ef` tool path: `export PATH="$PATH:/home/aaron/.dotnet/tools"`
-- Add migration: `dotnet ef migrations add <Name> --project src/api`
-- Check pending: `dotnet ef migrations has-pending-model-changes --project src/api`
+- Add migration: `dotnet ef migrations add <Name> --project src/backend/Shadowbrook.Api`
+- Check pending: `dotnet ef migrations has-pending-model-changes --project src/backend/Shadowbrook.Api`
 - See `.claude/rules/backend/ef-migrations.md` for full migration conventions
 
 ## Branching

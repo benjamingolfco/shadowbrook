@@ -1,7 +1,7 @@
 ---
 paths:
-  - "src/api/Migrations/**"
-  - "src/api/Data/ApplicationDbContext.cs"
+  - "src/backend/Shadowbrook.Api/Migrations/**"
+  - "src/backend/Shadowbrook.Api/Data/ApplicationDbContext.cs"
 ---
 
 # EF Core Migrations
@@ -14,7 +14,7 @@ All environments (dev, staging, production) use SQL Server and `Database.Migrate
 
 ```bash
 export PATH="$PATH:/home/aaron/.dotnet/tools"
-dotnet ef migrations add <Name> --project src/api
+dotnet ef migrations add <Name> --project src/backend/Shadowbrook.Api
 ```
 
 ### Naming Conventions
@@ -41,16 +41,16 @@ Avoid generic names like `Update1`, `Changes`, or `FixStuff`.
 ### Checking for Pending Changes
 
 ```bash
-dotnet ef migrations has-pending-model-changes --project src/api
+dotnet ef migrations has-pending-model-changes --project src/backend/Shadowbrook.Api
 ```
 
 ## Squashing Migrations
 
 While pre-production (no deployed database with real data), squash freely to keep the migration list clean:
 
-1. Delete the `src/api/Migrations/` folder
+1. Delete the `src/backend/Shadowbrook.Api/Migrations/` folder
 2. Drop the local Shadowbrook database in SQL Server
-3. Run `dotnet ef migrations add InitialCreate --project src/api`
+3. Run `dotnet ef migrations add InitialCreate --project src/backend/Shadowbrook.Api`
 4. Verify: `dotnet build && dotnet test`
 
 **Once a production database exists with real data, treat migrations as immutable history.** To squash after that point, follow the [official reset procedure](https://learn.microsoft.com/ef/core/managing-schemas/migrations/managing#resetting-all-migrations) which involves manipulating `__EFMigrationsHistory`.
@@ -60,7 +60,7 @@ While pre-production (no deployed database with real data), squash freely to kee
 When deploying to Azure, switch from runtime `Migrate()` to **migration bundles**:
 
 ```bash
-dotnet ef migrations bundle --self-contained -r linux-x64 --project src/api
+dotnet ef migrations bundle --self-contained -r linux-x64 --project src/backend/Shadowbrook.Api
 ./efbundle --connection "your-connection-string"
 ```
 

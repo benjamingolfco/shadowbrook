@@ -1,6 +1,6 @@
 ---
 paths:
-  - "src/api/**/*.cs"
+  - "src/backend/Shadowbrook.Api/**/*.cs"
 ---
 
 # Backend API Conventions
@@ -20,7 +20,7 @@ paths:
 
 ## API Patterns
 
-- Minimal API endpoints in `src/api/Endpoints/`, extension method pattern (`MapXxxEndpoints`)
+- Minimal API endpoints in `src/backend/Shadowbrook.Api/Endpoints/`, extension method pattern (`MapXxxEndpoints`)
 - Inline DTOs as records within endpoint files
 - `Results.*` return pattern (`Results.Ok()`, `Results.BadRequest()`, `Results.NotFound()`)
 - Multi-tenant scoping via `ICurrentUser.TenantId` and EF query filters

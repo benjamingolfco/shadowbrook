@@ -43,7 +43,7 @@ jobs:
         with:
           filters: |
             api:
-              - 'src/api/**'
+              - 'src/backend/**'
             web:
               - 'src/web/**'
 

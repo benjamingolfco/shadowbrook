@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\api\Shadowbrook.Api.csproj" />
+    <ProjectReference Include="..\Shadowbrook.Api\Shadowbrook.Api.csproj" />
   </ItemGroup>
 
 </Project>
