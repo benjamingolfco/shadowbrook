@@ -15,12 +15,12 @@ public class TeeTimeRequest : Entity
 
     public TeeTimeRequest(Guid walkUpWaitlistId, TimeOnly teeTime, int golfersNeeded)
     {
-        this.Id = Guid.NewGuid();
-        this.WalkUpWaitlistId = walkUpWaitlistId;
-        this.TeeTime = teeTime;
-        this.GolfersNeeded = golfersNeeded;
-        this.Status = RequestStatus.Pending;
-        this.CreatedAt = DateTimeOffset.UtcNow;
-        this.UpdatedAt = DateTimeOffset.UtcNow;
+        Id = Guid.CreateVersion7();
+        WalkUpWaitlistId = walkUpWaitlistId;
+        TeeTime = teeTime;
+        GolfersNeeded = golfersNeeded;
+        Status = RequestStatus.Pending;
+        CreatedAt = DateTimeOffset.UtcNow;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 }

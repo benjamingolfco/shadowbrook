@@ -34,7 +34,7 @@ public class WalkUpWaitlist : Entity
         var now = DateTimeOffset.UtcNow;
         return new WalkUpWaitlist
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             CourseId = courseId,
             Date = date,
             ShortCode = shortCode,
@@ -47,20 +47,20 @@ public class WalkUpWaitlist : Entity
 
     public void Close()
     {
-        if (this.Status != WaitlistStatus.Open)
+        if (Status != WaitlistStatus.Open)
         {
             throw new WaitlistNotOpenException();
         }
 
         var now = DateTimeOffset.UtcNow;
-        this.Status = WaitlistStatus.Closed;
-        this.ClosedAt = now;
-        this.UpdatedAt = now;
+        Status = WaitlistStatus.Closed;
+        ClosedAt = now;
+        UpdatedAt = now;
     }
 
     public TeeTimeRequest AddTeeTimeRequest(TimeOnly teeTime, int golfersNeeded)
     {
-        if (this.Status != WaitlistStatus.Open)
+        if (Status != WaitlistStatus.Open)
         {
             throw new WaitlistNotOpenException();
         }
@@ -72,20 +72,20 @@ public class WalkUpWaitlist : Entity
             throw new DuplicateTeeTimeRequestException(teeTime);
         }
 
-        var request = new TeeTimeRequest(this.Id, teeTime, golfersNeeded);
+        var request = new TeeTimeRequest(Id, teeTime, golfersNeeded);
         this.teeTimeRequests.Add(request);
 
         AddDomainEvent(new TeeTimeRequestAdded
         {
-            WaitlistId = this.Id,
+            WaitlistId = Id,
             TeeTimeRequestId = request.Id,
-            CourseId = this.CourseId,
-            Date = this.Date,
+            CourseId = CourseId,
+            Date = Date,
             TeeTime = teeTime,
             GolfersNeeded = golfersNeeded
         });
 
-        this.UpdatedAt = DateTimeOffset.UtcNow;
+        UpdatedAt = DateTimeOffset.UtcNow;
         return request;
     }
 }

@@ -37,6 +37,10 @@ paths:
 - For endpoints without the filter, inject `IValidator<T>` directly if needed
 - The filter is a no-op for request types without a registered validator, so it's safe to apply broadly
 
+## Identifiers
+
+- Use `Guid.CreateVersion7()` when generating new GUIDs for database identifiers — it produces time-ordered UUIDs (UUIDv7) that sort chronologically, avoiding index fragmentation in SQL Server
+
 ## Domain-Driven Design
 
 - Domain model lives in `Shadowbrook.Domain` (zero dependencies — no EF, no ASP.NET)
