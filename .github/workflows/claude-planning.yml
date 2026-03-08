@@ -3,10 +3,8 @@ name: Shadowbrook Planning
 on:
   issues:
     types: [opened, labeled, unlabeled]
-  issue_comment:
-    types: [created]
   schedule:
-    - cron: '0 0,6,12,18 * * *'  # Every 6 hours UTC
+    - cron: '0 0,8,16 * * *'  # Every 8 hours UTC (6pm, 2am, 10am CST)
 
 jobs:
   planning:
@@ -15,8 +13,7 @@ jobs:
       cancel-in-progress: true
     if: |
       (github.event_name == 'schedule') ||
-      (github.event_name == 'issues' && !contains(github.event.issue.labels.*.name, 'agent/ignore')) ||
-      (github.event_name == 'issue_comment' && !github.event.issue.pull_request && !endsWith(github.event.comment.user.login, '[bot]') && !contains(github.event.issue.labels.*.name, 'agent/ignore'))
+      (github.event_name == 'issues' && !contains(github.event.issue.labels.*.name, 'agent/ignore'))
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -37,13 +34,6 @@ jobs:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - name: Acknowledge comment
-        if: github.event_name == 'issue_comment'
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          gh api repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions -X POST -f content="eyes"
-
       - name: Run Planning Manager
         uses: anthropics/claude-code-action@v1
         with:
@@ -54,7 +44,7 @@ jobs:
           additional_permissions: |
             actions: read
           claude_args: |
-            --model claude-opus-4-6 --allowedTools "Bash" "Read" "Write" "Edit" "Glob" "Grep" "Task"
+            --model ${{ github.event_name == 'schedule' && 'claude-sonnet-4-5-20250929' || 'claude-opus-4-6' }} --allowedTools "Bash" "Read" "Write" "Edit" "Glob" "Grep" "Task"
           prompt: |
             You are the Planning Manager for the Shadowbrook agent pipeline.
 

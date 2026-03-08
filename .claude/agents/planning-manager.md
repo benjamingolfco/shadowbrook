@@ -188,7 +188,7 @@ Do all maintenance and corrective work first so the standup reflects the current
 
 **Stalled work:** Query issues in Needs Story or Needs Architecture status. The project `items` GraphQL connection supports server-side filtering via the `query` argument (e.g., `query: "status:\"Needs Story\""`). If no agent comment within 24h, post a ping and re-spawn the agent.
 
-**Review gate reminders:** Query issues in Story Review or Architecture Review (e.g., `query: "status:\"Story Review\""`). If 48h+ with no owner comment, post an Action Required reminder to `@aarongbenjamin`.
+**Review gate reminders:** Query issues in Story Review or Architecture Review (e.g., `query: "status:\"Story Review\""`). If 48h+ with no owner comment, post an Action Required reminder to `@aarongbenjamin`. **Cooldown:** Do NOT re-remind an issue if a bot reminder comment already exists within the last 7 days — check the issue's recent comments before posting. Limit to 5 reminders per cron cycle to avoid comment spam.
 
 **Issue Plan refresh:** Update all Issue Plan comments on active issues to reflect current state.
 
