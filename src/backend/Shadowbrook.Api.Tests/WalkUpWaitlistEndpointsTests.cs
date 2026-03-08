@@ -348,6 +348,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         Assert.NotNull(body);
         Assert.NotEqual(Guid.Empty, body!.EntryId);
         Assert.Equal("Jane Smith", body.GolferName);
+        Assert.Equal("+15558675309", body.GolferPhone);
         Assert.Equal(2, body.GroupSize);
         Assert.Equal(1, body.Position);
         Assert.False(string.IsNullOrEmpty(body.CourseName));
@@ -389,6 +390,10 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         });
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<ConflictResponse>();
+        Assert.NotNull(body);
+        Assert.Equal(1, body!.Position);
     }
 
     [Fact]
@@ -646,6 +651,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         int Position,
         string CourseName);
 
+    private record ConflictResponse(string Error, int Position);
     private record ErrorResponse(string Error);
     private record CourseIdResponse(Guid Id);
     private record TenantIdResponse(Guid Id);
