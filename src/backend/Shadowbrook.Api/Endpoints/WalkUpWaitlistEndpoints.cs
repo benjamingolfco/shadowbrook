@@ -61,18 +61,25 @@ public static class WalkUpWaitlistEndpoints
 
     private static async Task<IResult> GetToday(
         Guid courseId,
-        IWalkUpWaitlistRepository repo)
+        IWalkUpWaitlistRepository repo,
+        ApplicationDbContext db)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         var waitlist = await repo.GetByCourseDateAsync(courseId, today);
 
         var waitlistResponse = waitlist is not null ? ToResponse(waitlist) : null;
-        var todayResponse = new WalkUpWaitlistTodayResponse(
-            waitlistResponse,
-            new List<WalkUpWaitlistEntryResponse>());
 
-        return Results.Ok(todayResponse);
+        var entries = waitlist is not null
+            ? (await db.GolferWaitlistEntries
+                .Where(e => e.CourseWaitlistId == waitlist.Id && e.RemovedAt == null)
+                .Select(e => new WalkUpWaitlistEntryResponse(e.Id, e.GolferName, e.GroupSize, e.JoinedAt))
+                .ToListAsync())
+                .OrderBy(e => e.JoinedAt)
+                .ToList()
+            : new List<WalkUpWaitlistEntryResponse>();
+
+        return Results.Ok(new WalkUpWaitlistTodayResponse(waitlistResponse, entries));
     }
 
     private static async Task<IResult> CreateWaitlistRequest(
@@ -295,4 +302,5 @@ public record WalkUpWaitlistTodayResponse(
 public record WalkUpWaitlistEntryResponse(
     Guid Id,
     string GolferName,
+    int GroupSize,
     DateTimeOffset JoinedAt);

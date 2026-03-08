@@ -204,6 +204,30 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     }
 
     [Fact]
+    public async Task Today_WithEntries_ReturnsEntriesWithGroupSize()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+        await PostOpenAsync(courseId);
+
+        await PostAddGolferAsync(courseId, new
+        {
+            FirstName = "Alice",
+            LastName = "A",
+            Phone = "555-111-1111",
+            GroupSize = 3
+        });
+
+        var response = await GetTodayAsync(courseId);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<WalkUpWaitlistTodayResponse>();
+        Assert.NotNull(body);
+        Assert.Single(body!.Entries);
+        Assert.Equal("Alice A", body.Entries[0].GolferName);
+        Assert.Equal(3, body.Entries[0].GroupSize);
+    }
+
+    [Fact]
     public async Task Today_CourseNotFound_Returns404()
     {
         var response = await GetTodayAsync(Guid.NewGuid());
@@ -635,6 +659,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     private record WalkUpWaitlistEntryResponse(
         Guid Id,
         string GolferName,
+        int GroupSize,
         DateTimeOffset JoinedAt);
 
     private record WaitlistRequestResponse(
