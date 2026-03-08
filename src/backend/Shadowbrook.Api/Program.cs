@@ -43,6 +43,7 @@ builder.Services.AddScoped<ITextMessageService, ConsoleTextMessageService>();
 builder.Services.AddScoped<IDomainEventPublisher, InProcessDomainEventPublisher>();
 builder.Services.AddScoped<IWalkUpWaitlistRepository, WalkUpWaitlistRepository>();
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
+builder.Services.AddScoped<IDomainEventHandler<Shadowbrook.Domain.WalkUpWaitlist.Events.GolferJoinedWaitlist>, Shadowbrook.Api.Infrastructure.Events.GolferJoinedWaitlistSmsHandler>();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
@@ -88,5 +89,6 @@ app.MapTenantEndpoints();
 app.MapCourseEndpoints();
 app.MapTeeSheetEndpoints();
 app.MapWalkUpWaitlistEndpoints();
+app.MapWalkUpJoinEndpoints();
 
 app.Run();

@@ -18,6 +18,7 @@ export default defineConfig({
       '/tee-sheets': 'http://localhost:5221',
       '/tenants': 'http://localhost:5221',
       '/health': 'http://localhost:5221',
+      '/walkup': 'http://localhost:5221',
     },
   },
 })

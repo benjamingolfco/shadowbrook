@@ -19,6 +19,8 @@ public class ApplicationDbContext(
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<WalkUpWaitlistEntity> WalkUpWaitlists => Set<WalkUpWaitlistEntity>();
     public DbSet<TeeTimeRequest> TeeTimeRequests => Set<TeeTimeRequest>();
+    public DbSet<Golfer> Golfers => Set<Golfer>();
+    public DbSet<GolferWaitlistEntry> GolferWaitlistEntries => Set<GolferWaitlistEntry>();
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
@@ -80,5 +82,7 @@ public class ApplicationDbContext(
         // Apply domain entity configurations
         modelBuilder.ApplyConfiguration(new WalkUpWaitlistConfiguration());
         modelBuilder.ApplyConfiguration(new TeeTimeRequestConfiguration());
+        modelBuilder.ApplyConfiguration(new GolferConfiguration());
+        modelBuilder.ApplyConfiguration(new GolferWaitlistEntryConfiguration());
     }
 }
