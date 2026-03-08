@@ -18,6 +18,7 @@ public class GolferWaitlistEntry : Entity
     public required string GolferPhone { get; set; }
     public bool IsWalkUp { get; set; } = true;
     public bool IsReady { get; set; } = true;
+    public int GroupSize { get; set; } = 1;
     public DateTimeOffset JoinedAt { get; set; }
     public DateTimeOffset? RemovedAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
