@@ -1,3 +1,5 @@
+using Shadowbrook.Domain.Common;
+
 namespace Shadowbrook.Api.Infrastructure.Services;
 
 /// <summary>

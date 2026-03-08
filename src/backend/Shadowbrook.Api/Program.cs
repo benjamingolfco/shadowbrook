@@ -40,7 +40,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-builder.Services.AddScoped<ITextMessageService, ConsoleTextMessageService>();
+builder.Services.AddSingleton<InMemoryTextMessageService>();
+builder.Services.AddSingleton<ITextMessageService>(sp => sp.GetRequiredService<InMemoryTextMessageService>());
 builder.Services.AddScoped<IDomainEventPublisher, InProcessDomainEventPublisher>();
 builder.Services.AddScoped<IWalkUpWaitlistRepository, WalkUpWaitlistRepository>();
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
@@ -80,6 +81,11 @@ app.UseCors();
 app.UseMiddleware<TenantClaimMiddleware>();
 
 app.MapHealthChecks("/health");
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapDevSmsEndpoints();
+}
 
 if (app.Environment.EnvironmentName == "Testing")
 {
