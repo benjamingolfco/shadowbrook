@@ -8,28 +8,28 @@ public static class DevSmsEndpoints
     {
         var group = app.MapGroup("/dev/sms").WithTags("Dev SMS");
 
-        group.MapGet("/", () =>
+        group.MapGet("/", (InMemoryTextMessageService smsService) =>
         {
-            var messages = InMemoryTextMessageService.GetAll();
+            var messages = smsService.GetAll();
             return Results.Ok(messages);
         }).WithSummary("List all SMS messages");
 
-        group.MapGet("/conversations/{phoneNumber}", (string phoneNumber) =>
+        group.MapGet("/conversations/{phoneNumber}", (string phoneNumber, InMemoryTextMessageService smsService) =>
         {
             var decoded = Uri.UnescapeDataString(phoneNumber);
-            var messages = InMemoryTextMessageService.GetByPhone(decoded);
+            var messages = smsService.GetByPhone(decoded);
             return Results.Ok(messages);
         }).WithSummary("Get conversation thread for a phone number");
 
-        group.MapPost("/inbound", (InboundSmsRequest request) =>
+        group.MapPost("/inbound", (InboundSmsRequest request, InMemoryTextMessageService smsService) =>
         {
-            InMemoryTextMessageService.AddInbound(request.FromPhoneNumber, request.Message);
-            return Results.Created();
+            smsService.AddInbound(request.FromPhoneNumber, request.Message);
+            return Results.Ok();
         }).WithSummary("Simulate an inbound SMS from a golfer");
 
-        group.MapDelete("/", () =>
+        group.MapDelete("/", (InMemoryTextMessageService smsService) =>
         {
-            InMemoryTextMessageService.Clear();
+            smsService.Clear();
             return Results.NoContent();
         }).WithSummary("Clear all SMS messages");
 
