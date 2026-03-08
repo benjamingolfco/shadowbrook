@@ -1,4 +1,4 @@
-using Shadowbrook.Api.Infrastructure.Services;
+using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.WalkUpWaitlist.Events;
 
 namespace Shadowbrook.Api.Infrastructure.Events;
