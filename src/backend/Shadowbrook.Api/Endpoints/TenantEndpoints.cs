@@ -7,7 +7,7 @@ namespace Shadowbrook.Api.Endpoints;
 
 public static partial class TenantEndpoints
 {
-    public static void MapTenantEndpoints(this WebApplication app)
+    public static void MapTenantEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/tenants");
 

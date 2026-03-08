@@ -1,6 +1,5 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Endpoints.Filters;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Api.Models;
@@ -10,10 +9,9 @@ namespace Shadowbrook.Api.Endpoints;
 
 public static class WalkUpJoinEndpoints
 {
-    public static void MapWalkUpJoinEndpoints(this WebApplication app)
+    public static void MapWalkUpJoinEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/walkup")
-            .AddValidationFilter();
+        var group = app.MapGroup("/walkup");
 
         group.MapPost("/verify", VerifyShortCode);
         group.MapPost("/join", JoinWaitlist);
