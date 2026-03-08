@@ -15,4 +15,7 @@ export const queryKeys = {
   walkUpWaitlist: {
     today: (courseId: string) => ['walkup-waitlist', courseId, 'today'] as const,
   },
+  walkupJoin: {
+    verify: (code: string) => ['walkup-join', 'verify', code] as const,
+  },
 };

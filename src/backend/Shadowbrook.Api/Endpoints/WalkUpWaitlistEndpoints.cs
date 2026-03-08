@@ -7,11 +7,10 @@ namespace Shadowbrook.Api.Endpoints;
 
 public static class WalkUpWaitlistEndpoints
 {
-    public static void MapWalkUpWaitlistEndpoints(this WebApplication app)
+    public static void MapWalkUpWaitlistEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/courses/{courseId:guid}/walkup-waitlist")
-            .AddEndpointFilter<CourseExistsFilter>()
-            .AddValidationFilter();
+            .AddEndpointFilter<CourseExistsFilter>();
 
         group.MapPost("/open", OpenWaitlist);
         group.MapPost("/close", CloseWaitlist);

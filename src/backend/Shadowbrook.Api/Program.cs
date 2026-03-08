@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Endpoints;
+using Shadowbrook.Api.Endpoints.Filters;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Api.Infrastructure.Repositories;
@@ -43,6 +44,7 @@ builder.Services.AddScoped<ITextMessageService, ConsoleTextMessageService>();
 builder.Services.AddScoped<IDomainEventPublisher, InProcessDomainEventPublisher>();
 builder.Services.AddScoped<IWalkUpWaitlistRepository, WalkUpWaitlistRepository>();
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
+builder.Services.AddScoped<IDomainEventHandler<Shadowbrook.Domain.WalkUpWaitlist.Events.GolferJoinedWaitlist>, Shadowbrook.Api.Infrastructure.Events.GolferJoinedWaitlistSmsHandler>();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
@@ -84,9 +86,11 @@ if (app.Environment.EnvironmentName == "Testing")
     app.MapGet("/debug/current-user", (ICurrentUser currentUser) => Results.Ok(new { TenantId = currentUser.TenantId }));
 }
 
-app.MapTenantEndpoints();
-app.MapCourseEndpoints();
-app.MapTeeSheetEndpoints();
-app.MapWalkUpWaitlistEndpoints();
+var api = app.MapGroup("").AddValidationFilter();
+api.MapTenantEndpoints();
+api.MapCourseEndpoints();
+api.MapTeeSheetEndpoints();
+api.MapWalkUpWaitlistEndpoints();
+api.MapWalkUpJoinEndpoints();
 
 app.Run();

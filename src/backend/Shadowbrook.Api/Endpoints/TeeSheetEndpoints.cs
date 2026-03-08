@@ -6,7 +6,7 @@ namespace Shadowbrook.Api.Endpoints;
 
 public static class TeeSheetEndpoints
 {
-    public static void MapTeeSheetEndpoints(this WebApplication app)
+    public static void MapTeeSheetEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/tee-sheets");
 

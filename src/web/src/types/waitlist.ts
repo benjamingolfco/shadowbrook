@@ -33,3 +33,29 @@ export interface CreateWaitlistRequest {
   teeTime: string;
   golfersNeeded: number;
 }
+
+// Walkup join (public/golfer-facing)
+export interface VerifyCodeResponse {
+  courseWaitlistId: string;
+  courseName: string;
+  shortCode: string;
+}
+
+export interface JoinWaitlistRequest {
+  courseWaitlistId: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+}
+
+export interface JoinWaitlistResponse {
+  entryId: string;
+  golferName: string;
+  position: number;
+  courseName: string;
+}
+
+export interface DuplicateEntryError {
+  error: string;
+  position: number;
+}

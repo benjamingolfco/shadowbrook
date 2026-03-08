@@ -8,7 +8,7 @@ namespace Shadowbrook.Api.Endpoints;
 
 public static class CourseEndpoints
 {
-    public static void MapCourseEndpoints(this WebApplication app)
+    public static void MapCourseEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/courses");
 
