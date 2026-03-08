@@ -325,6 +325,217 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     }
 
     // -------------------------------------------------------------------------
+    // POST /entries
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task AddGolfer_ValidRequest_Returns201()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+        await PostOpenAsync(courseId);
+
+        var response = await PostAddGolferAsync(courseId, new
+        {
+            FirstName = "Jane",
+            LastName = "Smith",
+            Phone = "555-867-5309",
+            GroupSize = 2
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<AddGolferToWaitlistResponse>();
+        Assert.NotNull(body);
+        Assert.NotEqual(Guid.Empty, body!.EntryId);
+        Assert.Equal("Jane Smith", body.GolferName);
+        Assert.Equal(2, body.GroupSize);
+        Assert.Equal(1, body.Position);
+        Assert.False(string.IsNullOrEmpty(body.CourseName));
+    }
+
+    [Fact]
+    public async Task AddGolfer_NoOpenWaitlist_Returns404()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+
+        var response = await PostAddGolferAsync(courseId, new
+        {
+            FirstName = "Jane",
+            LastName = "Smith",
+            Phone = "555-867-5309"
+        });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task AddGolfer_DuplicatePhone_Returns409WithPosition()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+        await PostOpenAsync(courseId);
+
+        await PostAddGolferAsync(courseId, new
+        {
+            FirstName = "Jane",
+            LastName = "Smith",
+            Phone = "555-867-5309"
+        });
+
+        var response = await PostAddGolferAsync(courseId, new
+        {
+            FirstName = "Jane",
+            LastName = "Smith",
+            Phone = "555-867-5309"
+        });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task AddGolfer_ExistingGolfer_ReusesGolferRecord()
+    {
+        var (_, courseId1) = await CreateTestCourseAsync();
+        var (_, courseId2) = await CreateTestCourseAsync();
+
+        await PostOpenAsync(courseId1);
+        await PostOpenAsync(courseId2);
+
+        var r1 = await PostAddGolferAsync(courseId1, new
+        {
+            FirstName = "Jane",
+            LastName = "Smith",
+            Phone = "555-867-5309"
+        });
+
+        var r2 = await PostAddGolferAsync(courseId2, new
+        {
+            FirstName = "Jane",
+            LastName = "Smith",
+            Phone = "555-867-5309"
+        });
+
+        Assert.Equal(HttpStatusCode.Created, r1.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, r2.StatusCode);
+    }
+
+    [Fact]
+    public async Task AddGolfer_NoGroupSize_DefaultsTo1()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+        await PostOpenAsync(courseId);
+
+        var response = await PostAddGolferAsync(courseId, new
+        {
+            FirstName = "Jane",
+            LastName = "Smith",
+            Phone = "555-867-5309"
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<AddGolferToWaitlistResponse>();
+        Assert.NotNull(body);
+        Assert.Equal(1, body!.GroupSize);
+    }
+
+    [Fact]
+    public async Task AddGolfer_InvalidPhone_Returns400()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+        await PostOpenAsync(courseId);
+
+        var response = await PostAddGolferAsync(courseId, new
+        {
+            FirstName = "Jane",
+            LastName = "Smith",
+            Phone = "123"
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task AddGolfer_MissingName_Returns400()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+        await PostOpenAsync(courseId);
+
+        var response = await PostAddGolferAsync(courseId, new
+        {
+            FirstName = "",
+            LastName = "Smith",
+            Phone = "555-867-5309"
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task AddGolfer_GroupSizeOutOfRange_Returns400()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+        await PostOpenAsync(courseId);
+
+        var r0 = await PostAddGolferAsync(courseId, new
+        {
+            FirstName = "Jane",
+            LastName = "Smith",
+            Phone = "555-867-5309",
+            GroupSize = 0
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, r0.StatusCode);
+
+        var r5 = await PostAddGolferAsync(courseId, new
+        {
+            FirstName = "Jane",
+            LastName = "Smith",
+            Phone = "555-111-2222",
+            GroupSize = 5
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, r5.StatusCode);
+    }
+
+    [Fact]
+    public async Task AddGolfer_MultipleGolfers_CorrectPositions()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+        await PostOpenAsync(courseId);
+
+        var r1 = await PostAddGolferAsync(courseId, new { FirstName = "Alice", LastName = "A", Phone = "555-111-0001" });
+        var r2 = await PostAddGolferAsync(courseId, new { FirstName = "Bob", LastName = "B", Phone = "555-111-0002" });
+        var r3 = await PostAddGolferAsync(courseId, new { FirstName = "Carol", LastName = "C", Phone = "555-111-0003" });
+
+        var b1 = await r1.Content.ReadFromJsonAsync<AddGolferToWaitlistResponse>();
+        var b2 = await r2.Content.ReadFromJsonAsync<AddGolferToWaitlistResponse>();
+        var b3 = await r3.Content.ReadFromJsonAsync<AddGolferToWaitlistResponse>();
+
+        Assert.Equal(HttpStatusCode.Created, r1.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, r2.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, r3.StatusCode);
+
+        Assert.Equal(1, b1!.Position);
+        Assert.Equal(2, b2!.Position);
+        Assert.Equal(3, b3!.Position);
+    }
+
+    [Fact]
+    public async Task AddGolfer_ClosedWaitlist_Returns404()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+        await PostOpenAsync(courseId);
+        await PostCloseAsync(courseId);
+
+        var response = await PostAddGolferAsync(courseId, new
+        {
+            FirstName = "Jane",
+            LastName = "Smith",
+            Phone = "555-867-5309"
+        });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    // -------------------------------------------------------------------------
     // Tenant isolation
     // -------------------------------------------------------------------------
 
@@ -354,6 +565,9 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    private async Task<HttpResponseMessage> PostAddGolferAsync(Guid courseId, object body) =>
+        await this.client.PostAsJsonAsync($"/courses/{courseId}/walkup-waitlist/entries", body);
 
     private async Task<HttpResponseMessage> PostOpenAsync(Guid courseId)
     {
@@ -423,6 +637,14 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         string TeeTime,
         int GolfersNeeded,
         string Status);
+
+    private record AddGolferToWaitlistResponse(
+        Guid EntryId,
+        string GolferName,
+        string GolferPhone,
+        int GroupSize,
+        int Position,
+        string CourseName);
 
     private record ErrorResponse(string Error);
     private record CourseIdResponse(Guid Id);
