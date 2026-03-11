@@ -40,10 +40,18 @@
 - Multi-tenancy: `ICurrentUser.TenantId` injected via `TenantClaimMiddleware`, applied via EF global query filters
 - Domain events: `IDomainEventPublisher` with in-process synchronous handlers
 - Return types: `Results.Ok()`, `Results.BadRequest()`, `Results.NotFound()` — never return raw objects
+- Webhook endpoints (e.g., `/webhooks/sms/inbound`) registered outside the tenant-scoped `api` group — no query filters, no `ICurrentUser`
+- `TimeProvider` registered as `AddSingleton(TimeProvider.System)` — inject `FakeTimeProvider` in tests for expiry/time-sensitive behavior
+- EF models that raise domain events extend `Entity` (e.g., `WaitlistOffer`) — simple data models that don't raise events don't need to extend `Entity`
+- Static endpoint classes cannot be used as `ILogger<T>` type parameter — use `ILoggerFactory` + `CreateLogger("name")` instead
 
 ## Test Conventions
 
 - Integration tests use SQLite in-memory via `TestWebApplicationFactory`
 - Tests use `EnsureCreated()` (not migrations) — validates schema independent of migration history
-- 85 API tests + 8 domain tests (1 TeeTimeRequest + 7 WalkUpWaitlist) as of 2026-03-06
+- 154 API tests + 13 domain tests as of 2026-03-11
 - Domain test folder structure mirrors domain: `Shadowbrook.Domain.Tests/WalkUpWaitlist/`
+- WaitlistOffer model tests live in the API test project (not domain) — model is in the API layer
+- Use `factory.Services.GetRequiredService<InMemoryTextMessageService>()` to inspect SMS in tests — do NOT call `/dev/sms` endpoints (not registered in Testing environment)
+- Inject `FakeTimeProvider` (from `Microsoft.Extensions.TimeProvider.Testing`) via `factory.WithWebHostBuilder` for time-sensitive tests
+- SQLite does not support `DateTimeOffset` in EF ORDER BY — always sort in memory after `.ToListAsync()`

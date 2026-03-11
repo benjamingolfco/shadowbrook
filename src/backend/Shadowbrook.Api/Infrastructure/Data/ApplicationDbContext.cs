@@ -21,6 +21,8 @@ public class ApplicationDbContext(
     public DbSet<TeeTimeRequest> TeeTimeRequests => Set<TeeTimeRequest>();
     public DbSet<Golfer> Golfers => Set<Golfer>();
     public DbSet<GolferWaitlistEntry> GolferWaitlistEntries => Set<GolferWaitlistEntry>();
+    public DbSet<WaitlistOffer> WaitlistOffers => Set<WaitlistOffer>();
+    public DbSet<WaitlistRequestAcceptance> WaitlistRequestAcceptances => Set<WaitlistRequestAcceptance>();
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
@@ -84,5 +86,7 @@ public class ApplicationDbContext(
         modelBuilder.ApplyConfiguration(new TeeTimeRequestConfiguration());
         modelBuilder.ApplyConfiguration(new GolferConfiguration());
         modelBuilder.ApplyConfiguration(new GolferWaitlistEntryConfiguration());
+        modelBuilder.ApplyConfiguration(new WaitlistOfferConfiguration());
+        modelBuilder.ApplyConfiguration(new WaitlistRequestAcceptanceConfiguration());
     }
 }
