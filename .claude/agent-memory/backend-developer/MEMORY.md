@@ -3,16 +3,16 @@
 ## Project Structure
 
 - Domain: `src/backend/Shadowbrook.Domain/`
-- Domain Tests: `src/backend/Shadowbrook.Domain.Tests/`
+- Domain Tests: `tests/Shadowbrook.Domain.Tests/`
 - API: `src/backend/Shadowbrook.Api/` (references Domain)
-- API Tests: `src/backend/Shadowbrook.Api.Tests/`
+- API Tests: `tests/Shadowbrook.Api.Tests/`
 - Solution file: `shadowbrook.slnx` at repo root
 
 ## Key Commands
 
 - Build: `dotnet build shadowbrook.slnx`
-- Test (all): `dotnet test src/backend/Shadowbrook.Domain.Tests && dotnet test src/backend/Shadowbrook.Api.Tests`
-- Test (targeted API): `dotnet test src/backend/Shadowbrook.Api.Tests/ --filter "FullyQualifiedName~{TestClass}"`
+- Test (all): `dotnet test tests/Shadowbrook.Domain.Tests && dotnet test tests/Shadowbrook.Api.Tests`
+- Test (targeted API): `dotnet test tests/Shadowbrook.Api.Tests/ --filter "FullyQualifiedName~{TestClass}"`
 - Add migration: `export PATH="$PATH:/home/aaron/.dotnet/tools" && dotnet ef migrations add <Name> --project src/backend/Shadowbrook.Api`
 - Check pending: `dotnet ef migrations has-pending-model-changes --project src/backend/Shadowbrook.Api`
 
@@ -21,7 +21,7 @@
 - `src/backend/Shadowbrook.Api/Program.cs` — app bootstrap, DI registration, middleware
 - `src/backend/Shadowbrook.Api/Data/ApplicationDbContext.cs` — EF context with global query filters for multi-tenancy
 - `src/backend/Shadowbrook.Api/Endpoints/` — minimal API endpoint groups (extension method pattern)
-- `src/backend/Shadowbrook.Api.Tests/TestWebApplicationFactory.cs` — SQLite in-memory test host
+- `tests/Shadowbrook.Api.Tests/TestWebApplicationFactory.cs` — SQLite in-memory test host
 
 ## Domain Project Conventions
 
