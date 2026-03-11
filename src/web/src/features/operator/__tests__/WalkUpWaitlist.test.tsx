@@ -7,7 +7,7 @@ import {
   useOpenWalkUpWaitlist,
   useCloseWalkUpWaitlist,
 } from '../hooks/useWalkUpWaitlist';
-import { useCreateWaitlistRequest } from '../hooks/useWaitlist';
+import { useAddGolferToWaitlist, useCreateWaitlistRequest } from '../hooks/useWaitlist';
 
 vi.mock('../context/CourseContext');
 vi.mock('../hooks/useWalkUpWaitlist');
@@ -17,6 +17,7 @@ const mockUseCourseContext = vi.mocked(useCourseContext);
 const mockUseWalkUpWaitlistToday = vi.mocked(useWalkUpWaitlistToday);
 const mockUseOpenWalkUpWaitlist = vi.mocked(useOpenWalkUpWaitlist);
 const mockUseCloseWalkUpWaitlist = vi.mocked(useCloseWalkUpWaitlist);
+const mockUseAddGolferToWaitlist = vi.mocked(useAddGolferToWaitlist);
 const mockUseCreateWaitlistRequest = vi.mocked(useCreateWaitlistRequest);
 
 const mockCourse = { id: 'course-1', name: 'Pine Valley' };
@@ -38,8 +39,8 @@ const closedWaitlist = {
 };
 
 const mockEntries = [
-  { id: 'e-1', golferName: 'Alice Smith', joinedAt: '2026-03-05T09:15:00Z' },
-  { id: 'e-2', golferName: 'Bob Jones', joinedAt: '2026-03-05T09:20:00Z' },
+  { id: 'e-1', golferName: 'Alice Smith', groupSize: 2, joinedAt: '2026-03-05T09:15:00Z' },
+  { id: 'e-2', golferName: 'Bob Jones', groupSize: 1, joinedAt: '2026-03-05T09:20:00Z' },
 ];
 
 const mockOpenMutate = vi.fn();
@@ -78,6 +79,17 @@ function defaultCloseMutation(overrides = {}) {
   } as unknown as ReturnType<typeof useCloseWalkUpWaitlist>);
 }
 
+function defaultAddGolferToWaitlist() {
+  mockUseAddGolferToWaitlist.mockReturnValue({
+    mutate: vi.fn(),
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
+    reset: vi.fn(),
+  } as unknown as ReturnType<typeof useAddGolferToWaitlist>);
+}
+
 function defaultCreateWaitlistRequest() {
   mockUseCreateWaitlistRequest.mockReturnValue({
     mutate: vi.fn(),
@@ -94,6 +106,7 @@ beforeEach(() => {
   defaultCourseContext();
   defaultOpenMutation();
   defaultCloseMutation();
+  defaultAddGolferToWaitlist();
   defaultCreateWaitlistRequest();
 });
 

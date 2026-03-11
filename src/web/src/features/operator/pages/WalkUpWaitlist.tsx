@@ -19,6 +19,7 @@ import {
 } from '../hooks/useWalkUpWaitlist';
 import { useCourseContext } from '../context/CourseContext';
 import { OpenWaitlistDialog } from '../components/OpenWaitlistDialog';
+import { AddGolferDialog } from '../components/AddGolferDialog';
 import { AddTeeTimeRequestDialog } from '../components/AddTeeTimeRequestDialog';
 import { CloseWaitlistDialog } from '../components/CloseWaitlistDialog';
 import type { WalkUpWaitlistEntry } from '@/types/waitlist';
@@ -49,6 +50,7 @@ function QueueTable({ entries }: { entries: WalkUpWaitlistEntry[] }) {
             <TableRow>
               <TableHead className="w-12">#</TableHead>
               <TableHead>Name</TableHead>
+              <TableHead>Group</TableHead>
               <TableHead>Joined At</TableHead>
             </TableRow>
           </TableHeader>
@@ -57,6 +59,7 @@ function QueueTable({ entries }: { entries: WalkUpWaitlistEntry[] }) {
               <TableRow key={entry.id}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{entry.golferName}</TableCell>
+                <TableCell>{entry.groupSize}</TableCell>
                 <TableCell>{formatJoinedAt(entry.joinedAt)}</TableCell>
               </TableRow>
             ))}
@@ -75,6 +78,9 @@ function QueueTable({ entries }: { entries: WalkUpWaitlistEntry[] }) {
                 {index + 1}
               </span>
               <span className="font-medium">{entry.golferName}</span>
+              {entry.groupSize > 1 && (
+                <span className="text-muted-foreground text-xs">({entry.groupSize})</span>
+              )}
             </div>
             <span className="text-muted-foreground">{formatJoinedAt(entry.joinedAt)}</span>
           </div>
@@ -88,6 +94,7 @@ export default function WalkUpWaitlist() {
   const { course } = useCourseContext();
   const [copied, setCopied] = useState(false);
   const [openDialogOpen, setOpenDialogOpen] = useState(false);
+  const [addGolferDialogOpen, setAddGolferDialogOpen] = useState(false);
   const [addRequestDialogOpen, setAddRequestDialogOpen] = useState(false);
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
 
@@ -221,6 +228,12 @@ export default function WalkUpWaitlist() {
   // Active state (Open)
   const activeActions: PageAction[] = [
     {
+      id: 'add-golfer',
+      label: 'Add Golfer',
+      description: 'Add a walk-up golfer to the waitlist',
+      onClick: () => setAddGolferDialogOpen(true),
+    },
+    {
       id: 'add-request',
       label: 'Add Tee Time Request',
       description: 'Add a tee time request to the waitlist',
@@ -255,6 +268,12 @@ export default function WalkUpWaitlist() {
           </Button>
         </div>
       </PageHeader>
+
+      <AddGolferDialog
+        open={addGolferDialogOpen}
+        onOpenChange={setAddGolferDialogOpen}
+        courseId={courseId}
+      />
 
       <AddTeeTimeRequestDialog
         open={addRequestDialogOpen}
