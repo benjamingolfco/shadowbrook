@@ -1,4 +1,3 @@
-using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Services;
@@ -203,15 +202,3 @@ public static class SmsWebhookEndpoints
 }
 
 public record InboundSmsWebhookRequest(string From, string Body);
-
-public class InboundSmsWebhookRequestValidator : AbstractValidator<InboundSmsWebhookRequest>
-{
-    public InboundSmsWebhookRequestValidator()
-    {
-        RuleFor(x => x.From)
-            .NotEmpty().WithMessage("From phone number is required.");
-
-        RuleFor(x => x.Body)
-            .NotEmpty().WithMessage("Message body is required.");
-    }
-}

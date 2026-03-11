@@ -2,7 +2,10 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Time.Testing;
+using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Services;
+using Shadowbrook.Api.Models;
+using Shadowbrook.Domain.WalkUpWaitlist;
 
 namespace Shadowbrook.Api.Tests;
 
@@ -162,6 +165,73 @@ public class SmsOfferIntegrationTests(TestWebApplicationFactory factory) : IClas
         var messages = customSms.GetByPhone("+15550000003");
         var rejection = messages.FirstOrDefault(m =>
             m.Direction == SmsDirection.Outbound && m.Body.Contains("response window"));
+        Assert.NotNull(rejection);
+    }
+
+    // -------------------------------------------------------------------------
+    // Edge case: Already claimed — second golfer's claim rejected gracefully
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task InboundSms_TwoGolfers_SecondClaimRejected()
+    {
+        SmsService.Clear();
+        var (_, courseId) = await CreateTestCourseAsync();
+        await PostOpenAsync(courseId);
+        await AddGolferAsync(courseId, "Dave", "D", "+15550000004");
+        await AddGolferAsync(courseId, "Eve", "E", "+15550000005");
+
+        var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        await this.client.PostAsJsonAsync(
+            $"/courses/{courseId}/walkup-waitlist/requests",
+            new { Date = today, TeeTime = "14:00", GolfersNeeded = 1 });
+
+        // The first offer went to Dave (first in queue). Retrieve it so we can
+        // create a matching offer for Eve against the same TeeTimeRequest.
+        WaitlistOffer daveOffer;
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            daveOffer = db.WaitlistOffers
+                .Single(o => o.GolferPhone == "+15550000004" && o.Status == OfferStatus.Pending);
+
+            var now = DateTimeOffset.UtcNow;
+            var eveEntry = db.GolferWaitlistEntries
+                .Single(e => e.GolferPhone == "+15550000005");
+
+            var eveOffer = new WaitlistOffer
+            {
+                Id = Guid.CreateVersion7(),
+                TeeTimeRequestId = daveOffer.TeeTimeRequestId,
+                GolferWaitlistEntryId = eveEntry.Id,
+                GolferPhone = "+15550000005",
+                CourseName = daveOffer.CourseName,
+                TeeTime = daveOffer.TeeTime,
+                OfferDate = daveOffer.OfferDate,
+                Status = OfferStatus.Pending,
+                ResponseWindowMinutes = daveOffer.ResponseWindowMinutes,
+                OfferedAt = now,
+                ExpiresAt = now.AddMinutes(daveOffer.ResponseWindowMinutes),
+                CreatedAt = now
+            };
+            db.WaitlistOffers.Add(eveOffer);
+            await db.SaveChangesAsync();
+        }
+
+        // Dave claims successfully
+        var daveResponse = await PostInboundSmsAsync("+15550000004", "Y");
+        Assert.Equal(HttpStatusCode.OK, daveResponse.StatusCode);
+
+        var daveMessages = SmsService.GetByPhone("+15550000004");
+        Assert.Contains(daveMessages, m => m.Direction == SmsDirection.Outbound && m.Body.Contains("Confirmed"));
+
+        // Eve tries to claim the same slot — should be rejected
+        var eveResponse = await PostInboundSmsAsync("+15550000005", "Y");
+        Assert.Equal(HttpStatusCode.OK, eveResponse.StatusCode);
+
+        var eveMessages = SmsService.GetByPhone("+15550000005");
+        var rejection = eveMessages.FirstOrDefault(m =>
+            m.Direction == SmsDirection.Outbound && m.Body.Contains("already been taken"));
         Assert.NotNull(rejection);
     }
 
