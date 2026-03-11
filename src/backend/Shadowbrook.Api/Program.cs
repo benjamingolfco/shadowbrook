@@ -8,8 +8,11 @@ using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Api.Infrastructure.Repositories;
 using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.WalkUpWaitlist;
-using Shadowbrook.Domain.WalkUpWaitlist.Exceptions;
+using Shadowbrook.Domain.GolferAggregate;
+using Shadowbrook.Domain.TeeTimeRequestAggregate;
+using Shadowbrook.Domain.TeeTimeRequestAggregate.Exceptions;
+using Shadowbrook.Domain.WalkUpWaitlistAggregate;
+using Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,9 +46,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddSingleton<InMemoryTextMessageService>();
 builder.Services.AddSingleton<ITextMessageService>(sp => sp.GetRequiredService<InMemoryTextMessageService>());
 builder.Services.AddScoped<IDomainEventPublisher, InProcessDomainEventPublisher>();
+builder.Services.AddScoped<IGolferRepository, GolferRepository>();
+builder.Services.AddScoped<ITeeTimeRequestRepository, TeeTimeRequestRepository>();
+builder.Services.AddScoped<TeeTimeRequestService>();
 builder.Services.AddScoped<IWalkUpWaitlistRepository, WalkUpWaitlistRepository>();
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
-builder.Services.AddScoped<IDomainEventHandler<Shadowbrook.Domain.WalkUpWaitlist.Events.GolferJoinedWaitlist>, Shadowbrook.Api.Infrastructure.Events.GolferJoinedWaitlistSmsHandler>();
+builder.Services.AddScoped<IDomainEventHandler<Shadowbrook.Domain.WalkUpWaitlistAggregate.Events.GolferJoinedWaitlist>, Shadowbrook.Api.Infrastructure.Events.GolferJoinedWaitlistSmsHandler>();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
@@ -70,11 +76,13 @@ app.UseExceptionHandler(error => error.Run(async context =>
         context.Response.StatusCode = domainEx switch
         {
             DuplicateTeeTimeRequestException => StatusCodes.Status409Conflict,
+            GolferAlreadyOnWaitlistException => StatusCodes.Status409Conflict,
             WaitlistAlreadyExistsException => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status400BadRequest
         };
         await context.Response.WriteAsJsonAsync(new { error = domainEx.Message });
     }
+
 }));
 
 app.UseCors();

@@ -1,6 +1,6 @@
 using Shadowbrook.Domain.Common;
 
-namespace Shadowbrook.Domain.WalkUpWaitlist.Exceptions;
+namespace Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
 
 public class WaitlistAlreadyExistsException(WaitlistStatus existingStatus)
     : DomainException(existingStatus == WaitlistStatus.Open

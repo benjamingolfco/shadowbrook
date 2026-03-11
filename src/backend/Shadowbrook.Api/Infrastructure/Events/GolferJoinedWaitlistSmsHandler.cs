@@ -1,14 +1,24 @@
+using Microsoft.EntityFrameworkCore;
+using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.WalkUpWaitlist.Events;
+using Shadowbrook.Domain.WalkUpWaitlistAggregate.Events;
 
 namespace Shadowbrook.Api.Infrastructure.Events;
 
-public class GolferJoinedWaitlistSmsHandler(ITextMessageService textMessageService)
+public class GolferJoinedWaitlistSmsHandler(
+    ITextMessageService textMessageService,
+    ApplicationDbContext db)
     : IDomainEventHandler<GolferJoinedWaitlist>
 {
     public async Task HandleAsync(GolferJoinedWaitlist domainEvent, CancellationToken ct = default)
     {
-        var message = $"You're #{domainEvent.Position} on the waitlist at {domainEvent.CourseName}. Keep your phone handy - we'll text you when a spot opens up!";
+        var courseName = await db.Courses
+            .IgnoreQueryFilters()
+            .Where(c => c.Id == domainEvent.CourseId)
+            .Select(c => c.Name)
+            .FirstAsync(ct);
+
+        var message = $"You're #{domainEvent.Position} on the waitlist at {courseName}. Keep your phone handy - we'll text you when a spot opens up!";
         await textMessageService.SendAsync(domainEvent.GolferPhone, message, ct);
     }
 }

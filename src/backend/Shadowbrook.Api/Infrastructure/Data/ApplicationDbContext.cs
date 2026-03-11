@@ -4,8 +4,9 @@ using Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
 using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Api.Models;
 using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.WalkUpWaitlist;
-using WalkUpWaitlistEntity = Shadowbrook.Domain.WalkUpWaitlist.WalkUpWaitlist;
+using Shadowbrook.Domain.GolferAggregate;
+using Shadowbrook.Domain.TeeTimeRequestAggregate;
+using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 
 namespace Shadowbrook.Api.Infrastructure.Data;
 
@@ -17,7 +18,7 @@ public class ApplicationDbContext(
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<Booking> Bookings => Set<Booking>();
-    public DbSet<WalkUpWaitlistEntity> WalkUpWaitlists => Set<WalkUpWaitlistEntity>();
+    public DbSet<WalkUpWaitlist> WalkUpWaitlists => Set<WalkUpWaitlist>();
     public DbSet<TeeTimeRequest> TeeTimeRequests => Set<TeeTimeRequest>();
     public DbSet<Golfer> Golfers => Set<Golfer>();
     public DbSet<GolferWaitlistEntry> GolferWaitlistEntries => Set<GolferWaitlistEntry>();

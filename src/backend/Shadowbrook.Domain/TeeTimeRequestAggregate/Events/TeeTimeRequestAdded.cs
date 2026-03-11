@@ -1,12 +1,11 @@
 using Shadowbrook.Domain.Common;
 
-namespace Shadowbrook.Domain.WalkUpWaitlist.Events;
+namespace Shadowbrook.Domain.TeeTimeRequestAggregate.Events;
 
 public record TeeTimeRequestAdded : IDomainEvent
 {
     public Guid EventId { get; init; } = Guid.NewGuid();
     public DateTimeOffset OccurredAt { get; init; } = DateTimeOffset.UtcNow;
-    public required Guid WaitlistId { get; init; }
     public required Guid TeeTimeRequestId { get; init; }
     public required Guid CourseId { get; init; }
     public required DateOnly Date { get; init; }

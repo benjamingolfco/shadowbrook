@@ -1,6 +1,6 @@
 using Shadowbrook.Domain.Common;
 
-namespace Shadowbrook.Domain.WalkUpWaitlist.Events;
+namespace Shadowbrook.Domain.WalkUpWaitlistAggregate.Events;
 
 public record GolferJoinedWaitlist : IDomainEvent
 {
@@ -11,6 +11,6 @@ public record GolferJoinedWaitlist : IDomainEvent
     public required Guid GolferId { get; init; }
     public required string GolferName { get; init; }
     public required string GolferPhone { get; init; }
-    public required string CourseName { get; init; }
+    public required Guid CourseId { get; init; }
     public required int Position { get; init; }
 }

@@ -414,10 +414,6 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         });
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-
-        var body = await response.Content.ReadFromJsonAsync<ConflictResponse>();
-        Assert.NotNull(body);
-        Assert.Equal(1, body!.Position);
     }
 
     [Fact]

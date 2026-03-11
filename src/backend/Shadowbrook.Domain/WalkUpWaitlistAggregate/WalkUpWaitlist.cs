@@ -1,8 +1,9 @@
 using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.WalkUpWaitlist.Events;
-using Shadowbrook.Domain.WalkUpWaitlist.Exceptions;
+using Shadowbrook.Domain.GolferAggregate;
+using Shadowbrook.Domain.WalkUpWaitlistAggregate.Events;
+using Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
 
-namespace Shadowbrook.Domain.WalkUpWaitlist;
+namespace Shadowbrook.Domain.WalkUpWaitlistAggregate;
 
 public class WalkUpWaitlist : Entity
 {
@@ -15,8 +16,8 @@ public class WalkUpWaitlist : Entity
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
-    private readonly List<TeeTimeRequest> teeTimeRequests = [];
-    public IReadOnlyCollection<TeeTimeRequest> TeeTimeRequests => this.teeTimeRequests.AsReadOnly();
+    private readonly List<GolferWaitlistEntry> entries = [];
+    public IReadOnlyCollection<GolferWaitlistEntry> Entries => this.entries.AsReadOnly();
 
     private WalkUpWaitlist() { } // EF
 
@@ -58,34 +59,37 @@ public class WalkUpWaitlist : Entity
         UpdatedAt = now;
     }
 
-    public TeeTimeRequest AddTeeTimeRequest(TimeOnly teeTime, int golfersNeeded)
+    public GolferWaitlistEntry Join(Golfer golfer, int groupSize = 1)
     {
         if (Status != WaitlistStatus.Open)
         {
             throw new WaitlistNotOpenException();
         }
 
-        var duplicate = this.teeTimeRequests.Any(r =>
-            r.TeeTime == teeTime && r.Status == RequestStatus.Pending);
+        var duplicate = this.entries.Any(e =>
+            e.GolferId == golfer.Id && e.RemovedAt is null);
         if (duplicate)
         {
-            throw new DuplicateTeeTimeRequestException(teeTime);
+            throw new GolferAlreadyOnWaitlistException(golfer.Phone);
         }
 
-        var request = new TeeTimeRequest(Id, teeTime, golfersNeeded);
-        this.teeTimeRequests.Add(request);
+        var entry = new GolferWaitlistEntry(Id, golfer.Id, groupSize);
+        this.entries.Add(entry);
 
-        AddDomainEvent(new TeeTimeRequestAdded
+        var position = this.entries.Count(e => e.RemovedAt is null);
+
+        AddDomainEvent(new GolferJoinedWaitlist
         {
-            WaitlistId = Id,
-            TeeTimeRequestId = request.Id,
+            GolferWaitlistEntryId = entry.Id,
+            CourseWaitlistId = Id,
+            GolferId = golfer.Id,
+            GolferName = golfer.FullName,
+            GolferPhone = golfer.Phone,
             CourseId = CourseId,
-            Date = Date,
-            TeeTime = teeTime,
-            GolfersNeeded = golfersNeeded
+            Position = position
         });
 
         UpdatedAt = DateTimeOffset.UtcNow;
-        return request;
+        return entry;
     }
 }
