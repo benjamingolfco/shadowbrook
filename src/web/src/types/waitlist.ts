@@ -12,12 +12,30 @@ export interface WalkUpWaitlist {
 export interface WalkUpWaitlistEntry {
   id: string;
   golferName: string;
+  groupSize: number;
   joinedAt: string;
+}
+
+export interface AddGolferToWaitlistRequest {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  groupSize: number;
+}
+
+export interface AddGolferToWaitlistResponse {
+  entryId: string;
+  golferName: string;
+  golferPhone: string;
+  groupSize: number;
+  position: number;
+  courseName: string;
 }
 
 export interface WalkUpWaitlistTodayResponse {
   waitlist: WalkUpWaitlist | null;
   entries: WalkUpWaitlistEntry[];
+  requests: WaitlistRequestEntry[];
 }
 
 // Walk-up waitlist tee time requests

@@ -14,6 +14,7 @@ public class GolferWaitlistEntryConfiguration : IEntityTypeConfiguration<GolferW
 
         builder.Property(e => e.GolferName).IsRequired().HasMaxLength(200);
         builder.Property(e => e.GolferPhone).IsRequired().HasMaxLength(20);
+        builder.Property(e => e.GroupSize).HasDefaultValue(1);
 
         builder.HasOne<WalkUpWaitlistEntity>()
             .WithMany()
