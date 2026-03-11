@@ -2,10 +2,10 @@
   <Folder Name="/src/" />
   <Folder Name="/src/backend/">
     <Project Path="src/backend/Shadowbrook.Api/Shadowbrook.Api.csproj" />
-    <Project Path="src/backend/Shadowbrook.Domain.Tests/Shadowbrook.Domain.Tests.csproj" />
     <Project Path="src/backend/Shadowbrook.Domain/Shadowbrook.Domain.csproj" />
   </Folder>
-  <Folder Name="/src/backend/tests/">
-    <Project Path="src/backend/Shadowbrook.Api.Tests/Shadowbrook.Api.Tests.csproj" />
+  <Folder Name="/tests/">
+    <Project Path="tests/Shadowbrook.Domain.Tests/Shadowbrook.Domain.Tests.csproj" />
+    <Project Path="tests/Shadowbrook.Api.Tests/Shadowbrook.Api.Tests.csproj" />
   </Folder>
 </Solution>

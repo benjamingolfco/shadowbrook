@@ -24,13 +24,15 @@ services:
     ports:
       - "5221:8080"
     environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
       ConnectionStrings__DefaultConnection: "Server=db;Database=Shadowbrook;User Id=sa;Password=Dev@Password123!;TrustServerCertificate=True"
       Cors__AllowedOrigins__0: "http://localhost:3000"
     volumes:
-      - ./src/backend/Shadowbrook.Api:/app/Shadowbrook.Api
-      - ./src/backend/Shadowbrook.Domain:/app/Shadowbrook.Domain
+      - ./src/backend:/app
       - api_obj:/app/Shadowbrook.Api/obj
       - api_bin:/app/Shadowbrook.Api/bin
+      - domain_obj:/app/Shadowbrook.Domain/obj
+      - domain_bin:/app/Shadowbrook.Domain/bin
     depends_on:
       db:
         condition: service_healthy
@@ -39,3 +41,5 @@ volumes:
   sqldata:
   api_obj:
   api_bin:
+  domain_obj:
+  domain_bin:

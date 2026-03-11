@@ -36,9 +36,9 @@ Course operators know their course best. Ship with sensible defaults, but every 
 
 ## Project Structure
 - src/backend/Shadowbrook.Domain/ — Domain model (aggregates, entities, events, repository interfaces, domain services — zero dependencies)
-- src/backend/Shadowbrook.Domain.Tests/ — Pure domain unit tests (no DB, no HTTP)
 - src/backend/Shadowbrook.Api/ — .NET Web API (minimal API endpoints, Infrastructure/ for EF, repositories, event dispatch, services)
-- src/backend/Shadowbrook.Api.Tests/ — xUnit integration tests (TestWebApplicationFactory with SQLite in-memory)
+- tests/Shadowbrook.Domain.Tests/ — Pure domain unit tests (no DB, no HTTP)
+- tests/Shadowbrook.Api.Tests/ — xUnit integration tests (TestWebApplicationFactory with SQLite in-memory)
 - src/web/ — React SPA
 - docs/ — Documentation
 - docs/plans/ — Design docs and implementation plans

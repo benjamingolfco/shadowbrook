@@ -23,8 +23,8 @@ build: ## Build everything
 	pnpm --dir src/web build
 
 test: ## Run all backend tests
-	dotnet test src/backend/Shadowbrook.Domain.Tests
-	dotnet test src/backend/Shadowbrook.Api.Tests
+	dotnet test tests/Shadowbrook.Domain.Tests
+	dotnet test tests/Shadowbrook.Api.Tests
 
 lint: ## Lint the frontend
 	pnpm --dir src/web lint
