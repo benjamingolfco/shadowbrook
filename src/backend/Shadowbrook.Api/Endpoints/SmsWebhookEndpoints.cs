@@ -49,6 +49,12 @@ public static class SmsWebhookEndpoints
             return Results.Ok();
         }
 
+        if (string.IsNullOrWhiteSpace(request.Body))
+        {
+            logger.LogWarning("Inbound SMS from {Phone} with empty/null body. Ignored.", normalizedPhone);
+            return Results.Ok();
+        }
+
         var body = request.Body.Trim().ToUpperInvariant();
         var now = timeProvider.GetUtcNow();
 

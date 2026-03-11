@@ -247,6 +247,38 @@ public class SmsOfferIntegrationTests(TestWebApplicationFactory factory) : IClas
     }
 
     // -------------------------------------------------------------------------
+    // Edge case: Null/empty body returns 200 without crashing
+    // -------------------------------------------------------------------------
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task InboundSms_NullOrEmptyBody_Returns200(string? body)
+    {
+        SmsService.Clear();
+        var (_, courseId) = await CreateTestCourseAsync();
+        await PostOpenAsync(courseId);
+        await AddGolferAsync(courseId, "Ivan", "I", "+15550000099");
+
+        var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        await this.client.PostAsJsonAsync(
+            $"/courses/{courseId}/walkup-waitlist/requests",
+            new { Date = today, TeeTime = "08:00", GolfersNeeded = 1 });
+
+        // Capture message count before webhook — offer SMS is sent on request creation
+        var countBefore = SmsService.GetByPhone("+15550000099").Count;
+
+        var response = await this.client.PostAsJsonAsync("/webhooks/sms/inbound",
+            new { From = "+15550000099", Body = body });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        // No additional SMS should be sent for an empty/null body
+        var countAfter = SmsService.GetByPhone("+15550000099").Count;
+        Assert.Equal(countBefore, countAfter);
+    }
+
+    // -------------------------------------------------------------------------
     // Edge case: Garbage body sends help SMS
     // -------------------------------------------------------------------------
 
