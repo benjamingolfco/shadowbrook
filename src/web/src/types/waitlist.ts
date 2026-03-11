@@ -35,6 +35,7 @@ export interface AddGolferToWaitlistResponse {
 export interface WalkUpWaitlistTodayResponse {
   waitlist: WalkUpWaitlist | null;
   entries: WalkUpWaitlistEntry[];
+  requests: WaitlistRequestEntry[];
 }
 
 // Walk-up waitlist tee time requests

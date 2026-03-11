@@ -128,7 +128,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: null, entries: [] },
+      data: { waitlist: null, entries: [], requests: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -141,7 +141,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: null, entries: [] },
+      data: { waitlist: null, entries: [], requests: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -154,7 +154,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: openWaitlist, entries: [] },
+      data: { waitlist: openWaitlist, entries: [], requests: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -168,7 +168,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: closedWaitlist, entries: [] },
+      data: { waitlist: closedWaitlist, entries: [], requests: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -182,7 +182,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: null, entries: [] },
+      data: { waitlist: null, entries: [], requests: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -208,7 +208,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: openWaitlist, entries: [] },
+      data: { waitlist: openWaitlist, entries: [], requests: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -230,7 +230,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: openWaitlist, entries: [] },
+      data: { waitlist: openWaitlist, entries: [], requests: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -255,7 +255,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: openWaitlist, entries: [] },
+      data: { waitlist: openWaitlist, entries: [], requests: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -270,7 +270,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: openWaitlist, entries: mockEntries },
+      data: { waitlist: openWaitlist, entries: mockEntries, requests: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -301,7 +301,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: null, entries: [] },
+      data: { waitlist: null, entries: [], requests: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -322,7 +322,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: openWaitlist, entries: [] },
+      data: { waitlist: openWaitlist, entries: [], requests: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -335,7 +335,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: closedWaitlist, entries: [] },
+      data: { waitlist: closedWaitlist, entries: [], requests: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 

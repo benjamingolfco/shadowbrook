@@ -79,7 +79,16 @@ public static class WalkUpWaitlistEndpoints
                 .ToList()
             : new List<WalkUpWaitlistEntryResponse>();
 
-        return Results.Ok(new WalkUpWaitlistTodayResponse(waitlistResponse, entries));
+        var requests = waitlist is not null
+            ? (await db.TeeTimeRequests
+                .Where(r => r.WalkUpWaitlistId == waitlist.Id)
+                .Select(r => new { r.Id, r.TeeTime, r.GolfersNeeded, r.Status })
+                .ToListAsync())
+                .Select(r => new WalkUpWaitlistRequestResponse(r.Id, r.TeeTime.ToString("HH:mm"), r.GolfersNeeded, r.Status.ToString()))
+                .ToList()
+            : new List<WalkUpWaitlistRequestResponse>();
+
+        return Results.Ok(new WalkUpWaitlistTodayResponse(waitlistResponse, entries, requests));
     }
 
     private static async Task<IResult> CreateWaitlistRequest(
@@ -297,7 +306,8 @@ public record WalkUpWaitlistResponse(
 
 public record WalkUpWaitlistTodayResponse(
     WalkUpWaitlistResponse? Waitlist,
-    List<WalkUpWaitlistEntryResponse> Entries);
+    List<WalkUpWaitlistEntryResponse> Entries,
+    List<WalkUpWaitlistRequestResponse> Requests);
 
 public record WalkUpWaitlistEntryResponse(
     Guid Id,

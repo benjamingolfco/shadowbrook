@@ -22,7 +22,8 @@ import { OpenWaitlistDialog } from '../components/OpenWaitlistDialog';
 import { AddGolferDialog } from '../components/AddGolferDialog';
 import { AddTeeTimeRequestDialog } from '../components/AddTeeTimeRequestDialog';
 import { CloseWaitlistDialog } from '../components/CloseWaitlistDialog';
-import type { WalkUpWaitlistEntry } from '@/types/waitlist';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { WalkUpWaitlistEntry, WaitlistRequestEntry } from '@/types/waitlist';
 
 function formatJoinedAt(joinedAt: string): string {
   const date = new Date(joinedAt);
@@ -83,6 +84,71 @@ function QueueTable({ entries }: { entries: WalkUpWaitlistEntry[] }) {
               )}
             </div>
             <span className="text-muted-foreground">{formatJoinedAt(entry.joinedAt)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function formatTeeTime(teeTime: string): string {
+  const parts = teeTime.split(':');
+  const hour = parseInt(parts[0] ?? '0', 10);
+  const minute = parts[1] ?? '00';
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${hour12}:${minute} ${period}`;
+}
+
+function RequestsTable({ requests }: { requests: WaitlistRequestEntry[] }) {
+  if (requests.length === 0) {
+    return (
+      <p className="text-muted-foreground text-sm py-4">
+        No tee time requests for today.
+      </p>
+    );
+  }
+
+  return (
+    <div>
+      <p className="text-sm text-muted-foreground mb-2">
+        {requests.length} request{requests.length !== 1 ? 's' : ''}
+      </p>
+      {/* Desktop table */}
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Tee Time</TableHead>
+              <TableHead>Golfers Needed</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {requests.map((request) => (
+              <TableRow key={request.id}>
+                <TableCell>{formatTeeTime(request.teeTime)}</TableCell>
+                <TableCell>{request.golfersNeeded}</TableCell>
+                <TableCell>{request.status}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      {/* Mobile stacked cards */}
+      <div className="md:hidden space-y-2">
+        {requests.map((request) => (
+          <div
+            key={request.id}
+            className="flex items-center justify-between rounded-md border p-3 text-sm"
+          >
+            <div className="flex flex-col gap-1">
+              <span className="font-medium">{formatTeeTime(request.teeTime)}</span>
+              <span className="text-muted-foreground text-xs">
+                {request.golfersNeeded} golfer{request.golfersNeeded !== 1 ? 's' : ''} needed
+              </span>
+            </div>
+            <span className="text-muted-foreground">{request.status}</span>
           </div>
         ))}
       </div>
@@ -154,7 +220,7 @@ export default function WalkUpWaitlist() {
     );
   }
 
-  const { waitlist, entries } = todayQuery.data ?? { waitlist: null, entries: [] };
+  const { waitlist, entries, requests = [] } = todayQuery.data ?? { waitlist: null, entries: [], requests: [] };
 
   // Inactive state — no waitlist opened today
   if (!waitlist) {
@@ -211,16 +277,18 @@ export default function WalkUpWaitlist() {
           </div>
         </PageHeader>
 
-        {entries.length > 0 && (
-          <div>
-            <h2 className="text-lg font-semibold mb-3">Golfer Queue</h2>
+        <Tabs defaultValue="queue" className="mb-6">
+          <TabsList>
+            <TabsTrigger value="queue">Golfer Queue</TabsTrigger>
+            <TabsTrigger value="requests">Tee Time Requests</TabsTrigger>
+          </TabsList>
+          <TabsContent value="queue">
             <QueueTable entries={entries} />
-          </div>
-        )}
-
-        {entries.length === 0 && (
-          <p className="text-muted-foreground text-sm">No golfers joined before the waitlist closed.</p>
-        )}
+          </TabsContent>
+          <TabsContent value="requests">
+            <RequestsTable requests={requests} />
+          </TabsContent>
+        </Tabs>
       </div>
     );
   }
@@ -293,10 +361,18 @@ export default function WalkUpWaitlist() {
         </p>
       )}
 
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-3">Golfer Queue</h2>
-        <QueueTable entries={entries} />
-      </div>
+      <Tabs defaultValue="queue" className="mb-6">
+        <TabsList>
+          <TabsTrigger value="queue">Golfer Queue</TabsTrigger>
+          <TabsTrigger value="requests">Tee Time Requests</TabsTrigger>
+        </TabsList>
+        <TabsContent value="queue">
+          <QueueTable entries={entries} />
+        </TabsContent>
+        <TabsContent value="requests">
+          <RequestsTable requests={requests} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
