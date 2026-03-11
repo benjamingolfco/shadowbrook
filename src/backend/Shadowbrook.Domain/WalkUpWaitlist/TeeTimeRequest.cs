@@ -1,4 +1,5 @@
 using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.WalkUpWaitlist.Exceptions;
 
 namespace Shadowbrook.Domain.WalkUpWaitlist;
 
@@ -21,6 +22,17 @@ public class TeeTimeRequest : Entity
         GolfersNeeded = golfersNeeded;
         Status = RequestStatus.Pending;
         CreatedAt = DateTimeOffset.UtcNow;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void Fulfill()
+    {
+        if (Status != RequestStatus.Pending)
+        {
+            throw new TeeTimeRequestNotPendingException(Status);
+        }
+
+        Status = RequestStatus.Fulfilled;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 }
