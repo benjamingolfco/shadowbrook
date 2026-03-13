@@ -46,6 +46,8 @@ builder.Services.AddScoped<IDomainEventPublisher, InProcessDomainEventPublisher>
 builder.Services.AddScoped<IWalkUpWaitlistRepository, WalkUpWaitlistRepository>();
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
 builder.Services.AddScoped<IDomainEventHandler<Shadowbrook.Domain.WalkUpWaitlist.Events.GolferJoinedWaitlist>, Shadowbrook.Api.Infrastructure.Events.GolferJoinedWaitlistSmsHandler>();
+builder.Services.AddScoped<IDomainEventHandler<Shadowbrook.Domain.WalkUpWaitlist.Events.TeeTimeRequestAdded>, Shadowbrook.Api.Infrastructure.Events.TeeTimeRequestAddedNotifyHandler>();
+builder.Services.AddScoped<IDomainEventHandler<Shadowbrook.Domain.WalkUpWaitlist.Events.WaitlistOfferAccepted>, Shadowbrook.Api.Infrastructure.Events.WaitlistOfferAcceptedHandler>();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
@@ -91,6 +93,8 @@ if (app.Environment.EnvironmentName == "Testing")
 {
     app.MapGet("/debug/current-user", (ICurrentUser currentUser) => Results.Ok(new { TenantId = currentUser.TenantId }));
 }
+
+app.MapWaitlistOfferEndpoints();
 
 var api = app.MapGroup("").AddValidationFilter();
 api.MapTenantEndpoints();

@@ -1,0 +1,1 @@
+- [project_waitlist_offer_pattern.md](project_waitlist_offer_pattern.md) - Architecture decisions for walk-up waitlist offer/claim flow (#37): token-based auth, broadcast model, lazy expiration
