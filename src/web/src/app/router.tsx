@@ -9,6 +9,7 @@ const AdminFeature = lazy(() => import('@/features/admin'));
 const OperatorFeature = lazy(() => import('@/features/operator'));
 const GolferFeature = lazy(() => import('@/features/golfer'));
 const WalkupFeature = lazy(() => import('@/features/walkup'));
+const WalkUpOfferFeature = lazy(() => import('@/features/walk-up'));
 
 function LazyFeature({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<div className="p-6 text-muted-foreground">Loading...</div>}>{children}</Suspense>;
@@ -65,6 +66,12 @@ export const router = createBrowserRouter([
     path: '/join/*',
     element: (
       <LazyFeature><WalkupFeature /></LazyFeature>
+    ),
+  },
+  {
+    path: '/book/walkup/*',
+    element: (
+      <LazyFeature><WalkUpOfferFeature /></LazyFeature>
     ),
   },
 ]);
