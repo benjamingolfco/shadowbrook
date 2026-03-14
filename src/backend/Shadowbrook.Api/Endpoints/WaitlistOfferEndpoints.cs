@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Events;
@@ -73,6 +74,11 @@ public static class WaitlistOfferEndpoints
             return Results.Conflict(new { error = "This offer has expired." });
         }
 
+        // Use serializable transaction to prevent race condition when checking slot capacity
+        // Without this, two golfers could simultaneously check the count, both see available slots,
+        // and both create acceptances - exceeding the requested golfer count
+        using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+
         // Check concurrency: verify slots are still available
         var acceptanceCount = await db.WaitlistRequestAcceptances
             .Where(a => a.WaitlistRequestId == offer.TeeTimeRequestId)
@@ -101,6 +107,7 @@ public static class WaitlistOfferEndpoints
         try
         {
             await db.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
         }
         catch (DbUpdateException)
         {

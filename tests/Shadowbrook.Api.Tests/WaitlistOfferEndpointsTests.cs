@@ -199,6 +199,14 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
     [Fact]
     public async Task AcceptOffer_AllSlotsFilled_Returns409()
     {
+        // NOTE: This test validates the slot capacity check but runs sequentially (golfer A accepts, then B).
+        // It does NOT test the true race condition (A and B checking capacity simultaneously).
+        // Testing true concurrent execution would require:
+        // - Multiple threads/tasks hitting the endpoint at the exact same time
+        // - External load testing tools (e.g., k6, JMeter) to simulate parallel requests
+        // - Potentially mocking the database to slow down the count query and widen the race window
+        // The serializable transaction in the endpoint ensures correctness even under true concurrency.
+
         var (_, courseId) = await CreateTestCourseAsync();
         await OpenWaitlistAsync(courseId);
 
