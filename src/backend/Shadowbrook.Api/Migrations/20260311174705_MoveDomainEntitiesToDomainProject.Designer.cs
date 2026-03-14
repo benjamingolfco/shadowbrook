@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Shadowbrook.Api.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Shadowbrook.Api.Infrastructure.Data;
 namespace Shadowbrook.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260311174705_MoveDomainEntitiesToDomainProject")]
+    partial class MoveDomainEntitiesToDomainProject
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -189,44 +192,6 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("Golfers", (string)null);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.TeeTimeRequests.TeeTimeRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CourseId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<int>("GolfersNeeded")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<TimeOnly>("TeeTime")
-                        .HasColumnType("time");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CourseId", "Date", "Status")
-                        .HasDatabaseName("IX_WaitlistRequests_CourseId_Date_Status");
-
-                    b.HasIndex("CourseId", "Date", "TeeTime")
-                        .HasDatabaseName("IX_WaitlistRequests_CourseId_Date_TeeTime");
-
-                    b.ToTable("WaitlistRequests", (string)null);
-                });
-
             modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlist.GolferWaitlistEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -270,6 +235,42 @@ namespace Shadowbrook.Api.Migrations
                         .HasFilter("[RemovedAt] IS NULL");
 
                     b.ToTable("GolferWaitlistEntries", (string)null);
+                });
+
+            modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlist.TeeTimeRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("GolfersNeeded")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<TimeOnly>("TeeTime")
+                        .HasColumnType("time");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("WalkUpWaitlistId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CourseWaitlistId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WalkUpWaitlistId", "Status")
+                        .HasDatabaseName("IX_WaitlistRequests_CourseWaitlistId_Status");
+
+                    b.HasIndex("WalkUpWaitlistId", "TeeTime")
+                        .HasDatabaseName("IX_WaitlistRequests_CourseWaitlistId_TeeTime");
+
+                    b.ToTable("WaitlistRequests", (string)null);
                 });
 
             modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlist.WalkUpWaitlist", b =>
@@ -337,15 +338,6 @@ namespace Shadowbrook.Api.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.TeeTimeRequests.TeeTimeRequest", b =>
-                {
-                    b.HasOne("Shadowbrook.Api.Models.Course", null)
-                        .WithMany()
-                        .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlist.GolferWaitlistEntry", b =>
                 {
                     b.HasOne("Shadowbrook.Domain.WalkUpWaitlist.WalkUpWaitlist", null)
@@ -359,6 +351,16 @@ namespace Shadowbrook.Api.Migrations
                         .HasForeignKey("GolferId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlist.TeeTimeRequest", b =>
+                {
+                    b.HasOne("Shadowbrook.Domain.WalkUpWaitlist.WalkUpWaitlist", null)
+                        .WithMany("TeeTimeRequests")
+                        .HasForeignKey("WalkUpWaitlistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_WaitlistRequests_CourseWaitlists_CourseWaitlistId");
                 });
 
             modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlist.WalkUpWaitlist", b =>
@@ -378,6 +380,8 @@ namespace Shadowbrook.Api.Migrations
             modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlist.WalkUpWaitlist", b =>
                 {
                     b.Navigation("Entries");
+
+                    b.Navigation("TeeTimeRequests");
                 });
 #pragma warning restore 612, 618
         }

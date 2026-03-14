@@ -1,14 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Shadowbrook.Api.Models;
-using Shadowbrook.Domain.WalkUpWaitlist;
-using WalkUpWaitlistEntity = Shadowbrook.Domain.WalkUpWaitlist.WalkUpWaitlist;
+using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 
 namespace Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
 
-public class WalkUpWaitlistConfiguration : IEntityTypeConfiguration<WalkUpWaitlistEntity>
+public class WalkUpWaitlistConfiguration : IEntityTypeConfiguration<WalkUpWaitlist>
 {
-    public void Configure(EntityTypeBuilder<WalkUpWaitlistEntity> builder)
+    public void Configure(EntityTypeBuilder<WalkUpWaitlist> builder)
     {
         builder.ToTable("CourseWaitlists");
         builder.HasKey(w => w.Id);
@@ -25,13 +24,12 @@ public class WalkUpWaitlistConfiguration : IEntityTypeConfiguration<WalkUpWaitli
         builder.HasIndex(w => new { w.CourseId, w.Date }).IsUnique();
         builder.HasIndex(w => new { w.ShortCode, w.Date });
 
-        builder.HasMany(w => w.TeeTimeRequests)
+        builder.HasMany(w => w.Entries)
             .WithOne()
-            .HasForeignKey(r => r.WalkUpWaitlistId)
-            .HasConstraintName("FK_WaitlistRequests_CourseWaitlists_CourseWaitlistId")
+            .HasForeignKey(e => e.CourseWaitlistId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Navigation(w => w.TeeTimeRequests)
+        builder.Navigation(w => w.Entries)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

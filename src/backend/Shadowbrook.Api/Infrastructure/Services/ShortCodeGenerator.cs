@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.WalkUpWaitlist;
+using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 
 namespace Shadowbrook.Api.Infrastructure.Services;
 

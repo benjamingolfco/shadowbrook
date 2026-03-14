@@ -140,10 +140,6 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IClas
         var response = await PostJoinAsync(verifyBody.CourseWaitlistId, "Chris", "Dup", phone);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-
-        var body = await response.Content.ReadFromJsonAsync<DuplicateEntryError>();
-        Assert.Equal("You're already on the waitlist.", body!.Error);
-        Assert.Equal(1, body.Position);
     }
 
     [Fact]
@@ -272,7 +268,7 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IClas
     // -------------------------------------------------------------------------
 
     [Fact]
-    public async Task Join_ExistingGolfer_EntryUsesNewName_ButGolferPreserved()
+    public async Task Join_ExistingGolfer_EntryUsesGolferName()
     {
         // First join creates golfer as "Original Name"
         var (_, _, shortCode1) = await CreateOpenWaitlistAsync();
@@ -283,15 +279,15 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IClas
         var b1 = await r1.Content.ReadFromJsonAsync<JoinWaitlistResponse>();
         Assert.Equal("Original Name", b1!.GolferName);
 
-        // Second join on different waitlist with different name
+        // Second join on different waitlist with different submitted name
         var (_, _, shortCode2) = await CreateOpenWaitlistAsync();
         var v2 = await (await PostVerifyAsync(shortCode2)).Content.ReadFromJsonAsync<VerifyCodeResponse>();
         var r2 = await PostJoinAsync(v2!.CourseWaitlistId, "Changed", "Name", phone);
         Assert.Equal(HttpStatusCode.Created, r2.StatusCode);
 
-        // Entry uses new name (denormalized on the entry)
+        // Entry uses the golfer entity's name (source of truth)
         var b2 = await r2.Content.ReadFromJsonAsync<JoinWaitlistResponse>();
-        Assert.Equal("Changed Name", b2!.GolferName);
+        Assert.Equal("Original Name", b2!.GolferName);
     }
 
     [Fact]
@@ -371,12 +367,9 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IClas
         var thirdPhone = "555-100-0003";
         await PostJoinAsync(waitlistId, "Third", "Person", thirdPhone);
 
-        // Third golfer tries again — should get position 3
+        // Third golfer tries again — should get 409
         var dup = await PostJoinAsync(waitlistId, "Third", "Person", thirdPhone);
         Assert.Equal(HttpStatusCode.Conflict, dup.StatusCode);
-
-        var body = await dup.Content.ReadFromJsonAsync<DuplicateEntryError>();
-        Assert.Equal(3, body!.Position);
     }
 
     // -------------------------------------------------------------------------

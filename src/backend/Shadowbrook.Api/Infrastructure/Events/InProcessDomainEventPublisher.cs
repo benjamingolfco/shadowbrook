@@ -36,7 +36,7 @@ public class InProcessDomainEventPublisher(
         {
             try
             {
-                var method = handlerType.GetMethod("HandleAsync");
+                var method = handlerType.GetMethod(nameof(IDomainEventHandler<>.HandleAsync));
                 await (Task)method!.Invoke(handler, [domainEvent, ct])!;
             }
             catch (Exception ex)

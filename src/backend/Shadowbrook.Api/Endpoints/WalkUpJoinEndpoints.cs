@@ -2,8 +2,8 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Services;
-using Shadowbrook.Api.Models;
-using Shadowbrook.Domain.WalkUpWaitlist;
+using Shadowbrook.Domain.GolferAggregate;
+using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 
 namespace Shadowbrook.Api.Endpoints;
 
@@ -43,13 +43,15 @@ public static class WalkUpJoinEndpoints
             waitlist.ShortCode));
     }
 
-    private static async Task<IResult> JoinWaitlist(JoinWaitlistRequest request, ApplicationDbContext db)
+    private static async Task<IResult> JoinWaitlist(
+        JoinWaitlistRequest request,
+        IWalkUpWaitlistRepository waitlistRepo,
+        IGolferRepository golferRepo,
+        ApplicationDbContext db)
     {
         var normalizedPhone = PhoneNormalizer.Normalize(request.Phone);
 
-        var waitlist = await db.WalkUpWaitlists
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(w => w.Id == request.CourseWaitlistId);
+        var waitlist = await waitlistRepo.GetByIdAsync(request.CourseWaitlistId);
 
         if (waitlist is null || waitlist.Status != WaitlistStatus.Open)
         {
@@ -63,47 +65,23 @@ public static class WalkUpJoinEndpoints
             .Select(c => c.Name)
             .FirstAsync();
 
-        // Check for existing active entry (duplicate prevention)
-        var existingEntry = await db.GolferWaitlistEntries
-            .Where(e => e.CourseWaitlistId == waitlist.Id && e.GolferPhone == normalizedPhone && e.RemovedAt == null)
-            .FirstOrDefaultAsync();
-
-        if (existingEntry is not null)
-        {
-            var existingPosition = await CalculatePositionAsync(db, waitlist.Id, existingEntry.JoinedAt);
-            return Results.Conflict(new { error = "You're already on the waitlist.", position = existingPosition });
-        }
-
         // Golfer lookup-or-create
-        var golfer = await db.Golfers
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(g => g.Phone == normalizedPhone);
+        var golfer = await golferRepo.GetByPhoneAsync(normalizedPhone!);
 
         if (golfer is null)
         {
-            var now = DateTimeOffset.UtcNow;
-            golfer = new Golfer
-            {
-                Id = Guid.CreateVersion7(),
-                Phone = normalizedPhone!,
-                FirstName = request.FirstName.Trim(),
-                LastName = request.LastName.Trim(),
-                CreatedAt = now,
-                UpdatedAt = now
-            };
-            db.Golfers.Add(golfer);
+            golfer = Golfer.Create(normalizedPhone!, request.FirstName, request.LastName);
+            golferRepo.Add(golfer);
 
             try
             {
-                await db.SaveChangesAsync();
+                await golferRepo.SaveAsync();
             }
             catch (DbUpdateException)
             {
                 // Race condition: another request created the golfer concurrently
-                db.Golfers.Remove(golfer);
-                golfer = await db.Golfers
-                    .IgnoreQueryFilters()
-                    .FirstOrDefaultAsync(g => g.Phone == normalizedPhone);
+                db.Entry(golfer).State = EntityState.Detached;
+                golfer = await golferRepo.GetByPhoneAsync(normalizedPhone!);
 
                 if (golfer is null)
                 {
@@ -111,47 +89,17 @@ public static class WalkUpJoinEndpoints
                 }
             }
         }
-        // Existing golfer: name was set at registration and is not overwritten here
 
-        var entryNow = DateTimeOffset.UtcNow;
-        var entry = new GolferWaitlistEntry(Guid.CreateVersion7())
-        {
-            CourseWaitlistId = waitlist.Id,
-            GolferId = golfer.Id,
-            GolferName = $"{request.FirstName.Trim()} {request.LastName.Trim()}",
-            GolferPhone = normalizedPhone!,
-            IsWalkUp = true,
-            IsReady = true,
-            JoinedAt = entryNow,
-            CreatedAt = entryNow,
-            UpdatedAt = entryNow
-        };
+        var entry = waitlist.Join(golfer);
+        await waitlistRepo.SaveAsync();
 
-        db.GolferWaitlistEntries.Add(entry);
-        await db.SaveChangesAsync();
-
-        var position = await CalculatePositionAsync(db, waitlist.Id, entry.JoinedAt);
-
-        entry.RaiseJoinedEvent(courseName, position);
-        await db.SaveChangesAsync();
+        var position = waitlist.Entries.Count(e => e.RemovedAt is null && e.JoinedAt <= entry.JoinedAt);
 
         return Results.Created($"/walkup/join", new JoinWaitlistResponse(
             entry.Id,
-            entry.GolferName,
+            golfer.FullName,
             position,
             courseName));
-    }
-
-    // Position is determined by how many active entries joined at or before the given timestamp.
-    // We load JoinedAt values client-side to avoid DateTimeOffset translation issues with SQLite.
-    private static async Task<int> CalculatePositionAsync(ApplicationDbContext db, Guid courseWaitlistId, DateTimeOffset joinedAt)
-    {
-        var joinedAtValues = await db.GolferWaitlistEntries
-            .Where(e => e.CourseWaitlistId == courseWaitlistId && e.RemovedAt == null)
-            .Select(e => e.JoinedAt)
-            .ToListAsync();
-
-        return joinedAtValues.Count(t => t <= joinedAt);
     }
 }
 

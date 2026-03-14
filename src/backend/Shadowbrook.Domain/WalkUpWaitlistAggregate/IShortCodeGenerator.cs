@@ -1,4 +1,4 @@
-namespace Shadowbrook.Domain.WalkUpWaitlist;
+namespace Shadowbrook.Domain.WalkUpWaitlistAggregate;
 
 public interface IShortCodeGenerator
 {
