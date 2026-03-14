@@ -18,4 +18,16 @@ public class TeeTimeRequestTests
         Assert.Equal(2, request.GolfersNeeded);
         Assert.Equal(RequestStatus.Pending, request.Status);
     }
+
+    [Fact]
+    public void MarkFulfilled_SetsStatusToFulfilled()
+    {
+        var waitlistId = Guid.NewGuid();
+        var teeTime = new TimeOnly(10, 0);
+        var request = new TeeTimeRequest(waitlistId, teeTime, 2);
+
+        request.MarkFulfilled();
+
+        Assert.Equal(RequestStatus.Fulfilled, request.Status);
+    }
 }

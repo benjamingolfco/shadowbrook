@@ -23,4 +23,10 @@ public class TeeTimeRequest : Entity
         CreatedAt = DateTimeOffset.UtcNow;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
+
+    public void MarkFulfilled()
+    {
+        Status = RequestStatus.Fulfilled;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
 }
