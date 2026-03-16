@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Models;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate.Exceptions;
 
 namespace Shadowbrook.Api.Endpoints;
 
@@ -61,23 +60,8 @@ public static class WaitlistOfferEndpoints
 
         var acceptanceCount = await repository.GetAcceptanceCountAsync(offer.TeeTimeRequestId);
 
-        try
-        {
-            offer.Accept(acceptanceCount);
-        }
-        catch (OfferNotPendingException)
-        {
-            return Results.Conflict(new { error = "This offer is no longer available." });
-        }
-        catch (OfferExpiredException)
-        {
-            await db.SaveChangesAsync(ct);
-            return Results.Conflict(new { error = "This offer has expired." });
-        }
-        catch (OfferSlotsFilledException)
-        {
-            return Results.Conflict(new { error = "All slots have been filled." });
-        }
+        // Domain method validates and raises event — exceptions bubble to global handler
+        offer.Accept(acceptanceCount);
 
         // Create acceptance record
         var now = DateTimeOffset.UtcNow;
