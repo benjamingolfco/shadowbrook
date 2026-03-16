@@ -66,6 +66,7 @@ public class WaitlistOfferRejectedNextOfferHandler(
                 (e, g) => new { Entry = e, Golfer = g })
             .ToListAsync(ct))
             .OrderBy(eg => eg.Entry.JoinedAt)
+            .ThenBy(eg => eg.Entry.Id.ToString())
             .FirstOrDefault();
 
         if (nextEntry is null)

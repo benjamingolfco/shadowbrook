@@ -211,8 +211,8 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
         var (_, courseId) = await CreateTestCourseAsync();
         await OpenWaitlistAsync(courseId);
 
-        await AddGolferToWaitlistAsync(courseId, "Jane", "Smith", "555-867-5309");
-        await AddGolferToWaitlistAsync(courseId, "John", "Doe", "555-111-2222");
+        var phone1 = await AddGolferToWaitlistAsync(courseId, "Alice", "Cap", "555-900-0001");
+        await AddGolferToWaitlistAsync(courseId, "Bob", "Cap", "555-900-0002");
 
         await CreateTeeTimeRequestAsync(courseId, "10:00", 1); // Only 1 slot
 
@@ -227,7 +227,15 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
             .Where(o => teeTimeRequests.Contains(o.TeeTimeRequestId))
             .ToListAsync();
 
-        Assert.Single(offers);
+        var offer = Assert.Single(offers);
+
+        // The offer should go to Alice (first by JoinedAt), not Bob
+        var aliceEntry = await db.GolferWaitlistEntries
+            .Join(db.Golfers.IgnoreQueryFilters(),
+                e => e.GolferId, g => g.Id,
+                (e, g) => new { Entry = e, Golfer = g })
+            .FirstAsync(eg => eg.Golfer.Phone == phone1);
+        Assert.Equal(aliceEntry.Entry.Id, offer.GolferWaitlistEntryId);
     }
 
     [Fact]

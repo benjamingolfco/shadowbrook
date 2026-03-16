@@ -39,6 +39,7 @@ public class TeeTimeRequestAddedNotifyHandler(
                 (e, g) => new { Entry = e, Golfer = g })
             .ToListAsync(ct))
             .OrderBy(eg => eg.Entry.JoinedAt)
+            .ThenBy(eg => eg.Entry.Id.ToString())
             .ToList();
 
         if (eligibleGolfers.Count == 0)
@@ -55,7 +56,7 @@ public class TeeTimeRequestAddedNotifyHandler(
 
         // Greedy selection: pick just enough golfers to fill available slots
         var slotsToFill = domainEvent.GolfersNeeded;
-        var selectedGolfers = new List<(WaitlistOffer Offer, string Phone)>();
+        var offers = new List<(WaitlistOffer Offer, string Phone)>();
 
         foreach (var eg in eligibleGolfers)
         {
@@ -68,12 +69,10 @@ public class TeeTimeRequestAddedNotifyHandler(
                 var offer = WaitlistOffer.Create(
                     teeTimeRequestId: domainEvent.TeeTimeRequestId,
                     golferWaitlistEntryId: eg.Entry.Id);
-                selectedGolfers.Add((offer, eg.Golfer.Phone));
+                offers.Add((offer, eg.Golfer.Phone));
                 slotsToFill -= eg.Entry.GroupSize;
             }
         }
-
-        var offers = selectedGolfers;
 
         repository.AddRange(offers.Select(o => o.Offer));
         await repository.SaveAsync();
