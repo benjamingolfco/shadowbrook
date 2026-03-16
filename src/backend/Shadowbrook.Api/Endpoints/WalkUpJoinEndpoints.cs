@@ -101,7 +101,7 @@ public static class WalkUpJoinEndpoints
 
         var entry = waitlist.AddGolfer(golfer);
         entryRepo.Add(entry);
-        await waitlistRepo.SaveAsync();
+        await entryRepo.SaveAsync();
 
         var joinedAt = entry.JoinedAt;
         var activeEntries = await db.GolferWaitlistEntries
