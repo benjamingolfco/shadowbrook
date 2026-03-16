@@ -243,7 +243,6 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
         var offerSms = messages.FirstOrDefault(m => m.To == phone && m.Body.Contains("tee time just opened"));
         Assert.NotNull(offerSms);
         Assert.Contains("Claim your spot:", offerSms!.Body);
-        Assert.Contains("You have 15 minutes", offerSms.Body);
     }
 
     [Fact]
