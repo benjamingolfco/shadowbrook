@@ -1,4 +1,4 @@
-using Shadowbrook.Domain.TeeTimeRequestAggregate.Events;
+using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Exceptions;
 

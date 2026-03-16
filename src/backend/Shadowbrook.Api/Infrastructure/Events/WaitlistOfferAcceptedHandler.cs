@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Models;
 using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.TeeTimeRequestAggregate.Events;
+using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 
 namespace Shadowbrook.Api.Infrastructure.Events;
