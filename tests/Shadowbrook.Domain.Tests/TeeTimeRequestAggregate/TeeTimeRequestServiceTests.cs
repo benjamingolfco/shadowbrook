@@ -99,6 +99,9 @@ public class TeeTimeRequestServiceTests
         public Task<bool> ExistsAsync(Guid courseId, DateOnly date, TimeOnly teeTime)
             => Task.FromResult(false);
 
+        public Task<TeeTimeRequest?> GetByIdAsync(Guid id)
+            => Task.FromResult<TeeTimeRequest?>(null);
+
         public Task<List<TeeTimeRequest>> GetByCourseAndDateAsync(Guid courseId, DateOnly date)
             => Task.FromResult(new List<TeeTimeRequest>());
 

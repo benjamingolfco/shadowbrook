@@ -15,6 +15,13 @@ public class TeeTimeRequestRepository(ApplicationDbContext db) : ITeeTimeRequest
                 && r.Status == TeeTimeRequestStatus.Pending);
     }
 
+    public async Task<TeeTimeRequest?> GetByIdAsync(Guid id)
+    {
+        return await db.TeeTimeRequests
+            .Include(r => r.SlotFills)
+            .FirstOrDefaultAsync(r => r.Id == id);
+    }
+
     public async Task<List<TeeTimeRequest>> GetByCourseAndDateAsync(Guid courseId, DateOnly date)
     {
         return await db.TeeTimeRequests

@@ -14,6 +14,11 @@ public class TeeTimeRequest : Entity
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
+    private readonly List<TeeTimeSlotFill> slotFills = [];
+    public IReadOnlyCollection<TeeTimeSlotFill> SlotFills => this.slotFills.AsReadOnly();
+
+    public int RemainingSlots => GolfersNeeded - this.slotFills.Sum(f => f.GroupSize);
+
     private TeeTimeRequest() { } // EF
 
     private TeeTimeRequest(Guid courseId, DateOnly date, TimeOnly teeTime, int golfersNeeded)
@@ -36,6 +41,54 @@ public class TeeTimeRequest : Entity
             TeeTime = teeTime,
             GolfersNeeded = golfersNeeded
         });
+    }
+
+    public void MarkFulfilled()
+    {
+        Status = TeeTimeRequestStatus.Fulfilled;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    internal FillResult Fill(Guid golferId, int groupSize, Guid bookingId)
+    {
+        if (Status == TeeTimeRequestStatus.Fulfilled)
+        {
+            return new FillResult(false, "This tee time has already been filled.");
+        }
+
+        if (groupSize > RemainingSlots)
+        {
+            return new FillResult(false, "Your group is too large for the remaining slots.");
+        }
+
+        var fill = new TeeTimeSlotFill(Id, golferId, bookingId, groupSize);
+        this.slotFills.Add(fill);
+        UpdatedAt = DateTimeOffset.UtcNow;
+
+        if (RemainingSlots <= 0)
+        {
+            Status = TeeTimeRequestStatus.Fulfilled;
+            AddDomainEvent(new TeeTimeRequestFulfilled
+            {
+                TeeTimeRequestId = Id
+            });
+        }
+
+        return new FillResult(true);
+    }
+
+    internal void Unfill(Guid bookingId)
+    {
+        var fill = this.slotFills.FirstOrDefault(f => f.BookingId == bookingId);
+        if (fill is not null)
+        {
+            this.slotFills.Remove(fill);
+            if (Status == TeeTimeRequestStatus.Fulfilled)
+            {
+                Status = TeeTimeRequestStatus.Pending;
+            }
+            UpdatedAt = DateTimeOffset.UtcNow;
+        }
     }
 
     public static async Task<TeeTimeRequest> CreateAsync(

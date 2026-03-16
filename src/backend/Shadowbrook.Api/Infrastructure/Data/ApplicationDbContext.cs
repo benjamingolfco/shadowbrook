@@ -22,6 +22,7 @@ public class ApplicationDbContext(
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<WalkUpWaitlist> WalkUpWaitlists => Set<WalkUpWaitlist>();
     public DbSet<TeeTimeRequest> TeeTimeRequests => Set<TeeTimeRequest>();
+    public DbSet<TeeTimeSlotFill> TeeTimeSlotFills => Set<TeeTimeSlotFill>();
     public DbSet<Golfer> Golfers => Set<Golfer>();
     public DbSet<GolferWaitlistEntry> GolferWaitlistEntries => Set<GolferWaitlistEntry>();
     public DbSet<WaitlistOffer> WaitlistOffers => Set<WaitlistOffer>();
@@ -83,5 +84,6 @@ public class ApplicationDbContext(
         modelBuilder.ApplyConfiguration(new GolferWaitlistEntryConfiguration());
         modelBuilder.ApplyConfiguration(new WaitlistOfferConfiguration());
         modelBuilder.ApplyConfiguration(new WaitlistRequestAcceptanceConfiguration());
+        modelBuilder.ApplyConfiguration(new TeeTimeSlotFillConfiguration());
     }
 }

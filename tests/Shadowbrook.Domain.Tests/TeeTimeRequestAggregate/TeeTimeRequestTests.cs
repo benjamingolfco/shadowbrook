@@ -47,6 +47,17 @@ public class TeeTimeRequestTests
     }
 
     [Fact]
+    public async Task MarkFulfilled_TransitionsStatusToFulfilled()
+    {
+        var request = await TeeTimeRequest.CreateAsync(
+            Guid.NewGuid(), new DateOnly(2026, 3, 6), new TimeOnly(10, 0), 2, this.repository);
+
+        request.MarkFulfilled();
+
+        Assert.Equal(TeeTimeRequestStatus.Fulfilled, request.Status);
+    }
+
+    [Fact]
     public async Task CreateAsync_DifferentTeeTimes_Succeeds()
     {
         var courseId = Guid.NewGuid();
@@ -58,6 +69,91 @@ public class TeeTimeRequestTests
         Assert.NotEqual(first.Id, second.Id);
     }
 
+    [Fact]
+    public async Task Fill_Success_AddsSlotFill()
+    {
+        var request = await TeeTimeRequest.CreateAsync(
+            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 4, this.repository);
+
+        var result = request.Fill(Guid.NewGuid(), groupSize: 2, Guid.NewGuid());
+
+        Assert.True(result.Success);
+        Assert.Single(request.SlotFills);
+        Assert.Equal(2, request.RemainingSlots);
+    }
+
+    [Fact]
+    public async Task Fill_GroupTooLarge_ReturnsFailure()
+    {
+        var request = await TeeTimeRequest.CreateAsync(
+            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 2, this.repository);
+
+        var result = request.Fill(Guid.NewGuid(), groupSize: 3, Guid.NewGuid());
+
+        Assert.False(result.Success);
+        Assert.Equal("Your group is too large for the remaining slots.", result.RejectionReason);
+        Assert.Empty(request.SlotFills);
+    }
+
+    [Fact]
+    public async Task Fill_AlreadyFulfilled_ReturnsFailure()
+    {
+        var request = await TeeTimeRequest.CreateAsync(
+            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 1, this.repository);
+        request.Fill(Guid.NewGuid(), groupSize: 1, Guid.NewGuid());
+
+        var result = request.Fill(Guid.NewGuid(), groupSize: 1, Guid.NewGuid());
+
+        Assert.False(result.Success);
+        Assert.Equal("This tee time has already been filled.", result.RejectionReason);
+    }
+
+    [Fact]
+    public async Task Fill_ExactFit_MarksFulfilled_RaisesEvent()
+    {
+        var request = await TeeTimeRequest.CreateAsync(
+            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 2, this.repository);
+        request.ClearDomainEvents(); // Clear the TeeTimeRequestAdded event
+
+        request.Fill(Guid.NewGuid(), groupSize: 2, Guid.NewGuid());
+
+        Assert.Equal(TeeTimeRequestStatus.Fulfilled, request.Status);
+        var domainEvent = Assert.Single(request.DomainEvents);
+        var fulfilled = Assert.IsType<TeeTimeRequestFulfilled>(domainEvent);
+        Assert.Equal(request.Id, fulfilled.TeeTimeRequestId);
+    }
+
+    [Fact]
+    public async Task Unfill_RemovesSlotFill_ResetsToPending()
+    {
+        var request = await TeeTimeRequest.CreateAsync(
+            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 1, this.repository);
+        var bookingId = Guid.NewGuid();
+        request.Fill(Guid.NewGuid(), groupSize: 1, bookingId);
+        Assert.Equal(TeeTimeRequestStatus.Fulfilled, request.Status);
+
+        request.Unfill(bookingId);
+
+        Assert.Equal(TeeTimeRequestStatus.Pending, request.Status);
+        Assert.Empty(request.SlotFills);
+        Assert.Equal(1, request.RemainingSlots);
+    }
+
+    [Fact]
+    public async Task RemainingSlots_CalculatesCorrectly()
+    {
+        var request = await TeeTimeRequest.CreateAsync(
+            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 4, this.repository);
+
+        Assert.Equal(4, request.RemainingSlots);
+
+        request.Fill(Guid.NewGuid(), groupSize: 2, Guid.NewGuid());
+        Assert.Equal(2, request.RemainingSlots);
+
+        request.Fill(Guid.NewGuid(), groupSize: 1, Guid.NewGuid());
+        Assert.Equal(1, request.RemainingSlots);
+    }
+
     private class StubTeeTimeRequestRepository : ITeeTimeRequestRepository
     {
         private bool exists;
@@ -66,6 +162,9 @@ public class TeeTimeRequestTests
 
         public Task<bool> ExistsAsync(Guid courseId, DateOnly date, TimeOnly teeTime)
             => Task.FromResult(this.exists);
+
+        public Task<TeeTimeRequest?> GetByIdAsync(Guid id)
+            => Task.FromResult<TeeTimeRequest?>(null);
 
         public Task<List<TeeTimeRequest>> GetByCourseAndDateAsync(Guid courseId, DateOnly date)
             => Task.FromResult(new List<TeeTimeRequest>());
