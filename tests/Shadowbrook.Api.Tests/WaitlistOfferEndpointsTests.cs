@@ -205,57 +205,51 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
     }
 
     [Fact]
-    public async Task AcceptOffer_FillFails_RejectsOffer()
+    public async Task CreateRequest_CapsOffersAtSlotsNeeded()
     {
-        // When a 1-slot request gets filled by golfer 1, TeeTimeRequestFulfilledHandler
-        // synchronously rejects all remaining pending offers via the saga chain.
+        // With GolfersNeeded=1 and 2 eligible golfers, only 1 offer should be created
         var (_, courseId) = await CreateTestCourseAsync();
         await OpenWaitlistAsync(courseId);
 
-        var phone1 = await AddGolferToWaitlistAsync(courseId, "Jane", "Smith", "555-867-5309");
-        var phone2 = await AddGolferToWaitlistAsync(courseId, "John", "Doe", "555-111-2222");
+        await AddGolferToWaitlistAsync(courseId, "Jane", "Smith", "555-867-5309");
+        await AddGolferToWaitlistAsync(courseId, "John", "Doe", "555-111-2222");
 
         await CreateTeeTimeRequestAsync(courseId, "10:00", 1); // Only 1 slot
 
-        var token1 = await GetOfferTokenFromSmsAsync(phone1);
-        var token2 = await GetOfferTokenFromSmsAsync(phone2);
-
-        // First golfer accepts — fills the slot, saga rejects offer2 synchronously
-        var response1 = await this.client.PostAsync($"/waitlist/offers/{token1}/accept", null);
-        Assert.Equal(HttpStatusCode.OK, response1.StatusCode);
-
-        // After saga, offer2 should already be Rejected by TeeTimeRequestFulfilledHandler
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<Shadowbrook.Api.Infrastructure.Data.ApplicationDbContext>();
-        var offer2 = await db.WaitlistOffers.IgnoreQueryFilters().FirstOrDefaultAsync(o => o.Token == token2);
-        Assert.NotNull(offer2);
-        Assert.Equal(Shadowbrook.Domain.WaitlistOfferAggregate.OfferStatus.Rejected, offer2!.Status);
+
+        var teeTimeRequests = await db.TeeTimeRequests.IgnoreQueryFilters()
+            .Where(r => r.CourseId == courseId)
+            .Select(r => r.Id)
+            .ToListAsync();
+        var offers = await db.WaitlistOffers
+            .Where(o => teeTimeRequests.Contains(o.TeeTimeRequestId))
+            .ToListAsync();
+
+        Assert.Single(offers);
     }
 
     [Fact]
-    public async Task AcceptOffer_FillFails_SendsRejectionSms()
+    public async Task CreateRequest_CapsOffers_OnlySendsSmsToCappedGolfers()
     {
-        // TeeTimeRequestFulfilledHandler rejects pending offers synchronously after the slot is filled.
-        // WaitlistOfferRejectedSmsHandler then sends the rejection SMS.
+        // With GolfersNeeded=1 and 2 eligible golfers, only the first golfer
+        // (by JoinedAt) should receive an offer SMS.
         var (_, courseId) = await CreateTestCourseAsync();
         await OpenWaitlistAsync(courseId);
 
         var phone1 = await AddGolferToWaitlistAsync(courseId, "Jane", "Smith", "555-867-5309");
         var phone2 = await AddGolferToWaitlistAsync(courseId, "John", "Doe", "555-111-2222");
 
+        this.smsService.Clear();
         await CreateTeeTimeRequestAsync(courseId, "10:00", 1); // Only 1 slot
 
-        var token1 = await GetOfferTokenFromSmsAsync(phone1);
-        // Consume the offer SMS so we start fresh before tracking rejections
-        await GetOfferTokenFromSmsAsync(phone2);
-
-        this.smsService.Clear();
-        // First golfer accepts — fills the slot, triggers rejection SMS to golfer 2 via saga
-        await this.client.PostAsync($"/waitlist/offers/{token1}/accept", null);
-
         var messages = this.smsService.GetAll();
-        var rejectionSms = messages.FirstOrDefault(m => m.To == phone2 && m.Body.Contains("no longer available"));
-        Assert.NotNull(rejectionSms);
+        var offerToPhone1 = messages.FirstOrDefault(m => m.To == phone1 && m.Body.Contains("tee time just opened"));
+        var offerToPhone2 = messages.FirstOrDefault(m => m.To == phone2 && m.Body.Contains("tee time just opened"));
+
+        Assert.NotNull(offerToPhone1);
+        Assert.Null(offerToPhone2);
     }
 
     // -------------------------------------------------------------------------
