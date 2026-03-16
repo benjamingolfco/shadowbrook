@@ -23,7 +23,7 @@ public class GolferJoinedWaitlistSmsHandler(
             return;
         }
 
-        var golfer = await golferRepository.GetByIdAsync(domainEvent.GolferId);
+        var golfer = await golferRepository.GetByIdAsync(entry.GolferId);
         if (golfer is null)
         {
             return;
@@ -33,7 +33,12 @@ public class GolferJoinedWaitlistSmsHandler(
             .IgnoreQueryFilters()
             .Where(w => w.Id == domainEvent.CourseWaitlistId)
             .Join(db.Courses.IgnoreQueryFilters(), w => w.CourseId, c => c.Id, (w, c) => c.Name)
-            .FirstAsync(ct);
+            .FirstOrDefaultAsync(ct);
+
+        if (courseName is null)
+        {
+            return;
+        }
 
         // Calculate position: count active entries that joined at or before this entry.
         // Fetching JoinedAt values to a list first avoids SQLite DateTimeOffset comparison issues in tests.
