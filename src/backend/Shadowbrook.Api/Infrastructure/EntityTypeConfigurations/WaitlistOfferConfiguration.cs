@@ -15,9 +15,10 @@ public class WaitlistOfferConfiguration : IEntityTypeConfiguration<WaitlistOffer
         builder.Property(o => o.Token).IsRequired();
         builder.HasIndex(o => o.Token).IsUnique();
 
-        builder.Property(o => o.CourseName).IsRequired().HasMaxLength(200);
-        builder.Property(o => o.GolferName).IsRequired().HasMaxLength(200);
-        builder.Property(o => o.GolferPhone).IsRequired().HasMaxLength(20);
+        builder.Property(o => o.BookingId).IsRequired();
+        builder.HasIndex(o => o.BookingId).IsUnique();
+
+        builder.Property(o => o.RejectionReason).HasMaxLength(500);
         builder.Property(o => o.Status).HasConversion<string>().HasMaxLength(20);
 
         builder.HasIndex(o => o.TeeTimeRequestId);

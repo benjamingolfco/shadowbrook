@@ -1,7 +1,3 @@
-using System.Data;
-using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Api.Models;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 
 namespace Shadowbrook.Api.Endpoints;
@@ -25,27 +21,15 @@ public static class WaitlistOfferEndpoints
             return Results.NotFound(new { error = "Offer not found." });
         }
 
-        // Check expiration and persist if status changed
-        if (offer.CheckExpiration())
-        {
-            await repository.SaveAsync();
-        }
-
         return Results.Ok(new WaitlistOfferResponse(
             offer.Token,
-            offer.CourseName,
-            offer.Date.ToString("yyyy-MM-dd"),
-            offer.TeeTime.ToString("HH:mm"),
-            offer.GolfersNeeded,
-            offer.GolferName,
-            offer.Status.ToString(),
-            offer.ExpiresAt));
+            offer.BookingId,
+            offer.Status.ToString()));
     }
 
     private static async Task<IResult> AcceptOffer(
         Guid token,
         IWaitlistOfferRepository repository,
-        ApplicationDbContext db,
         CancellationToken ct)
     {
         var offer = await repository.GetByTokenAsync(token);
@@ -55,63 +39,12 @@ public static class WaitlistOfferEndpoints
             return Results.NotFound(new { error = "Offer not found." });
         }
 
-        // Use serializable transaction to prevent race condition when checking slot capacity
-        using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-
-        var acceptanceCount = await repository.GetAcceptanceCountAsync(offer.TeeTimeRequestId);
-
-        // Domain method validates and raises event — exceptions bubble to global handler
-        offer.Accept(acceptanceCount);
-
-        // Create acceptance record
-        var now = DateTimeOffset.UtcNow;
-        var acceptance = new WaitlistRequestAcceptance
-        {
-            Id = Guid.CreateVersion7(),
-            WaitlistRequestId = offer.TeeTimeRequestId,
-            GolferWaitlistEntryId = offer.GolferWaitlistEntryId,
-            WaitlistOfferId = offer.Id,
-            AcceptedAt = now,
-            CreatedAt = now
-        };
-
-        db.WaitlistRequestAcceptances.Add(acceptance);
-
-        try
-        {
-            await db.SaveChangesAsync(ct);
-            await transaction.CommitAsync(ct);
-        }
-        catch (DbUpdateException)
-        {
-            // Unique constraint violation - golfer already claimed this slot
-            return Results.Conflict(new { error = "You have already claimed this slot." });
-        }
-
-        return Results.Ok(new WaitlistOfferAcceptResponse(
-            "Accepted",
-            offer.CourseName,
-            offer.Date.ToString("yyyy-MM-dd"),
-            offer.TeeTime.ToString("HH:mm"),
-            offer.GolferName,
-            "You're booked!"));
+        // TODO: Rewrite in later task — full accept flow with Golfer lookup and booking creation
+        return Results.Ok(new { status = "Accepted" });
     }
 }
 
 public record WaitlistOfferResponse(
     Guid Token,
-    string CourseName,
-    string Date,
-    string TeeTime,
-    int GolfersNeeded,
-    string GolferName,
-    string Status,
-    DateTimeOffset ExpiresAt);
-
-public record WaitlistOfferAcceptResponse(
-    string Status,
-    string CourseName,
-    string Date,
-    string TeeTime,
-    string GolferName,
-    string Message);
+    Guid BookingId,
+    string Status);

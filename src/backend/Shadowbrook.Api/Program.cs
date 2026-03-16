@@ -13,8 +13,8 @@ using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate.Exceptions;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
-using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Exceptions;
+using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -85,9 +85,7 @@ app.UseExceptionHandler(error => error.Run(async context =>
             DuplicateTeeTimeRequestException => StatusCodes.Status409Conflict,
             GolferAlreadyOnWaitlistException => StatusCodes.Status409Conflict,
             WaitlistAlreadyExistsException => StatusCodes.Status409Conflict,
-            OfferExpiredException => StatusCodes.Status409Conflict,
             OfferNotPendingException => StatusCodes.Status409Conflict,
-            OfferSlotsFilledException => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status400BadRequest
         };
         await context.Response.WriteAsJsonAsync(new { error = domainEx.Message });

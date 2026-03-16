@@ -13,10 +13,11 @@ public class WaitlistOfferRepository(ApplicationDbContext db) : IWaitlistOfferRe
             .FirstOrDefaultAsync(o => o.Token == token);
     }
 
-    public async Task<int> GetAcceptanceCountAsync(Guid teeTimeRequestId)
+    public async Task<WaitlistOffer?> GetByBookingIdAsync(Guid bookingId)
     {
-        return await db.WaitlistRequestAcceptances
-            .CountAsync(a => a.WaitlistRequestId == teeTimeRequestId);
+        return await db.WaitlistOffers
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(o => o.BookingId == bookingId);
     }
 
     public async Task<List<WaitlistOffer>> GetPendingByRequestAsync(Guid teeTimeRequestId)

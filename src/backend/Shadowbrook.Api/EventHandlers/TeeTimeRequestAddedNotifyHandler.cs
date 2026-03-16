@@ -45,42 +45,33 @@ public class TeeTimeRequestAddedNotifyHandler(
             return;
         }
 
-        // Get course name for the offer
+        // Get course name for SMS messages
         var courseName = await db.Courses
             .IgnoreQueryFilters()
             .Where(c => c.Id == domainEvent.CourseId)
             .Select(c => c.Name)
             .FirstAsync(ct);
 
-        var expiresAt = DateTimeOffset.UtcNow.AddMinutes(15);
-        var offers = new List<WaitlistOffer>();
+        var offers = new List<(WaitlistOffer Offer, string Phone)>();
 
         foreach (var eg in eligibleGolfers)
         {
             var offer = WaitlistOffer.Create(
                 teeTimeRequestId: domainEvent.TeeTimeRequestId,
-                golferWaitlistEntryId: eg.Entry.Id,
-                courseId: domainEvent.CourseId,
-                courseName: courseName,
-                date: domainEvent.Date,
-                teeTime: domainEvent.TeeTime,
-                golfersNeeded: domainEvent.GolfersNeeded,
-                golferName: eg.Golfer.FullName,
-                golferPhone: eg.Golfer.Phone,
-                expiresAt: expiresAt);
-            offers.Add(offer);
+                golferWaitlistEntryId: eg.Entry.Id);
+            offers.Add((offer, eg.Golfer.Phone));
         }
 
-        repository.AddRange(offers);
+        repository.AddRange(offers.Select(o => o.Offer));
         await repository.SaveAsync();
 
         // Send SMS to each eligible golfer
         var baseUrl = configuration["App:BaseUrl"] ?? "http://localhost:3000";
 
-        foreach (var offer in offers)
+        foreach (var (offer, phone) in offers)
         {
-            var message = $"{offer.CourseName}: {offer.TeeTime:h:mm tt} tee time just opened! Claim your spot: {baseUrl}/book/walkup/{offer.Token} - You have 15 minutes.";
-            await textMessageService.SendAsync(offer.GolferPhone, message, ct);
+            var message = $"{courseName}: {domainEvent.TeeTime:h:mm tt} tee time just opened! Claim your spot: {baseUrl}/book/walkup/{offer.Token} - You have 15 minutes.";
+            await textMessageService.SendAsync(phone, message, ct);
         }
     }
 }
