@@ -18,45 +18,38 @@ public static class WaitlistOfferEndpoints
 
     private static async Task<IResult> GetOffer(Guid token, ApplicationDbContext db)
     {
-        var offer = await db.WaitlistOffers.IgnoreQueryFilters().FirstOrDefaultAsync(o => o.Token == token);
+        var raw = await db.WaitlistOffers
+            .IgnoreQueryFilters()
+            .Where(o => o.Token == token)
+            .Join(db.TeeTimeRequests, o => o.TeeTimeRequestId, r => r.Id, (o, r) => new { Offer = o, Request = r })
+            .Join(db.GolferWaitlistEntries, or => or.Offer.GolferWaitlistEntryId, e => e.Id, (or, e) => new { or.Offer, or.Request, Entry = e })
+            .Join(db.Golfers.IgnoreQueryFilters(), ore => ore.Entry.GolferId, g => g.Id, (ore, g) => new { ore.Offer, ore.Request, ore.Entry, Golfer = g })
+            .Join(db.Courses.IgnoreQueryFilters(), oreg => oreg.Request.CourseId, c => c.Id, (oreg, c) => new
+            {
+                oreg.Offer.Token,
+                CourseName = c.Name,
+                oreg.Request.Date,
+                oreg.Request.TeeTime,
+                oreg.Request.GolfersNeeded,
+                oreg.Golfer.FirstName,
+                oreg.Golfer.LastName,
+                oreg.Offer.Status
+            })
+            .FirstOrDefaultAsync();
 
-        if (offer is null)
-        {
-            return Results.NotFound(new { error = "Offer not found." });
-        }
-
-        var request = await db.TeeTimeRequests.FindAsync(offer.TeeTimeRequestId);
-        if (request is null)
-        {
-            return Results.NotFound(new { error = "Offer not found." });
-        }
-
-        var entry = await db.GolferWaitlistEntries.FindAsync(offer.GolferWaitlistEntryId);
-        if (entry is null)
-        {
-            return Results.NotFound(new { error = "Offer not found." });
-        }
-
-        var golfer = await db.Golfers.IgnoreQueryFilters().FirstOrDefaultAsync(g => g.Id == entry.GolferId);
-        if (golfer is null)
-        {
-            return Results.NotFound(new { error = "Offer not found." });
-        }
-
-        var course = await db.Courses.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == request.CourseId);
-        if (course is null)
+        if (raw is null)
         {
             return Results.NotFound(new { error = "Offer not found." });
         }
 
         return Results.Ok(new WaitlistOfferResponse(
-            offer.Token,
-            course.Name,
-            request.Date.ToString("yyyy-MM-dd"),
-            request.TeeTime.ToString("HH:mm"),
-            request.GolfersNeeded,
-            golfer.FullName,
-            offer.Status.ToString()));
+            raw.Token,
+            raw.CourseName,
+            raw.Date.ToString("yyyy-MM-dd"),
+            raw.TeeTime.ToString("HH:mm"),
+            raw.GolfersNeeded,
+            $"{raw.FirstName} {raw.LastName}",
+            raw.Status.ToString()));
     }
 
     private static async Task<IResult> AcceptOffer(
