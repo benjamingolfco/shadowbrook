@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
+using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 
 namespace Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
 
@@ -18,6 +19,11 @@ public class GolferWaitlistEntryConfiguration : IEntityTypeConfiguration<GolferW
         builder.HasOne<Golfer>()
             .WithMany()
             .HasForeignKey(e => e.GolferId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne<WalkUpWaitlist>()
+            .WithMany()
+            .HasForeignKey(e => e.CourseWaitlistId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(e => new { e.CourseWaitlistId, e.GolferId })
