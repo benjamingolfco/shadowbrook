@@ -84,6 +84,7 @@ public class TeeTimeRequest : Entity
                 Status = TeeTimeRequestStatus.Pending;
             }
             UpdatedAt = DateTimeOffset.UtcNow;
+            RowVersion = Guid.NewGuid();
         }
     }
 
