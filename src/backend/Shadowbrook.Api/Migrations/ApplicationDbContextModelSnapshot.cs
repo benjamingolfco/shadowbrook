@@ -155,7 +155,101 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("Tenants");
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.Golfers.Golfer", b =>
+            modelBuilder.Entity("Shadowbrook.Api.Models.WaitlistOffer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CourseName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("GolferName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("GolferPhone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("GolferWaitlistEntryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("GolfersNeeded")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<TimeOnly>("TeeTime")
+                        .HasColumnType("time");
+
+                    b.Property<Guid>("TeeTimeRequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Token")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeeTimeRequestId");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("GolferWaitlistEntryId", "TeeTimeRequestId");
+
+                    b.ToTable("WaitlistOffers", (string)null);
+                });
+
+            modelBuilder.Entity("Shadowbrook.Api.Models.WaitlistRequestAcceptance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("AcceptedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("GolferWaitlistEntryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("WaitlistOfferId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("WaitlistRequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WaitlistOfferId");
+
+                    b.HasIndex("WaitlistRequestId", "GolferWaitlistEntryId")
+                        .IsUnique();
+
+                    b.ToTable("WaitlistRequestAcceptances", (string)null);
+                });
+
+            modelBuilder.Entity("Shadowbrook.Domain.GolferAggregate.Golfer", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -189,7 +283,7 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("Golfers", (string)null);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.TeeTimeRequests.TeeTimeRequest", b =>
+            modelBuilder.Entity("Shadowbrook.Domain.TeeTimeRequestAggregate.TeeTimeRequest", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -227,7 +321,7 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("WaitlistRequests", (string)null);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlist.GolferWaitlistEntry", b =>
+            modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlistAggregate.GolferWaitlistEntry", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -272,7 +366,7 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("GolferWaitlistEntries", (string)null);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlist.WalkUpWaitlist", b =>
+            modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlistAggregate.WalkUpWaitlist", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -337,7 +431,7 @@ namespace Shadowbrook.Api.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.TeeTimeRequests.TeeTimeRequest", b =>
+            modelBuilder.Entity("Shadowbrook.Domain.TeeTimeRequestAggregate.TeeTimeRequest", b =>
                 {
                     b.HasOne("Shadowbrook.Api.Models.Course", null)
                         .WithMany()
@@ -346,22 +440,22 @@ namespace Shadowbrook.Api.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlist.GolferWaitlistEntry", b =>
+            modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlistAggregate.GolferWaitlistEntry", b =>
                 {
-                    b.HasOne("Shadowbrook.Domain.WalkUpWaitlist.WalkUpWaitlist", null)
+                    b.HasOne("Shadowbrook.Domain.WalkUpWaitlistAggregate.WalkUpWaitlist", null)
                         .WithMany("Entries")
                         .HasForeignKey("CourseWaitlistId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Shadowbrook.Domain.Golfers.Golfer", null)
+                    b.HasOne("Shadowbrook.Domain.GolferAggregate.Golfer", null)
                         .WithMany()
                         .HasForeignKey("GolferId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlist.WalkUpWaitlist", b =>
+            modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlistAggregate.WalkUpWaitlist", b =>
                 {
                     b.HasOne("Shadowbrook.Api.Models.Course", null)
                         .WithMany()
@@ -375,7 +469,7 @@ namespace Shadowbrook.Api.Migrations
                     b.Navigation("Courses");
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlist.WalkUpWaitlist", b =>
+            modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlistAggregate.WalkUpWaitlist", b =>
                 {
                     b.Navigation("Entries");
                 });

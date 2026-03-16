@@ -19,6 +19,8 @@ export default defineConfig({
       '/tenants': 'http://localhost:5221',
       '/health': 'http://localhost:5221',
       '/walkup': 'http://localhost:5221',
+      '/waitlist': 'http://localhost:5221',
+      '/dev': 'http://localhost:5221',
     },
   },
 })

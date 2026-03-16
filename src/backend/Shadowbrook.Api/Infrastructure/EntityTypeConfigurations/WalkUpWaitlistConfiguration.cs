@@ -23,13 +23,5 @@ public class WalkUpWaitlistConfiguration : IEntityTypeConfiguration<WalkUpWaitli
 
         builder.HasIndex(w => new { w.CourseId, w.Date }).IsUnique();
         builder.HasIndex(w => new { w.ShortCode, w.Date });
-
-        builder.HasMany(w => w.Entries)
-            .WithOne()
-            .HasForeignKey(e => e.CourseWaitlistId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Navigation(w => w.Entries)
-            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

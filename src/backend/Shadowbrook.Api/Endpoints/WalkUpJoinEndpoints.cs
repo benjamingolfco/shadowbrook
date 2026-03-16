@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.GolferAggregate;
+using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 
 namespace Shadowbrook.Api.Endpoints;
@@ -46,6 +47,7 @@ public static class WalkUpJoinEndpoints
     private static async Task<IResult> JoinWaitlist(
         JoinWaitlistRequest request,
         IWalkUpWaitlistRepository waitlistRepo,
+        IGolferWaitlistEntryRepository entryRepo,
         IGolferRepository golferRepo,
         ApplicationDbContext db)
     {
@@ -90,10 +92,12 @@ public static class WalkUpJoinEndpoints
             }
         }
 
-        var entry = waitlist.Join(golfer);
+        var entry = waitlist.AddGolfer(golfer);
+        entryRepo.Add(entry);
         await waitlistRepo.SaveAsync();
 
-        var position = waitlist.Entries.Count(e => e.RemovedAt is null && e.JoinedAt <= entry.JoinedAt);
+        var position = await db.GolferWaitlistEntries
+            .CountAsync(e => e.CourseWaitlistId == waitlist.Id && e.RemovedAt == null && e.JoinedAt <= entry.JoinedAt);
 
         return Results.Created($"/walkup/join", new JoinWaitlistResponse(
             entry.Id,

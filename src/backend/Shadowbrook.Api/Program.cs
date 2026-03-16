@@ -8,6 +8,7 @@ using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Api.Infrastructure.Repositories;
 using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate.Exceptions;
@@ -53,6 +54,7 @@ builder.Services.AddScoped<ITeeTimeRequestRepository, TeeTimeRequestRepository>(
 builder.Services.AddScoped<TeeTimeRequestService>();
 builder.Services.AddScoped<IWalkUpWaitlistRepository, WalkUpWaitlistRepository>();
 builder.Services.AddScoped<IWaitlistOfferRepository, WaitlistOfferRepository>();
+builder.Services.AddScoped<IGolferWaitlistEntryRepository, GolferWaitlistEntryRepository>();
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
 builder.Services.AddScoped<IDomainEventHandler<Shadowbrook.Domain.WalkUpWaitlistAggregate.Events.GolferJoinedWaitlist>, Shadowbrook.Api.EventHandlers.GolferJoinedWaitlistSmsHandler>();
 builder.Services.AddScoped<IDomainEventHandler<Shadowbrook.Domain.TeeTimeRequestAggregate.Events.TeeTimeRequestAdded>, Shadowbrook.Api.EventHandlers.TeeTimeRequestAddedNotifyHandler>();

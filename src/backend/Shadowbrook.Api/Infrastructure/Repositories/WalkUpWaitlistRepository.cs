@@ -9,21 +9,18 @@ public class WalkUpWaitlistRepository(ApplicationDbContext db) : IWalkUpWaitlist
     public async Task<WalkUpWaitlist?> GetByIdAsync(Guid id)
     {
         return await db.WalkUpWaitlists
-            .Include(w => w.Entries)
             .FirstOrDefaultAsync(w => w.Id == id);
     }
 
     public async Task<WalkUpWaitlist?> GetByCourseDateAsync(Guid courseId, DateOnly date)
     {
         return await db.WalkUpWaitlists
-            .Include(w => w.Entries)
             .FirstOrDefaultAsync(w => w.CourseId == courseId && w.Date == date);
     }
 
     public async Task<WalkUpWaitlist?> GetOpenByCourseDateAsync(Guid courseId, DateOnly date)
     {
         return await db.WalkUpWaitlists
-            .Include(w => w.Entries)
             .FirstOrDefaultAsync(w => w.CourseId == courseId && w.Date == date
                 && w.Status == WaitlistStatus.Open);
     }

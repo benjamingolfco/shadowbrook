@@ -5,6 +5,7 @@ using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate;
+using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 
 namespace Shadowbrook.Api.Endpoints;
@@ -119,6 +120,7 @@ public static class WalkUpWaitlistEndpoints
         Guid courseId,
         AddGolferToWaitlistRequest request,
         IWalkUpWaitlistRepository repo,
+        IGolferWaitlistEntryRepository entryRepo,
         IGolferRepository golferRepo,
         ApplicationDbContext db)
     {
@@ -162,10 +164,12 @@ public static class WalkUpWaitlistEndpoints
             }
         }
 
-        var entry = waitlist.Join(golfer, request.GroupSize ?? 1);
+        var entry = waitlist.AddGolfer(golfer, request.GroupSize ?? 1);
+        entryRepo.Add(entry);
         await repo.SaveAsync();
 
-        var position = waitlist.Entries.Count(e => e.RemovedAt is null && e.JoinedAt <= entry.JoinedAt);
+        var position = await db.GolferWaitlistEntries
+            .CountAsync(e => e.CourseWaitlistId == waitlist.Id && e.RemovedAt == null && e.JoinedAt <= entry.JoinedAt);
 
         return Results.Created(
             $"/courses/{courseId}/walkup-waitlist/entries/{entry.Id}",

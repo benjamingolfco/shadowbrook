@@ -1,6 +1,7 @@
 using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.GolferWaitlistEntryAggregate.Events;
 
-namespace Shadowbrook.Domain.WalkUpWaitlistAggregate;
+namespace Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 
 public class GolferWaitlistEntry : Entity
 {
@@ -35,5 +36,11 @@ public class GolferWaitlistEntry : Entity
         var now = DateTimeOffset.UtcNow;
         RemovedAt = now;
         UpdatedAt = now;
+
+        AddDomainEvent(new GolferRemovedFromWaitlist
+        {
+            GolferWaitlistEntryId = Id,
+            GolferId = GolferId
+        });
     }
 }

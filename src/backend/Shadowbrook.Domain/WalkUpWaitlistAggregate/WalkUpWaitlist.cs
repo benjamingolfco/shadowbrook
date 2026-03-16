@@ -1,5 +1,6 @@
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.GolferAggregate;
+using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate.Events;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
 
@@ -15,9 +16,6 @@ public class WalkUpWaitlist : Entity
     public DateTimeOffset? ClosedAt { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
-
-    private readonly List<GolferWaitlistEntry> entries = [];
-    public IReadOnlyCollection<GolferWaitlistEntry> Entries => this.entries.AsReadOnly();
 
     private WalkUpWaitlist() { } // EF
 
@@ -59,24 +57,14 @@ public class WalkUpWaitlist : Entity
         UpdatedAt = now;
     }
 
-    public GolferWaitlistEntry Join(Golfer golfer, int groupSize = 1)
+    public GolferWaitlistEntry AddGolfer(Golfer golfer, int groupSize = 1)
     {
         if (Status != WaitlistStatus.Open)
         {
             throw new WaitlistNotOpenException();
         }
 
-        var duplicate = this.entries.Any(e =>
-            e.GolferId == golfer.Id && e.RemovedAt is null);
-        if (duplicate)
-        {
-            throw new GolferAlreadyOnWaitlistException(golfer.Phone);
-        }
-
         var entry = new GolferWaitlistEntry(Id, golfer.Id, groupSize);
-        this.entries.Add(entry);
-
-        var position = this.entries.Count(e => e.RemovedAt is null);
 
         AddDomainEvent(new GolferJoinedWaitlist
         {
@@ -86,7 +74,7 @@ public class WalkUpWaitlist : Entity
             GolferName = golfer.FullName,
             GolferPhone = golfer.Phone,
             CourseId = CourseId,
-            Position = position
+            Position = 0
         });
 
         UpdatedAt = DateTimeOffset.UtcNow;

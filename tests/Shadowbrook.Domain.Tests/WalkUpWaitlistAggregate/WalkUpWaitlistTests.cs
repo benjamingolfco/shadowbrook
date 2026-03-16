@@ -23,7 +23,6 @@ public class WalkUpWaitlistTests
         Assert.Equal("1234", waitlist.ShortCode);
         Assert.Equal(WaitlistStatus.Open, waitlist.Status);
         Assert.Null(waitlist.ClosedAt);
-        Assert.Empty(waitlist.Entries);
     }
 
     [Fact]
@@ -97,6 +96,31 @@ public class WalkUpWaitlistTests
         waitlist.Close();
 
         Assert.Throws<WaitlistNotOpenException>(() => waitlist.Close());
+    }
+
+    [Fact]
+    public async Task AddGolfer_WhenOpen_ReturnsEntryWithCorrectProperties()
+    {
+        var waitlist = await CreateOpenWaitlistAsync();
+        var golfer = GolferAggregate.Golfer.Create("+12125551234", "Jane", "Doe");
+
+        var entry = waitlist.AddGolfer(golfer, groupSize: 2);
+
+        Assert.NotEqual(Guid.Empty, entry.Id);
+        Assert.Equal(waitlist.Id, entry.CourseWaitlistId);
+        Assert.Equal(golfer.Id, entry.GolferId);
+        Assert.Equal(2, entry.GroupSize);
+        Assert.Null(entry.RemovedAt);
+    }
+
+    [Fact]
+    public async Task AddGolfer_WhenClosed_ThrowsWaitlistNotOpenException()
+    {
+        var waitlist = await CreateOpenWaitlistAsync();
+        waitlist.Close();
+        var golfer = GolferAggregate.Golfer.Create("+12125551234", "Jane", "Doe");
+
+        Assert.Throws<WaitlistNotOpenException>(() => waitlist.AddGolfer(golfer));
     }
 
     private async Task<Domain.WalkUpWaitlistAggregate.WalkUpWaitlist> CreateOpenWaitlistAsync()

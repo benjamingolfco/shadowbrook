@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Shadowbrook.Domain.GolferAggregate;
-using Shadowbrook.Domain.WalkUpWaitlistAggregate;
+using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 
 namespace Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
 
