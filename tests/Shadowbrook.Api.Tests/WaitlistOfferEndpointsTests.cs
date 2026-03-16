@@ -15,7 +15,7 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
     // GET /waitlist/offers/{token}
     // -------------------------------------------------------------------------
 
-    [Fact(Skip = "Endpoint being rewritten — offer response shape changed in Task 5 refactor")]
+    [Fact]
     public async Task ViewOffer_ValidToken_Returns200WithOfferDetails()
     {
         var token = await CreateOfferAndGetTokenAsync();
@@ -46,39 +46,11 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
         Assert.Equal("Offer not found.", body!.Error);
     }
 
-    [Fact]
-    public async Task ViewOffer_ExpiredOffer_ReturnsExpiredStatus()
-    {
-        var (_, courseId) = await CreateTestCourseAsync();
-        await OpenWaitlistAsync(courseId);
-        var phone = await AddGolferToWaitlistAsync(courseId, "Jane", "Smith", "555-867-5309");
-
-        await CreateTeeTimeRequestAsync(courseId, "10:00", 2);
-
-        var token = await GetOfferTokenFromSmsAsync(phone);
-
-        // TODO: Expiration concept removed — this test needs to be rewritten in a later task
-        // Mark offer as rejected to simulate a non-pending state
-        using var scope = factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<Shadowbrook.Api.Infrastructure.Data.ApplicationDbContext>();
-        await db.WaitlistOffers
-            .Where(o => o.Token == token)
-            .ExecuteUpdateAsync(s => s.SetProperty(o => o.Status, Shadowbrook.Domain.WaitlistOfferAggregate.OfferStatus.Rejected));
-
-        var response = await this.client.GetAsync($"/waitlist/offers/{token}");
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var body = await response.Content.ReadFromJsonAsync<WaitlistOfferResponse>();
-        Assert.NotNull(body);
-        Assert.Equal("Rejected", body!.Status);
-    }
-
     // -------------------------------------------------------------------------
     // POST /waitlist/offers/{token}/accept
     // -------------------------------------------------------------------------
 
-    [Fact(Skip = "Endpoint being rewritten — accept flow stubbed in Task 5 refactor")]
+    [Fact]
     public async Task AcceptOffer_ValidPendingOffer_Returns200()
     {
         var token = await CreateOfferAndGetTokenAsync();
@@ -89,12 +61,11 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
 
         var body = await response.Content.ReadFromJsonAsync<WaitlistOfferAcceptResponse>();
         Assert.NotNull(body);
-        Assert.Equal("Accepted", body!.Status);
-        Assert.Equal("You're booked!", body.Message);
-        Assert.NotNull(body.CourseName);
+        Assert.Equal("Processing", body!.Status);
+        Assert.NotNull(body.Message);
     }
 
-    [Fact(Skip = "Endpoint being rewritten — accept flow stubbed in Task 5 refactor")]
+    [Fact]
     public async Task AcceptOffer_CreatesBooking()
     {
         var token = await CreateOfferAndGetTokenAsync();
@@ -105,10 +76,10 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
         var db = scope.ServiceProvider.GetRequiredService<Shadowbrook.Api.Infrastructure.Data.ApplicationDbContext>();
 
         var bookingExists = await db.Bookings.AnyAsync(b => b.GolferName.Contains("Jane") && b.PlayerCount == 1);
-        Assert.True(bookingExists, "Booking should be created after accepting offer");
+        Assert.True(bookingExists, "Booking should be created via saga after accepting offer");
     }
 
-    [Fact(Skip = "Endpoint being rewritten — accept flow stubbed in Task 5 refactor")]
+    [Fact]
     public async Task AcceptOffer_RemovesGolferFromWaitlist()
     {
         var (_, courseId) = await CreateTestCourseAsync();
@@ -119,7 +90,7 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
 
         await this.client.PostAsync($"/waitlist/offers/{token}/accept", null);
 
-        // Verify golfer was soft-deleted from waitlist
+        // Verify golfer was soft-deleted from waitlist via BookingCreated saga
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<Shadowbrook.Api.Infrastructure.Data.ApplicationDbContext>();
 
@@ -131,8 +102,8 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
         Assert.NotNull(entry!.RemovedAt);
     }
 
-    [Fact(Skip = "Endpoint being rewritten — accept flow stubbed in Task 5 refactor")]
-    public async Task AcceptOffer_SendsConfirmationSms()
+    [Fact]
+    public async Task AcceptOffer_SendsProcessingSms()
     {
         var (_, courseId) = await CreateTestCourseAsync();
         await OpenWaitlistAsync(courseId);
@@ -146,12 +117,12 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var messages = this.smsService.GetAll();
-        var confirmationSms = messages.FirstOrDefault(m => m.Body.Contains("You're booked!") && m.To == phone);
-        Assert.NotNull(confirmationSms);
+        var processingSms = messages.FirstOrDefault(m => m.Body.Contains("processing") && m.To == phone);
+        Assert.NotNull(processingSms);
     }
 
-    [Fact(Skip = "Endpoint being rewritten — expiration concept removed in Task 5 refactor")]
-    public async Task AcceptOffer_ExpiredOffer_Returns409()
+    [Fact]
+    public async Task AcceptOffer_SendsConfirmationSms()
     {
         var (_, courseId) = await CreateTestCourseAsync();
         await OpenWaitlistAsync(courseId);
@@ -159,23 +130,24 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
         await CreateTeeTimeRequestAsync(courseId, "10:00", 2);
         var token = await GetOfferTokenFromSmsAsync(phone);
 
-        // TODO: Expiration concept removed — this test needs to be rewritten in a later task
-        // Reject the offer via direct SQL update to simulate a non-pending state
-        using var scope = factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<Shadowbrook.Api.Infrastructure.Data.ApplicationDbContext>();
-        await db.WaitlistOffers
-            .Where(o => o.Token == token)
-            .ExecuteUpdateAsync(s => s.SetProperty(o => o.Status, Shadowbrook.Domain.WaitlistOfferAggregate.OfferStatus.Rejected));
+        this.smsService.Clear();
+        await this.client.PostAsync($"/waitlist/offers/{token}/accept", null);
 
-        var response = await this.client.PostAsync($"/waitlist/offers/{token}/accept", null);
-
-        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-
-        var body = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.Equal("This offer is no longer available.", body!.Error);
+        // Confirmation SMS comes from BookingCreatedConfirmationSmsHandler via saga chain
+        var messages = this.smsService.GetAll();
+        var confirmationSms = messages.FirstOrDefault(m => m.Body.Contains("You're booked!") && m.To == phone);
+        Assert.NotNull(confirmationSms);
     }
 
-    [Fact(Skip = "Endpoint being rewritten — accept flow stubbed in Task 5 refactor")]
+    [Fact]
+    public async Task AcceptOffer_InvalidToken_Returns404()
+    {
+        var response = await this.client.PostAsync($"/waitlist/offers/{Guid.NewGuid()}/accept", null);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
     public async Task AcceptOffer_AlreadyAcceptedOffer_Returns409()
     {
         var token = await CreateOfferAndGetTokenAsync();
@@ -189,17 +161,54 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
         Assert.Equal("This offer is no longer available.", body!.Error);
     }
 
-    [Fact]
-    public async Task AcceptOffer_InvalidToken_Returns404()
-    {
-        var response = await this.client.PostAsync($"/waitlist/offers/{Guid.NewGuid()}/accept", null);
+    // -------------------------------------------------------------------------
+    // Saga chain tests
+    // -------------------------------------------------------------------------
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    [Fact]
+    public async Task AcceptOffer_FillSucceeds_CreatesBookingViaSaga()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+        await OpenWaitlistAsync(courseId);
+        var phone = await AddGolferToWaitlistAsync(courseId, "Jane", "Smith", "555-867-5309");
+        await CreateTeeTimeRequestAsync(courseId, "10:00", 2);
+        var token = await GetOfferTokenFromSmsAsync(phone);
+
+        var response = await this.client.PostAsync($"/waitlist/offers/{token}/accept", null);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<Shadowbrook.Api.Infrastructure.Data.ApplicationDbContext>();
+        var bookingExists = await db.Bookings.AnyAsync(b => b.GolferName.Contains("Jane"));
+        Assert.True(bookingExists, "Booking should exist after saga chain completes");
     }
 
-    [Fact(Skip = "Endpoint being rewritten — accept flow stubbed in Task 5 refactor")]
-    public async Task AcceptOffer_AllSlotsFilled_Returns409()
+    [Fact]
+    public async Task AcceptOffer_FillSucceeds_RemovesFromWaitlistViaSaga()
     {
+        var (_, courseId) = await CreateTestCourseAsync();
+        await OpenWaitlistAsync(courseId);
+        var phone = await AddGolferToWaitlistAsync(courseId, "Jane", "Smith", "555-867-5309");
+        await CreateTeeTimeRequestAsync(courseId, "10:00", 2);
+        var token = await GetOfferTokenFromSmsAsync(phone);
+
+        await this.client.PostAsync($"/waitlist/offers/{token}/accept", null);
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<Shadowbrook.Api.Infrastructure.Data.ApplicationDbContext>();
+        var golfer = await db.Golfers.IgnoreQueryFilters().FirstOrDefaultAsync(g => g.Phone == phone);
+        Assert.NotNull(golfer);
+        var entry = await db.GolferWaitlistEntries.FirstOrDefaultAsync(e => e.GolferId == golfer!.Id);
+        Assert.NotNull(entry);
+        Assert.NotNull(entry!.RemovedAt);
+    }
+
+    [Fact]
+    public async Task AcceptOffer_FillFails_RejectsOffer()
+    {
+        // When a 1-slot request gets filled by golfer 1, TeeTimeRequestFulfilledHandler
+        // synchronously rejects all remaining pending offers via the saga chain.
         var (_, courseId) = await CreateTestCourseAsync();
         await OpenWaitlistAsync(courseId);
 
@@ -211,18 +220,42 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
         var token1 = await GetOfferTokenFromSmsAsync(phone1);
         var token2 = await GetOfferTokenFromSmsAsync(phone2);
 
-        // First golfer accepts
+        // First golfer accepts — fills the slot, saga rejects offer2 synchronously
         var response1 = await this.client.PostAsync($"/waitlist/offers/{token1}/accept", null);
         Assert.Equal(HttpStatusCode.OK, response1.StatusCode);
 
-        // Second golfer tries - should fail
-        var response2 = await this.client.PostAsync($"/waitlist/offers/{token2}/accept", null);
-        Assert.Equal(HttpStatusCode.Conflict, response2.StatusCode);
+        // After saga, offer2 should already be Rejected by TeeTimeRequestFulfilledHandler
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<Shadowbrook.Api.Infrastructure.Data.ApplicationDbContext>();
+        var offer2 = await db.WaitlistOffers.IgnoreQueryFilters().FirstOrDefaultAsync(o => o.Token == token2);
+        Assert.NotNull(offer2);
+        Assert.Equal(Shadowbrook.Domain.WaitlistOfferAggregate.OfferStatus.Rejected, offer2!.Status);
+    }
 
-        var body = await response2.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.True(
-            body!.Error == "All slots have been filled." || body.Error == "This offer is no longer available.",
-            $"Expected error about slots filled or offer unavailable, got: {body.Error}");
+    [Fact]
+    public async Task AcceptOffer_FillFails_SendsRejectionSms()
+    {
+        // TeeTimeRequestFulfilledHandler rejects pending offers synchronously after the slot is filled.
+        // WaitlistOfferRejectedSmsHandler then sends the rejection SMS.
+        var (_, courseId) = await CreateTestCourseAsync();
+        await OpenWaitlistAsync(courseId);
+
+        var phone1 = await AddGolferToWaitlistAsync(courseId, "Jane", "Smith", "555-867-5309");
+        var phone2 = await AddGolferToWaitlistAsync(courseId, "John", "Doe", "555-111-2222");
+
+        await CreateTeeTimeRequestAsync(courseId, "10:00", 1); // Only 1 slot
+
+        var token1 = await GetOfferTokenFromSmsAsync(phone1);
+        // Consume the offer SMS so we start fresh before tracking rejections
+        await GetOfferTokenFromSmsAsync(phone2);
+
+        this.smsService.Clear();
+        // First golfer accepts — fills the slot, triggers rejection SMS to golfer 2 via saga
+        await this.client.PostAsync($"/waitlist/offers/{token1}/accept", null);
+
+        var messages = this.smsService.GetAll();
+        var rejectionSms = messages.FirstOrDefault(m => m.To == phone2 && m.Body.Contains("no longer available"));
+        Assert.NotNull(rejectionSms);
     }
 
     // -------------------------------------------------------------------------
@@ -271,7 +304,6 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<Shadowbrook.Api.Infrastructure.Data.ApplicationDbContext>();
 
-        // CourseId removed from WaitlistOffer — count all offers created in this test run
         var teeTimeRequests = await db.TeeTimeRequests.IgnoreQueryFilters()
             .Where(r => r.CourseId == courseId)
             .Select(r => r.Id)
@@ -381,22 +413,16 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
 
     private record WaitlistOfferResponse(
         Guid Token,
-        Guid BookingId,
-        string Status,
-        // Legacy fields — kept for test compilation; will be removed when tests are rewritten
-        string? CourseName = null,
-        string? Date = null,
-        string? TeeTime = null,
-        int GolfersNeeded = 0,
-        string? GolferName = null);
+        string CourseName,
+        string Date,
+        string TeeTime,
+        int GolfersNeeded,
+        string GolferName,
+        string Status);
 
     private record WaitlistOfferAcceptResponse(
         string Status,
-        string? Message = null,
-        string? CourseName = null,
-        string? Date = null,
-        string? TeeTime = null,
-        string? GolferName = null);
+        string Message);
 
     private record ErrorResponse(string Error);
     private record CourseIdResponse(Guid Id);
