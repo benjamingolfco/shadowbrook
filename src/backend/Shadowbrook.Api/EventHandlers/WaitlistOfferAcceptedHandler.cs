@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
+using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Api.Models;
 using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
-namespace Shadowbrook.Api.Infrastructure.Events;
+namespace Shadowbrook.Api.EventHandlers;
 
 public class WaitlistOfferAcceptedHandler(
     ApplicationDbContext db,

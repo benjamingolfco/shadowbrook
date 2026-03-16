@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
+using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate.Events;
 
-namespace Shadowbrook.Api.Infrastructure.Events;
+namespace Shadowbrook.Api.EventHandlers;
 
 public class GolferJoinedWaitlistSmsHandler(
     ITextMessageService textMessageService,

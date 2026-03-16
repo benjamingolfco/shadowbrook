@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
+using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.TeeTimeRequestAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.Events;
+namespace Shadowbrook.Api.EventHandlers;
 
 public class TeeTimeRequestAddedNotifyHandler(
     ApplicationDbContext db,
