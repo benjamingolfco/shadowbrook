@@ -6,6 +6,9 @@ namespace Shadowbrook.Api.Infrastructure.Repositories;
 
 public class WaitlistOfferRepository(ApplicationDbContext db) : IWaitlistOfferRepository
 {
+    public async Task<WaitlistOffer?> GetByIdAsync(Guid id) =>
+        await db.WaitlistOffers.IgnoreQueryFilters().FirstOrDefaultAsync(o => o.Id == id);
+
     public async Task<WaitlistOffer?> GetByTokenAsync(Guid token)
     {
         return await db.WaitlistOffers

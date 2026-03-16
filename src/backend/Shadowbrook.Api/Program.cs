@@ -7,12 +7,16 @@ using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Api.Infrastructure.Repositories;
 using Shadowbrook.Api.Infrastructure.Services;
+using Shadowbrook.Domain.BookingAggregate;
+using Shadowbrook.Domain.BookingAggregate.Events;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate;
+using Shadowbrook.Domain.TeeTimeRequestAggregate.Events;
 using Shadowbrook.Domain.TeeTimeRequestAggregate.Exceptions;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Exceptions;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
@@ -55,10 +59,33 @@ builder.Services.AddScoped<TeeTimeRequestService>();
 builder.Services.AddScoped<IWalkUpWaitlistRepository, WalkUpWaitlistRepository>();
 builder.Services.AddScoped<IWaitlistOfferRepository, WaitlistOfferRepository>();
 builder.Services.AddScoped<IGolferWaitlistEntryRepository, GolferWaitlistEntryRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
+
+// Domain event handlers
 builder.Services.AddScoped<IDomainEventHandler<Shadowbrook.Domain.WalkUpWaitlistAggregate.Events.GolferJoinedWaitlist>, Shadowbrook.Api.EventHandlers.GolferJoinedWaitlistSmsHandler>();
-builder.Services.AddScoped<IDomainEventHandler<Shadowbrook.Domain.TeeTimeRequestAggregate.Events.TeeTimeRequestAdded>, Shadowbrook.Api.EventHandlers.TeeTimeRequestAddedNotifyHandler>();
-builder.Services.AddScoped<IDomainEventHandler<Shadowbrook.Domain.WaitlistOfferAggregate.Events.WaitlistOfferAccepted>, Shadowbrook.Api.EventHandlers.WaitlistOfferAcceptedHandler>();
+builder.Services.AddScoped<IDomainEventHandler<TeeTimeRequestAdded>, Shadowbrook.Api.EventHandlers.TeeTimeRequestAddedNotifyHandler>();
+
+// WaitlistOfferAccepted → two handlers
+builder.Services.AddScoped<IDomainEventHandler<WaitlistOfferAccepted>, Shadowbrook.Api.EventHandlers.WaitlistOfferAcceptedFillHandler>();
+builder.Services.AddScoped<IDomainEventHandler<WaitlistOfferAccepted>, Shadowbrook.Api.EventHandlers.WaitlistOfferAcceptedSmsHandler>();
+
+// TeeTimeSlotFilled → one handler
+builder.Services.AddScoped<IDomainEventHandler<TeeTimeSlotFilled>, Shadowbrook.Api.EventHandlers.TeeTimeSlotFilledBookingHandler>();
+
+// TeeTimeSlotFillFailed → one handler
+builder.Services.AddScoped<IDomainEventHandler<TeeTimeSlotFillFailed>, Shadowbrook.Api.EventHandlers.TeeTimeSlotFillFailedHandler>();
+
+// TeeTimeRequestFulfilled → one handler
+builder.Services.AddScoped<IDomainEventHandler<TeeTimeRequestFulfilled>, Shadowbrook.Api.EventHandlers.TeeTimeRequestFulfilledHandler>();
+
+// BookingCreated → two handlers
+builder.Services.AddScoped<IDomainEventHandler<BookingCreated>, Shadowbrook.Api.EventHandlers.BookingCreatedRemoveFromWaitlistHandler>();
+builder.Services.AddScoped<IDomainEventHandler<BookingCreated>, Shadowbrook.Api.EventHandlers.BookingCreatedConfirmationSmsHandler>();
+
+// WaitlistOfferRejected → two handlers
+builder.Services.AddScoped<IDomainEventHandler<WaitlistOfferRejected>, Shadowbrook.Api.EventHandlers.WaitlistOfferRejectedSmsHandler>();
+builder.Services.AddScoped<IDomainEventHandler<WaitlistOfferRejected>, Shadowbrook.Api.EventHandlers.WaitlistOfferRejectedNextOfferHandler>();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();

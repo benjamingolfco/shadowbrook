@@ -26,13 +26,14 @@ public class TeeTimeRequestAddedNotifyHandler(
             return;
         }
 
-        // Query eligible golfers by joining entries with golfer records
+        // Query eligible golfers — active, walk-up, ready, group fits remaining slots
         // Client-side ordering to avoid SQLite DateTimeOffset limitation in tests
         var eligibleGolfers = (await db.GolferWaitlistEntries
             .Where(e => e.CourseWaitlistId == waitlist.Id
                 && e.IsWalkUp == true
                 && e.IsReady == true
-                && e.RemovedAt == null)
+                && e.RemovedAt == null
+                && e.GroupSize <= domainEvent.GolfersNeeded)
             .Join(db.Golfers.IgnoreQueryFilters(),
                 e => e.GolferId, g => g.Id,
                 (e, g) => new { Entry = e, Golfer = g })
@@ -70,7 +71,7 @@ public class TeeTimeRequestAddedNotifyHandler(
 
         foreach (var (offer, phone) in offers)
         {
-            var message = $"{courseName}: {domainEvent.TeeTime:h:mm tt} tee time just opened! Claim your spot: {baseUrl}/book/walkup/{offer.Token} - You have 15 minutes.";
+            var message = $"{courseName}: {domainEvent.TeeTime:h:mm tt} tee time just opened! Claim your spot: {baseUrl}/book/walkup/{offer.Token}";
             await textMessageService.SendAsync(phone, message, ct);
         }
     }
