@@ -14,6 +14,7 @@ public class TeeTimeRequestConfiguration : IEntityTypeConfiguration<TeeTimeReque
         builder.Property(r => r.Id).ValueGeneratedNever();
 
         builder.Property(r => r.Status).HasConversion<string>();
+        builder.Property(r => r.RowVersion).IsConcurrencyToken();
 
         builder.HasOne<Course>()
             .WithMany()

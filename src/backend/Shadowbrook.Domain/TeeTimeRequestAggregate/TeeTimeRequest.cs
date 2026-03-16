@@ -13,6 +13,7 @@ public class TeeTimeRequest : Entity
     public TeeTimeRequestStatus Status { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
+    public Guid RowVersion { get; private set; } = Guid.NewGuid();
 
     private readonly List<TeeTimeSlotFill> slotFills = [];
     public IReadOnlyCollection<TeeTimeSlotFill> SlotFills => this.slotFills.AsReadOnly();
@@ -43,12 +44,6 @@ public class TeeTimeRequest : Entity
         });
     }
 
-    public void MarkFulfilled()
-    {
-        Status = TeeTimeRequestStatus.Fulfilled;
-        UpdatedAt = DateTimeOffset.UtcNow;
-    }
-
     internal FillResult Fill(Guid golferId, int groupSize, Guid bookingId)
     {
         if (Status == TeeTimeRequestStatus.Fulfilled)
@@ -64,6 +59,7 @@ public class TeeTimeRequest : Entity
         var fill = new TeeTimeSlotFill(Id, golferId, bookingId, groupSize);
         this.slotFills.Add(fill);
         UpdatedAt = DateTimeOffset.UtcNow;
+        RowVersion = Guid.NewGuid();
 
         if (RemainingSlots <= 0)
         {
