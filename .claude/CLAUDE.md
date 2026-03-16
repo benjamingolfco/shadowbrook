@@ -45,7 +45,7 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - infra/ — Azure deployment config (planned)
 
 ## Code Conventions
-- C#: `.editorconfig` at repo root defines style rules; see `.claude/rules/backend/api-conventions.md` for full conventions
+- C#: `.editorconfig` at repo root defines style rules; see `.claude/rules/backend/backend-conventions.md` for full conventions
 - TypeScript: strict mode, ES modules, no CommonJS, path aliases (`@/*`)
 - Frontend: feature-based folders, TanStack Query for data fetching, RHF + Zod for forms (see `.claude/rules/frontend/react-conventions.md`)
 - Prefer existing patterns in the codebase over introducing new ones
