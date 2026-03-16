@@ -4,5 +4,5 @@ public enum OfferStatus
 {
     Pending,
     Accepted,
-    Expired
+    Rejected
 }

@@ -1,5 +1,6 @@
-using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
+using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Exceptions;
 
 namespace Shadowbrook.Domain.Tests.WaitlistOfferAggregate;
@@ -7,112 +8,86 @@ namespace Shadowbrook.Domain.Tests.WaitlistOfferAggregate;
 public class WaitlistOfferTests
 {
     [Fact]
-    public void Create_SetsPropertiesAndPendingStatus()
+    public void Create_SetsPropertiesAndGeneratesIds()
     {
-        var offer = CreateTestOffer();
+        var requestId = Guid.NewGuid();
+        var entryId = Guid.NewGuid();
+
+        var offer = WaitlistOffer.Create(requestId, entryId);
 
         Assert.NotEqual(Guid.Empty, offer.Id);
         Assert.NotEqual(Guid.Empty, offer.Token);
+        Assert.NotEqual(Guid.Empty, offer.BookingId);
+        Assert.Equal(requestId, offer.TeeTimeRequestId);
+        Assert.Equal(entryId, offer.GolferWaitlistEntryId);
         Assert.Equal(OfferStatus.Pending, offer.Status);
-        Assert.Equal("Test Course", offer.CourseName);
-        Assert.Equal("Jane Smith", offer.GolferName);
-        Assert.Equal("+15558675309", offer.GolferPhone);
-        Assert.Equal(2, offer.GolfersNeeded);
+        Assert.Null(offer.RejectionReason);
     }
 
     [Fact]
     public void Accept_PendingOffer_SetsAcceptedAndRaisesEvent()
     {
-        var offer = CreateTestOffer();
+        var offer = WaitlistOffer.Create(Guid.NewGuid(), Guid.NewGuid());
+        var golfer = Golfer.Create("+15558675309", "Jane", "Smith");
 
-        offer.Accept(currentAcceptanceCount: 0);
+        offer.Accept(golfer);
 
         Assert.Equal(OfferStatus.Accepted, offer.Status);
         var domainEvent = Assert.Single(offer.DomainEvents);
         var accepted = Assert.IsType<WaitlistOfferAccepted>(domainEvent);
         Assert.Equal(offer.Id, accepted.WaitlistOfferId);
-        Assert.Equal(1, accepted.AcceptanceCount);
+        Assert.Equal(offer.BookingId, accepted.BookingId);
+        Assert.Equal(offer.TeeTimeRequestId, accepted.TeeTimeRequestId);
+        Assert.Equal(offer.GolferWaitlistEntryId, accepted.GolferWaitlistEntryId);
+        Assert.Equal(golfer.Id, accepted.GolferId);
     }
 
     [Fact]
     public void Accept_AlreadyAccepted_ThrowsOfferNotPending()
     {
-        var offer = CreateTestOffer();
-        offer.Accept(currentAcceptanceCount: 0);
+        var offer = WaitlistOffer.Create(Guid.NewGuid(), Guid.NewGuid());
+        var golfer = Golfer.Create("+15558675309", "Jane", "Smith");
+        offer.Accept(golfer);
 
-        Assert.Throws<OfferNotPendingException>(() => offer.Accept(0));
+        Assert.Throws<OfferNotPendingException>(() => offer.Accept(golfer));
     }
 
     [Fact]
-    public void Accept_ExpiredOffer_ThrowsOfferExpired()
+    public void Accept_AlreadyRejected_ThrowsOfferNotPending()
     {
-        var offer = CreateTestOffer(expiresAt: DateTimeOffset.UtcNow.AddMinutes(-1));
+        var offer = WaitlistOffer.Create(Guid.NewGuid(), Guid.NewGuid());
+        var golfer = Golfer.Create("+15558675309", "Jane", "Smith");
+        offer.Reject("test reason");
 
-        Assert.Throws<OfferExpiredException>(() => offer.Accept(0));
-        Assert.Equal(OfferStatus.Expired, offer.Status);
+        Assert.Throws<OfferNotPendingException>(() => offer.Accept(golfer));
     }
 
     [Fact]
-    public void Accept_AllSlotsFilled_ThrowsOfferSlotsFilled()
+    public void Reject_PendingOffer_SetsRejectedWithReason()
     {
-        var offer = CreateTestOffer(golfersNeeded: 1);
+        var offer = WaitlistOffer.Create(Guid.NewGuid(), Guid.NewGuid());
 
-        Assert.Throws<OfferSlotsFilledException>(() => offer.Accept(currentAcceptanceCount: 1));
+        offer.Reject("Tee time has been filled.");
+
+        Assert.Equal(OfferStatus.Rejected, offer.Status);
+        Assert.Equal("Tee time has been filled.", offer.RejectionReason);
+        var domainEvent = Assert.Single(offer.DomainEvents);
+        var rejected = Assert.IsType<WaitlistOfferRejected>(domainEvent);
+        Assert.Equal(offer.Id, rejected.WaitlistOfferId);
+        Assert.Equal("Tee time has been filled.", rejected.Reason);
     }
 
     [Fact]
-    public void Expire_PendingOffer_SetsExpired()
+    public void Reject_AlreadyAccepted_NoChange()
     {
-        var offer = CreateTestOffer();
+        var offer = WaitlistOffer.Create(Guid.NewGuid(), Guid.NewGuid());
+        var golfer = Golfer.Create("+15558675309", "Jane", "Smith");
+        offer.Accept(golfer);
+        offer.ClearDomainEvents();
 
-        offer.Expire();
-
-        Assert.Equal(OfferStatus.Expired, offer.Status);
-    }
-
-    [Fact]
-    public void Expire_AlreadyAccepted_NoChange()
-    {
-        var offer = CreateTestOffer();
-        offer.Accept(0);
-
-        offer.Expire();
+        offer.Reject("test");
 
         Assert.Equal(OfferStatus.Accepted, offer.Status);
-    }
-
-    [Fact]
-    public void CheckExpiration_NotExpired_ReturnsFalse()
-    {
-        var offer = CreateTestOffer();
-
-        Assert.False(offer.CheckExpiration());
-        Assert.Equal(OfferStatus.Pending, offer.Status);
-    }
-
-    [Fact]
-    public void CheckExpiration_Expired_ReturnsTrueAndSetsStatus()
-    {
-        var offer = CreateTestOffer(expiresAt: DateTimeOffset.UtcNow.AddMinutes(-1));
-
-        Assert.True(offer.CheckExpiration());
-        Assert.Equal(OfferStatus.Expired, offer.Status);
-    }
-
-    private static WaitlistOffer CreateTestOffer(
-        int golfersNeeded = 2,
-        DateTimeOffset? expiresAt = null)
-    {
-        return WaitlistOffer.Create(
-            teeTimeRequestId: Guid.NewGuid(),
-            golferWaitlistEntryId: Guid.NewGuid(),
-            courseId: Guid.NewGuid(),
-            courseName: "Test Course",
-            date: new DateOnly(2026, 3, 16),
-            teeTime: new TimeOnly(10, 0),
-            golfersNeeded: golfersNeeded,
-            golferName: "Jane Smith",
-            golferPhone: "+15558675309",
-            expiresAt: expiresAt ?? DateTimeOffset.UtcNow.AddMinutes(15));
+        Assert.Empty(offer.DomainEvents);
     }
 }
