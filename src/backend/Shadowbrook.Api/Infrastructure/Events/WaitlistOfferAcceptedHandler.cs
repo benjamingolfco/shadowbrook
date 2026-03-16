@@ -9,6 +9,7 @@ namespace Shadowbrook.Api.Infrastructure.Events;
 
 public class WaitlistOfferAcceptedHandler(
     ApplicationDbContext db,
+    IWaitlistOfferRepository repository,
     ITextMessageService textMessageService)
     : IDomainEventHandler<WaitlistOfferAccepted>
 {
@@ -41,9 +42,7 @@ public class WaitlistOfferAcceptedHandler(
             }
 
             // Expire all other pending offers for this request
-            var pendingOffers = await db.WaitlistOffers
-                .Where(o => o.TeeTimeRequestId == domainEvent.TeeTimeRequestId && o.Status == OfferStatus.Pending)
-                .ToListAsync(ct);
+            var pendingOffers = await repository.GetPendingByRequestAsync(domainEvent.TeeTimeRequestId);
 
             foreach (var offer in pendingOffers)
             {

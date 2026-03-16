@@ -8,6 +8,7 @@ namespace Shadowbrook.Api.Infrastructure.Events;
 
 public class TeeTimeRequestAddedNotifyHandler(
     ApplicationDbContext db,
+    IWaitlistOfferRepository repository,
     ITextMessageService textMessageService,
     IConfiguration configuration)
     : IDomainEventHandler<TeeTimeRequestAdded>
@@ -69,8 +70,8 @@ public class TeeTimeRequestAddedNotifyHandler(
             offers.Add(offer);
         }
 
-        db.WaitlistOffers.AddRange(offers);
-        await db.SaveChangesAsync(ct);
+        repository.AddRange(offers);
+        await repository.SaveAsync();
 
         // Send SMS to each eligible golfer
         var baseUrl = configuration["App:BaseUrl"] ?? "http://localhost:3000";

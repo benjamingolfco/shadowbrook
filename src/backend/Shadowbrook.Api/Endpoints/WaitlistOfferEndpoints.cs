@@ -17,11 +17,9 @@ public static class WaitlistOfferEndpoints
         group.MapPost("/{token:guid}/accept", AcceptOffer);
     }
 
-    private static async Task<IResult> GetOffer(Guid token, ApplicationDbContext db)
+    private static async Task<IResult> GetOffer(Guid token, IWaitlistOfferRepository repository)
     {
-        var offer = await db.WaitlistOffers
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(o => o.Token == token);
+        var offer = await repository.GetByTokenAsync(token);
 
         if (offer is null)
         {
@@ -31,7 +29,7 @@ public static class WaitlistOfferEndpoints
         // Check expiration and persist if status changed
         if (offer.CheckExpiration())
         {
-            await db.SaveChangesAsync();
+            await repository.SaveAsync();
         }
 
         return Results.Ok(new WaitlistOfferResponse(
@@ -47,12 +45,11 @@ public static class WaitlistOfferEndpoints
 
     private static async Task<IResult> AcceptOffer(
         Guid token,
+        IWaitlistOfferRepository repository,
         ApplicationDbContext db,
         CancellationToken ct)
     {
-        var offer = await db.WaitlistOffers
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(o => o.Token == token, ct);
+        var offer = await repository.GetByTokenAsync(token);
 
         if (offer is null)
         {
@@ -62,9 +59,7 @@ public static class WaitlistOfferEndpoints
         // Use serializable transaction to prevent race condition when checking slot capacity
         using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
 
-        var acceptanceCount = await db.WaitlistRequestAcceptances
-            .Where(a => a.WaitlistRequestId == offer.TeeTimeRequestId)
-            .CountAsync(ct);
+        var acceptanceCount = await repository.GetAcceptanceCountAsync(offer.TeeTimeRequestId);
 
         try
         {

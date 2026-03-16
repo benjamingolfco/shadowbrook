@@ -11,6 +11,7 @@ using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate.Exceptions;
+using Shadowbrook.Domain.WaitlistOfferAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
 
@@ -50,8 +51,11 @@ builder.Services.AddScoped<IGolferRepository, GolferRepository>();
 builder.Services.AddScoped<ITeeTimeRequestRepository, TeeTimeRequestRepository>();
 builder.Services.AddScoped<TeeTimeRequestService>();
 builder.Services.AddScoped<IWalkUpWaitlistRepository, WalkUpWaitlistRepository>();
+builder.Services.AddScoped<IWaitlistOfferRepository, WaitlistOfferRepository>();
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
 builder.Services.AddScoped<IDomainEventHandler<Shadowbrook.Domain.WalkUpWaitlistAggregate.Events.GolferJoinedWaitlist>, Shadowbrook.Api.Infrastructure.Events.GolferJoinedWaitlistSmsHandler>();
+builder.Services.AddScoped<IDomainEventHandler<Shadowbrook.Domain.TeeTimeRequestAggregate.Events.TeeTimeRequestAdded>, Shadowbrook.Api.Infrastructure.Events.TeeTimeRequestAddedNotifyHandler>();
+builder.Services.AddScoped<IDomainEventHandler<Shadowbrook.Domain.TeeTimeRequestAggregate.Events.WaitlistOfferAccepted>, Shadowbrook.Api.Infrastructure.Events.WaitlistOfferAcceptedHandler>();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
@@ -106,5 +110,6 @@ api.MapCourseEndpoints();
 api.MapTeeSheetEndpoints();
 api.MapWalkUpWaitlistEndpoints();
 api.MapWalkUpJoinEndpoints();
+app.MapWaitlistOfferEndpoints();
 
 app.Run();
