@@ -86,15 +86,10 @@ export interface WaitlistOfferResponse {
   teeTime: string;    // "HH:mm"
   golfersNeeded: number;
   golferName: string;
-  status: 'Pending' | 'Accepted' | 'Expired';
-  expiresAt: string;  // ISO 8601
+  status: 'Pending' | 'Accepted';
 }
 
 export interface WaitlistOfferAcceptResponse {
   status: string;
-  courseName: string;
-  date: string;
-  teeTime: string;
-  golferName: string;
   message: string;
 }
