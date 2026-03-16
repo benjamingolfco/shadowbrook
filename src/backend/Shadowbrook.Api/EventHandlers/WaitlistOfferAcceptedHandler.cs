@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Events;
-using Shadowbrook.Api.Models;
+using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
@@ -16,20 +16,15 @@ public class WaitlistOfferAcceptedHandler(
 {
     public async Task HandleAsync(WaitlistOfferAccepted domainEvent, CancellationToken ct = default)
     {
-        var now = DateTimeOffset.UtcNow;
-
-        // Create booking
-        var booking = new Booking
-        {
-            Id = Guid.CreateVersion7(),
-            CourseId = domainEvent.CourseId,
-            Date = domainEvent.Date,
-            Time = domainEvent.TeeTime,
-            GolferName = domainEvent.GolferName,
-            PlayerCount = 1,
-            CreatedAt = now,
-            UpdatedAt = now
-        };
+        // Create booking — TODO: pass pre-allocated BookingId from WaitlistOffer; GolferId plumbing added in later task
+        var booking = Booking.Create(
+            bookingId: Guid.CreateVersion7(),
+            courseId: domainEvent.CourseId,
+            golferId: Guid.Empty,
+            date: domainEvent.Date,
+            time: domainEvent.TeeTime,
+            golferName: domainEvent.GolferName,
+            playerCount: 1);
         db.Bookings.Add(booking);
 
         // Check if all slots are filled

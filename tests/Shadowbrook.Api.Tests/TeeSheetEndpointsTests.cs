@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Api.Models;
+using Shadowbrook.Domain.BookingAggregate;
 
 namespace Shadowbrook.Api.Tests;
 
@@ -16,17 +16,14 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IClassF
         using var scope = this.factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        var booking = new Booking
-        {
-            Id = Guid.NewGuid(),
-            CourseId = courseId,
-            Date = DateOnly.ParseExact(date, "yyyy-MM-dd"),
-            Time = TimeOnly.ParseExact(time, "HH:mm"),
-            GolferName = golferName,
-            PlayerCount = playerCount,
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow
-        };
+        var booking = Booking.Create(
+            bookingId: Guid.CreateVersion7(),
+            courseId: courseId,
+            golferId: Guid.Empty,
+            date: DateOnly.ParseExact(date, "yyyy-MM-dd"),
+            time: TimeOnly.ParseExact(time, "HH:mm"),
+            golferName: golferName,
+            playerCount: playerCount);
 
         db.Bookings.Add(booking);
         await db.SaveChangesAsync();

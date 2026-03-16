@@ -3,6 +3,7 @@ using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
 using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Api.Models;
+using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate;
@@ -74,16 +75,8 @@ public class ApplicationDbContext(
             .HasIndex(c => new { c.TenantId, c.Name })
             .IsUnique();
 
-        modelBuilder.Entity<Booking>()
-            .HasOne(b => b.Course)
-            .WithMany()
-            .HasForeignKey(b => b.CourseId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<Booking>()
-            .HasIndex(b => new { b.CourseId, b.Date, b.Time });
-
         // Apply domain entity configurations
+        modelBuilder.ApplyConfiguration(new BookingConfiguration());
         modelBuilder.ApplyConfiguration(new WalkUpWaitlistConfiguration());
         modelBuilder.ApplyConfiguration(new TeeTimeRequestConfiguration());
         modelBuilder.ApplyConfiguration(new GolferConfiguration());
