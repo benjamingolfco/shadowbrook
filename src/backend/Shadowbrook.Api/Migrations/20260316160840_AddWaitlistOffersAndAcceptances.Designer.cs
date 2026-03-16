@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Shadowbrook.Api.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Shadowbrook.Api.Infrastructure.Data;
 namespace Shadowbrook.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260316160840_AddWaitlistOffersAndAcceptances")]
+    partial class AddWaitlistOffersAndAcceptances
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,6 +24,41 @@ namespace Shadowbrook.Api.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("Shadowbrook.Api.Models.Booking", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("GolferName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PlayerCount")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly>("Time")
+                        .HasColumnType("time");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId", "Date", "Time");
+
+                    b.ToTable("Bookings");
+                });
 
             modelBuilder.Entity("Shadowbrook.Api.Models.Course", b =>
                 {
@@ -120,6 +158,70 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("Tenants");
                 });
 
+            modelBuilder.Entity("Shadowbrook.Api.Models.WaitlistOffer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CourseName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("GolferName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("GolferPhone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("GolferWaitlistEntryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("GolfersNeeded")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<TimeOnly>("TeeTime")
+                        .HasColumnType("time");
+
+                    b.Property<Guid>("TeeTimeRequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Token")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeeTimeRequestId");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("GolferWaitlistEntryId", "TeeTimeRequestId");
+
+                    b.ToTable("WaitlistOffers", (string)null);
+                });
+
             modelBuilder.Entity("Shadowbrook.Api.Models.WaitlistRequestAcceptance", b =>
                 {
                     b.Property<Guid>("Id")
@@ -148,44 +250,6 @@ namespace Shadowbrook.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("WaitlistRequestAcceptances", (string)null);
-                });
-
-            modelBuilder.Entity("Shadowbrook.Domain.BookingAggregate.Booking", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CourseId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<Guid>("GolferId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("GolferName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<int>("PlayerCount")
-                        .HasColumnType("int");
-
-                    b.Property<TimeOnly>("Time")
-                        .HasColumnType("time");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CourseId", "Date", "Time");
-
-                    b.ToTable("Bookings", (string)null);
                 });
 
             modelBuilder.Entity("Shadowbrook.Domain.GolferAggregate.Golfer", b =>
@@ -222,7 +286,45 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("Golfers", (string)null);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.GolferWaitlistEntryAggregate.GolferWaitlistEntry", b =>
+            modelBuilder.Entity("Shadowbrook.Domain.TeeTimeRequestAggregate.TeeTimeRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("GolfersNeeded")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<TimeOnly>("TeeTime")
+                        .HasColumnType("time");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId", "Date", "Status")
+                        .HasDatabaseName("IX_WaitlistRequests_CourseId_Date_Status");
+
+                    b.HasIndex("CourseId", "Date", "TeeTime")
+                        .HasDatabaseName("IX_WaitlistRequests_CourseId_Date_TeeTime");
+
+                    b.ToTable("WaitlistRequests", (string)null);
+                });
+
+            modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlistAggregate.GolferWaitlistEntry", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -265,117 +367,6 @@ namespace Shadowbrook.Api.Migrations
                         .HasFilter("[RemovedAt] IS NULL");
 
                     b.ToTable("GolferWaitlistEntries", (string)null);
-                });
-
-            modelBuilder.Entity("Shadowbrook.Domain.TeeTimeRequestAggregate.TeeTimeRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CourseId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<int>("GolfersNeeded")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<TimeOnly>("TeeTime")
-                        .HasColumnType("time");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CourseId", "Date", "Status")
-                        .HasDatabaseName("IX_WaitlistRequests_CourseId_Date_Status");
-
-                    b.HasIndex("CourseId", "Date", "TeeTime")
-                        .HasDatabaseName("IX_WaitlistRequests_CourseId_Date_TeeTime");
-
-                    b.ToTable("WaitlistRequests", (string)null);
-                });
-
-            modelBuilder.Entity("Shadowbrook.Domain.TeeTimeRequestAggregate.TeeTimeSlotFill", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("BookingId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("FilledAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("GolferId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("GroupSize")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("TeeTimeRequestId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BookingId");
-
-                    b.HasIndex("TeeTimeRequestId");
-
-                    b.ToTable("WaitlistSlotFills", (string)null);
-                });
-
-            modelBuilder.Entity("Shadowbrook.Domain.WaitlistOfferAggregate.WaitlistOffer", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("BookingId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("GolferWaitlistEntryId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("RejectionReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<Guid>("TeeTimeRequestId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("Token")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BookingId")
-                        .IsUnique();
-
-                    b.HasIndex("TeeTimeRequestId");
-
-                    b.HasIndex("Token")
-                        .IsUnique();
-
-                    b.HasIndex("GolferWaitlistEntryId", "TeeTimeRequestId");
-
-                    b.ToTable("WaitlistOffers", (string)null);
                 });
 
             modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlistAggregate.WalkUpWaitlist", b =>
@@ -421,6 +412,17 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("CourseWaitlists", (string)null);
                 });
 
+            modelBuilder.Entity("Shadowbrook.Api.Models.Booking", b =>
+                {
+                    b.HasOne("Shadowbrook.Api.Models.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+                });
+
             modelBuilder.Entity("Shadowbrook.Api.Models.Course", b =>
                 {
                     b.HasOne("Shadowbrook.Api.Models.Tenant", "Tenant")
@@ -432,21 +434,6 @@ namespace Shadowbrook.Api.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.GolferWaitlistEntryAggregate.GolferWaitlistEntry", b =>
-                {
-                    b.HasOne("Shadowbrook.Domain.WalkUpWaitlistAggregate.WalkUpWaitlist", null)
-                        .WithMany()
-                        .HasForeignKey("CourseWaitlistId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Shadowbrook.Domain.GolferAggregate.Golfer", null)
-                        .WithMany()
-                        .HasForeignKey("GolferId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Shadowbrook.Domain.TeeTimeRequestAggregate.TeeTimeRequest", b =>
                 {
                     b.HasOne("Shadowbrook.Api.Models.Course", null)
@@ -456,11 +443,17 @@ namespace Shadowbrook.Api.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.TeeTimeRequestAggregate.TeeTimeSlotFill", b =>
+            modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlistAggregate.GolferWaitlistEntry", b =>
                 {
-                    b.HasOne("Shadowbrook.Domain.TeeTimeRequestAggregate.TeeTimeRequest", null)
-                        .WithMany("SlotFills")
-                        .HasForeignKey("TeeTimeRequestId")
+                    b.HasOne("Shadowbrook.Domain.WalkUpWaitlistAggregate.WalkUpWaitlist", null)
+                        .WithMany("Entries")
+                        .HasForeignKey("CourseWaitlistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Shadowbrook.Domain.GolferAggregate.Golfer", null)
+                        .WithMany()
+                        .HasForeignKey("GolferId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -479,9 +472,9 @@ namespace Shadowbrook.Api.Migrations
                     b.Navigation("Courses");
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.TeeTimeRequestAggregate.TeeTimeRequest", b =>
+            modelBuilder.Entity("Shadowbrook.Domain.WalkUpWaitlistAggregate.WalkUpWaitlist", b =>
                 {
-                    b.Navigation("SlotFills");
+                    b.Navigation("Entries");
                 });
 #pragma warning restore 612, 618
         }
