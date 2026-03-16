@@ -70,11 +70,7 @@ public class WalkUpWaitlist : Entity
         {
             GolferWaitlistEntryId = entry.Id,
             CourseWaitlistId = Id,
-            GolferId = golfer.Id,
-            GolferName = golfer.FullName,
-            GolferPhone = golfer.Phone,
-            CourseId = CourseId,
-            Position = 0
+            GolferId = golfer.Id
         });
 
         UpdatedAt = DateTimeOffset.UtcNow;
