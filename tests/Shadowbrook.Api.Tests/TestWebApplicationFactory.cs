@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Shadowbrook.Api.Infrastructure.Data;
+using Wolverine;
 
 namespace Shadowbrook.Api.Tests;
 
@@ -31,6 +32,10 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             connection.Open();
 
             services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(connection));
+
+            // Disable Wolverine's SQL Server transport for SQLite-based tests
+            services.DisableAllExternalWolverineTransports();
+            services.RunWolverineInSoloMode();
         });
 
         builder.UseEnvironment("Testing");

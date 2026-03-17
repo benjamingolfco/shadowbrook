@@ -53,8 +53,11 @@ builder.Host.UseWolverine(opts =>
 {
     opts.Discovery.IncludeAssembly(typeof(Program).Assembly);
 
-    opts.PersistMessagesWithSqlServer(connectionString!, "wolverine")
-        .EnableMessageTransport();
+    if (connectionString is not null)
+    {
+        opts.UseSqlServerPersistenceAndTransport(connectionString, "wolverine")
+            .AutoProvision();
+    }
 
     opts.MultipleHandlerBehavior = MultipleHandlerBehavior.Separated;
 
