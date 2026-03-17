@@ -4,22 +4,20 @@ using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Endpoints;
 using Shadowbrook.Api.Endpoints.Filters;
 using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Api.Infrastructure.Repositories;
 using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.BookingAggregate;
-using Shadowbrook.Domain.BookingAggregate.Events;
 using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.GolferAggregate;
+using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate;
-using Shadowbrook.Domain.TeeTimeRequestAggregate.Events;
-using Shadowbrook.Domain.TeeTimeRequestAggregate.Exceptions;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
-using Shadowbrook.Domain.WaitlistOfferAggregate.Exceptions;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate;
+using Shadowbrook.Domain.TeeTimeRequestAggregate.Exceptions;
+using Shadowbrook.Domain.WaitlistOfferAggregate.Exceptions;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
+using Wolverine;
+using Wolverine.SqlServer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,9 +48,21 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+builder.Host.UseWolverine(opts =>
+{
+    opts.Discovery.IncludeAssembly(typeof(Program).Assembly);
+
+    opts.UseSqlServerPersistenceAndTransport(connectionString!, "wolverine")
+        .AutoProvision();
+
+    opts.MultipleHandlerBehavior = MultipleHandlerBehavior.Separated;
+
+    opts.Handlers.OnException<DbUpdateConcurrencyException>()
+        .RetryTimes(3);
+});
+
 builder.Services.AddSingleton<InMemoryTextMessageService>();
 builder.Services.AddSingleton<ITextMessageService>(sp => sp.GetRequiredService<InMemoryTextMessageService>());
-builder.Services.AddScoped<IDomainEventPublisher, InProcessDomainEventPublisher>();
 builder.Services.AddScoped<IGolferRepository, GolferRepository>();
 builder.Services.AddScoped<ITeeTimeRequestRepository, TeeTimeRequestRepository>();
 builder.Services.AddScoped<TeeTimeRequestService>();
@@ -61,31 +71,6 @@ builder.Services.AddScoped<IWaitlistOfferRepository, WaitlistOfferRepository>();
 builder.Services.AddScoped<IGolferWaitlistEntryRepository, GolferWaitlistEntryRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
-
-// Domain event handlers
-builder.Services.AddScoped<IDomainEventHandler<Shadowbrook.Domain.WalkUpWaitlistAggregate.Events.GolferJoinedWaitlist>, Shadowbrook.Api.EventHandlers.GolferJoinedWaitlistSmsHandler>();
-builder.Services.AddScoped<IDomainEventHandler<TeeTimeRequestAdded>, Shadowbrook.Api.EventHandlers.TeeTimeRequestAddedNotifyHandler>();
-
-// WaitlistOfferAccepted → two handlers
-builder.Services.AddScoped<IDomainEventHandler<WaitlistOfferAccepted>, Shadowbrook.Api.EventHandlers.WaitlistOfferAcceptedFillHandler>();
-builder.Services.AddScoped<IDomainEventHandler<WaitlistOfferAccepted>, Shadowbrook.Api.EventHandlers.WaitlistOfferAcceptedSmsHandler>();
-
-// TeeTimeSlotFilled → one handler
-builder.Services.AddScoped<IDomainEventHandler<TeeTimeSlotFilled>, Shadowbrook.Api.EventHandlers.TeeTimeSlotFilledBookingHandler>();
-
-// TeeTimeSlotFillFailed → one handler
-builder.Services.AddScoped<IDomainEventHandler<TeeTimeSlotFillFailed>, Shadowbrook.Api.EventHandlers.TeeTimeSlotFillFailedHandler>();
-
-// TeeTimeRequestFulfilled → one handler
-builder.Services.AddScoped<IDomainEventHandler<TeeTimeRequestFulfilled>, Shadowbrook.Api.EventHandlers.TeeTimeRequestFulfilledHandler>();
-
-// BookingCreated → two handlers
-builder.Services.AddScoped<IDomainEventHandler<BookingCreated>, Shadowbrook.Api.EventHandlers.BookingCreatedRemoveFromWaitlistHandler>();
-builder.Services.AddScoped<IDomainEventHandler<BookingCreated>, Shadowbrook.Api.EventHandlers.BookingCreatedConfirmationSmsHandler>();
-
-// WaitlistOfferRejected → two handlers
-builder.Services.AddScoped<IDomainEventHandler<WaitlistOfferRejected>, Shadowbrook.Api.EventHandlers.WaitlistOfferRejectedSmsHandler>();
-builder.Services.AddScoped<IDomainEventHandler<WaitlistOfferRejected>, Shadowbrook.Api.EventHandlers.WaitlistOfferRejectedNextOfferHandler>();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
