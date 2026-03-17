@@ -17,6 +17,7 @@ using Shadowbrook.Domain.TeeTimeRequestAggregate.Exceptions;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Exceptions;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
 using Wolverine;
+using Wolverine.ErrorHandling;
 using Wolverine.SqlServer;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,12 +53,12 @@ builder.Host.UseWolverine(opts =>
 {
     opts.Discovery.IncludeAssembly(typeof(Program).Assembly);
 
-    opts.UseSqlServerPersistenceAndTransport(connectionString!, "wolverine")
-        .AutoProvision();
+    opts.PersistMessagesWithSqlServer(connectionString!, "wolverine")
+        .EnableMessageTransport();
 
     opts.MultipleHandlerBehavior = MultipleHandlerBehavior.Separated;
 
-    opts.Handlers.OnException<DbUpdateConcurrencyException>()
+    opts.OnException<DbUpdateConcurrencyException>()
         .RetryTimes(3);
 });
 
