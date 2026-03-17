@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
@@ -13,9 +12,8 @@ public class GolferJoinedWaitlistSmsHandler(
     IGolferRepository golferRepository,
     IGolferWaitlistEntryRepository entryRepository,
     ApplicationDbContext db)
-    : IDomainEventHandler<GolferJoinedWaitlist>
 {
-    public async Task HandleAsync(GolferJoinedWaitlist domainEvent, CancellationToken ct = default)
+    public async Task Handle(GolferJoinedWaitlist domainEvent, CancellationToken ct)
     {
         var entry = await entryRepository.GetByIdAsync(domainEvent.GolferWaitlistEntryId);
         if (entry is null)

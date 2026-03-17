@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.BookingAggregate.Events;
 using Shadowbrook.Domain.Common;
@@ -13,9 +12,8 @@ public class BookingCreatedConfirmationSmsHandler(
     IBookingRepository bookingRepository,
     ApplicationDbContext db,
     ITextMessageService textMessageService)
-    : IDomainEventHandler<BookingCreated>
 {
-    public async Task HandleAsync(BookingCreated domainEvent, CancellationToken ct = default)
+    public async Task Handle(BookingCreated domainEvent, CancellationToken ct)
     {
         var golfer = await golferRepository.GetByIdAsync(domainEvent.GolferId);
         if (golfer is null)

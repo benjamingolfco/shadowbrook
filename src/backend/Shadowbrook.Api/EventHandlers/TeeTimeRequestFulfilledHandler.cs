@@ -1,5 +1,3 @@
-using Shadowbrook.Api.Infrastructure.Events;
-using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.TeeTimeRequestAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 
@@ -7,9 +5,8 @@ namespace Shadowbrook.Api.EventHandlers;
 
 public class TeeTimeRequestFulfilledHandler(
     IWaitlistOfferRepository offerRepository)
-    : IDomainEventHandler<TeeTimeRequestFulfilled>
 {
-    public async Task HandleAsync(TeeTimeRequestFulfilled domainEvent, CancellationToken ct = default)
+    public async Task Handle(TeeTimeRequestFulfilled domainEvent, CancellationToken ct)
     {
         var pendingOffers = await offerRepository.GetPendingByRequestAsync(domainEvent.TeeTimeRequestId);
 

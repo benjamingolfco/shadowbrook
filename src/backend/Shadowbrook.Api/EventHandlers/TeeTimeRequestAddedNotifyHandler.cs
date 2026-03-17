@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.TeeTimeRequestAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
@@ -12,9 +11,8 @@ public class TeeTimeRequestAddedNotifyHandler(
     IWaitlistOfferRepository repository,
     ITextMessageService textMessageService,
     IConfiguration configuration)
-    : IDomainEventHandler<TeeTimeRequestAdded>
 {
-    public async Task HandleAsync(TeeTimeRequestAdded domainEvent, CancellationToken ct = default)
+    public async Task Handle(TeeTimeRequestAdded domainEvent, CancellationToken ct)
     {
         // Find the open waitlist for this course + date
         var waitlist = await db.WalkUpWaitlists

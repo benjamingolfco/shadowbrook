@@ -1,6 +1,4 @@
-using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Domain.BookingAggregate;
-using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate;
@@ -15,9 +13,8 @@ public class TeeTimeSlotFilledBookingHandler(
     IWaitlistOfferRepository offerRepository,
     IGolferWaitlistEntryRepository entryRepository,
     IBookingRepository bookingRepository)
-    : IDomainEventHandler<TeeTimeSlotFilled>
 {
-    public async Task HandleAsync(TeeTimeSlotFilled domainEvent, CancellationToken ct = default)
+    public async Task Handle(TeeTimeSlotFilled domainEvent, CancellationToken ct)
     {
         var request = await requestRepository.GetByIdAsync(domainEvent.TeeTimeRequestId);
         if (request is null)
