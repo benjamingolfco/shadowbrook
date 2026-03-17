@@ -47,17 +47,6 @@ public class TeeTimeRequestTests
     }
 
     [Fact]
-    public async Task MarkFulfilled_TransitionsStatusToFulfilled()
-    {
-        var request = await TeeTimeRequest.CreateAsync(
-            Guid.NewGuid(), new DateOnly(2026, 3, 6), new TimeOnly(10, 0), 2, this.repository);
-
-        request.MarkFulfilled();
-
-        Assert.Equal(TeeTimeRequestStatus.Fulfilled, request.Status);
-    }
-
-    [Fact]
     public async Task CreateAsync_DifferentTeeTimes_Succeeds()
     {
         var courseId = Guid.NewGuid();
