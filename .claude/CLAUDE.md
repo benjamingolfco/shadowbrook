@@ -31,6 +31,7 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - Database: SQL Server (local via `docker compose up db -d`, EF Core migrations)
 - Frontend: React 19, TypeScript 5.9, Vite 7, React Router, TanStack Query, React Hook Form + Zod, Tailwind CSS, shadcn/ui
 - Package manager: pnpm (never npm or yarn)
+- Messaging: WolverineFx (SQL Server transport, migrating to Azure Service Bus)
 - SMS: ITextMessageService abstraction (Twilio planned)
 - Infra: Azure (planned)
 

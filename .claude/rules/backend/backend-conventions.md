@@ -73,10 +73,44 @@ paths:
 
 - Events carry **identifiers only** — handlers look up the data they need at handling time
 - Events are immutable `record` types implementing `IDomainEvent`
-- Events are dispatched automatically via `ApplicationDbContext.SaveChangesAsync()` override
+- Events are dispatched via Wolverine's `IMessageBus` — `ApplicationDbContext.SaveChangesAsync()` harvests events from tracked entities and publishes them
 - Event handlers live in `EventHandlers/` (top-level Api project folder, sibling to `Infrastructure/`)
-- Event infrastructure (interfaces, publisher) lives in `Infrastructure/Events/`
 - Each handler does **one thing** and raises **one event** — chain handlers for multi-step flows
+
+### Wolverine (Message Bus)
+
+The project uses [WolverineFx](https://wolverinefx.net) for message handling, replacing a custom in-process event dispatcher.
+
+**Handler conventions:**
+- Handlers are plain classes with a `Handle` method — no interface to implement
+- Wolverine discovers handlers automatically by convention (scans the assembly)
+- Dependencies are constructor-injected via primary constructors (instance style)
+- Method signature: `public async Task Handle(EventType domainEvent, CancellationToken ct)`
+- Handlers that need to publish follow-on events inject `IMessageBus` and call `bus.PublishAsync()`
+
+**Configuration (Program.cs):**
+- `UseWolverine()` on the host builder with SQL Server persistence and transport
+- `MultipleHandlerBehavior.Separated` — multiple handlers for the same event type run independently (isolated failure domains)
+- `OnException<DbUpdateConcurrencyException>().RetryTimes(3)` — automatic retry for optimistic concurrency conflicts
+
+**Testing:**
+- `TestWebApplicationFactory` disables external transports via `services.DisableAllExternalWolverineTransports()` and `services.RunWolverineInSoloMode()` for SQLite-based tests
+- Handlers still fire in tests — only the durable transport is disabled
+
+**Handler example:**
+```csharp
+public class TeeTimeSlotFillFailedHandler(
+    IWaitlistOfferRepository offerRepository)
+{
+    public async Task Handle(TeeTimeSlotFillFailed domainEvent, CancellationToken ct)
+    {
+        var offer = await offerRepository.GetByIdAsync(domainEvent.OfferId);
+        if (offer is null) return;
+        offer.Reject(domainEvent.Reason);
+        await offerRepository.SaveAsync();
+    }
+}
+```
 
 ### Saga Pattern (Event-Driven Choreography)
 
@@ -87,6 +121,7 @@ For operations spanning multiple aggregates, use sequential event chains instead
 - Compensation flows handle failures by walking backward (undo previous steps)
 - Domain outcomes that represent business failures (e.g., rejection, slot full) are **not exceptions** — they are successful state transitions that raise events
 - Pre-allocate IDs (e.g., `BookingId` on `WaitlistOffer`) when downstream steps need correlation
+- Wolverine's `MultipleHandlerBehavior.Separated` ensures that if one handler for an event fails, the others still run independently
 
 ### Result Objects
 
