@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.TeeTimeRequestAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
@@ -14,9 +13,8 @@ public class WaitlistOfferRejectedNextOfferHandler(
     ApplicationDbContext db,
     ITextMessageService textMessageService,
     IConfiguration configuration)
-    : IDomainEventHandler<WaitlistOfferRejected>
 {
-    public async Task HandleAsync(WaitlistOfferRejected domainEvent, CancellationToken ct = default)
+    public async Task Handle(WaitlistOfferRejected domainEvent, CancellationToken ct)
     {
         // Get the rejected offer to find the TeeTimeRequestId
         var rejectedOffer = await offerRepository.GetByIdAsync(domainEvent.WaitlistOfferId);
