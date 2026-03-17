@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
-using Shadowbrook.Api.Infrastructure.Events;
+using Wolverine;
 using Shadowbrook.Api.Models;
 using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.Common;
@@ -16,7 +16,7 @@ namespace Shadowbrook.Api.Infrastructure.Data;
 public class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,
     ICurrentUser? currentUser = null,
-    IDomainEventPublisher? eventPublisher = null) : DbContext(options)
+    IMessageBus? bus = null) : DbContext(options)
 {
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Course> Courses => Set<Course>();
@@ -41,11 +41,11 @@ public class ApplicationDbContext(
             entity.Entity.ClearDomainEvents();
         }
 
-        if (eventPublisher is not null)
+        if (bus is not null)
         {
             foreach (var domainEvent in domainEvents)
             {
-                await eventPublisher.PublishAsync(domainEvent, cancellationToken);
+                await bus.PublishAsync(domainEvent);
             }
         }
 
