@@ -1,31 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
-using Shadowbrook.Api.Endpoints.Filters;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Models;
+using Wolverine.Http;
 
 namespace Shadowbrook.Api.Endpoints;
 
 public static class CourseEndpoints
 {
-    public static void MapCourseEndpoints(this IEndpointRouteBuilder app)
-    {
-        var group = app.MapGroup("/courses");
-
-        group.MapPost("", CreateCourse);
-        group.MapGet("", GetAllCourses);
-        group.MapGet("{id:guid}", GetCourseById);
-
-        var courseGroup = group.MapGroup("{id:guid}")
-            .AddEndpointFilter<CourseExistsFilter>();
-
-        courseGroup.MapPut("tee-time-settings", UpdateTeeTimeSettings);
-        courseGroup.MapGet("tee-time-settings", GetTeeTimeSettings);
-        courseGroup.MapPut("pricing", UpdatePricing);
-        courseGroup.MapGet("pricing", GetPricing);
-    }
-
-    private static async Task<IResult> CreateCourse(
+    [WolverinePost("/courses")]
+    public static async Task<IResult> CreateCourse(
         CreateCourseRequest request,
         ApplicationDbContext db,
         ICurrentUser currentUser)
@@ -77,7 +61,6 @@ public static class CourseEndpoints
         };
 
         db.Courses.Add(course);
-        await db.SaveChangesAsync();
 
         var response = new CourseResponse(
             course.Id,
@@ -95,7 +78,8 @@ public static class CourseEndpoints
         return Results.Created($"/courses/{course.Id}", response);
     }
 
-    private static async Task<IResult> GetAllCourses(ApplicationDbContext db, ICurrentUser currentUser)
+    [WolverineGet("/courses")]
+    public static async Task<IResult> GetAllCourses(ApplicationDbContext db, ICurrentUser currentUser)
     {
         // Query filter automatically scopes to tenant when TenantId is present
         var courses = await db.Courses
@@ -116,7 +100,8 @@ public static class CourseEndpoints
         return Results.Ok(courses);
     }
 
-    private static async Task<IResult> GetCourseById(Guid id, ApplicationDbContext db)
+    [WolverineGet("/courses/{id}")]
+    public static async Task<IResult> GetCourseById(Guid id, ApplicationDbContext db)
     {
         var course = await db.Courses
             .Include(c => c.Tenant)
@@ -139,12 +124,18 @@ public static class CourseEndpoints
 
     private static readonly int[] allowedIntervals = [8, 10, 12];
 
-    private static async Task<IResult> UpdateTeeTimeSettings(
+    [WolverinePut("/courses/{id}/tee-time-settings")]
+    public static async Task<IResult> UpdateTeeTimeSettings(
         Guid id,
         TeeTimeSettingsRequest request,
         ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (course is null)
+        {
+            return Results.NotFound(new { error = "Course not found." });
+        }
 
         if (!allowedIntervals.Contains(request.TeeTimeIntervalMinutes))
         {
@@ -156,12 +147,10 @@ public static class CourseEndpoints
             return Results.BadRequest(new { error = "First tee time must be before last tee time." });
         }
 
-        course!.TeeTimeIntervalMinutes = request.TeeTimeIntervalMinutes;
+        course.TeeTimeIntervalMinutes = request.TeeTimeIntervalMinutes;
         course.FirstTeeTime = request.FirstTeeTime;
         course.LastTeeTime = request.LastTeeTime;
         course.UpdatedAt = DateTimeOffset.UtcNow;
-
-        await db.SaveChangesAsync();
 
         return Results.Ok(new TeeTimeSettingsResponse(
             course.TeeTimeIntervalMinutes.Value,
@@ -169,11 +158,17 @@ public static class CourseEndpoints
             course.LastTeeTime.Value));
     }
 
-    private static async Task<IResult> GetTeeTimeSettings(Guid id, ApplicationDbContext db)
+    [WolverineGet("/courses/{id}/tee-time-settings")]
+    public static async Task<IResult> GetTeeTimeSettings(Guid id, ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
 
-        if (course!.TeeTimeIntervalMinutes is null || course.FirstTeeTime is null || course.LastTeeTime is null)
+        if (course is null)
+        {
+            return Results.NotFound(new { error = "Course not found." });
+        }
+
+        if (course.TeeTimeIntervalMinutes is null || course.FirstTeeTime is null || course.LastTeeTime is null)
         {
             return Results.Ok(new { });
         }
@@ -184,12 +179,18 @@ public static class CourseEndpoints
             course.LastTeeTime.Value));
     }
 
-    private static async Task<IResult> UpdatePricing(
+    [WolverinePut("/courses/{id}/pricing")]
+    public static async Task<IResult> UpdatePricing(
         Guid id,
         PricingRequest request,
         ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (course is null)
+        {
+            return Results.NotFound(new { error = "Course not found." });
+        }
 
         if (request.FlatRatePrice < 0)
         {
@@ -201,19 +202,23 @@ public static class CourseEndpoints
             return Results.BadRequest(new { error = "Price must be less than or equal to 10000." });
         }
 
-        course!.FlatRatePrice = request.FlatRatePrice;
+        course.FlatRatePrice = request.FlatRatePrice;
         course.UpdatedAt = DateTimeOffset.UtcNow;
-
-        await db.SaveChangesAsync();
 
         return Results.Ok(new PricingResponse(course.FlatRatePrice.Value));
     }
 
-    private static async Task<IResult> GetPricing(Guid id, ApplicationDbContext db)
+    [WolverineGet("/courses/{id}/pricing")]
+    public static async Task<IResult> GetPricing(Guid id, ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
 
-        if (course!.FlatRatePrice is null)
+        if (course is null)
+        {
+            return Results.NotFound(new { error = "Course not found." });
+        }
+
+        if (course.FlatRatePrice is null)
         {
             return Results.Ok(new { });
         }

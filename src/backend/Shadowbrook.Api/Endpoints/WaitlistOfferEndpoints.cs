@@ -3,20 +3,14 @@ using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Wolverine.Http;
 
 namespace Shadowbrook.Api.Endpoints;
 
 public static class WaitlistOfferEndpoints
 {
-    public static void MapWaitlistOfferEndpoints(this IEndpointRouteBuilder app)
-    {
-        var group = app.MapGroup("/waitlist/offers");
-
-        group.MapGet("/{token:guid}", GetOffer);
-        group.MapPost("/{token:guid}/accept", AcceptOffer);
-    }
-
-    private static async Task<IResult> GetOffer(Guid token, ApplicationDbContext db)
+    [WolverineGet("/waitlist/offers/{token}")]
+    public static async Task<IResult> GetOffer(Guid token, ApplicationDbContext db)
     {
         var raw = await db.WaitlistOffers
             .IgnoreQueryFilters()
@@ -52,7 +46,8 @@ public static class WaitlistOfferEndpoints
             raw.Status.ToString()));
     }
 
-    private static async Task<IResult> AcceptOffer(
+    [WolverinePost("/waitlist/offers/{token}/accept")]
+    public static async Task<IResult> AcceptOffer(
         Guid token,
         IWaitlistOfferRepository offerRepository,
         IGolferWaitlistEntryRepository entryRepository,
@@ -80,7 +75,6 @@ public static class WaitlistOfferEndpoints
         }
 
         offer.Accept(golfer);
-        await offerRepository.SaveAsync();
 
         return Results.Ok(new WaitlistOfferAcceptResponse(
             "Processing",

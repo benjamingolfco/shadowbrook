@@ -35,7 +35,4 @@ public class WaitlistOfferRepository(ApplicationDbContext db) : IWaitlistOfferRe
 
     public void AddRange(IEnumerable<WaitlistOffer> offers) =>
         db.WaitlistOffers.AddRange(offers);
-
-    public async Task SaveAsync() =>
-        await db.SaveChangesAsync();
 }

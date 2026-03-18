@@ -31,7 +31,4 @@ public class TeeTimeRequestRepository(ApplicationDbContext db) : ITeeTimeRequest
 
     public void Add(TeeTimeRequest request) =>
         db.TeeTimeRequests.Add(request);
-
-    public async Task SaveAsync() =>
-        await db.SaveChangesAsync();
 }

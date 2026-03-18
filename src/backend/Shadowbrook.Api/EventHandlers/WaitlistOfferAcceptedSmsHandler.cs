@@ -5,12 +5,14 @@ using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
 namespace Shadowbrook.Api.EventHandlers;
 
-public class WaitlistOfferAcceptedSmsHandler(
-    IGolferWaitlistEntryRepository entryRepository,
-    IGolferRepository golferRepository,
-    ITextMessageService textMessageService)
+public static class WaitlistOfferAcceptedSmsHandler
 {
-    public async Task Handle(WaitlistOfferAccepted domainEvent, CancellationToken ct)
+    public static async Task Handle(
+        WaitlistOfferAccepted domainEvent,
+        IGolferWaitlistEntryRepository entryRepository,
+        IGolferRepository golferRepository,
+        ITextMessageService textMessageService,
+        CancellationToken ct)
     {
         var entry = await entryRepository.GetByIdAsync(domainEvent.GolferWaitlistEntryId);
         if (entry is null)

@@ -1,6 +1,5 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Endpoints.Filters;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.GolferAggregate;
@@ -8,43 +7,47 @@ using Shadowbrook.Domain.TeeTimeRequestAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
+using Wolverine.Http;
 
 namespace Shadowbrook.Api.Endpoints;
 
 public static class WalkUpWaitlistEndpoints
 {
-    public static void MapWalkUpWaitlistEndpoints(this IEndpointRouteBuilder app)
-    {
-        var group = app.MapGroup("/courses/{courseId:guid}/walkup-waitlist")
-            .AddEndpointFilter<CourseExistsFilter>();
-
-        group.MapPost("/open", OpenWaitlist);
-        group.MapPost("/close", CloseWaitlist);
-        group.MapGet("/today", GetToday);
-        group.MapPost("/requests", CreateWaitlistRequest);
-        group.MapPost("/entries", AddGolferToWaitlist);
-    }
-
-    private static async Task<IResult> OpenWaitlist(
+    [WolverinePost("/courses/{courseId}/walkup-waitlist/open")]
+    public static async Task<IResult> OpenWaitlist(
         Guid courseId,
+        ApplicationDbContext db,
         IWalkUpWaitlistRepository repo,
         IShortCodeGenerator shortCodeGenerator)
     {
+        var courseExists = await db.Courses.AnyAsync(c => c.Id == courseId);
+        if (!courseExists)
+        {
+            return Results.NotFound(new { error = "Course not found." });
+        }
+
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         var waitlist = await WalkUpWaitlist.OpenAsync(courseId, today, shortCodeGenerator, repo);
 
         repo.Add(waitlist);
-        await repo.SaveAsync();
 
         var response = ToResponse(waitlist);
         return Results.Created($"/courses/{courseId}/walkup-waitlist/today", response);
     }
 
-    private static async Task<IResult> CloseWaitlist(
+    [WolverinePost("/courses/{courseId}/walkup-waitlist/close")]
+    public static async Task<IResult> CloseWaitlist(
         Guid courseId,
+        ApplicationDbContext db,
         IWalkUpWaitlistRepository repo)
     {
+        var courseExists = await db.Courses.AnyAsync(c => c.Id == courseId);
+        if (!courseExists)
+        {
+            return Results.NotFound(new { error = "Course not found." });
+        }
+
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         var waitlist = await repo.GetOpenByCourseDateAsync(courseId, today);
@@ -56,16 +59,21 @@ public static class WalkUpWaitlistEndpoints
 
         waitlist.Close();
 
-        await repo.SaveAsync();
-
         return Results.Ok(ToResponse(waitlist));
     }
 
-    private static async Task<IResult> GetToday(
+    [WolverineGet("/courses/{courseId}/walkup-waitlist/today")]
+    public static async Task<IResult> GetToday(
         Guid courseId,
-        IWalkUpWaitlistRepository repo,
-        ApplicationDbContext db)
+        ApplicationDbContext db,
+        IWalkUpWaitlistRepository repo)
     {
+        var courseExists = await db.Courses.AnyAsync(c => c.Id == courseId);
+        if (!courseExists)
+        {
+            return Results.NotFound(new { error = "Course not found." });
+        }
+
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         var waitlist = await repo.GetByCourseDateAsync(courseId, today);
@@ -93,12 +101,20 @@ public static class WalkUpWaitlistEndpoints
         return Results.Ok(new WalkUpWaitlistTodayResponse(waitlistResponse, entries, requests));
     }
 
-    private static async Task<IResult> CreateWaitlistRequest(
+    [WolverinePost("/courses/{courseId}/walkup-waitlist/requests")]
+    public static async Task<IResult> CreateWaitlistRequest(
         Guid courseId,
         CreateWalkUpWaitlistRequestRequest request,
+        ApplicationDbContext db,
         TeeTimeRequestService teeTimeRequestService,
         ITeeTimeRequestRepository teeTimeRequestRepo)
     {
+        var courseExists = await db.Courses.AnyAsync(c => c.Id == courseId);
+        if (!courseExists)
+        {
+            return Results.NotFound(new { error = "Course not found." });
+        }
+
         var parsedDate = DateOnly.ParseExact(request.Date, "yyyy-MM-dd");
         var parsedTeeTime = TimeOnly.ParseExact(request.TeeTime, ["HH:mm", "HH:mm:ss"]);
 
@@ -106,7 +122,6 @@ public static class WalkUpWaitlistEndpoints
             courseId, parsedDate, parsedTeeTime, request.GolfersNeeded);
 
         teeTimeRequestRepo.Add(teeTimeRequest);
-        await teeTimeRequestRepo.SaveAsync();
 
         var response = new WalkUpWaitlistRequestResponse(
             teeTimeRequest.Id,
@@ -117,14 +132,21 @@ public static class WalkUpWaitlistEndpoints
         return Results.Created($"/courses/{courseId}/walkup-waitlist/requests/{teeTimeRequest.Id}", response);
     }
 
-    private static async Task<IResult> AddGolferToWaitlist(
+    [WolverinePost("/courses/{courseId}/walkup-waitlist/entries")]
+    public static async Task<IResult> AddGolferToWaitlist(
         Guid courseId,
         AddGolferToWaitlistRequest request,
+        ApplicationDbContext db,
         IWalkUpWaitlistRepository repo,
         IGolferWaitlistEntryRepository entryRepo,
-        IGolferRepository golferRepo,
-        ApplicationDbContext db)
+        IGolferRepository golferRepo)
     {
+        var courseExists = await db.Courses.AnyAsync(c => c.Id == courseId);
+        if (!courseExists)
+        {
+            return Results.NotFound(new { error = "Course not found." });
+        }
+
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var normalizedPhone = PhoneNormalizer.Normalize(request.Phone);
 
@@ -150,7 +172,7 @@ public static class WalkUpWaitlistEndpoints
 
             try
             {
-                await golferRepo.SaveAsync();
+                await db.SaveChangesAsync();
             }
             catch (DbUpdateException)
             {
@@ -173,7 +195,6 @@ public static class WalkUpWaitlistEndpoints
 
         var entry = waitlist.AddGolfer(golfer, request.GroupSize ?? 1);
         entryRepo.Add(entry);
-        await entryRepo.SaveAsync();
 
         var joinedAt = entry.JoinedAt;
         var activeEntries = await db.GolferWaitlistEntries

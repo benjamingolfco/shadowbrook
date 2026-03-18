@@ -2,21 +2,14 @@ using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Models;
 using System.Text.RegularExpressions;
+using Wolverine.Http;
 
 namespace Shadowbrook.Api.Endpoints;
 
 public static partial class TenantEndpoints
 {
-    public static void MapTenantEndpoints(this IEndpointRouteBuilder app)
-    {
-        var group = app.MapGroup("/tenants");
-
-        group.MapPost("", CreateTenant);
-        group.MapGet("", GetAllTenants);
-        group.MapGet("{id:guid}", GetTenantById);
-    }
-
-    private static async Task<IResult> CreateTenant(
+    [WolverinePost("/tenants")]
+    public static async Task<IResult> CreateTenant(
         CreateTenantRequest request,
         ApplicationDbContext db)
     {
@@ -67,7 +60,6 @@ public static partial class TenantEndpoints
         };
 
         db.Tenants.Add(tenant);
-        await db.SaveChangesAsync();
 
         var response = new TenantResponse(
             tenant.Id,
@@ -81,7 +73,8 @@ public static partial class TenantEndpoints
         return Results.Created($"/tenants/{tenant.Id}", response);
     }
 
-    private static async Task<IResult> GetAllTenants(ApplicationDbContext db)
+    [WolverineGet("/tenants")]
+    public static async Task<IResult> GetAllTenants(ApplicationDbContext db)
     {
         var tenants = await db.Tenants
             .Select(t => new TenantListResponse(
@@ -98,7 +91,8 @@ public static partial class TenantEndpoints
         return Results.Ok(tenants);
     }
 
-    private static async Task<IResult> GetTenantById(Guid id, ApplicationDbContext db)
+    [WolverineGet("/tenants/{id}")]
+    public static async Task<IResult> GetTenantById(Guid id, ApplicationDbContext db)
     {
         var tenant = await db.Tenants
             .Include(t => t.Courses)

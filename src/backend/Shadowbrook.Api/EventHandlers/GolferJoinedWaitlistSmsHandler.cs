@@ -7,13 +7,15 @@ using Shadowbrook.Domain.WalkUpWaitlistAggregate.Events;
 
 namespace Shadowbrook.Api.EventHandlers;
 
-public class GolferJoinedWaitlistSmsHandler(
-    ITextMessageService textMessageService,
-    IGolferRepository golferRepository,
-    IGolferWaitlistEntryRepository entryRepository,
-    ApplicationDbContext db)
+public static class GolferJoinedWaitlistSmsHandler
 {
-    public async Task Handle(GolferJoinedWaitlist domainEvent, CancellationToken ct)
+    public static async Task Handle(
+        GolferJoinedWaitlist domainEvent,
+        ITextMessageService textMessageService,
+        IGolferRepository golferRepository,
+        IGolferWaitlistEntryRepository entryRepository,
+        ApplicationDbContext db,
+        CancellationToken ct)
     {
         var entry = await entryRepository.GetByIdAsync(domainEvent.GolferWaitlistEntryId);
         if (entry is null)

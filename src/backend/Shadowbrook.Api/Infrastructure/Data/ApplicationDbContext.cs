@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
-using Wolverine;
 using Shadowbrook.Api.Models;
 using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.Common;
@@ -15,8 +14,7 @@ namespace Shadowbrook.Api.Infrastructure.Data;
 
 public class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,
-    ICurrentUser? currentUser = null,
-    IMessageBus? bus = null) : DbContext(options)
+    ICurrentUser? currentUser = null) : DbContext(options)
 {
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Course> Courses => Set<Course>();
@@ -27,30 +25,6 @@ public class ApplicationDbContext(
     public DbSet<Golfer> Golfers => Set<Golfer>();
     public DbSet<GolferWaitlistEntry> GolferWaitlistEntries => Set<GolferWaitlistEntry>();
     public DbSet<WaitlistOffer> WaitlistOffers => Set<WaitlistOffer>();
-
-    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        var result = await base.SaveChangesAsync(cancellationToken);
-
-        var domainEvents = ChangeTracker.Entries<Entity>()
-            .SelectMany(e => e.Entity.DomainEvents)
-            .ToList();
-
-        foreach (var entity in ChangeTracker.Entries<Entity>())
-        {
-            entity.Entity.ClearDomainEvents();
-        }
-
-        if (bus is not null)
-        {
-            foreach (var domainEvent in domainEvents)
-            {
-                await bus.PublishAsync(domainEvent);
-            }
-        }
-
-        return result;
-    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

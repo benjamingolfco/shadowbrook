@@ -6,5 +6,4 @@ public interface ITeeTimeRequestRepository
     Task<TeeTimeRequest?> GetByIdAsync(Guid id);
     Task<List<TeeTimeRequest>> GetByCourseAndDateAsync(Guid courseId, DateOnly date);
     void Add(TeeTimeRequest request);
-    Task SaveAsync();
 }

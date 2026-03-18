@@ -1,18 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
+using Wolverine.Http;
 
 namespace Shadowbrook.Api.Endpoints;
 
 public static class TeeSheetEndpoints
 {
-    public static void MapTeeSheetEndpoints(this IEndpointRouteBuilder app)
-    {
-        var group = app.MapGroup("/tee-sheets");
-
-        group.MapGet("", GetTeeSheet);
-    }
-
-    private static async Task<IResult> GetTeeSheet(
+    [WolverineGet("/tee-sheets")]
+    public static async Task<IResult> GetTeeSheet(
         Guid? courseId,
         string? date,
         ApplicationDbContext db)

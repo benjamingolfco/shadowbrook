@@ -7,14 +7,16 @@ using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
 namespace Shadowbrook.Api.EventHandlers;
 
-public class WaitlistOfferRejectedNextOfferHandler(
-    IWaitlistOfferRepository offerRepository,
-    ITeeTimeRequestRepository requestRepository,
-    ApplicationDbContext db,
-    ITextMessageService textMessageService,
-    IConfiguration configuration)
+public static class WaitlistOfferRejectedNextOfferHandler
 {
-    public async Task Handle(WaitlistOfferRejected domainEvent, CancellationToken ct)
+    public static async Task Handle(
+        WaitlistOfferRejected domainEvent,
+        IWaitlistOfferRepository offerRepository,
+        ITeeTimeRequestRepository requestRepository,
+        ApplicationDbContext db,
+        ITextMessageService textMessageService,
+        IConfiguration configuration,
+        CancellationToken ct)
     {
         // Get the rejected offer to find the TeeTimeRequestId
         var rejectedOffer = await offerRepository.GetByIdAsync(domainEvent.WaitlistOfferId);
@@ -83,7 +85,6 @@ public class WaitlistOfferRejectedNextOfferHandler(
             golferWaitlistEntryId: nextEntry.Entry.Id);
 
         offerRepository.Add(offer);
-        await offerRepository.SaveAsync();
 
         var baseUrl = configuration["App:BaseUrl"] ?? "http://localhost:3000";
         var message = $"{courseName}: {request.TeeTime:h:mm tt} tee time available! Claim your spot: {baseUrl}/book/walkup/{offer.Token}";

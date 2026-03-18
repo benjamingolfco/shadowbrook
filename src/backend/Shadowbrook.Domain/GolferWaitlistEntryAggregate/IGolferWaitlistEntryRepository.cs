@@ -6,5 +6,4 @@ public interface IGolferWaitlistEntryRepository
     Task<GolferWaitlistEntry?> GetActiveByWaitlistAndGolferAsync(Guid courseWaitlistId, Guid golferId);
     Task<List<GolferWaitlistEntry>> GetActiveByWaitlistAsync(Guid courseWaitlistId);
     void Add(GolferWaitlistEntry entry);
-    Task SaveAsync();
 }

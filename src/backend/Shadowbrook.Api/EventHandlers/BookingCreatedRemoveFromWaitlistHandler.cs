@@ -4,11 +4,12 @@ using Shadowbrook.Domain.WaitlistOfferAggregate;
 
 namespace Shadowbrook.Api.EventHandlers;
 
-public class BookingCreatedRemoveFromWaitlistHandler(
-    IWaitlistOfferRepository offerRepository,
-    IGolferWaitlistEntryRepository entryRepository)
+public static class BookingCreatedRemoveFromWaitlistHandler
 {
-    public async Task Handle(BookingCreated domainEvent, CancellationToken ct)
+    public static async Task Handle(
+        BookingCreated domainEvent,
+        IWaitlistOfferRepository offerRepository,
+        IGolferWaitlistEntryRepository entryRepository)
     {
         var offer = await offerRepository.GetByBookingIdAsync(domainEvent.BookingId);
         if (offer is null)
@@ -23,6 +24,5 @@ public class BookingCreatedRemoveFromWaitlistHandler(
         }
 
         entry.Remove();
-        await entryRepository.SaveAsync();
     }
 }

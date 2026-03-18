@@ -27,7 +27,4 @@ public class GolferWaitlistEntryRepository(ApplicationDbContext db) : IGolferWai
 
     public void Add(GolferWaitlistEntry entry) =>
         db.GolferWaitlistEntries.Add(entry);
-
-    public async Task SaveAsync() =>
-        await db.SaveChangesAsync();
 }

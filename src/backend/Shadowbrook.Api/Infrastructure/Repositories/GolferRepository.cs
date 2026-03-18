@@ -22,7 +22,4 @@ public class GolferRepository(ApplicationDbContext db) : IGolferRepository
 
     public void Add(Golfer golfer) =>
         db.Golfers.Add(golfer);
-
-    public async Task SaveAsync() =>
-        await db.SaveChangesAsync();
 }

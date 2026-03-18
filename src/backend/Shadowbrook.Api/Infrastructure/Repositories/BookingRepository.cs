@@ -11,7 +11,4 @@ public class BookingRepository(ApplicationDbContext db) : IBookingRepository
 
     public void Add(Booking booking) =>
         db.Bookings.Add(booking);
-
-    public async Task SaveAsync() =>
-        await db.SaveChangesAsync();
 }

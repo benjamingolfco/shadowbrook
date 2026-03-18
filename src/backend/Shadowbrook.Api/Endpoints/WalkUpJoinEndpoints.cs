@@ -6,20 +6,14 @@ using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
+using Wolverine.Http;
 
 namespace Shadowbrook.Api.Endpoints;
 
 public static class WalkUpJoinEndpoints
 {
-    public static void MapWalkUpJoinEndpoints(this IEndpointRouteBuilder app)
-    {
-        var group = app.MapGroup("/walkup");
-
-        group.MapPost("/verify", VerifyShortCode);
-        group.MapPost("/join", JoinWaitlist);
-    }
-
-    private static async Task<IResult> VerifyShortCode(VerifyCodeRequest request, ApplicationDbContext db)
+    [WolverinePost("/walkup/verify")]
+    public static async Task<IResult> VerifyShortCode(VerifyCodeRequest request, ApplicationDbContext db)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -45,7 +39,8 @@ public static class WalkUpJoinEndpoints
             waitlist.ShortCode));
     }
 
-    private static async Task<IResult> JoinWaitlist(
+    [WolverinePost("/walkup/join")]
+    public static async Task<IResult> JoinWaitlist(
         JoinWaitlistRequest request,
         IWalkUpWaitlistRepository waitlistRepo,
         IGolferWaitlistEntryRepository entryRepo,
@@ -78,7 +73,7 @@ public static class WalkUpJoinEndpoints
 
             try
             {
-                await golferRepo.SaveAsync();
+                await db.SaveChangesAsync();
             }
             catch (DbUpdateException)
             {
@@ -101,7 +96,6 @@ public static class WalkUpJoinEndpoints
 
         var entry = waitlist.AddGolfer(golfer);
         entryRepo.Add(entry);
-        await entryRepo.SaveAsync();
 
         var joinedAt = entry.JoinedAt;
         var activeEntries = await db.GolferWaitlistEntries

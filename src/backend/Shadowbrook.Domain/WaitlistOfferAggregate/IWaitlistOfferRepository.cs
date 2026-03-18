@@ -8,5 +8,4 @@ public interface IWaitlistOfferRepository
     Task<List<WaitlistOffer>> GetPendingByRequestAsync(Guid teeTimeRequestId);
     void Add(WaitlistOffer offer);
     void AddRange(IEnumerable<WaitlistOffer> offers);
-    Task SaveAsync();
 }

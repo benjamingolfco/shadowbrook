@@ -3,10 +3,9 @@ using Shadowbrook.Domain.WaitlistOfferAggregate;
 
 namespace Shadowbrook.Api.EventHandlers;
 
-public class TeeTimeRequestFulfilledHandler(
-    IWaitlistOfferRepository offerRepository)
+public static class TeeTimeRequestFulfilledHandler
 {
-    public async Task Handle(TeeTimeRequestFulfilled domainEvent, CancellationToken ct)
+    public static async Task Handle(TeeTimeRequestFulfilled domainEvent, IWaitlistOfferRepository offerRepository)
     {
         var pendingOffers = await offerRepository.GetPendingByRequestAsync(domainEvent.TeeTimeRequestId);
 
@@ -15,9 +14,5 @@ public class TeeTimeRequestFulfilledHandler(
             offer.Reject("Tee time has been filled.");
         }
 
-        if (pendingOffers.Count > 0)
-        {
-            await offerRepository.SaveAsync();
-        }
     }
 }

@@ -7,14 +7,15 @@ using Shadowbrook.Domain.WaitlistOfferAggregate;
 
 namespace Shadowbrook.Api.EventHandlers;
 
-public class TeeTimeSlotFilledBookingHandler(
-    ITeeTimeRequestRepository requestRepository,
-    IGolferRepository golferRepository,
-    IWaitlistOfferRepository offerRepository,
-    IGolferWaitlistEntryRepository entryRepository,
-    IBookingRepository bookingRepository)
+public static class TeeTimeSlotFilledBookingHandler
 {
-    public async Task Handle(TeeTimeSlotFilled domainEvent, CancellationToken ct)
+    public static async Task Handle(
+        TeeTimeSlotFilled domainEvent,
+        ITeeTimeRequestRepository requestRepository,
+        IGolferRepository golferRepository,
+        IWaitlistOfferRepository offerRepository,
+        IGolferWaitlistEntryRepository entryRepository,
+        IBookingRepository bookingRepository)
     {
         var request = await requestRepository.GetByIdAsync(domainEvent.TeeTimeRequestId);
         if (request is null)
@@ -50,6 +51,5 @@ public class TeeTimeSlotFilledBookingHandler(
             playerCount: entry.GroupSize);
 
         bookingRepository.Add(booking);
-        await bookingRepository.SaveAsync();
     }
 }

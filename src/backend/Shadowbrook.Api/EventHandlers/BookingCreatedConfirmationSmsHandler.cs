@@ -7,13 +7,15 @@ using Shadowbrook.Domain.GolferAggregate;
 
 namespace Shadowbrook.Api.EventHandlers;
 
-public class BookingCreatedConfirmationSmsHandler(
-    IGolferRepository golferRepository,
-    IBookingRepository bookingRepository,
-    ApplicationDbContext db,
-    ITextMessageService textMessageService)
+public static class BookingCreatedConfirmationSmsHandler
 {
-    public async Task Handle(BookingCreated domainEvent, CancellationToken ct)
+    public static async Task Handle(
+        BookingCreated domainEvent,
+        IGolferRepository golferRepository,
+        IBookingRepository bookingRepository,
+        ApplicationDbContext db,
+        ITextMessageService textMessageService,
+        CancellationToken ct)
     {
         var golfer = await golferRepository.GetByIdAsync(domainEvent.GolferId);
         if (golfer is null)

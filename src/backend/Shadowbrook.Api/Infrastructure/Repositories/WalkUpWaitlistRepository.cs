@@ -27,7 +27,4 @@ public class WalkUpWaitlistRepository(ApplicationDbContext db) : IWalkUpWaitlist
 
     public void Add(WalkUpWaitlist waitlist) =>
         db.WalkUpWaitlists.Add(waitlist);
-
-    public async Task SaveAsync() =>
-        await db.SaveChangesAsync();
 }

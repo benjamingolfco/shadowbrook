@@ -6,13 +6,15 @@ using Shadowbrook.Domain.WaitlistOfferAggregate;
 
 namespace Shadowbrook.Api.EventHandlers;
 
-public class TeeTimeRequestAddedNotifyHandler(
-    ApplicationDbContext db,
-    IWaitlistOfferRepository repository,
-    ITextMessageService textMessageService,
-    IConfiguration configuration)
+public static class TeeTimeRequestAddedNotifyHandler
 {
-    public async Task Handle(TeeTimeRequestAdded domainEvent, CancellationToken ct)
+    public static async Task Handle(
+        TeeTimeRequestAdded domainEvent,
+        ApplicationDbContext db,
+        IWaitlistOfferRepository repository,
+        ITextMessageService textMessageService,
+        IConfiguration configuration,
+        CancellationToken ct)
     {
         // Find the open waitlist for this course + date
         var waitlist = await db.WalkUpWaitlists
@@ -73,7 +75,6 @@ public class TeeTimeRequestAddedNotifyHandler(
         }
 
         repository.AddRange(offers.Select(o => o.Offer));
-        await repository.SaveAsync();
 
         // Send SMS to each eligible golfer
         var baseUrl = configuration["App:BaseUrl"] ?? "http://localhost:3000";

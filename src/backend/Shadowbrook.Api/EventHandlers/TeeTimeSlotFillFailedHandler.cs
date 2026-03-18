@@ -3,10 +3,9 @@ using Shadowbrook.Domain.WaitlistOfferAggregate;
 
 namespace Shadowbrook.Api.EventHandlers;
 
-public class TeeTimeSlotFillFailedHandler(
-    IWaitlistOfferRepository offerRepository)
+public static class TeeTimeSlotFillFailedHandler
 {
-    public async Task Handle(TeeTimeSlotFillFailed domainEvent, CancellationToken ct)
+    public static async Task Handle(TeeTimeSlotFillFailed domainEvent, IWaitlistOfferRepository offerRepository)
     {
         var offer = await offerRepository.GetByIdAsync(domainEvent.OfferId);
         if (offer is null)
@@ -15,6 +14,5 @@ public class TeeTimeSlotFillFailedHandler(
         }
 
         offer.Reject(domainEvent.Reason);
-        await offerRepository.SaveAsync();
     }
 }
