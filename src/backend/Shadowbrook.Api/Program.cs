@@ -17,7 +17,10 @@ using Shadowbrook.Domain.TeeTimeRequestAggregate.Exceptions;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Exceptions;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
 using Wolverine;
+using Wolverine.EntityFrameworkCore;
 using Wolverine.ErrorHandling;
+using Wolverine.FluentValidation;
+using Wolverine.Http;
 using Wolverine.SqlServer;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -63,6 +66,10 @@ builder.Host.UseWolverine(opts =>
 
     opts.OnException<DbUpdateConcurrencyException>()
         .RetryTimes(3);
+
+    opts.UseEntityFrameworkCoreTransactions();
+    opts.UseFluentValidation();
+    opts.PublishDomainEventsFromEntityFrameworkCore<Entity, IDomainEvent>(e => e.DomainEvents);
 });
 
 builder.Services.AddSingleton<InMemoryTextMessageService>();
@@ -76,6 +83,7 @@ builder.Services.AddScoped<IGolferWaitlistEntryRepository, GolferWaitlistEntryRe
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+builder.Services.AddWolverineHttp();
 
 var app = builder.Build();
 
@@ -131,5 +139,7 @@ api.MapTeeSheetEndpoints();
 api.MapWalkUpWaitlistEndpoints();
 api.MapWalkUpJoinEndpoints();
 api.MapWaitlistOfferEndpoints();
+
+app.MapWolverineEndpoints();
 
 app.Run();
