@@ -21,6 +21,7 @@ using Wolverine.ErrorHandling;
 using Wolverine.FluentValidation;
 using Wolverine.Http;
 using Wolverine.Http.FluentValidation;
+using Shadowbrook.Api.Endpoints.Middleware;
 using Wolverine.SqlServer;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -136,6 +137,8 @@ if (app.Environment.EnvironmentName == "Testing")
 app.MapWolverineEndpoints(opts =>
 {
     opts.UseFluentValidationProblemDetailMiddleware();
+    opts.AddMiddleware(typeof(CourseExistsMiddleware),
+        chain => chain.RoutePattern?.RawText?.Contains("{courseId}") == true);
 });
 
 app.Run();

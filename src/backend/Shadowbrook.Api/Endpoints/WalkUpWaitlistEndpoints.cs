@@ -13,12 +13,6 @@ namespace Shadowbrook.Api.Endpoints;
 
 public static class WalkUpWaitlistEndpoints
 {
-    public static async Task<IResult?> Before(Guid courseId, [NotBody] ApplicationDbContext db)
-    {
-        var courseExists = await db.Courses.AnyAsync(c => c.Id == courseId);
-        return courseExists ? null : Results.NotFound(new { error = "Course not found." });
-    }
-
     [WolverinePost("/courses/{courseId}/walkup-waitlist/open")]
     public static async Task<IResult> OpenWaitlist(
         Guid courseId,
