@@ -16,7 +16,7 @@ Canonical reference: https://wolverinefx.net/llms-full.txt — fetch this when y
 | Route param | `Guid id` matches `{id}` in route |
 | Request body | First complex non-service type parameter |
 | DI service | Interfaces and registered types resolve automatically |
-| DbContext param | **Must use `[NotBody]`** — Wolverine treats it as request body otherwise |
+| DbContext param | Use `[NotBody]` only on POST/PUT endpoints where no request body type exists (e.g., `OpenWaitlist(Guid courseId, [NotBody] ApplicationDbContext db)`). Not needed on GET endpoints or when another type is already the body. |
 | Save changes | **Don't** — transactional middleware calls `SaveChangesAsync()` automatically |
 | Domain events | Scraped from `Entity.DomainEvents` via `PublishDomainEventsFromEntityFrameworkCore` |
 | Cascading messages | Return `object?` from handler — non-null values published as messages |
@@ -66,7 +66,9 @@ app.MapWolverineEndpoints(opts =>
 
 ### `[NotBody]` missing on `ApplicationDbContext`
 **Symptom:** `Error trying to deserialize JSON from incoming HTTP body to type ApplicationDbContext`
-**Fix:** Add `[NotBody]` attribute to every `ApplicationDbContext` parameter in HTTP endpoints. Wolverine treats the first non-interface complex type as the request body.
+**When:** POST/PUT endpoints where `ApplicationDbContext` is the first concrete non-service type and there's no request body parameter before it (e.g., `OpenWaitlist(Guid courseId, ApplicationDbContext db)`).
+**Not needed:** On GET endpoints (no body), or when another type already serves as the body (e.g., `CreateTenant(CreateTenantRequest request, ApplicationDbContext db)` — `request` is the body).
+**Fix:** Add `[NotBody]` to `ApplicationDbContext` on the affected POST/PUT endpoints only.
 
 ### Wrong FluentValidation package for HTTP
 **Symptom:** FluentValidation validators not running on HTTP endpoints (invalid requests get through).
