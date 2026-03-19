@@ -13,6 +13,12 @@ namespace Shadowbrook.Api.Endpoints;
 
 public static class WalkUpWaitlistEndpoints
 {
+    public static async Task<IResult?> Before(Guid courseId, [NotBody] ApplicationDbContext db)
+    {
+        var courseExists = await db.Courses.AnyAsync(c => c.Id == courseId);
+        return courseExists ? null : Results.NotFound(new { error = "Course not found." });
+    }
+
     [WolverinePost("/courses/{courseId}/walkup-waitlist/open")]
     public static async Task<IResult> OpenWaitlist(
         Guid courseId,
@@ -20,12 +26,6 @@ public static class WalkUpWaitlistEndpoints
         IWalkUpWaitlistRepository repo,
         IShortCodeGenerator shortCodeGenerator)
     {
-        var courseExists = await db.Courses.AnyAsync(c => c.Id == courseId);
-        if (!courseExists)
-        {
-            return Results.NotFound(new { error = "Course not found." });
-        }
-
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         var waitlist = await WalkUpWaitlist.OpenAsync(courseId, today, shortCodeGenerator, repo);
@@ -42,12 +42,6 @@ public static class WalkUpWaitlistEndpoints
         [NotBody] ApplicationDbContext db,
         IWalkUpWaitlistRepository repo)
     {
-        var courseExists = await db.Courses.AnyAsync(c => c.Id == courseId);
-        if (!courseExists)
-        {
-            return Results.NotFound(new { error = "Course not found." });
-        }
-
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         var waitlist = await repo.GetOpenByCourseDateAsync(courseId, today);
@@ -68,12 +62,6 @@ public static class WalkUpWaitlistEndpoints
         [NotBody] ApplicationDbContext db,
         IWalkUpWaitlistRepository repo)
     {
-        var courseExists = await db.Courses.AnyAsync(c => c.Id == courseId);
-        if (!courseExists)
-        {
-            return Results.NotFound(new { error = "Course not found." });
-        }
-
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         var waitlist = await repo.GetByCourseDateAsync(courseId, today);
@@ -109,12 +97,6 @@ public static class WalkUpWaitlistEndpoints
         TeeTimeRequestService teeTimeRequestService,
         ITeeTimeRequestRepository teeTimeRequestRepo)
     {
-        var courseExists = await db.Courses.AnyAsync(c => c.Id == courseId);
-        if (!courseExists)
-        {
-            return Results.NotFound(new { error = "Course not found." });
-        }
-
         var parsedDate = DateOnly.ParseExact(request.Date, "yyyy-MM-dd");
         var parsedTeeTime = TimeOnly.ParseExact(request.TeeTime, ["HH:mm", "HH:mm:ss"]);
 
@@ -141,12 +123,6 @@ public static class WalkUpWaitlistEndpoints
         IGolferWaitlistEntryRepository entryRepo,
         IGolferRepository golferRepo)
     {
-        var courseExists = await db.Courses.AnyAsync(c => c.Id == courseId);
-        if (!courseExists)
-        {
-            return Results.NotFound(new { error = "Course not found." });
-        }
-
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var normalizedPhone = PhoneNormalizer.Normalize(request.Phone);
 
