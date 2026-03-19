@@ -13,7 +13,7 @@ namespace Shadowbrook.Api.Endpoints;
 public static class WalkUpJoinEndpoints
 {
     [WolverinePost("/walkup/verify")]
-    public static async Task<IResult> VerifyShortCode(VerifyCodeRequest request, [NotBody] ApplicationDbContext db)
+    public static async Task<IResult> VerifyShortCode(VerifyCodeRequest request, ApplicationDbContext db)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -45,7 +45,7 @@ public static class WalkUpJoinEndpoints
         IWalkUpWaitlistRepository waitlistRepo,
         IGolferWaitlistEntryRepository entryRepo,
         IGolferRepository golferRepo,
-        [NotBody] ApplicationDbContext db)
+        ApplicationDbContext db)
     {
         var normalizedPhone = PhoneNormalizer.Normalize(request.Phone);
 

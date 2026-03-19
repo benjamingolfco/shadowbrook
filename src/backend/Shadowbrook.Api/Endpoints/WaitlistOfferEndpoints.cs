@@ -10,7 +10,7 @@ namespace Shadowbrook.Api.Endpoints;
 public static class WaitlistOfferEndpoints
 {
     [WolverineGet("/waitlist/offers/{token}")]
-    public static async Task<IResult> GetOffer(Guid token, [NotBody] ApplicationDbContext db)
+    public static async Task<IResult> GetOffer(Guid token, ApplicationDbContext db)
     {
         var raw = await db.WaitlistOffers
             .IgnoreQueryFilters()

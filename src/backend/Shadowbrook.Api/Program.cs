@@ -59,8 +59,10 @@ builder.Host.UseWolverine(opts =>
 
     if (connectionString is not null)
     {
-        opts.PersistMessagesWithSqlServer(connectionString, "wolverine")
-            .EnableMessageTransport(transport => transport.AutoProvision());
+        #pragma warning disable CS0618 // EnableMessageTransport not implemented in 5.20.1
+        opts.UseSqlServerPersistenceAndTransport(connectionString, "wolverine")
+            .AutoProvision();
+        #pragma warning restore CS0618
     }
 
     opts.MultipleHandlerBehavior = MultipleHandlerBehavior.Separated;

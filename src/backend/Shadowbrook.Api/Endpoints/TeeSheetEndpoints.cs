@@ -10,7 +10,7 @@ public static class TeeSheetEndpoints
     public static async Task<IResult> GetTeeSheet(
         Guid? courseId,
         string? date,
-        [NotBody] ApplicationDbContext db)
+        ApplicationDbContext db)
     {
         if (courseId is null)
         {

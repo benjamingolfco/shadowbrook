@@ -11,7 +11,7 @@ public static class CourseEndpoints
     [WolverinePost("/courses")]
     public static async Task<IResult> CreateCourse(
         CreateCourseRequest request,
-        [NotBody] ApplicationDbContext db,
+        ApplicationDbContext db,
         ICurrentUser currentUser)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
@@ -79,7 +79,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses")]
-    public static async Task<IResult> GetAllCourses([NotBody] ApplicationDbContext db, ICurrentUser currentUser)
+    public static async Task<IResult> GetAllCourses(ApplicationDbContext db, ICurrentUser currentUser)
     {
         // Query filter automatically scopes to tenant when TenantId is present
         var courses = await db.Courses
@@ -101,7 +101,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses/{id}")]
-    public static async Task<IResult> GetCourseById(Guid id, [NotBody] ApplicationDbContext db)
+    public static async Task<IResult> GetCourseById(Guid id, ApplicationDbContext db)
     {
         var course = await db.Courses
             .Include(c => c.Tenant)
@@ -128,7 +128,7 @@ public static class CourseEndpoints
     public static async Task<IResult> UpdateTeeTimeSettings(
         Guid id,
         TeeTimeSettingsRequest request,
-        [NotBody] ApplicationDbContext db)
+        ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
 
@@ -159,7 +159,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses/{id}/tee-time-settings")]
-    public static async Task<IResult> GetTeeTimeSettings(Guid id, [NotBody] ApplicationDbContext db)
+    public static async Task<IResult> GetTeeTimeSettings(Guid id, ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
 
@@ -183,7 +183,7 @@ public static class CourseEndpoints
     public static async Task<IResult> UpdatePricing(
         Guid id,
         PricingRequest request,
-        [NotBody] ApplicationDbContext db)
+        ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
 
@@ -209,7 +209,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses/{id}/pricing")]
-    public static async Task<IResult> GetPricing(Guid id, [NotBody] ApplicationDbContext db)
+    public static async Task<IResult> GetPricing(Guid id, ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
 

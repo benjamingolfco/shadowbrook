@@ -53,7 +53,7 @@ public static class WalkUpWaitlistEndpoints
     [WolverineGet("/courses/{courseId}/walkup-waitlist/today")]
     public static async Task<IResult> GetToday(
         Guid courseId,
-        [NotBody] ApplicationDbContext db,
+        ApplicationDbContext db,
         IWalkUpWaitlistRepository repo)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -87,7 +87,7 @@ public static class WalkUpWaitlistEndpoints
     public static async Task<IResult> CreateWaitlistRequest(
         Guid courseId,
         CreateWalkUpWaitlistRequestRequest request,
-        [NotBody] ApplicationDbContext db,
+        ApplicationDbContext db,
         TeeTimeRequestService teeTimeRequestService,
         ITeeTimeRequestRepository teeTimeRequestRepo)
     {
@@ -112,7 +112,7 @@ public static class WalkUpWaitlistEndpoints
     public static async Task<IResult> AddGolferToWaitlist(
         Guid courseId,
         AddGolferToWaitlistRequest request,
-        [NotBody] ApplicationDbContext db,
+        ApplicationDbContext db,
         IWalkUpWaitlistRepository repo,
         IGolferWaitlistEntryRepository entryRepo,
         IGolferRepository golferRepo)
