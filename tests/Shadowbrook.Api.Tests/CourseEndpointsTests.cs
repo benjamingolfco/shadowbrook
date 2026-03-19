@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 
 namespace Shadowbrook.Api.Tests;
-
 public class CourseEndpointsTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient client = factory.CreateClient();

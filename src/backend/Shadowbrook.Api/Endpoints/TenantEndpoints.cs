@@ -11,7 +11,7 @@ public static partial class TenantEndpoints
     [WolverinePost("/tenants")]
     public static async Task<IResult> CreateTenant(
         CreateTenantRequest request,
-        ApplicationDbContext db)
+        [NotBody] ApplicationDbContext db)
     {
         if (string.IsNullOrWhiteSpace(request.OrganizationName))
         {
@@ -74,7 +74,7 @@ public static partial class TenantEndpoints
     }
 
     [WolverineGet("/tenants")]
-    public static async Task<IResult> GetAllTenants(ApplicationDbContext db)
+    public static async Task<IResult> GetAllTenants([NotBody] ApplicationDbContext db)
     {
         var tenants = await db.Tenants
             .Select(t => new TenantListResponse(
@@ -92,7 +92,7 @@ public static partial class TenantEndpoints
     }
 
     [WolverineGet("/tenants/{id}")]
-    public static async Task<IResult> GetTenantById(Guid id, ApplicationDbContext db)
+    public static async Task<IResult> GetTenantById(Guid id, [NotBody] ApplicationDbContext db)
     {
         var tenant = await db.Tenants
             .Include(t => t.Courses)

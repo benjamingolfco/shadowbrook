@@ -1,5 +1,4 @@
 namespace Shadowbrook.Api.Tests;
-
 public class SmokeTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient client = factory.CreateClient();

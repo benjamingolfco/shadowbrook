@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Shadowbrook.Api.Infrastructure.Services;
 
 namespace Shadowbrook.Api.Tests;
-
 public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient client = factory.CreateClient();

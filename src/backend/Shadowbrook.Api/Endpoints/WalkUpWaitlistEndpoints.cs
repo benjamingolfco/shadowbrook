@@ -16,7 +16,7 @@ public static class WalkUpWaitlistEndpoints
     [WolverinePost("/courses/{courseId}/walkup-waitlist/open")]
     public static async Task<IResult> OpenWaitlist(
         Guid courseId,
-        ApplicationDbContext db,
+        [NotBody] ApplicationDbContext db,
         IWalkUpWaitlistRepository repo,
         IShortCodeGenerator shortCodeGenerator)
     {
@@ -39,7 +39,7 @@ public static class WalkUpWaitlistEndpoints
     [WolverinePost("/courses/{courseId}/walkup-waitlist/close")]
     public static async Task<IResult> CloseWaitlist(
         Guid courseId,
-        ApplicationDbContext db,
+        [NotBody] ApplicationDbContext db,
         IWalkUpWaitlistRepository repo)
     {
         var courseExists = await db.Courses.AnyAsync(c => c.Id == courseId);
@@ -65,7 +65,7 @@ public static class WalkUpWaitlistEndpoints
     [WolverineGet("/courses/{courseId}/walkup-waitlist/today")]
     public static async Task<IResult> GetToday(
         Guid courseId,
-        ApplicationDbContext db,
+        [NotBody] ApplicationDbContext db,
         IWalkUpWaitlistRepository repo)
     {
         var courseExists = await db.Courses.AnyAsync(c => c.Id == courseId);
@@ -105,7 +105,7 @@ public static class WalkUpWaitlistEndpoints
     public static async Task<IResult> CreateWaitlistRequest(
         Guid courseId,
         CreateWalkUpWaitlistRequestRequest request,
-        ApplicationDbContext db,
+        [NotBody] ApplicationDbContext db,
         TeeTimeRequestService teeTimeRequestService,
         ITeeTimeRequestRepository teeTimeRequestRepo)
     {
@@ -136,7 +136,7 @@ public static class WalkUpWaitlistEndpoints
     public static async Task<IResult> AddGolferToWaitlist(
         Guid courseId,
         AddGolferToWaitlistRequest request,
-        ApplicationDbContext db,
+        [NotBody] ApplicationDbContext db,
         IWalkUpWaitlistRepository repo,
         IGolferWaitlistEntryRepository entryRepo,
         IGolferRepository golferRepo)

@@ -20,6 +20,7 @@ using Wolverine.EntityFrameworkCore;
 using Wolverine.ErrorHandling;
 using Wolverine.FluentValidation;
 using Wolverine.Http;
+using Wolverine.Http.FluentValidation;
 using Wolverine.SqlServer;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -67,6 +68,7 @@ builder.Host.UseWolverine(opts =>
         .RetryTimes(3);
 
     opts.UseEntityFrameworkCoreTransactions();
+    opts.Policies.AutoApplyTransactions();
     opts.UseFluentValidation();
     opts.PublishDomainEventsFromEntityFrameworkCore<Entity, IDomainEvent>(e => e.DomainEvents);
 });
@@ -131,6 +133,9 @@ if (app.Environment.EnvironmentName == "Testing")
     app.MapGet("/debug/current-user", (ICurrentUser currentUser) => Results.Ok(new { TenantId = currentUser.TenantId }));
 }
 
-app.MapWolverineEndpoints();
+app.MapWolverineEndpoints(opts =>
+{
+    opts.UseFluentValidationProblemDetailMiddleware();
+});
 
 app.Run();

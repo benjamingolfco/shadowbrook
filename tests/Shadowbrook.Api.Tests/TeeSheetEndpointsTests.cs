@@ -5,7 +5,6 @@ using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.BookingAggregate;
 
 namespace Shadowbrook.Api.Tests;
-
 public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient client = factory.CreateClient();
