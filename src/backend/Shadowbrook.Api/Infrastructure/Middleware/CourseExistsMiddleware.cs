@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Wolverine.Http;
 
-namespace Shadowbrook.Api.Endpoints.Middleware;
+namespace Shadowbrook.Api.Infrastructure.Middleware;
 
 public static class CourseExistsMiddleware
 {

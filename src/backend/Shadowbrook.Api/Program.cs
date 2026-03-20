@@ -1,7 +1,7 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
-using Shadowbrook.Api.Endpoints;
+using Shadowbrook.Api.Features.Dev;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Repositories;
 using Shadowbrook.Api.Infrastructure.Services;
@@ -21,7 +21,7 @@ using Wolverine.ErrorHandling;
 using Wolverine.FluentValidation;
 using Wolverine.Http;
 using Wolverine.Http.FluentValidation;
-using Shadowbrook.Api.Endpoints.Middleware;
+using Shadowbrook.Api.Infrastructure.Middleware;
 using Wolverine.SqlServer;
 
 var builder = WebApplication.CreateBuilder(args);

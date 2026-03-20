@@ -167,6 +167,11 @@ public static class WalkUpWaitlistEndpoints
         var entry = waitlist.AddGolfer(golfer, request.GroupSize ?? 1);
         entryRepo.Add(entry);
 
+        // Intentional mid-flow save: position query reads from DB,
+        // so the new entry must be flushed first. This mirrors the golfer
+        // upsert pattern above. Wolverine won't double-save a clean tracker.
+        await db.SaveChangesAsync();
+
         var joinedAt = entry.JoinedAt;
         var activeEntries = await db.GolferWaitlistEntries
             .Where(e => e.CourseWaitlistId == waitlist.Id && e.RemovedAt == null)
