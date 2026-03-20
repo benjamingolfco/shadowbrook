@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
@@ -14,11 +15,6 @@ public static class CourseEndpoints
         ApplicationDbContext db,
         ICurrentUser currentUser)
     {
-        if (string.IsNullOrWhiteSpace(request.Name))
-        {
-            return Results.BadRequest(new { error = "Name is required." });
-        }
-
         // Derive TenantId from X-Tenant-Id header, fallback to request.TenantId
         var tenantId = currentUser.TenantId ?? request.TenantId;
         if (tenantId is null)
@@ -122,8 +118,6 @@ public static class CourseEndpoints
         return course is null ? Results.NotFound() : Results.Ok(course);
     }
 
-    private static readonly int[] allowedIntervals = [8, 10, 12];
-
     [WolverinePut("/courses/{id}/tee-time-settings")]
     public static async Task<IResult> UpdateTeeTimeSettings(
         Guid id,
@@ -135,16 +129,6 @@ public static class CourseEndpoints
         if (course is null)
         {
             return Results.NotFound(new { error = "Course not found." });
-        }
-
-        if (!allowedIntervals.Contains(request.TeeTimeIntervalMinutes))
-        {
-            return Results.BadRequest(new { error = "Interval must be 8, 10, or 12 minutes." });
-        }
-
-        if (request.FirstTeeTime >= request.LastTeeTime)
-        {
-            return Results.BadRequest(new { error = "First tee time must be before last tee time." });
         }
 
         course.TeeTimeIntervalMinutes = request.TeeTimeIntervalMinutes;
@@ -190,16 +174,6 @@ public static class CourseEndpoints
         if (course is null)
         {
             return Results.NotFound(new { error = "Course not found." });
-        }
-
-        if (request.FlatRatePrice < 0)
-        {
-            return Results.BadRequest(new { error = "Price must be greater than or equal to 0." });
-        }
-
-        if (request.FlatRatePrice > 10000)
-        {
-            return Results.BadRequest(new { error = "Price must be less than or equal to 10000." });
         }
 
         course.FlatRatePrice = request.FlatRatePrice;
@@ -265,3 +239,36 @@ public record TeeTimeSettingsResponse(
 public record PricingRequest(decimal FlatRatePrice);
 
 public record PricingResponse(decimal FlatRatePrice);
+
+public class CreateCourseRequestValidator : AbstractValidator<CreateCourseRequest>
+{
+    public CreateCourseRequestValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty();
+    }
+}
+
+public class PricingRequestValidator : AbstractValidator<PricingRequest>
+{
+    public PricingRequestValidator()
+    {
+        RuleFor(x => x.FlatRatePrice)
+            .GreaterThanOrEqualTo(0).WithMessage("Price must be greater than or equal to 0.")
+            .LessThanOrEqualTo(10000).WithMessage("Price must be less than or equal to 10000.");
+    }
+}
+
+public class TeeTimeSettingsRequestValidator : AbstractValidator<TeeTimeSettingsRequest>
+{
+    private static readonly int[] AllowedIntervals = [8, 10, 12];
+
+    public TeeTimeSettingsRequestValidator()
+    {
+        RuleFor(x => x.TeeTimeIntervalMinutes)
+            .Must(i => AllowedIntervals.Contains(i))
+            .WithMessage("Interval must be 8, 10, or 12 minutes.");
+        RuleFor(x => x.FirstTeeTime)
+            .LessThan(x => x.LastTeeTime)
+            .WithMessage("First tee time must be before last tee time.");
+    }
+}

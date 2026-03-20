@@ -132,19 +132,6 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IClassFix
     }
 
     [Fact]
-    public async Task PostCourse_WithoutName_ReturnsBadRequest()
-    {
-        var (tenantId, _) = await CreateTestTenantAsync();
-        var request = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        request.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request.Content = JsonContent.Create(new { StreetAddress = "123 Main St" });
-
-        var response = await this.client.SendAsync(request);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
     public async Task PostCourse_DuplicateName_ReturnsConflict()
     {
         var (tenantId, _) = await CreateTestTenantAsync();

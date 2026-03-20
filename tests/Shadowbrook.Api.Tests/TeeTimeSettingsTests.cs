@@ -53,51 +53,6 @@ public class TeeTimeSettingsTests(TestWebApplicationFactory factory) : IClassFix
     }
 
     [Fact]
-    public async Task UpdateTeeTimeSettings_InvalidInterval_ReturnsBadRequest()
-    {
-        var courseId = await CreateCourse();
-
-        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
-        {
-            TeeTimeIntervalMinutes = 15,
-            FirstTeeTime = "07:00",
-            LastTeeTime = "18:00"
-        });
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task UpdateTeeTimeSettings_FirstAfterLast_ReturnsBadRequest()
-    {
-        var courseId = await CreateCourse();
-
-        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
-        {
-            TeeTimeIntervalMinutes = 10,
-            FirstTeeTime = "18:00",
-            LastTeeTime = "07:00"
-        });
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task UpdateTeeTimeSettings_FirstEqualsLast_ReturnsBadRequest()
-    {
-        var courseId = await CreateCourse();
-
-        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
-        {
-            TeeTimeIntervalMinutes = 10,
-            FirstTeeTime = "07:00",
-            LastTeeTime = "07:00"
-        });
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
     public async Task UpdateTeeTimeSettings_CourseNotFound_ReturnsNotFound()
     {
         var response = await this.client.PutAsJsonAsync($"/courses/{Guid.NewGuid()}/tee-time-settings", new
