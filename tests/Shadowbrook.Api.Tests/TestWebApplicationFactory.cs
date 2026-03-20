@@ -47,7 +47,26 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
     async Task IAsyncLifetime.DisposeAsync()
     {
-        await base.DisposeAsync();
+        try
+        {
+            await base.DisposeAsync();
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            // Wolverine background services throw TaskCanceledException on host shutdown — expected
+        }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        try
+        {
+            base.Dispose(disposing);
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            // Wolverine background services throw TaskCanceledException on host shutdown — expected
+        }
     }
 
     private string GetConnectionString() =>
