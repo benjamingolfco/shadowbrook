@@ -1,22 +1,23 @@
 name: Shadowbrook Implementation
 
 on:
-  workflow_dispatch:
-    inputs:
-      issue_number:
-        description: 'Issue number to dispatch for sprint execution (leave empty to run find-work)'
-        required: false
-        type: string
-  issue_comment:
-    types: [created]
-  pull_request:
-    types: [opened, closed, synchronize]
-  pull_request_review:
-    types: [submitted]
-  check_suite:
-    types: [completed]
-  schedule:
-    - cron: '0 2,6,14,18,22 * * *'  # Every ~4 hours UTC (8pm, midnight, 8am, noon, 4pm CST)
+  workflow_dispatch:  # manual-only while pipeline is disabled
+  # workflow_dispatch:
+  #   inputs:
+  #     issue_number:
+  #       description: 'Issue number to dispatch for sprint execution (leave empty to run find-work)'
+  #       required: false
+  #       type: string
+  # issue_comment:
+  #   types: [created]
+  # pull_request:
+  #   types: [opened, closed, synchronize]
+  # pull_request_review:
+  #   types: [submitted]
+  # check_suite:
+  #   types: [completed]
+  # schedule:
+  #   - cron: '0 2,6,14,18,22 * * *'  # Every ~4 hours UTC (8pm, midnight, 8am, noon, 4pm CST)
 
 jobs:
   # ──────────────────────────────────────────────────────────────────────
