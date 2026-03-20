@@ -116,6 +116,22 @@ public class TeeTimeRequest : Entity
         }
     }
 
+    public void Close()
+    {
+        if (Status is TeeTimeRequestStatus.Closed or TeeTimeRequestStatus.Fulfilled)
+        {
+            return;
+        }
+
+        Status = TeeTimeRequestStatus.Closed;
+        UpdatedAt = DateTimeOffset.UtcNow;
+
+        AddDomainEvent(new TeeTimeRequestClosed
+        {
+            TeeTimeRequestId = Id
+        });
+    }
+
     public static async Task<TeeTimeRequest> CreateAsync(
         Guid courseId,
         DateOnly date,
