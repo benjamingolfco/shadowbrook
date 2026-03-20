@@ -135,9 +135,93 @@ public static async Task<object?> Handle(
 }
 ```
 
-## Test Infrastructure
+## Testing
 
-Tests use Testcontainers SQL Server (required for Wolverine's transactional middleware):
+### Unit Tests — Handlers (NSubstitute)
+
+Wolverine handlers are static methods with injected dependencies — test them directly by calling `Handle()` with NSubstitute stubs for repository interfaces and real domain objects for aggregates.
+
+```csharp
+using NSubstitute;
+
+public class MyHandlerTests
+{
+    private readonly IWaitlistOfferRepository offerRepo = Substitute.For<IWaitlistOfferRepository>();
+    private readonly IGolferRepository golferRepo = Substitute.For<IGolferRepository>();
+    private readonly ITextMessageService sms = Substitute.For<ITextMessageService>();
+
+    [Fact]
+    public async Task Handle_GolferNotFound_NoSms()
+    {
+        // Stub: return null for any golfer lookup
+        // (NSubstitute returns null by default, but be explicit when it matters)
+
+        var evt = new SomeEvent { GolferId = Guid.NewGuid() };
+        await MyHandler.Handle(evt, golferRepo, sms, CancellationToken.None);
+
+        // Verify SMS was NOT sent
+        await sms.DidNotReceive().SendAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_Success_SendsSms()
+    {
+        // Use real domain objects — they have behavior worth exercising
+        var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
+        golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
+
+        var evt = new SomeEvent { GolferId = golfer.Id };
+        await MyHandler.Handle(evt, golferRepo, sms, CancellationToken.None);
+
+        // Verify SMS was sent with correct phone and message content
+        await sms.Received(1).SendAsync(
+            "+15551234567",
+            Arg.Is<string>(m => m.Contains("expected text")),
+            Arg.Any<CancellationToken>());
+    }
+}
+```
+
+**Key patterns:**
+- `Substitute.For<IRepository>()` — stub repository interfaces
+- `.Returns(entity)` — control what the handler sees
+- `.Received(1)` / `.DidNotReceive()` — verify side effects (SMS, repository writes)
+- `Arg.Is<T>(predicate)` — match arguments with conditions
+- `Arg.Any<T>()` — match any argument of type T
+- Use **real** domain objects (`Golfer.Create(...)`, `new GolferWaitlistEntry(...)`, `WaitlistOffer.Create(...)`) — don't substitute aggregates
+- Handlers that return cascading messages (`Task<object?>`) — assert the return type: `Assert.IsType<TeeTimeSlotFilled>(result)`
+
+**When to unit test vs integration test handlers:**
+- **Unit test:** Handlers with only repository interface dependencies — stub with NSubstitute
+- **Integration test:** Handlers with direct `ApplicationDbContext` queries (joins, query filters) — need real DB
+
+### Unit Tests — Validators
+
+Test FluentValidation validators by calling `Validate()` directly — no HTTP needed:
+
+```csharp
+public class MyRequestValidatorTests
+{
+    private readonly MyRequestValidator validator = new();
+
+    [Fact]
+    public void ValidRequest_Passes() =>
+        Assert.True(validator.Validate(new MyRequest("valid")).IsValid);
+
+    [Fact]
+    public void EmptyField_Fails()
+    {
+        var result = validator.Validate(new MyRequest(""));
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.PropertyName == "FieldName");
+    }
+}
+```
+
+### Integration Tests — Full Stack
+
+Integration tests use Testcontainers SQL Server (required for Wolverine's transactional middleware):
 
 ```csharp
 public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime

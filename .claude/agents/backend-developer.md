@@ -4,6 +4,8 @@ description: Backend developer for implementing .NET API features. Use proactive
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 memory: project
+skills:
+  - wolverine
 hooks:
   Stop:
     - hooks:
@@ -11,7 +13,7 @@ hooks:
           command: "./scripts/hooks/verify-build.sh"
 ---
 
-You are a backend developer for the Shadowbrook tee time booking platform, a .NET 10 minimal API with EF Core 10 and SQLite (dev) / SQL Server (prod).
+You are a backend developer for the Shadowbrook tee time booking platform, a .NET 10 API with EF Core 10, Wolverine HTTP endpoints, and SQL Server (dev via Docker, test via Testcontainers, prod via Azure).
 
 ## Expertise
 

@@ -39,7 +39,7 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - src/backend/Shadowbrook.Domain/ — Domain model (aggregates, entities, events, repository interfaces, domain services — zero dependencies)
 - src/backend/Shadowbrook.Api/ — .NET Web API (minimal API endpoints, Infrastructure/ for EF, repositories, event dispatch, services)
 - tests/Shadowbrook.Domain.Tests/ — Pure domain unit tests (no DB, no HTTP)
-- tests/Shadowbrook.Api.Tests/ — xUnit integration tests (TestWebApplicationFactory with SQLite in-memory)
+- tests/Shadowbrook.Api.Tests/ — xUnit tests: unit tests (validators, handlers, utilities) + integration tests (TestWebApplicationFactory with SQL Server via Testcontainers)
 - src/web/ — React SPA
 - docs/ — Documentation
 - docs/plans/ — Design docs and implementation plans
@@ -55,7 +55,7 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - Run `dotnet build shadowbrook.slnx` after C# changes to verify compilation
 - Run `pnpm --dir src/web lint` after TypeScript changes
 - Run `pnpm --dir src/web test` after frontend component changes
-- Prefer unit tests before integration tests
+- **Testing pyramid: unit tests first, integration tests second.** Test behavior at the cheapest layer possible — validators, handlers, domain logic should all be unit tested without spinning up a DB or HTTP server. Integration tests are for DB-dependent behavior, middleware, and E2E flows only. See `.claude/rules/backend/backend-conventions.md` for backend-specific patterns; the same principle applies to frontend (component tests before browser tests).
 - Prefer running single tests over full suites for speed
 - `dotnet-ef` tool path: `export PATH="$PATH:/home/aaron/.dotnet/tools"`
 - Add migration: `dotnet ef migrations add <Name> --project src/backend/Shadowbrook.Api`

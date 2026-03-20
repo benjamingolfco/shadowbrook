@@ -1,19 +1,17 @@
 ---
 name: wolverine_integration_review
-description: Outcome and issues found when reviewing the Wolverine integration PR on branch issue/37-claim-tee-time-slot
+description: Historical review findings from initial Wolverine integration — resolved. Kept for pattern awareness only.
 type: project
 ---
 
-Reviewed Wolverine integration (branch: issue/37-claim-tee-time-slot) against spec at `docs/superpowers/specs/2026-03-17-wolverine-integration-design.md`. Three blockers found.
+Reviewed initial Wolverine integration (branch: issue/37-claim-tee-time-slot, 2026-03-17). Three blockers were found and subsequently resolved during the HTTP migration phase.
 
-**Why:** This was a 1:1 behavioral replacement of `InProcessDomainEventPublisher` with WolverineFx for handler discovery, retry policies, and a path to Azure Service Bus.
+**Resolved issues (for historical awareness):**
 
-**How to apply:** When reviewing future Wolverine-related PRs, check these three areas first as they were missed:
+1. **TestWebApplicationFactory** — Was not updated for Wolverine. Now uses Testcontainers SQL Server with full Wolverine pipeline support.
 
-1. **TestWebApplicationFactory not updated** — `DisableAllExternalWolverineTransports()` and `RunWolverineInSoloMode()` were not added. Integration tests will attempt SQL Server transport against SQLite. The `WolverineFx` package was added to the test project but the factory itself was skipped.
+2. **Old infrastructure files** — `IDomainEventPublisher.cs`, `IDomainEventHandler.cs`, `InProcessDomainEventPublisher.cs` were left on disk. Now deleted.
 
-2. **Old infrastructure files not deleted** — `IDomainEventPublisher.cs`, `IDomainEventHandler.cs`, `InProcessDomainEventPublisher.cs` in `Infrastructure/Events/` were left on disk despite no remaining references. Spec called for deletion.
+3. **SQL Server API** — Was using wrong persistence API and missing `.AutoProvision()`. Now uses `UseSqlServerPersistenceAndTransport(connStr, "wolverine").AutoProvision()`.
 
-3. **Wrong SQL Server API** — Spec required `UseSqlServerPersistenceAndTransport(connStr, "wolverine").AutoProvision()`. Implementation used `PersistMessagesWithSqlServer(connStr, "wolverine").EnableMessageTransport()`. Missing `.AutoProvision()` means Wolverine schema tables are not auto-created on fresh deployments.
-
-What passed: all 11 handler migrations (interface drop, method rename, CancellationToken fix), `ApplicationDbContext` IMessageBus replacement, `WaitlistOfferAcceptedFillHandler` manual retry removal, `MultipleHandlerBehavior.Separated`, concurrency retry policy shape.
+**How to apply:** When reviewing Wolverine-related PRs, verify: (1) TestWebApplicationFactory uses SQL Server, (2) no manual `SaveChangesAsync()` calls in endpoints/handlers, (3) FluentValidation uses correct package for HTTP vs messaging.
