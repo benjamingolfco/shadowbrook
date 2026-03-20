@@ -9,7 +9,6 @@ public class TeeTimeOfferPolicy : Saga
 {
     public Guid Id { get; set; }
     public Guid? LastOfferId { get; set; }
-    public bool IsBuffering { get; set; }
 
     public static (TeeTimeOfferPolicy, NotifyNextEligibleGolfer) Start(TeeTimeRequestAdded evt)
     {
@@ -21,7 +20,6 @@ public class TeeTimeOfferPolicy : Saga
         [SagaIdentityFrom("TeeTimeRequestId")] GolferNotifiedOfOffer evt)
     {
         LastOfferId = evt.WaitlistOfferId;
-        IsBuffering = true;
         return new TeeTimeOfferBufferTimeout(Id, evt.WaitlistOfferId);
     }
 
@@ -29,7 +27,6 @@ public class TeeTimeOfferPolicy : Saga
         [SagaIdentityFrom("TeeTimeRequestId")] TeeTimeOfferBufferTimeout timeout)
     {
         if (timeout.OfferId != LastOfferId) return null;
-        IsBuffering = false;
         return new NotifyNextEligibleGolfer(Id);
     }
 
@@ -37,7 +34,6 @@ public class TeeTimeOfferPolicy : Saga
         [SagaIdentityFrom("TeeTimeRequestId")] WaitlistOfferRejected evt)
     {
         if (evt.WaitlistOfferId != LastOfferId) return null;
-        IsBuffering = false;
         return new NotifyNextEligibleGolfer(Id);
     }
 
@@ -46,7 +42,6 @@ public class TeeTimeOfferPolicy : Saga
     {
         if (evt.WaitlistOfferId != LastOfferId) return;
         LastOfferId = null;
-        IsBuffering = false;
     }
 
     public void Handle(

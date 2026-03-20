@@ -22,7 +22,6 @@ public class TeeTimeOfferPolicyTests
         var (policy, command) = TeeTimeOfferPolicy.Start(evt);
 
         Assert.Equal(requestId, policy.Id);
-        Assert.False(policy.IsBuffering);
         Assert.Null(policy.LastOfferId);
         Assert.Equal(requestId, command.TeeTimeRequestId);
     }
@@ -41,7 +40,6 @@ public class TeeTimeOfferPolicyTests
         var timeout = policy.Handle(evt);
 
         Assert.Equal(offerId, policy.LastOfferId);
-        Assert.True(policy.IsBuffering);
         Assert.Equal(policy.Id, timeout.TeeTimeRequestId);
         Assert.Equal(offerId, timeout.OfferId);
     }
@@ -53,15 +51,13 @@ public class TeeTimeOfferPolicyTests
         var policy = new TeeTimeOfferPolicy
         {
             Id = Guid.NewGuid(),
-            LastOfferId = offerId,
-            IsBuffering = true
+            LastOfferId = offerId
         };
         var timeout = new TeeTimeOfferBufferTimeout(policy.Id, offerId);
 
         var command = policy.Handle(timeout);
 
         Assert.NotNull(command);
-        Assert.False(policy.IsBuffering);
         Assert.Equal(policy.Id, command!.TeeTimeRequestId);
     }
 
@@ -71,15 +67,13 @@ public class TeeTimeOfferPolicyTests
         var policy = new TeeTimeOfferPolicy
         {
             Id = Guid.NewGuid(),
-            LastOfferId = Guid.NewGuid(),
-            IsBuffering = true
+            LastOfferId = Guid.NewGuid()
         };
         var timeout = new TeeTimeOfferBufferTimeout(policy.Id, Guid.NewGuid());
 
         var command = policy.Handle(timeout);
 
         Assert.Null(command);
-        Assert.True(policy.IsBuffering);
     }
 
     [Fact]
@@ -90,8 +84,7 @@ public class TeeTimeOfferPolicyTests
         var policy = new TeeTimeOfferPolicy
         {
             Id = requestId,
-            LastOfferId = offerId,
-            IsBuffering = true
+            LastOfferId = offerId
         };
         var evt = new WaitlistOfferRejected
         {
@@ -104,7 +97,6 @@ public class TeeTimeOfferPolicyTests
         var command = policy.Handle(evt);
 
         Assert.NotNull(command);
-        Assert.False(policy.IsBuffering);
         Assert.Equal(requestId, command!.TeeTimeRequestId);
     }
 
@@ -115,8 +107,7 @@ public class TeeTimeOfferPolicyTests
         var policy = new TeeTimeOfferPolicy
         {
             Id = requestId,
-            LastOfferId = Guid.NewGuid(),
-            IsBuffering = true
+            LastOfferId = Guid.NewGuid()
         };
         var evt = new WaitlistOfferRejected
         {
@@ -129,7 +120,6 @@ public class TeeTimeOfferPolicyTests
         var command = policy.Handle(evt);
 
         Assert.Null(command);
-        Assert.True(policy.IsBuffering);
     }
 
     [Fact]
@@ -140,8 +130,7 @@ public class TeeTimeOfferPolicyTests
         var policy = new TeeTimeOfferPolicy
         {
             Id = requestId,
-            LastOfferId = offerId,
-            IsBuffering = true
+            LastOfferId = offerId
         };
         var evt = new WaitlistOfferAccepted
         {
@@ -155,7 +144,6 @@ public class TeeTimeOfferPolicyTests
         policy.Handle(evt);
 
         Assert.Null(policy.LastOfferId);
-        Assert.False(policy.IsBuffering);
         Assert.False(policy.IsCompleted());
     }
 
@@ -167,8 +155,7 @@ public class TeeTimeOfferPolicyTests
         var policy = new TeeTimeOfferPolicy
         {
             Id = requestId,
-            LastOfferId = currentOfferId,
-            IsBuffering = true
+            LastOfferId = currentOfferId
         };
         var evt = new WaitlistOfferAccepted
         {
@@ -182,7 +169,6 @@ public class TeeTimeOfferPolicyTests
         policy.Handle(evt);
 
         Assert.Equal(currentOfferId, policy.LastOfferId);
-        Assert.True(policy.IsBuffering);
     }
 
     [Fact]
@@ -192,8 +178,7 @@ public class TeeTimeOfferPolicyTests
         var policy = new TeeTimeOfferPolicy
         {
             Id = requestId,
-            LastOfferId = Guid.NewGuid(),
-            IsBuffering = true
+            LastOfferId = Guid.NewGuid()
         };
         var evt = new TeeTimeRequestFulfilled { TeeTimeRequestId = requestId };
 
@@ -206,11 +191,7 @@ public class TeeTimeOfferPolicyTests
     public void Handle_TeeTimeRequestClosed_MarksCompleted()
     {
         var requestId = Guid.NewGuid();
-        var policy = new TeeTimeOfferPolicy
-        {
-            Id = requestId,
-            IsBuffering = false
-        };
+        var policy = new TeeTimeOfferPolicy { Id = requestId };
         var evt = new TeeTimeRequestClosed { TeeTimeRequestId = requestId };
 
         policy.Handle(evt);
