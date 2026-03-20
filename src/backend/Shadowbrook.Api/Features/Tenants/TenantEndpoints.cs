@@ -1,43 +1,18 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Models;
-using System.Text.RegularExpressions;
 using Wolverine.Http;
 
 namespace Shadowbrook.Api.Features.Tenants;
 
-public static partial class TenantEndpoints
+public static class TenantEndpoints
 {
     [WolverinePost("/tenants")]
     public static async Task<IResult> CreateTenant(
         CreateTenantRequest request,
         ApplicationDbContext db)
     {
-        if (string.IsNullOrWhiteSpace(request.OrganizationName))
-        {
-            return Results.BadRequest(new { error = "OrganizationName is required." });
-        }
-
-        if (string.IsNullOrWhiteSpace(request.ContactName))
-        {
-            return Results.BadRequest(new { error = "ContactName is required." });
-        }
-
-        if (string.IsNullOrWhiteSpace(request.ContactEmail))
-        {
-            return Results.BadRequest(new { error = "ContactEmail is required." });
-        }
-
-        if (!IsValidEmail(request.ContactEmail))
-        {
-            return Results.BadRequest(new { error = "ContactEmail must be a valid email address." });
-        }
-
-        if (string.IsNullOrWhiteSpace(request.ContactPhone))
-        {
-            return Results.BadRequest(new { error = "ContactPhone is required." });
-        }
-
         // Check for duplicate organization name (case-insensitive)
         var normalizedName = request.OrganizationName.ToLower();
         var existingTenant = await db.Tenants
@@ -116,10 +91,6 @@ public static partial class TenantEndpoints
         return Results.Ok(response);
     }
 
-    [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase)]
-    private static partial Regex EmailRegex();
-
-    private static bool IsValidEmail(string email) => EmailRegex().IsMatch(email);
 }
 
 public record CreateTenantRequest(
@@ -127,6 +98,17 @@ public record CreateTenantRequest(
     string ContactName,
     string ContactEmail,
     string ContactPhone);
+
+public class CreateTenantRequestValidator : AbstractValidator<CreateTenantRequest>
+{
+    public CreateTenantRequestValidator()
+    {
+        RuleFor(x => x.OrganizationName).NotEmpty();
+        RuleFor(x => x.ContactName).NotEmpty();
+        RuleFor(x => x.ContactEmail).NotEmpty().EmailAddress();
+        RuleFor(x => x.ContactPhone).NotEmpty();
+    }
+}
 
 public record TenantResponse(
     Guid Id,
