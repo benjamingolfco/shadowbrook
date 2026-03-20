@@ -8,7 +8,7 @@ namespace Shadowbrook.Api.Features.WaitlistOffers;
 public class TeeTimeOfferPolicy : Saga
 {
     public Guid Id { get; set; }
-    public Guid? CurrentOfferId { get; set; }
+    public Guid? LastOfferId { get; set; }
     public bool IsBuffering { get; set; }
 
     public static (TeeTimeOfferPolicy, NotifyNextEligibleGolfer) Start(TeeTimeRequestAdded evt)
@@ -17,18 +17,18 @@ public class TeeTimeOfferPolicy : Saga
         return (policy, new NotifyNextEligibleGolfer(evt.TeeTimeRequestId));
     }
 
-    public TeeTimeOfferTimeout Handle(
+    public TeeTimeOfferBufferTimeout Handle(
         [SagaIdentityFrom("TeeTimeRequestId")] GolferNotifiedOfOffer evt)
     {
-        CurrentOfferId = evt.WaitlistOfferId;
+        LastOfferId = evt.WaitlistOfferId;
         IsBuffering = true;
-        return new TeeTimeOfferTimeout(Id, evt.WaitlistOfferId);
+        return new TeeTimeOfferBufferTimeout(Id, evt.WaitlistOfferId);
     }
 
     public NotifyNextEligibleGolfer? Handle(
-        [SagaIdentityFrom("TeeTimeRequestId")] TeeTimeOfferTimeout timeout)
+        [SagaIdentityFrom("TeeTimeRequestId")] TeeTimeOfferBufferTimeout timeout)
     {
-        if (timeout.OfferId != CurrentOfferId) return null;
+        if (timeout.OfferId != LastOfferId) return null;
         IsBuffering = false;
         return new NotifyNextEligibleGolfer(Id);
     }
@@ -36,9 +36,17 @@ public class TeeTimeOfferPolicy : Saga
     public NotifyNextEligibleGolfer? Handle(
         [SagaIdentityFrom("TeeTimeRequestId")] WaitlistOfferRejected evt)
     {
-        if (evt.WaitlistOfferId != CurrentOfferId) return null;
+        if (evt.WaitlistOfferId != LastOfferId) return null;
         IsBuffering = false;
         return new NotifyNextEligibleGolfer(Id);
+    }
+
+    public void Handle(
+        [SagaIdentityFrom("TeeTimeRequestId")] WaitlistOfferAccepted evt)
+    {
+        if (evt.WaitlistOfferId != LastOfferId) return;
+        LastOfferId = null;
+        IsBuffering = false;
     }
 
     public void Handle(
@@ -50,5 +58,5 @@ public class TeeTimeOfferPolicy : Saga
 
 public record NotifyNextEligibleGolfer(Guid TeeTimeRequestId);
 
-public record TeeTimeOfferTimeout(Guid TeeTimeRequestId, Guid OfferId)
+public record TeeTimeOfferBufferTimeout(Guid TeeTimeRequestId, Guid OfferId)
     : TimeoutMessage(TimeSpan.FromSeconds(60));

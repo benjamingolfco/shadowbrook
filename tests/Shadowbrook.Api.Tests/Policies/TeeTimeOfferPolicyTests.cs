@@ -23,7 +23,7 @@ public class TeeTimeOfferPolicyTests
 
         Assert.Equal(requestId, policy.Id);
         Assert.False(policy.IsBuffering);
-        Assert.Null(policy.CurrentOfferId);
+        Assert.Null(policy.LastOfferId);
         Assert.Equal(requestId, command.TeeTimeRequestId);
     }
 
@@ -40,7 +40,7 @@ public class TeeTimeOfferPolicyTests
 
         var timeout = policy.Handle(evt);
 
-        Assert.Equal(offerId, policy.CurrentOfferId);
+        Assert.Equal(offerId, policy.LastOfferId);
         Assert.True(policy.IsBuffering);
         Assert.Equal(policy.Id, timeout.TeeTimeRequestId);
         Assert.Equal(offerId, timeout.OfferId);
@@ -53,10 +53,10 @@ public class TeeTimeOfferPolicyTests
         var policy = new TeeTimeOfferPolicy
         {
             Id = Guid.NewGuid(),
-            CurrentOfferId = offerId,
+            LastOfferId = offerId,
             IsBuffering = true
         };
-        var timeout = new TeeTimeOfferTimeout(policy.Id, offerId);
+        var timeout = new TeeTimeOfferBufferTimeout(policy.Id, offerId);
 
         var command = policy.Handle(timeout);
 
@@ -71,10 +71,10 @@ public class TeeTimeOfferPolicyTests
         var policy = new TeeTimeOfferPolicy
         {
             Id = Guid.NewGuid(),
-            CurrentOfferId = Guid.NewGuid(),
+            LastOfferId = Guid.NewGuid(),
             IsBuffering = true
         };
-        var timeout = new TeeTimeOfferTimeout(policy.Id, Guid.NewGuid());
+        var timeout = new TeeTimeOfferBufferTimeout(policy.Id, Guid.NewGuid());
 
         var command = policy.Handle(timeout);
 
@@ -90,7 +90,7 @@ public class TeeTimeOfferPolicyTests
         var policy = new TeeTimeOfferPolicy
         {
             Id = requestId,
-            CurrentOfferId = offerId,
+            LastOfferId = offerId,
             IsBuffering = true
         };
         var evt = new WaitlistOfferRejected
@@ -115,7 +115,7 @@ public class TeeTimeOfferPolicyTests
         var policy = new TeeTimeOfferPolicy
         {
             Id = requestId,
-            CurrentOfferId = Guid.NewGuid(),
+            LastOfferId = Guid.NewGuid(),
             IsBuffering = true
         };
         var evt = new WaitlistOfferRejected
@@ -133,13 +133,66 @@ public class TeeTimeOfferPolicyTests
     }
 
     [Fact]
+    public void Handle_WaitlistOfferAccepted_CurrentOffer_ClearsStateButDoesNotComplete()
+    {
+        var offerId = Guid.NewGuid();
+        var requestId = Guid.NewGuid();
+        var policy = new TeeTimeOfferPolicy
+        {
+            Id = requestId,
+            LastOfferId = offerId,
+            IsBuffering = true
+        };
+        var evt = new WaitlistOfferAccepted
+        {
+            WaitlistOfferId = offerId,
+            TeeTimeRequestId = requestId,
+            BookingId = Guid.NewGuid(),
+            GolferWaitlistEntryId = Guid.NewGuid(),
+            GolferId = Guid.NewGuid()
+        };
+
+        policy.Handle(evt);
+
+        Assert.Null(policy.LastOfferId);
+        Assert.False(policy.IsBuffering);
+        Assert.False(policy.IsCompleted());
+    }
+
+    [Fact]
+    public void Handle_WaitlistOfferAccepted_DifferentOffer_Ignores()
+    {
+        var requestId = Guid.NewGuid();
+        var currentOfferId = Guid.NewGuid();
+        var policy = new TeeTimeOfferPolicy
+        {
+            Id = requestId,
+            LastOfferId = currentOfferId,
+            IsBuffering = true
+        };
+        var evt = new WaitlistOfferAccepted
+        {
+            WaitlistOfferId = Guid.NewGuid(),
+            TeeTimeRequestId = requestId,
+            BookingId = Guid.NewGuid(),
+            GolferWaitlistEntryId = Guid.NewGuid(),
+            GolferId = Guid.NewGuid()
+        };
+
+        policy.Handle(evt);
+
+        Assert.Equal(currentOfferId, policy.LastOfferId);
+        Assert.True(policy.IsBuffering);
+    }
+
+    [Fact]
     public void Handle_TeeTimeRequestFulfilled_MarksCompleted()
     {
         var requestId = Guid.NewGuid();
         var policy = new TeeTimeOfferPolicy
         {
             Id = requestId,
-            CurrentOfferId = Guid.NewGuid(),
+            LastOfferId = Guid.NewGuid(),
             IsBuffering = true
         };
         var evt = new TeeTimeRequestFulfilled { TeeTimeRequestId = requestId };
