@@ -5,10 +5,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Shadowbrook.Api.Infrastructure.Services;
 
 namespace Shadowbrook.Api.Tests;
-public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
+
+[Collection("Integration")]
+public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
     private readonly HttpClient client = factory.CreateClient();
     private readonly InMemoryTextMessageService smsService = factory.Services.GetRequiredService<InMemoryTextMessageService>();
+
+    public Task InitializeAsync() => factory.ResetDatabaseAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
 
     // -------------------------------------------------------------------------
     // GET /waitlist/offers/{token}

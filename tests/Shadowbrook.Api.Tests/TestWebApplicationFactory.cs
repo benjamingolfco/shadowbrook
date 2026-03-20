@@ -4,6 +4,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Respawn;
 using Shadowbrook.Api.Infrastructure.Data;
 using Testcontainers.MsSql;
 using Wolverine;
@@ -12,37 +13,41 @@ namespace Shadowbrook.Api.Tests;
 
 public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private static readonly MsSqlContainer SqlContainer = new MsSqlBuilder()
+    private readonly MsSqlContainer sqlContainer = new MsSqlBuilder()
         .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
         .Build();
 
-    private static readonly SemaphoreSlim ContainerLock = new(1, 1);
-    private static bool _containerStarted;
-
-    private readonly string _databaseName = $"test_{Guid.NewGuid():N}"[..30];
+    private Respawner? respawner;
+    private string connectionString = string.Empty;
 
     public async Task InitializeAsync()
     {
-        await ContainerLock.WaitAsync();
-        try
+        await this.sqlContainer.StartAsync();
+        this.connectionString = this.sqlContainer.GetConnectionString();
+    }
+
+    public async Task ResetDatabaseAsync()
+    {
+        if (this.respawner is null)
         {
-            if (!_containerStarted)
+            await using var conn = new SqlConnection(this.connectionString);
+            await conn.OpenAsync();
+            // Wolverine tables live in the "wolverine" schema (configured in Program.cs),
+            // so SchemasToInclude = ["dbo"] already excludes them. Only EF migration
+            // history needs explicit protection.
+            this.respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
             {
-                await SqlContainer.StartAsync();
-                _containerStarted = true;
-            }
-        }
-        finally
-        {
-            ContainerLock.Release();
+                DbAdapter = DbAdapter.SqlServer,
+                SchemasToInclude = ["dbo"],
+                TablesToIgnore = [
+                    new Respawn.Graph.Table("__EFMigrationsHistory"),
+                ]
+            });
         }
 
-        // Pre-create the database so Wolverine can connect during host startup
-        await using var conn = new SqlConnection(SqlContainer.GetConnectionString());
-        await conn.OpenAsync();
-        await using var cmd = conn.CreateCommand();
-        cmd.CommandText = $"CREATE DATABASE [{_databaseName}]";
-        await cmd.ExecuteNonQueryAsync();
+        await using var connection = new SqlConnection(this.connectionString);
+        await connection.OpenAsync();
+        await this.respawner.ResetAsync(connection);
     }
 
     async Task IAsyncLifetime.DisposeAsync()
@@ -55,6 +60,8 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
         {
             // Wolverine background services throw TaskCanceledException on host shutdown — expected
         }
+
+        await this.sqlContainer.DisposeAsync();
     }
 
     protected override void Dispose(bool disposing)
@@ -69,21 +76,12 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
         }
     }
 
-    private string GetConnectionString() =>
-        SqlContainer.GetConnectionString()
-            .Replace("Database=master", $"Database={_databaseName}");
-
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        var connectionString = GetConnectionString();
-
-        // Override the app connection string so Wolverine's
-        // UseSqlServerPersistenceAndTransport in Program.cs picks it up
-        builder.UseSetting("ConnectionStrings:DefaultConnection", connectionString);
+        builder.UseSetting("ConnectionStrings:DefaultConnection", this.connectionString);
 
         builder.ConfigureServices(services =>
         {
-            // Remove the app's DbContext registration
             var descriptorsToRemove = services
                 .Where(d =>
                     d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
@@ -97,15 +95,11 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
             }
 
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString));
+                options.UseSqlServer(this.connectionString));
 
             services.DisableAllExternalWolverineTransports();
             services.RunWolverineInSoloMode();
 
-            // Use in-memory (non-durable) local queue so domain event handlers
-            // are dispatched without going through the SQL outbox. With solo mode
-            // the SQL outbox poller is disabled, but an in-memory queue still
-            // processes messages in the same host process.
             services.ConfigureWolverine(opts =>
                 opts.DefaultLocalQueue.BufferedInMemory());
         });

@@ -2,10 +2,15 @@ using System.Net;
 using System.Net.Http.Json;
 
 namespace Shadowbrook.Api.Tests;
-public class CourseEndpointsTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
+
+[Collection("Integration")]
+public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
     private readonly HttpClient client = factory.CreateClient();
     private readonly TestWebApplicationFactory factory = factory;
+
+    public Task InitializeAsync() => factory.ResetDatabaseAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task GetAllCourses_ReturnsOk()

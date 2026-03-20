@@ -5,9 +5,14 @@ using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.BookingAggregate;
 
 namespace Shadowbrook.Api.Tests;
-public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
+
+[Collection("Integration")]
+public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
     private readonly HttpClient client = factory.CreateClient();
+
+    public Task InitializeAsync() => factory.ResetDatabaseAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
     private readonly TestWebApplicationFactory factory = factory;
 
     private async Task CreateBookingAsync(Guid courseId, string date, string time, string golferName, int playerCount)
