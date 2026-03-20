@@ -17,7 +17,7 @@ public class GolferWaitlistEntry : Entity
 
     private GolferWaitlistEntry() { } // EF
 
-    internal GolferWaitlistEntry(Guid courseWaitlistId, Guid golferId, int groupSize = 1)
+    public GolferWaitlistEntry(Guid courseWaitlistId, Guid golferId, int groupSize = 1)
     {
         var now = DateTimeOffset.UtcNow;
         Id = Guid.CreateVersion7();

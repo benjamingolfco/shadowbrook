@@ -44,7 +44,7 @@ public class TeeTimeRequest : Entity
         });
     }
 
-    internal FillResult Fill(Guid golferId, int groupSize, Guid bookingId, Guid offerId)
+    public FillResult Fill(Guid golferId, int groupSize, Guid bookingId, Guid offerId)
     {
         if (Status == TeeTimeRequestStatus.Fulfilled)
         {
@@ -94,7 +94,7 @@ public class TeeTimeRequest : Entity
         return new FillResult(true);
     }
 
-    internal void Unfill(Guid bookingId)
+    public void Unfill(Guid bookingId)
     {
         var fill = this.slotFills.FirstOrDefault(f => f.BookingId == bookingId);
         if (fill is not null)
