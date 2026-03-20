@@ -43,6 +43,15 @@ export default function AdminLayout() {
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <NavLink to="/admin/dev/sms">
+                  {({ isActive }) => (
+                    <span className={isActive ? 'font-semibold' : ''}>SMS Log</span>
+                  )}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>
