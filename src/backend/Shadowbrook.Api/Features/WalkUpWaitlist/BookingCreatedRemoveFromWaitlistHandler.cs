@@ -2,7 +2,7 @@ using Shadowbrook.Domain.BookingAggregate.Events;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 
-namespace Shadowbrook.Api.Features.Bookings;
+namespace Shadowbrook.Api.Features.WalkUpWaitlist;
 
 public static class BookingCreatedRemoveFromWaitlistHandler
 {

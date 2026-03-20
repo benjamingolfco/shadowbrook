@@ -1,7 +1,7 @@
 using Shadowbrook.Domain.TeeTimeRequestAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 
-namespace Shadowbrook.Api.Features.Bookings;
+namespace Shadowbrook.Api.Features.WaitlistOffers;
 
 public static class TeeTimeRequestFulfilledHandler
 {

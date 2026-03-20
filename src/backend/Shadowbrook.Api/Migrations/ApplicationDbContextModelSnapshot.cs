@@ -22,6 +22,32 @@ namespace Shadowbrook.Api.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Shadowbrook.Api.Features.WaitlistOffers.TeeTimeOfferPolicy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CurrentOfferId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsBuffering")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TeeTimeOfferPolicies", (string)null);
+                });
+
+            modelBuilder.Entity("Shadowbrook.Api.Features.WalkUpWaitlist.TeeTimeRequestExpirationPolicy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TeeTimeRequestExpirationPolicies", (string)null);
+                });
+
             modelBuilder.Entity("Shadowbrook.Api.Models.Course", b =>
                 {
                     b.Property<Guid>("Id")

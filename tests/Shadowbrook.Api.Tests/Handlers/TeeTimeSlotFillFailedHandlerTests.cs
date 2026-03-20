@@ -1,5 +1,5 @@
 using NSubstitute;
-using Shadowbrook.Api.Features.Bookings;
+using Shadowbrook.Api.Features.WaitlistOffers;
 using Shadowbrook.Domain.TeeTimeRequestAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 

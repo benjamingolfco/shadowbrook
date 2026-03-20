@@ -2,7 +2,7 @@ using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
-namespace Shadowbrook.Api.Features.WaitlistOffers;
+namespace Shadowbrook.Api.Features.WalkUpWaitlist;
 
 public static class WaitlistOfferAcceptedFillHandler
 {

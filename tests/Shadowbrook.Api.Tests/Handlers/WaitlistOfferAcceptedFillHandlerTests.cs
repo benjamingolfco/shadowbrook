@@ -1,5 +1,5 @@
 using NSubstitute;
-using Shadowbrook.Api.Features.WaitlistOffers;
+using Shadowbrook.Api.Features.WalkUpWaitlist;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate.Events;

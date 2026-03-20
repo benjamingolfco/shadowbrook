@@ -1,5 +1,5 @@
 using NSubstitute;
-using Shadowbrook.Api.Features.Bookings;
+using Shadowbrook.Api.Features.WalkUpWaitlist;
 using Shadowbrook.Domain.BookingAggregate.Events;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
