@@ -165,45 +165,6 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
     // -------------------------------------------------------------------------
 
     [Fact(Skip = "Depends on Wolverine processing TeeTimeRequestAdded asynchronously — background handler timing not yet reliable in tests")]
-    public async Task AcceptOffer_FillSucceeds_CreatesBookingViaSaga()
-    {
-        var (_, courseId) = await CreateTestCourseAsync();
-        await OpenWaitlistAsync(courseId);
-        var phone = await AddGolferToWaitlistAsync(courseId, "Jane", "Smith", "555-867-5309");
-        await CreateTeeTimeRequestAsync(courseId, "10:00", 2);
-        var token = await GetOfferTokenFromSmsAsync(phone);
-
-        var response = await this.client.PostAsync($"/waitlist/offers/{token}/accept", null);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        using var scope = factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<Shadowbrook.Api.Infrastructure.Data.ApplicationDbContext>();
-        var bookingExists = await db.Bookings.AnyAsync(b => b.GolferName.Contains("Jane"));
-        Assert.True(bookingExists, "Booking should exist after saga chain completes");
-    }
-
-    [Fact(Skip = "Depends on Wolverine processing TeeTimeRequestAdded asynchronously — background handler timing not yet reliable in tests")]
-    public async Task AcceptOffer_FillSucceeds_RemovesFromWaitlistViaSaga()
-    {
-        var (_, courseId) = await CreateTestCourseAsync();
-        await OpenWaitlistAsync(courseId);
-        var phone = await AddGolferToWaitlistAsync(courseId, "Jane", "Smith", "555-867-5309");
-        await CreateTeeTimeRequestAsync(courseId, "10:00", 2);
-        var token = await GetOfferTokenFromSmsAsync(phone);
-
-        await this.client.PostAsync($"/waitlist/offers/{token}/accept", null);
-
-        using var scope = factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<Shadowbrook.Api.Infrastructure.Data.ApplicationDbContext>();
-        var golfer = await db.Golfers.IgnoreQueryFilters().FirstOrDefaultAsync(g => g.Phone == phone);
-        Assert.NotNull(golfer);
-        var entry = await db.GolferWaitlistEntries.FirstOrDefaultAsync(e => e.GolferId == golfer!.Id);
-        Assert.NotNull(entry);
-        Assert.NotNull(entry!.RemovedAt);
-    }
-
-    [Fact(Skip = "Depends on Wolverine processing TeeTimeRequestAdded asynchronously — background handler timing not yet reliable in tests")]
     public async Task CreateRequest_CapsOffersAtSlotsNeeded()
     {
         // With GolfersNeeded=1 and 2 eligible golfers, only 1 offer should be created
