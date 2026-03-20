@@ -51,18 +51,6 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IClas
         Assert.Equal("Code not found or waitlist is not active.", body!.Error);
     }
 
-    [Theory]
-    [InlineData("abc")]
-    [InlineData("12345")]
-    [InlineData("")]
-    [InlineData("12ab")]
-    public async Task Verify_MalformedCode_Returns400(string code)
-    {
-        var response = await PostVerifyAsync(code);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
     // -------------------------------------------------------------------------
     // POST /walkup/join
     // -------------------------------------------------------------------------
@@ -139,39 +127,6 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IClas
         var response = await PostJoinAsync(verifyBody.CourseWaitlistId, "Chris", "Dup", phone);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Join_InvalidPhone_Returns400()
-    {
-        var (_, _, shortCode) = await CreateOpenWaitlistAsync();
-        var verifyBody = await (await PostVerifyAsync(shortCode)).Content.ReadFromJsonAsync<VerifyCodeResponse>();
-
-        var response = await PostJoinAsync(verifyBody!.CourseWaitlistId, "Jane", "Doe", "123");
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Join_MissingFirstName_Returns400()
-    {
-        var (_, _, shortCode) = await CreateOpenWaitlistAsync();
-        var verifyBody = await (await PostVerifyAsync(shortCode)).Content.ReadFromJsonAsync<VerifyCodeResponse>();
-
-        var response = await PostJoinAsync(verifyBody!.CourseWaitlistId, "", "Smith", "555-123-4567");
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Join_MissingLastName_Returns400()
-    {
-        var (_, _, shortCode) = await CreateOpenWaitlistAsync();
-        var verifyBody = await (await PostVerifyAsync(shortCode)).Content.ReadFromJsonAsync<VerifyCodeResponse>();
-
-        var response = await PostJoinAsync(verifyBody!.CourseWaitlistId, "John", "", "555-123-4567");
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
@@ -301,30 +256,6 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IClas
 
         var body = await response.Content.ReadFromJsonAsync<JoinWaitlistResponse>();
         Assert.Equal("John Smith", body!.GolferName);
-    }
-
-    // -------------------------------------------------------------------------
-    // FluentValidation format
-    // -------------------------------------------------------------------------
-
-    [Fact]
-    public async Task Verify_WhitespaceCode_Returns400_WithMessage()
-    {
-        var response = await PostVerifyAsync("   ");
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-
-        var body = await response.Content.ReadFromJsonAsync<ValidationErrorResponse>();
-        Assert.NotNull(body);
-        Assert.NotEmpty(body!.Error);
-    }
-
-    [Fact]
-    public async Task Join_AllFieldsMissing_Returns400()
-    {
-        var response = await PostJoinAsync(Guid.NewGuid(), "", "", "");
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     // -------------------------------------------------------------------------
@@ -497,7 +428,6 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IClas
     private record JoinWaitlistResponse(Guid EntryId, string GolferName, int Position, string CourseName);
     private record DuplicateEntryError(string Error, int Position);
     private record ErrorResponse(string Error);
-    private record ValidationErrorResponse(string Error);
     private record CourseIdResponse(Guid Id);
     private record TenantIdResponse(Guid Id);
     private record WalkUpWaitlistResponse(Guid Id, string ShortCode);

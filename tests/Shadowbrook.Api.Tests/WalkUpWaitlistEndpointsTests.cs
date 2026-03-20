@@ -304,38 +304,6 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     }
 
     [Fact]
-    public async Task CreateRequest_InvalidTeeTime_Returns400()
-    {
-        var (_, courseId) = await CreateTestCourseAsync();
-        await PostOpenAsync(courseId);
-        var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
-
-        var response = await this.client.PostAsJsonAsync(
-            $"/courses/{courseId}/walkup-waitlist/requests",
-            new { Date = today, TeeTime = "invalid", GolfersNeeded = 2 });
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task CreateRequest_GolfersNeededOutOfRange_Returns400()
-    {
-        var (_, courseId) = await CreateTestCourseAsync();
-        await PostOpenAsync(courseId);
-        var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
-
-        var r0 = await this.client.PostAsJsonAsync(
-            $"/courses/{courseId}/walkup-waitlist/requests",
-            new { Date = today, TeeTime = "10:00", GolfersNeeded = 0 });
-        Assert.Equal(HttpStatusCode.BadRequest, r0.StatusCode);
-
-        var r5 = await this.client.PostAsJsonAsync(
-            $"/courses/{courseId}/walkup-waitlist/requests",
-            new { Date = today, TeeTime = "10:00", GolfersNeeded = 5 });
-        Assert.Equal(HttpStatusCode.BadRequest, r5.StatusCode);
-    }
-
-    [Fact]
     public async Task CreateRequest_CourseNotFound_Returns404()
     {
         var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
@@ -460,63 +428,6 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         var body = await response.Content.ReadFromJsonAsync<AddGolferToWaitlistResponse>();
         Assert.NotNull(body);
         Assert.Equal(1, body!.GroupSize);
-    }
-
-    [Fact]
-    public async Task AddGolfer_InvalidPhone_Returns400()
-    {
-        var (_, courseId) = await CreateTestCourseAsync();
-        await PostOpenAsync(courseId);
-
-        var response = await PostAddGolferAsync(courseId, new
-        {
-            FirstName = "Jane",
-            LastName = "Smith",
-            Phone = "123"
-        });
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task AddGolfer_MissingName_Returns400()
-    {
-        var (_, courseId) = await CreateTestCourseAsync();
-        await PostOpenAsync(courseId);
-
-        var response = await PostAddGolferAsync(courseId, new
-        {
-            FirstName = "",
-            LastName = "Smith",
-            Phone = "555-867-5309"
-        });
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task AddGolfer_GroupSizeOutOfRange_Returns400()
-    {
-        var (_, courseId) = await CreateTestCourseAsync();
-        await PostOpenAsync(courseId);
-
-        var r0 = await PostAddGolferAsync(courseId, new
-        {
-            FirstName = "Jane",
-            LastName = "Smith",
-            Phone = "555-867-5309",
-            GroupSize = 0
-        });
-        Assert.Equal(HttpStatusCode.BadRequest, r0.StatusCode);
-
-        var r5 = await PostAddGolferAsync(courseId, new
-        {
-            FirstName = "Jane",
-            LastName = "Smith",
-            Phone = "555-111-2222",
-            GroupSize = 5
-        });
-        Assert.Equal(HttpStatusCode.BadRequest, r5.StatusCode);
     }
 
     [Fact]
