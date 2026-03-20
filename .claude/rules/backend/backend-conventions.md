@@ -114,7 +114,7 @@ Shadowbrook.Api/
 - Reference other aggregates by ID only, not by holding direct navigation properties
 - Passing another aggregate as a **method parameter** for validation is acceptable (e.g., `offer.Accept(golfer)`)
 - An aggregate can serve as a **factory for another aggregate** — validate creation rules and return a new independent aggregate (e.g., `WalkUpWaitlist.Join()` validates waitlist rules and returns a new `GolferWaitlistEntry` aggregate). The returned aggregate is independent and not owned as a child.
-- Use `internal` methods for cross-aggregate operations within the Domain assembly (e.g., `TeeTimeRequest.Fill()` called by `WaitlistOffer.Accept()`)
+- Never use `InternalsVisibleTo` to expose domain internals for testing or handler consumption. If you need to test or call an `internal` method from outside the domain, rethink the design — either make it part of the public API or restructure so the behavior is exercised through public methods. Tests should always test the public interface.
 
 ### Domain Events
 
