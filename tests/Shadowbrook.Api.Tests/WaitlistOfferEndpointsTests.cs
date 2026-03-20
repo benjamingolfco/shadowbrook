@@ -298,6 +298,9 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IA
     {
         // Poll until the offer SMS arrives — TeeTimeRequestAddedNotifyHandler runs
         // asynchronously via the Wolverine outbox after the HTTP request returns.
+        // Note: Wolverine tracked sessions (WolverineFx.Testing) don't support wrapping
+        // HTTP requests initiated via HttpClient/WebApplicationFactory, so polling is
+        // the pragmatic approach for HTTP-triggered async handler flows.
         SmsMessage? offerMessage = null;
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         while (!cts.IsCancellationRequested)
