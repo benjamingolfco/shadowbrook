@@ -22,6 +22,9 @@ public class WaitlistOfferConfiguration : IEntityTypeConfiguration<WaitlistOffer
         builder.Property(o => o.RejectionReason).HasMaxLength(500);
         builder.Property(o => o.Status).HasConversion<string>().HasMaxLength(20);
 
+        builder.HasShadowRowVersion();
+        builder.HasShadowAuditProperties();
+
         builder.HasIndex(o => o.TeeTimeRequestId);
         builder.HasIndex(o => new { o.GolferWaitlistEntryId, o.TeeTimeRequestId });
     }

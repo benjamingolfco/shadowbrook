@@ -12,9 +12,6 @@ public class TeeTimeRequest : Entity
     public int GolfersNeeded { get; private set; }
     public TeeTimeRequestStatus Status { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
-    public DateTimeOffset UpdatedAt { get; private set; }
-    public Guid RowVersion { get; private set; } = Guid.NewGuid();
-
     private readonly List<TeeTimeSlotFill> slotFills = [];
     public IReadOnlyCollection<TeeTimeSlotFill> SlotFills => this.slotFills.AsReadOnly();
 
@@ -32,7 +29,6 @@ public class TeeTimeRequest : Entity
         GolfersNeeded = golfersNeeded;
         Status = TeeTimeRequestStatus.Pending;
         CreatedAt = now;
-        UpdatedAt = now;
 
         AddDomainEvent(new TeeTimeRequestAdded
         {
@@ -72,8 +68,7 @@ public class TeeTimeRequest : Entity
 
         var fill = new TeeTimeSlotFill(Id, golferId, bookingId, groupSize);
         this.slotFills.Add(fill);
-        UpdatedAt = DateTimeOffset.UtcNow;
-        RowVersion = Guid.NewGuid();
+
 
         AddDomainEvent(new TeeTimeSlotFilled
         {
@@ -104,8 +99,7 @@ public class TeeTimeRequest : Entity
             {
                 Status = TeeTimeRequestStatus.Pending;
             }
-            UpdatedAt = DateTimeOffset.UtcNow;
-            RowVersion = Guid.NewGuid();
+    
 
             AddDomainEvent(new TeeTimeSlotUnfilled
             {
@@ -124,7 +118,7 @@ public class TeeTimeRequest : Entity
         }
 
         Status = TeeTimeRequestStatus.Closed;
-        UpdatedAt = DateTimeOffset.UtcNow;
+
 
         AddDomainEvent(new TeeTimeRequestClosed
         {

@@ -12,6 +12,8 @@ public class TeeTimeSlotFillConfiguration : IEntityTypeConfiguration<TeeTimeSlot
         builder.HasKey(f => f.Id);
         builder.Property(f => f.Id).ValueGeneratedNever();
 
+        builder.HasShadowAuditProperties();
+
         builder.HasIndex(f => f.BookingId);
     }
 }

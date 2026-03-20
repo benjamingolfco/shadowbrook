@@ -8,7 +8,6 @@ public class Golfer : Entity
     public string FirstName { get; private set; } = string.Empty;
     public string LastName { get; private set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; private set; }
-    public DateTimeOffset UpdatedAt { get; private set; }
 
     public string FullName => $"{FirstName} {LastName}";
 
@@ -23,8 +22,7 @@ public class Golfer : Entity
             Phone = phone,
             FirstName = firstName.Trim(),
             LastName = lastName.Trim(),
-            CreatedAt = now,
-            UpdatedAt = now
+            CreatedAt = now
         };
     }
 }

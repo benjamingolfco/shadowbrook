@@ -12,7 +12,6 @@ public class Booking : Entity
     public string GolferName { get; private set; } = string.Empty;
     public int PlayerCount { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
-    public DateTimeOffset UpdatedAt { get; private set; }
 
     private Booking() { } // EF
 
@@ -35,8 +34,7 @@ public class Booking : Entity
             Time = time,
             GolferName = golferName,
             PlayerCount = playerCount,
-            CreatedAt = now,
-            UpdatedAt = now
+            CreatedAt = now
         };
 
         booking.AddDomainEvent(new BookingCreated

@@ -26,7 +26,6 @@ public class BookingTests
         Assert.Equal(golferName, booking.GolferName);
         Assert.Equal(playerCount, booking.PlayerCount);
         Assert.NotEqual(default, booking.CreatedAt);
-        Assert.NotEqual(default, booking.UpdatedAt);
     }
 
     [Fact]

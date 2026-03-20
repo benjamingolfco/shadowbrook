@@ -14,6 +14,9 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
 
         builder.Property(b => b.GolferName).IsRequired().HasMaxLength(200);
 
+        builder.HasShadowRowVersion();
+        builder.HasShadowAuditProperties();
+
         builder.HasIndex(b => new { b.CourseId, b.Date, b.Time });
     }
 }

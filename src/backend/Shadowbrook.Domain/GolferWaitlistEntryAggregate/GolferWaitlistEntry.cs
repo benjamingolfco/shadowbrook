@@ -13,7 +13,6 @@ public class GolferWaitlistEntry : Entity
     public DateTimeOffset JoinedAt { get; private set; }
     public DateTimeOffset? RemovedAt { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
-    public DateTimeOffset UpdatedAt { get; private set; }
 
     private GolferWaitlistEntry() { } // EF
 
@@ -28,14 +27,12 @@ public class GolferWaitlistEntry : Entity
         GroupSize = groupSize;
         JoinedAt = now;
         CreatedAt = now;
-        UpdatedAt = now;
     }
 
     public void Remove()
     {
         var now = DateTimeOffset.UtcNow;
         RemovedAt = now;
-        UpdatedAt = now;
 
         AddDomainEvent(new GolferRemovedFromWaitlist
         {

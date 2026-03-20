@@ -14,7 +14,6 @@ public class GolferTests
         Assert.Equal("Smith", golfer.LastName);
         Assert.NotEqual(Guid.Empty, golfer.Id);
         Assert.NotEqual(default, golfer.CreatedAt);
-        Assert.NotEqual(default, golfer.UpdatedAt);
     }
 
     [Fact]

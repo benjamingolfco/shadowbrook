@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Shadowbrook.Api.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Shadowbrook.Api.Infrastructure.Data;
 namespace Shadowbrook.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260320220427_AddShadowRowVersionToAggregateRoots")]
+    partial class AddShadowRowVersionToAggregateRoots
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -179,10 +182,6 @@ namespace Shadowbrook.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CourseId", "Date", "Time");
@@ -220,10 +219,6 @@ namespace Shadowbrook.Api.Migrations
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 
@@ -272,10 +267,6 @@ namespace Shadowbrook.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("GolferId");
@@ -319,10 +310,6 @@ namespace Shadowbrook.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CourseId", "Date", "Status")
@@ -353,13 +340,6 @@ namespace Shadowbrook.Api.Migrations
 
                     b.Property<Guid>("TeeTimeRequestId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 
@@ -406,13 +386,6 @@ namespace Shadowbrook.Api.Migrations
 
                     b.Property<Guid>("Token")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 
@@ -466,10 +439,6 @@ namespace Shadowbrook.Api.Migrations
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 

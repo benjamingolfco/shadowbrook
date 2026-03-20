@@ -15,7 +15,6 @@ public class WalkUpWaitlist : Entity
     public DateTimeOffset OpenedAt { get; private set; }
     public DateTimeOffset? ClosedAt { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
-    public DateTimeOffset UpdatedAt { get; private set; }
 
     private WalkUpWaitlist() { } // EF
 
@@ -39,8 +38,7 @@ public class WalkUpWaitlist : Entity
             ShortCode = shortCode,
             Status = WaitlistStatus.Open,
             OpenedAt = now,
-            CreatedAt = now,
-            UpdatedAt = now
+            CreatedAt = now
         };
     }
 
@@ -54,7 +52,6 @@ public class WalkUpWaitlist : Entity
         var now = DateTimeOffset.UtcNow;
         Status = WaitlistStatus.Closed;
         ClosedAt = now;
-        UpdatedAt = now;
     }
 
     public async Task<GolferWaitlistEntry> Join(
@@ -80,7 +77,6 @@ public class WalkUpWaitlist : Entity
             GolferId = golfer.Id
         });
 
-        UpdatedAt = DateTimeOffset.UtcNow;
         return entry;
     }
 }

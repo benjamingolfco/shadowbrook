@@ -30,6 +30,9 @@ public class GolferWaitlistEntryConfiguration : IEntityTypeConfiguration<GolferW
             .HasFilter("[RemovedAt] IS NULL")
             .IsUnique();
 
+        builder.HasShadowRowVersion();
+        builder.HasShadowAuditProperties();
+
         builder.HasIndex(e => e.GolferId);
     }
 }

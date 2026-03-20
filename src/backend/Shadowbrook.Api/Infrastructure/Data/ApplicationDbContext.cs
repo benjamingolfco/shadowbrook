@@ -30,6 +30,21 @@ public class ApplicationDbContext(
     public DbSet<TeeTimeOfferPolicy> TeeTimeOfferPolicies => Set<TeeTimeOfferPolicy>();
     public DbSet<TeeTimeRequestExpirationPolicy> TeeTimeRequestExpirationPolicies => Set<TeeTimeRequestExpirationPolicy>();
 
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var userId = currentUser?.UserId;
+
+        foreach (var entry in ChangeTracker.Entries<Entity>()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified))
+        {
+            entry.Property("UpdatedAt").CurrentValue = now;
+            entry.Property("UpdatedBy").CurrentValue = userId;
+        }
+
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
