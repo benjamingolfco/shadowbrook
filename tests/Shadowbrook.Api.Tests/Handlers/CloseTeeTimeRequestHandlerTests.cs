@@ -16,6 +16,8 @@ public class CloseTeeTimeRequestHandlerTests
 
         var command = new CloseTeeTimeRequest(Guid.NewGuid());
         await CloseTeeTimeRequestHandler.Handle(command, this.requestRepo);
+
+        await this.requestRepo.Received(1).GetByIdAsync(command.TeeTimeRequestId);
     }
 
     [Fact]
