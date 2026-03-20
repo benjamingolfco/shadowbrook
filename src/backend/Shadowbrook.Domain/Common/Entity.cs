@@ -5,7 +5,7 @@ public abstract class Entity
     public Guid Id { get; init; }
 
     private readonly List<IDomainEvent> domainEvents = [];
-    public IReadOnlyCollection<IDomainEvent> DomainEvents => this.domainEvents;
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => this.domainEvents.AsReadOnly();
     public void ClearDomainEvents() => this.domainEvents.Clear();
     protected void AddDomainEvent(IDomainEvent domainEvent) => this.domainEvents.Add(domainEvent);
 }
