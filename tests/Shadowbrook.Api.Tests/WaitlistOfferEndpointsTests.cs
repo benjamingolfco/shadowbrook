@@ -330,8 +330,28 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IC
 
     private async Task<Guid> GetOfferTokenFromSmsAsync(string phone)
     {
-        var messages = this.smsService.GetByPhone(phone);
-        var offerMessage = messages.LastOrDefault(m => m.Body.Contains("Claim your spot:"));
+        // Poll until the offer SMS arrives — TeeTimeRequestAddedNotifyHandler runs
+        // asynchronously via the Wolverine outbox after the HTTP request returns.
+        SmsMessage? offerMessage = null;
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        while (!cts.IsCancellationRequested)
+        {
+            offerMessage = this.smsService.GetByPhone(phone).LastOrDefault(m => m.Body.Contains("Claim your spot:"));
+            if (offerMessage is not null)
+            {
+                break;
+            }
+
+            try
+            {
+                await Task.Delay(50, cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+        }
+
         Assert.NotNull(offerMessage);
 
         // Extract token from URL in message body

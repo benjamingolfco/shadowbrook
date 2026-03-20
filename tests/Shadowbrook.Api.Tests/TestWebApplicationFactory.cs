@@ -82,6 +82,13 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
             services.DisableAllExternalWolverineTransports();
             services.RunWolverineInSoloMode();
+
+            // Use in-memory (non-durable) local queue so domain event handlers
+            // are dispatched without going through the SQL outbox. With solo mode
+            // the SQL outbox poller is disabled, but an in-memory queue still
+            // processes messages in the same host process.
+            services.ConfigureWolverine(opts =>
+                opts.DefaultLocalQueue.BufferedInMemory());
         });
 
         builder.UseEnvironment("Testing");
