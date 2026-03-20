@@ -4,5 +4,6 @@ public enum TeeTimeRequestStatus
 {
     Pending,
     Fulfilled,
-    Cancelled
+    Cancelled,
+    Closed
 }
