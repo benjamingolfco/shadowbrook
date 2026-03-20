@@ -16,7 +16,7 @@ export default function AdminFeature() {
         <Route path="tenants" element={<TenantList />} />
         <Route path="tenants/new" element={<TenantCreate />} />
         <Route path="tenants/:id" element={<TenantDetail />} />
-        <Route path="dev/sms" element={<DevSmsPage />} />
+        {(import.meta.env.DEV || import.meta.env.VITE_SHOW_DEV_TOOLS === 'true') && <Route path="dev/sms" element={<DevSmsPage />} />}
         <Route path="*" element={<Navigate to="tenants" replace />} />
       </Route>
     </Routes>
