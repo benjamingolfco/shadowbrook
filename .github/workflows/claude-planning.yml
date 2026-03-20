@@ -1,10 +1,11 @@
 name: Shadowbrook Planning
 
 on:
-  issues:
-    types: [opened, labeled, unlabeled]
-  schedule:
-    - cron: '0 0,8,16 * * *'  # Every 8 hours UTC (6pm, 2am, 10am CST)
+  workflow_dispatch:  # manual-only while pipeline is disabled
+  # issues:
+  #   types: [opened, labeled, unlabeled]
+  # schedule:
+  #   - cron: '0 0,8,16 * * *'  # Every 8 hours UTC (6pm, 2am, 10am CST)
 
 jobs:
   planning:
