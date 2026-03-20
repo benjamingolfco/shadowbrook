@@ -8,3 +8,5 @@ public class TeeTimeOfferPolicy : Saga
     public Guid? CurrentOfferId { get; set; }
     public bool IsBuffering { get; set; }
 }
+
+public record NotifyNextEligibleGolfer(Guid TeeTimeRequestId);
