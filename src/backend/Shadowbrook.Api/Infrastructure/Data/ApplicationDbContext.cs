@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
+using Shadowbrook.Api.Features.WaitlistOffers;
+using Shadowbrook.Api.Features.WalkUpWaitlist;
 using Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
 using Shadowbrook.Api.Models;
 using Shadowbrook.Domain.BookingAggregate;
@@ -25,6 +27,8 @@ public class ApplicationDbContext(
     public DbSet<Golfer> Golfers => Set<Golfer>();
     public DbSet<GolferWaitlistEntry> GolferWaitlistEntries => Set<GolferWaitlistEntry>();
     public DbSet<WaitlistOffer> WaitlistOffers => Set<WaitlistOffer>();
+    public DbSet<TeeTimeOfferPolicy> TeeTimeOfferPolicies => Set<TeeTimeOfferPolicy>();
+    public DbSet<TeeTimeRequestExpirationPolicy> TeeTimeRequestExpirationPolicies => Set<TeeTimeRequestExpirationPolicy>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -58,5 +62,7 @@ public class ApplicationDbContext(
         modelBuilder.ApplyConfiguration(new GolferWaitlistEntryConfiguration());
         modelBuilder.ApplyConfiguration(new WaitlistOfferConfiguration());
         modelBuilder.ApplyConfiguration(new TeeTimeSlotFillConfiguration());
+        modelBuilder.ApplyConfiguration(new TeeTimeOfferPolicyConfiguration());
+        modelBuilder.ApplyConfiguration(new TeeTimeRequestExpirationPolicyConfiguration());
     }
 }
