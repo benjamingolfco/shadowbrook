@@ -8,12 +8,12 @@ public class JoinWaitlistRequestValidatorTests
 
     [Fact]
     public void ValidRequest_Passes() =>
-        Assert.True(validator.Validate(new JoinWaitlistRequest(Guid.NewGuid(), "John", "Smith", "555-123-4567")).IsValid);
+        Assert.True(this.validator.Validate(new JoinWaitlistRequest(Guid.NewGuid(), "John", "Smith", "555-123-4567")).IsValid);
 
     [Fact]
     public void EmptyFirstName_Fails()
     {
-        var result = validator.Validate(new JoinWaitlistRequest(Guid.NewGuid(), "", "Smith", "555-123-4567"));
+        var result = this.validator.Validate(new JoinWaitlistRequest(Guid.NewGuid(), "", "Smith", "555-123-4567"));
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, e => e.PropertyName == "FirstName");
     }
@@ -21,7 +21,7 @@ public class JoinWaitlistRequestValidatorTests
     [Fact]
     public void EmptyLastName_Fails()
     {
-        var result = validator.Validate(new JoinWaitlistRequest(Guid.NewGuid(), "John", "", "555-123-4567"));
+        var result = this.validator.Validate(new JoinWaitlistRequest(Guid.NewGuid(), "John", "", "555-123-4567"));
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, e => e.PropertyName == "LastName");
     }
@@ -32,7 +32,7 @@ public class JoinWaitlistRequestValidatorTests
     [InlineData("abcdefghij")]
     public void InvalidPhone_Fails(string phone)
     {
-        var result = validator.Validate(new JoinWaitlistRequest(Guid.NewGuid(), "John", "Smith", phone));
+        var result = this.validator.Validate(new JoinWaitlistRequest(Guid.NewGuid(), "John", "Smith", phone));
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, e => e.PropertyName == "Phone");
     }

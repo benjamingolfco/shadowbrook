@@ -13,7 +13,7 @@ public class TeeTimeRequestServiceTests
 
     public TeeTimeRequestServiceTests()
     {
-        shortCodeGenerator.GenerateAsync(Arg.Any<DateOnly>()).Returns("1234");
+        this.shortCodeGenerator.GenerateAsync(Arg.Any<DateOnly>()).Returns("1234");
     }
 
     [Fact]
@@ -24,11 +24,11 @@ public class TeeTimeRequestServiceTests
         var teeTime = new TimeOnly(10, 0);
 
         var waitlist = await WalkUpWaitlist.OpenAsync(
-            courseId, date, shortCodeGenerator, waitlistRepo);
-        waitlistRepo.GetOpenByCourseDateAsync(courseId, date)
+            courseId, date, this.shortCodeGenerator, this.waitlistRepo);
+        this.waitlistRepo.GetOpenByCourseDateAsync(courseId, date)
             .Returns(waitlist);
 
-        var service = new TeeTimeRequestService(teeTimeRequestRepo, waitlistRepo);
+        var service = new TeeTimeRequestService(this.teeTimeRequestRepo, this.waitlistRepo);
 
         var request = await service.CreateAsync(courseId, date, teeTime, 2);
 
@@ -46,7 +46,7 @@ public class TeeTimeRequestServiceTests
 
         // NSubstitute returns null by default — no setup needed
 
-        var service = new TeeTimeRequestService(teeTimeRequestRepo, waitlistRepo);
+        var service = new TeeTimeRequestService(this.teeTimeRequestRepo, this.waitlistRepo);
 
         await Assert.ThrowsAsync<WaitlistNotOpenForRequestsException>(
             () => service.CreateAsync(courseId, date, new TimeOnly(10, 0), 2));
@@ -59,12 +59,12 @@ public class TeeTimeRequestServiceTests
         var date = new DateOnly(2026, 3, 6);
 
         var waitlist = await WalkUpWaitlist.OpenAsync(
-            courseId, date, shortCodeGenerator, waitlistRepo);
+            courseId, date, this.shortCodeGenerator, this.waitlistRepo);
         waitlist.Close();
         // Closed waitlist should NOT be returned by GetOpenByCourseDateAsync
         // so we don't configure the repo to return it
 
-        var service = new TeeTimeRequestService(teeTimeRequestRepo, waitlistRepo);
+        var service = new TeeTimeRequestService(this.teeTimeRequestRepo, this.waitlistRepo);
 
         await Assert.ThrowsAsync<WaitlistNotOpenForRequestsException>(
             () => service.CreateAsync(courseId, date, new TimeOnly(10, 0), 2));

@@ -21,4 +21,7 @@ export const queryKeys = {
   walkUpOffer: {
     byToken: (token: string) => ['walk-up-offer', token] as const,
   },
+  devSms: {
+    all: ['dev-sms'] as const,
+  },
 };

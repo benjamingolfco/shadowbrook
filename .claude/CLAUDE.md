@@ -53,6 +53,7 @@ Course operators know their course best. Ship with sensible defaults, but every 
 
 ## Workflow
 - Run `dotnet build shadowbrook.slnx` after C# changes to verify compilation
+- Run `dotnet format shadowbrook.slnx` after C# changes to fix IDE style warnings (braces, `this.` qualification, naming, etc.)
 - Run `pnpm --dir src/web lint` after TypeScript changes
 - Run `pnpm --dir src/web test` after frontend component changes
 - **Testing pyramid: unit tests first, integration tests second.** Test behavior at the cheapest layer possible — validators, handlers, domain logic should all be unit tested without spinning up a DB or HTTP server. Integration tests are for DB-dependent behavior, middleware, and E2E flows only. See `.claude/rules/backend/backend-conventions.md` for backend-specific patterns; the same principle applies to frontend (component tests before browser tests).

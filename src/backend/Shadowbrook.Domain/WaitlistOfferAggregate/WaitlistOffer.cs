@@ -83,17 +83,17 @@ public class WaitlistOffer : Entity
 
     public void MarkNotified()
     {
-        if (this.NotifiedAt is not null)
+        if (NotifiedAt is not null)
         {
             throw new InvalidOperationException("Offer has already been marked as notified.");
         }
 
-        this.NotifiedAt = DateTimeOffset.UtcNow;
+        NotifiedAt = DateTimeOffset.UtcNow;
 
         AddDomainEvent(new GolferNotifiedOfOffer
         {
-            WaitlistOfferId = this.Id,
-            TeeTimeRequestId = this.TeeTimeRequestId
+            WaitlistOfferId = Id,
+            TeeTimeRequestId = TeeTimeRequestId
         });
     }
 }

@@ -8,11 +8,11 @@ public class CreateWalkUpWaitlistRequestRequestValidatorTests
 
     [Fact]
     public void ValidRequest_Passes() =>
-        Assert.True(validator.Validate(new CreateWalkUpWaitlistRequestRequest("2026-06-15", "09:00", 2)).IsValid);
+        Assert.True(this.validator.Validate(new CreateWalkUpWaitlistRequestRequest("2026-06-15", "09:00", 2)).IsValid);
 
     [Fact]
     public void ValidRequest_WithSeconds_Passes() =>
-        Assert.True(validator.Validate(new CreateWalkUpWaitlistRequestRequest("2026-06-15", "09:00:00", 2)).IsValid);
+        Assert.True(this.validator.Validate(new CreateWalkUpWaitlistRequestRequest("2026-06-15", "09:00:00", 2)).IsValid);
 
     [Theory]
     [InlineData("")]
@@ -21,7 +21,7 @@ public class CreateWalkUpWaitlistRequestRequestValidatorTests
     [InlineData("not-a-date")]
     public void InvalidDate_Fails(string date)
     {
-        var result = validator.Validate(new CreateWalkUpWaitlistRequestRequest(date, "09:00", 2));
+        var result = this.validator.Validate(new CreateWalkUpWaitlistRequestRequest(date, "09:00", 2));
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, e => e.PropertyName == "Date");
     }
@@ -32,7 +32,7 @@ public class CreateWalkUpWaitlistRequestRequestValidatorTests
     [InlineData("25:00")]
     public void InvalidTeeTime_Fails(string teeTime)
     {
-        var result = validator.Validate(new CreateWalkUpWaitlistRequestRequest("2026-06-15", teeTime, 2));
+        var result = this.validator.Validate(new CreateWalkUpWaitlistRequestRequest("2026-06-15", teeTime, 2));
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, e => e.PropertyName == "TeeTime");
     }
@@ -43,7 +43,7 @@ public class CreateWalkUpWaitlistRequestRequestValidatorTests
     [InlineData(-1)]
     public void InvalidGolfersNeeded_Fails(int golfersNeeded)
     {
-        var result = validator.Validate(new CreateWalkUpWaitlistRequestRequest("2026-06-15", "09:00", golfersNeeded));
+        var result = this.validator.Validate(new CreateWalkUpWaitlistRequestRequest("2026-06-15", "09:00", golfersNeeded));
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, e => e.PropertyName == "GolfersNeeded");
     }

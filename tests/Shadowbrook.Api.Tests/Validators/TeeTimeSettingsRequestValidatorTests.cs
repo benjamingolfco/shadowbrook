@@ -10,7 +10,7 @@ public class TeeTimeSettingsRequestValidatorTests
 
     [Fact]
     public void Valid_Request_Passes() =>
-        validator.TestValidate(new TeeTimeSettingsRequest(10, TimeOnly.Parse("07:00"), TimeOnly.Parse("18:00")))
+        this.validator.TestValidate(new TeeTimeSettingsRequest(10, TimeOnly.Parse("07:00"), TimeOnly.Parse("18:00")))
             .ShouldNotHaveAnyValidationErrors();
 
     [Theory]
@@ -19,16 +19,16 @@ public class TeeTimeSettingsRequestValidatorTests
     [InlineData(0)]
     [InlineData(-1)]
     public void Invalid_Interval_Fails(int interval) =>
-        validator.TestValidate(new TeeTimeSettingsRequest(interval, TimeOnly.Parse("07:00"), TimeOnly.Parse("18:00")))
+        this.validator.TestValidate(new TeeTimeSettingsRequest(interval, TimeOnly.Parse("07:00"), TimeOnly.Parse("18:00")))
             .ShouldHaveValidationErrorFor(x => x.TeeTimeIntervalMinutes);
 
     [Fact]
     public void FirstTeeTime_After_LastTeeTime_Fails() =>
-        validator.TestValidate(new TeeTimeSettingsRequest(10, TimeOnly.Parse("18:00"), TimeOnly.Parse("07:00")))
+        this.validator.TestValidate(new TeeTimeSettingsRequest(10, TimeOnly.Parse("18:00"), TimeOnly.Parse("07:00")))
             .ShouldHaveValidationErrorFor(x => x.FirstTeeTime);
 
     [Fact]
     public void FirstTeeTime_Equals_LastTeeTime_Fails() =>
-        validator.TestValidate(new TeeTimeSettingsRequest(10, TimeOnly.Parse("07:00"), TimeOnly.Parse("07:00")))
+        this.validator.TestValidate(new TeeTimeSettingsRequest(10, TimeOnly.Parse("07:00"), TimeOnly.Parse("07:00")))
             .ShouldHaveValidationErrorFor(x => x.FirstTeeTime);
 }

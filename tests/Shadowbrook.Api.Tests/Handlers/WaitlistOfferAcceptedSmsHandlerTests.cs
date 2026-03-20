@@ -17,34 +17,34 @@ public class WaitlistOfferAcceptedSmsHandlerTests
     public async Task Handle_EntryNotFound_NoSms()
     {
         var evt = MakeEvent();
-        await WaitlistOfferAcceptedSmsHandler.Handle(evt, entryRepo, golferRepo, sms, CancellationToken.None);
-        await sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await WaitlistOfferAcceptedSmsHandler.Handle(evt, this.entryRepo, this.golferRepo, this.sms, CancellationToken.None);
+        await this.sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Handle_GolferNotFound_NoSms()
     {
         var entry = await WaitlistEntryFactory.CreateAsync();
-        entryRepo.GetByIdAsync(entry.Id).Returns(entry);
+        this.entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var evt = MakeEvent(entryId: entry.Id);
-        await WaitlistOfferAcceptedSmsHandler.Handle(evt, entryRepo, golferRepo, sms, CancellationToken.None);
-        await sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await WaitlistOfferAcceptedSmsHandler.Handle(evt, this.entryRepo, this.golferRepo, this.sms, CancellationToken.None);
+        await this.sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Handle_Success_SendsSms()
     {
         var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
-        golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
+        this.golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
 
         var entry = await WaitlistEntryFactory.CreateAsync(golfer);
-        entryRepo.GetByIdAsync(entry.Id).Returns(entry);
+        this.entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var evt = MakeEvent(entryId: entry.Id);
-        await WaitlistOfferAcceptedSmsHandler.Handle(evt, entryRepo, golferRepo, sms, CancellationToken.None);
+        await WaitlistOfferAcceptedSmsHandler.Handle(evt, this.entryRepo, this.golferRepo, this.sms, CancellationToken.None);
 
-        await sms.Received(1).SendAsync(
+        await this.sms.Received(1).SendAsync(
             "+15551234567",
             Arg.Is<string>(m => m.Contains("processing")),
             Arg.Any<CancellationToken>());

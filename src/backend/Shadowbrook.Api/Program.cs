@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Features.Dev;
 using Shadowbrook.Api.Infrastructure.Data;
+using Shadowbrook.Api.Infrastructure.Middleware;
 using Shadowbrook.Api.Infrastructure.Repositories;
 using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.BookingAggregate;
@@ -10,10 +11,10 @@ using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate;
-using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate.Exceptions;
+using Shadowbrook.Domain.WaitlistOfferAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Exceptions;
+using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
 using Wolverine;
 using Wolverine.EntityFrameworkCore;
@@ -21,7 +22,6 @@ using Wolverine.ErrorHandling;
 using Wolverine.FluentValidation;
 using Wolverine.Http;
 using Wolverine.Http.FluentValidation;
-using Shadowbrook.Api.Infrastructure.Middleware;
 using Wolverine.SqlServer;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -59,10 +59,10 @@ builder.Host.UseWolverine(opts =>
 
     if (connectionString is not null)
     {
-        #pragma warning disable CS0618 // EnableMessageTransport not implemented in 5.20.1
+#pragma warning disable CS0618 // EnableMessageTransport not implemented in 5.20.1
         opts.UseSqlServerPersistenceAndTransport(connectionString, "wolverine")
             .AutoProvision();
-        #pragma warning restore CS0618
+#pragma warning restore CS0618
     }
 
     opts.MultipleHandlerBehavior = MultipleHandlerBehavior.Separated;

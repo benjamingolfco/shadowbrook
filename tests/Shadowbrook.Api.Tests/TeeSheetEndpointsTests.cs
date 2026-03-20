@@ -12,7 +12,7 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
 {
     private readonly HttpClient client = factory.CreateClient();
 
-    public Task InitializeAsync() => factory.ResetDatabaseAsync();
+    public Task InitializeAsync() => this.factory.ResetDatabaseAsync();
     public Task DisposeAsync() => Task.CompletedTask;
     private readonly TestWebApplicationFactory factory = factory;
 

@@ -10,11 +10,11 @@ public class CreateCourseRequestValidatorTests
 
     [Fact]
     public void Valid_Request_Passes() =>
-        validator.TestValidate(new CreateCourseRequest("Course Name"))
+        this.validator.TestValidate(new CreateCourseRequest("Course Name"))
             .ShouldNotHaveAnyValidationErrors();
 
     [Fact]
     public void Missing_Name_Fails() =>
-        validator.TestValidate(new CreateCourseRequest(""))
+        this.validator.TestValidate(new CreateCourseRequest(""))
             .ShouldHaveValidationErrorFor(x => x.Name);
 }

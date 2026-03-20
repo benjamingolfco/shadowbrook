@@ -19,78 +19,78 @@ public class WaitlistOfferRejectedSmsHandlerTests
     public async Task Handle_OfferNeverNotified_DoesNotSendSms()
     {
         var offer = WaitlistOffer.Create(Guid.NewGuid(), Guid.NewGuid());
-        offerRepo.GetByIdAsync(offer.Id).Returns(offer);
+        this.offerRepo.GetByIdAsync(offer.Id).Returns(offer);
 
         var evt = MakeEvent(offerId: offer.Id);
-        await WaitlistOfferRejectedSmsHandler.Handle(evt, offerRepo, entryRepo, golferRepo, sms, CancellationToken.None);
+        await WaitlistOfferRejectedSmsHandler.Handle(evt, this.offerRepo, this.entryRepo, this.golferRepo, this.sms, CancellationToken.None);
 
-        await sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await this.sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Handle_OfferNotFound_NoSms()
     {
         var evt = MakeEvent();
-        await WaitlistOfferRejectedSmsHandler.Handle(evt, offerRepo, entryRepo, golferRepo, sms, CancellationToken.None);
-        await sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await WaitlistOfferRejectedSmsHandler.Handle(evt, this.offerRepo, this.entryRepo, this.golferRepo, this.sms, CancellationToken.None);
+        await this.sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Handle_EntryNotFound_NoSms()
     {
         var offer = MakeNotifiedOffer();
-        offerRepo.GetByIdAsync(offer.Id).Returns(offer);
+        this.offerRepo.GetByIdAsync(offer.Id).Returns(offer);
 
         var evt = MakeEvent(offerId: offer.Id);
-        await WaitlistOfferRejectedSmsHandler.Handle(evt, offerRepo, entryRepo, golferRepo, sms, CancellationToken.None);
-        await sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await WaitlistOfferRejectedSmsHandler.Handle(evt, this.offerRepo, this.entryRepo, this.golferRepo, this.sms, CancellationToken.None);
+        await this.sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Handle_EntryAlreadyRemoved_NoSms()
     {
         var offer = MakeNotifiedOffer();
-        offerRepo.GetByIdAsync(offer.Id).Returns(offer);
+        this.offerRepo.GetByIdAsync(offer.Id).Returns(offer);
 
         var entry = await WaitlistEntryFactory.CreateAsync();
         entry.Remove(); // Sets RemovedAt
-        entryRepo.GetByIdAsync(entry.Id).Returns(entry);
+        this.entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var evt = MakeEvent(offerId: offer.Id, entryId: entry.Id);
-        await WaitlistOfferRejectedSmsHandler.Handle(evt, offerRepo, entryRepo, golferRepo, sms, CancellationToken.None);
-        await sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await WaitlistOfferRejectedSmsHandler.Handle(evt, this.offerRepo, this.entryRepo, this.golferRepo, this.sms, CancellationToken.None);
+        await this.sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Handle_GolferNotFound_NoSms()
     {
         var offer = MakeNotifiedOffer();
-        offerRepo.GetByIdAsync(offer.Id).Returns(offer);
+        this.offerRepo.GetByIdAsync(offer.Id).Returns(offer);
 
         var entry = await WaitlistEntryFactory.CreateAsync();
-        entryRepo.GetByIdAsync(entry.Id).Returns(entry);
+        this.entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var evt = MakeEvent(offerId: offer.Id, entryId: entry.Id);
-        await WaitlistOfferRejectedSmsHandler.Handle(evt, offerRepo, entryRepo, golferRepo, sms, CancellationToken.None);
-        await sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await WaitlistOfferRejectedSmsHandler.Handle(evt, this.offerRepo, this.entryRepo, this.golferRepo, this.sms, CancellationToken.None);
+        await this.sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Handle_Success_SendsSms()
     {
         var offer = MakeNotifiedOffer();
-        offerRepo.GetByIdAsync(offer.Id).Returns(offer);
+        this.offerRepo.GetByIdAsync(offer.Id).Returns(offer);
 
         var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
-        golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
+        this.golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
 
         var entry = await WaitlistEntryFactory.CreateAsync(golfer);
-        entryRepo.GetByIdAsync(entry.Id).Returns(entry);
+        this.entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var evt = MakeEvent(offerId: offer.Id, entryId: entry.Id);
-        await WaitlistOfferRejectedSmsHandler.Handle(evt, offerRepo, entryRepo, golferRepo, sms, CancellationToken.None);
+        await WaitlistOfferRejectedSmsHandler.Handle(evt, this.offerRepo, this.entryRepo, this.golferRepo, this.sms, CancellationToken.None);
 
-        await sms.Received(1).SendAsync(
+        await this.sms.Received(1).SendAsync(
             "+15551234567",
             Arg.Is<string>(m => m.Contains("no longer available")),
             Arg.Any<CancellationToken>());

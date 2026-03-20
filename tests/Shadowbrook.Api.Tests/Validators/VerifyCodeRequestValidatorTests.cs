@@ -11,13 +11,13 @@ public class VerifyCodeRequestValidatorTests
     [InlineData("0000")]
     [InlineData("9999")]
     public void ValidCode_Passes(string code) =>
-        Assert.True(validator.Validate(new VerifyCodeRequest(code)).IsValid);
+        Assert.True(this.validator.Validate(new VerifyCodeRequest(code)).IsValid);
 
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
     public void Empty_Fails(string code) =>
-        Assert.False(validator.Validate(new VerifyCodeRequest(code)).IsValid);
+        Assert.False(this.validator.Validate(new VerifyCodeRequest(code)).IsValid);
 
     [Theory]
     [InlineData("abc")]
@@ -25,5 +25,5 @@ public class VerifyCodeRequestValidatorTests
     [InlineData("123")]
     [InlineData("12ab")]
     public void InvalidFormat_Fails(string code) =>
-        Assert.False(validator.Validate(new VerifyCodeRequest(code)).IsValid);
+        Assert.False(this.validator.Validate(new VerifyCodeRequest(code)).IsValid);
 }

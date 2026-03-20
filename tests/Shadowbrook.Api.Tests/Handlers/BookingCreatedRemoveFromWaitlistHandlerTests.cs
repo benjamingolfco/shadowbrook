@@ -15,21 +15,21 @@ public class BookingCreatedRemoveFromWaitlistHandlerTests
     public async Task Handle_OfferNotFound_DoesNothing()
     {
         var evt = new BookingCreated { BookingId = Guid.CreateVersion7(), GolferId = Guid.NewGuid(), CourseId = Guid.NewGuid() };
-        await BookingCreatedRemoveFromWaitlistHandler.Handle(evt, offerRepo, entryRepo);
+        await BookingCreatedRemoveFromWaitlistHandler.Handle(evt, this.offerRepo, this.entryRepo);
 
-        await entryRepo.DidNotReceive().GetByIdAsync(Arg.Any<Guid>());
+        await this.entryRepo.DidNotReceive().GetByIdAsync(Arg.Any<Guid>());
     }
 
     [Fact]
     public async Task Handle_EntryNotFound_DoesNothing()
     {
         var offer = WaitlistOffer.Create(Guid.NewGuid(), Guid.NewGuid());
-        offerRepo.GetByBookingIdAsync(offer.BookingId).Returns(offer);
+        this.offerRepo.GetByBookingIdAsync(offer.BookingId).Returns(offer);
 
         var evt = new BookingCreated { BookingId = offer.BookingId, GolferId = Guid.NewGuid(), CourseId = Guid.NewGuid() };
-        await BookingCreatedRemoveFromWaitlistHandler.Handle(evt, offerRepo, entryRepo);
+        await BookingCreatedRemoveFromWaitlistHandler.Handle(evt, this.offerRepo, this.entryRepo);
 
-        entryRepo.DidNotReceive().Add(Arg.Any<GolferWaitlistEntry>());
+        this.entryRepo.DidNotReceive().Add(Arg.Any<GolferWaitlistEntry>());
     }
 
     [Fact]
@@ -39,11 +39,11 @@ public class BookingCreatedRemoveFromWaitlistHandlerTests
         Assert.Null(entry.RemovedAt);
 
         var offer = WaitlistOffer.Create(Guid.NewGuid(), entry.Id);
-        offerRepo.GetByBookingIdAsync(offer.BookingId).Returns(offer);
-        entryRepo.GetByIdAsync(entry.Id).Returns(entry);
+        this.offerRepo.GetByBookingIdAsync(offer.BookingId).Returns(offer);
+        this.entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var evt = new BookingCreated { BookingId = offer.BookingId, GolferId = Guid.NewGuid(), CourseId = Guid.NewGuid() };
-        await BookingCreatedRemoveFromWaitlistHandler.Handle(evt, offerRepo, entryRepo);
+        await BookingCreatedRemoveFromWaitlistHandler.Handle(evt, this.offerRepo, this.entryRepo);
 
         Assert.NotNull(entry.RemovedAt);
     }

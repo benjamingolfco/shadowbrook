@@ -22,65 +22,65 @@ public class TeeTimeSlotFilledBookingHandlerTests
     {
         var evt = MakeEvent();
         await Handle(evt);
-        bookingRepo.DidNotReceive().Add(Arg.Any<Booking>());
+        this.bookingRepo.DidNotReceive().Add(Arg.Any<Booking>());
     }
 
     [Fact]
     public async Task Handle_GolferNotFound_DoesNothing()
     {
         var request = await CreateRequest();
-        requestRepo.GetByIdAsync(request.Id).Returns(request);
+        this.requestRepo.GetByIdAsync(request.Id).Returns(request);
         var evt = MakeEvent(teeTimeRequestId: request.Id);
 
         await Handle(evt);
-        bookingRepo.DidNotReceive().Add(Arg.Any<Booking>());
+        this.bookingRepo.DidNotReceive().Add(Arg.Any<Booking>());
     }
 
     [Fact]
     public async Task Handle_OfferNotFound_DoesNothing()
     {
         var request = await CreateRequest();
-        requestRepo.GetByIdAsync(request.Id).Returns(request);
+        this.requestRepo.GetByIdAsync(request.Id).Returns(request);
         var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
-        golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
+        this.golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
         var evt = MakeEvent(teeTimeRequestId: request.Id, golferId: golfer.Id);
 
         await Handle(evt);
-        bookingRepo.DidNotReceive().Add(Arg.Any<Booking>());
+        this.bookingRepo.DidNotReceive().Add(Arg.Any<Booking>());
     }
 
     [Fact]
     public async Task Handle_EntryNotFound_DoesNothing()
     {
         var request = await CreateRequest();
-        requestRepo.GetByIdAsync(request.Id).Returns(request);
+        this.requestRepo.GetByIdAsync(request.Id).Returns(request);
         var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
-        golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
+        this.golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
 
         var offer = WaitlistOffer.Create(request.Id, Guid.NewGuid());
-        offerRepo.GetByBookingIdAsync(offer.BookingId).Returns(offer);
+        this.offerRepo.GetByBookingIdAsync(offer.BookingId).Returns(offer);
         // entryRepo.GetByIdAsync not set up — returns null
 
         var evt = MakeEvent(teeTimeRequestId: request.Id, bookingId: offer.BookingId, golferId: golfer.Id);
 
         await Handle(evt);
-        bookingRepo.DidNotReceive().Add(Arg.Any<Booking>());
+        this.bookingRepo.DidNotReceive().Add(Arg.Any<Booking>());
     }
 
     [Fact]
     public async Task Handle_Success_CreatesBooking()
     {
         var request = await CreateRequest();
-        requestRepo.GetByIdAsync(request.Id).Returns(request);
+        this.requestRepo.GetByIdAsync(request.Id).Returns(request);
 
         var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
-        golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
+        this.golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
 
         var entry = await WaitlistEntryFactory.CreateAsync(golfer, groupSize: 2);
-        entryRepo.GetByIdAsync(entry.Id).Returns(entry);
+        this.entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var offer = WaitlistOffer.Create(request.Id, entry.Id);
-        offerRepo.GetByBookingIdAsync(offer.BookingId).Returns(offer);
+        this.offerRepo.GetByBookingIdAsync(offer.BookingId).Returns(offer);
 
         var evt = MakeEvent(
             teeTimeRequestId: request.Id,
@@ -89,7 +89,7 @@ public class TeeTimeSlotFilledBookingHandlerTests
 
         await Handle(evt);
 
-        bookingRepo.Received(1).Add(Arg.Is<Booking>(b =>
+        this.bookingRepo.Received(1).Add(Arg.Is<Booking>(b =>
             b.Id == offer.BookingId &&
             b.CourseId == request.CourseId &&
             b.GolferId == golfer.Id &&
@@ -98,17 +98,17 @@ public class TeeTimeSlotFilledBookingHandlerTests
     }
 
     private Task Handle(TeeTimeSlotFilled evt) =>
-        TeeTimeSlotFilledBookingHandler.Handle(evt, requestRepo, golferRepo, offerRepo, entryRepo, bookingRepo);
+        TeeTimeSlotFilledBookingHandler.Handle(evt, this.requestRepo, this.golferRepo, this.offerRepo, this.entryRepo, this.bookingRepo);
 
     private static TeeTimeSlotFilled MakeEvent(
         Guid? teeTimeRequestId = null,
         Guid? bookingId = null,
         Guid? golferId = null) => new()
-    {
-        TeeTimeRequestId = teeTimeRequestId ?? Guid.NewGuid(),
-        BookingId = bookingId ?? Guid.CreateVersion7(),
-        GolferId = golferId ?? Guid.NewGuid()
-    };
+        {
+            TeeTimeRequestId = teeTimeRequestId ?? Guid.NewGuid(),
+            BookingId = bookingId ?? Guid.CreateVersion7(),
+            GolferId = golferId ?? Guid.NewGuid()
+        };
 
     private static async Task<TeeTimeRequest> CreateRequest()
     {

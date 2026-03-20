@@ -18,36 +18,36 @@ public class WaitlistOfferAcceptedFillHandlerTests
         var evt = MakeEvent();
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => WaitlistOfferAcceptedFillHandler.Handle(evt, requestRepo, entryRepo));
+            () => WaitlistOfferAcceptedFillHandler.Handle(evt, this.requestRepo, this.entryRepo));
     }
 
     [Fact]
     public async Task Handle_RequestNotFound_Throws()
     {
         var entry = await WaitlistEntryFactory.CreateAsync();
-        entryRepo.GetByIdAsync(entry.Id).Returns(entry);
+        this.entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var evt = MakeEvent(entryId: entry.Id);
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => WaitlistOfferAcceptedFillHandler.Handle(evt, requestRepo, entryRepo));
+            () => WaitlistOfferAcceptedFillHandler.Handle(evt, this.requestRepo, this.entryRepo));
     }
 
     [Fact]
     public async Task Handle_FillFails_RaisesFillFailedDomainEvent()
     {
         var entry = await WaitlistEntryFactory.CreateAsync();
-        entryRepo.GetByIdAsync(entry.Id).Returns(entry);
+        this.entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         // Create a request that's already fulfilled so Fill() raises failure
         var request = await CreateRequest();
         request.Fill(Guid.NewGuid(), request.GolfersNeeded, Guid.CreateVersion7(), Guid.NewGuid()); // fills all slots
         request.ClearDomainEvents();
-        requestRepo.GetByIdAsync(request.Id).Returns(request);
+        this.requestRepo.GetByIdAsync(request.Id).Returns(request);
 
         var evt = MakeEvent(teeTimeRequestId: request.Id, entryId: entry.Id);
 
-        await WaitlistOfferAcceptedFillHandler.Handle(evt, requestRepo, entryRepo);
+        await WaitlistOfferAcceptedFillHandler.Handle(evt, this.requestRepo, this.entryRepo);
 
         var domainEvent = Assert.Single(request.DomainEvents);
         var failed = Assert.IsType<TeeTimeSlotFillFailed>(domainEvent);
@@ -59,15 +59,15 @@ public class WaitlistOfferAcceptedFillHandlerTests
     public async Task Handle_Success_RaisesSlotFilledDomainEvent()
     {
         var entry = await WaitlistEntryFactory.CreateAsync(groupSize: 1);
-        entryRepo.GetByIdAsync(entry.Id).Returns(entry);
+        this.entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var request = await CreateRequest(golfersNeeded: 2);
         request.ClearDomainEvents();
-        requestRepo.GetByIdAsync(request.Id).Returns(request);
+        this.requestRepo.GetByIdAsync(request.Id).Returns(request);
 
         var evt = MakeEvent(teeTimeRequestId: request.Id, entryId: entry.Id);
 
-        await WaitlistOfferAcceptedFillHandler.Handle(evt, requestRepo, entryRepo);
+        await WaitlistOfferAcceptedFillHandler.Handle(evt, this.requestRepo, this.entryRepo);
 
         var filledEvent = request.DomainEvents.OfType<TeeTimeSlotFilled>().SingleOrDefault();
         Assert.NotNull(filledEvent);
@@ -79,13 +79,13 @@ public class WaitlistOfferAcceptedFillHandlerTests
     private static WaitlistOfferAccepted MakeEvent(
         Guid? teeTimeRequestId = null,
         Guid? entryId = null) => new()
-    {
-        WaitlistOfferId = Guid.NewGuid(),
-        BookingId = Guid.CreateVersion7(),
-        TeeTimeRequestId = teeTimeRequestId ?? Guid.NewGuid(),
-        GolferWaitlistEntryId = entryId ?? Guid.NewGuid(),
-        GolferId = Guid.NewGuid()
-    };
+        {
+            WaitlistOfferId = Guid.NewGuid(),
+            BookingId = Guid.CreateVersion7(),
+            TeeTimeRequestId = teeTimeRequestId ?? Guid.NewGuid(),
+            GolferWaitlistEntryId = entryId ?? Guid.NewGuid(),
+            GolferId = Guid.NewGuid()
+        };
 
     private static async Task<TeeTimeRequest> CreateRequest(int golfersNeeded = 2)
     {

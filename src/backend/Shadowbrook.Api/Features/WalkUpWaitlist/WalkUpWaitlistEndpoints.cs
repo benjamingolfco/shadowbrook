@@ -3,11 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.GolferAggregate;
-using Shadowbrook.Domain.TeeTimeRequestAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
+using Shadowbrook.Domain.TeeTimeRequestAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate;
-using WalkUpWaitlistAggregate = Shadowbrook.Domain.WalkUpWaitlistAggregate.WalkUpWaitlist;
 using Wolverine.Http;
+using WalkUpWaitlistAggregate = Shadowbrook.Domain.WalkUpWaitlistAggregate.WalkUpWaitlist;
 
 namespace Shadowbrook.Api.Features.WalkUpWaitlist;
 

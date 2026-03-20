@@ -1,28 +1,27 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Shadowbrook.Api.Migrations
+namespace Shadowbrook.Api.Migrations;
+
+/// <inheritdoc />
+public partial class RestoreAsReadOnlyOnDomainEvents : Migration
 {
     /// <inheritdoc />
-    public partial class RestoreAsReadOnlyOnDomainEvents : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.RenameColumn(
-                name: "CurrentOfferId",
-                table: "TeeTimeOfferPolicies",
-                newName: "LastOfferId");
-        }
+        migrationBuilder.RenameColumn(
+            name: "CurrentOfferId",
+            table: "TeeTimeOfferPolicies",
+            newName: "LastOfferId");
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.RenameColumn(
-                name: "LastOfferId",
-                table: "TeeTimeOfferPolicies",
-                newName: "CurrentOfferId");
-        }
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.RenameColumn(
+            name: "LastOfferId",
+            table: "TeeTimeOfferPolicies",
+            newName: "CurrentOfferId");
     }
 }

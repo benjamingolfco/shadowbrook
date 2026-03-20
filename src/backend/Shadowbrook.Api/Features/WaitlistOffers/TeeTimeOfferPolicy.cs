@@ -26,21 +26,33 @@ public class TeeTimeOfferPolicy : Saga
     public NotifyNextEligibleGolfer? Handle(
         [SagaIdentityFrom("TeeTimeRequestId")] TeeTimeOfferBufferTimeout timeout)
     {
-        if (timeout.OfferId != LastOfferId) return null;
+        if (timeout.OfferId != LastOfferId)
+        {
+            return null;
+        }
+
         return new NotifyNextEligibleGolfer(Id);
     }
 
     public NotifyNextEligibleGolfer? Handle(
         [SagaIdentityFrom("TeeTimeRequestId")] WaitlistOfferRejected evt)
     {
-        if (evt.WaitlistOfferId != LastOfferId) return null;
+        if (evt.WaitlistOfferId != LastOfferId)
+        {
+            return null;
+        }
+
         return new NotifyNextEligibleGolfer(Id);
     }
 
     public void Handle(
         [SagaIdentityFrom("TeeTimeRequestId")] WaitlistOfferAccepted evt)
     {
-        if (evt.WaitlistOfferId != LastOfferId) return;
+        if (evt.WaitlistOfferId != LastOfferId)
+        {
+            return;
+        }
+
         LastOfferId = null;
     }
 

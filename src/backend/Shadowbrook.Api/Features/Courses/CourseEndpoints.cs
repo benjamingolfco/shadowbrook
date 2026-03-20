@@ -260,12 +260,12 @@ public class PricingRequestValidator : AbstractValidator<PricingRequest>
 
 public class TeeTimeSettingsRequestValidator : AbstractValidator<TeeTimeSettingsRequest>
 {
-    private static readonly int[] AllowedIntervals = [8, 10, 12];
+    private static readonly int[] allowedIntervals = [8, 10, 12];
 
     public TeeTimeSettingsRequestValidator()
     {
         RuleFor(x => x.TeeTimeIntervalMinutes)
-            .Must(i => AllowedIntervals.Contains(i))
+            .Must(i => allowedIntervals.Contains(i))
             .WithMessage("Interval must be 8, 10, or 12 minutes.");
         RuleFor(x => x.FirstTeeTime)
             .LessThan(x => x.LastTeeTime)

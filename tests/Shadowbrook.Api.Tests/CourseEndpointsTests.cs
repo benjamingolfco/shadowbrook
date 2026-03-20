@@ -10,7 +10,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
     private readonly HttpClient client = factory.CreateClient();
     private readonly TestWebApplicationFactory factory = factory;
 
-    public Task InitializeAsync() => factory.ResetDatabaseAsync();
+    public Task InitializeAsync() => this.factory.ResetDatabaseAsync();
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]

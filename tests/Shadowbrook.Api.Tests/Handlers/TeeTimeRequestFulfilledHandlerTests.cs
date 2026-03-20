@@ -13,13 +13,13 @@ public class TeeTimeRequestFulfilledHandlerTests
     public async Task Handle_NoPendingOffers_DoesNothing()
     {
         var requestId = Guid.NewGuid();
-        offerRepo.GetPendingByRequestAsync(requestId).Returns(new List<WaitlistOffer>());
+        this.offerRepo.GetPendingByRequestAsync(requestId).Returns(new List<WaitlistOffer>());
 
         var evt = new TeeTimeRequestFulfilled { TeeTimeRequestId = requestId };
-        await TeeTimeRequestFulfilledHandler.Handle(evt, offerRepo);
+        await TeeTimeRequestFulfilledHandler.Handle(evt, this.offerRepo);
 
-        offerRepo.DidNotReceive().Add(Arg.Any<WaitlistOffer>());
-        offerRepo.DidNotReceive().AddRange(Arg.Any<IEnumerable<WaitlistOffer>>());
+        this.offerRepo.DidNotReceive().Add(Arg.Any<WaitlistOffer>());
+        this.offerRepo.DidNotReceive().AddRange(Arg.Any<IEnumerable<WaitlistOffer>>());
     }
 
     [Fact]
@@ -28,10 +28,10 @@ public class TeeTimeRequestFulfilledHandlerTests
         var requestId = Guid.NewGuid();
         var offer1 = WaitlistOffer.Create(requestId, Guid.NewGuid());
         var offer2 = WaitlistOffer.Create(requestId, Guid.NewGuid());
-        offerRepo.GetPendingByRequestAsync(requestId).Returns(new List<WaitlistOffer> { offer1, offer2 });
+        this.offerRepo.GetPendingByRequestAsync(requestId).Returns(new List<WaitlistOffer> { offer1, offer2 });
 
         var evt = new TeeTimeRequestFulfilled { TeeTimeRequestId = requestId };
-        await TeeTimeRequestFulfilledHandler.Handle(evt, offerRepo);
+        await TeeTimeRequestFulfilledHandler.Handle(evt, this.offerRepo);
 
         Assert.Equal(OfferStatus.Rejected, offer1.Status);
         Assert.Equal(OfferStatus.Rejected, offer2.Status);
