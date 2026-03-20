@@ -1,3 +1,4 @@
+using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
 
@@ -102,7 +103,7 @@ public class WalkUpWaitlistTests
     public async Task AddGolfer_WhenOpen_ReturnsEntryWithCorrectProperties()
     {
         var waitlist = await CreateOpenWaitlistAsync();
-        var golfer = GolferAggregate.Golfer.Create("+12125551234", "Jane", "Doe");
+        var golfer = Golfer.Create("+12125551234", "Jane", "Doe");
 
         var entry = waitlist.AddGolfer(golfer, groupSize: 2);
 
@@ -118,7 +119,7 @@ public class WalkUpWaitlistTests
     {
         var waitlist = await CreateOpenWaitlistAsync();
         waitlist.Close();
-        var golfer = GolferAggregate.Golfer.Create("+12125551234", "Jane", "Doe");
+        var golfer = Golfer.Create("+12125551234", "Jane", "Doe");
 
         Assert.Throws<WaitlistNotOpenException>(() => waitlist.AddGolfer(golfer));
     }
