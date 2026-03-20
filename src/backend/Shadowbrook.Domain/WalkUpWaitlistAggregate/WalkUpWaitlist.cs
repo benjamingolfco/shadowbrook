@@ -57,11 +57,18 @@ public class WalkUpWaitlist : Entity
         UpdatedAt = now;
     }
 
-    public GolferWaitlistEntry AddGolfer(Golfer golfer, int groupSize = 1)
+    public async Task<GolferWaitlistEntry> Join(
+        Golfer golfer, IGolferWaitlistEntryRepository entryRepository, int groupSize = 1)
     {
         if (Status != WaitlistStatus.Open)
         {
             throw new WaitlistNotOpenException();
+        }
+
+        var duplicate = await entryRepository.GetActiveByWaitlistAndGolferAsync(Id, golfer.Id);
+        if (duplicate is not null)
+        {
+            throw new GolferAlreadyOnWaitlistException(golfer.Phone);
         }
 
         var entry = new GolferWaitlistEntry(Id, golfer.Id, groupSize);

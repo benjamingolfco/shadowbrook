@@ -1,51 +1,24 @@
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate;
-using Shadowbrook.Domain.TeeTimeRequestAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
 namespace Shadowbrook.Api.Features.WaitlistOffers;
 
 public static class WaitlistOfferAcceptedFillHandler
 {
-    public static async Task<object?> Handle(
+    public static async Task Handle(
         WaitlistOfferAccepted domainEvent,
         ITeeTimeRequestRepository requestRepository,
         IGolferWaitlistEntryRepository entryRepository)
     {
-        var entry = await entryRepository.GetByIdAsync(domainEvent.GolferWaitlistEntryId);
-        if (entry is null)
-        {
-            return null;
-        }
+        var entry = await entryRepository.GetByIdAsync(domainEvent.GolferWaitlistEntryId)
+            ?? throw new InvalidOperationException(
+                $"GolferWaitlistEntry {domainEvent.GolferWaitlistEntryId} not found for accepted offer {domainEvent.WaitlistOfferId}.");
 
-        var request = await requestRepository.GetByIdAsync(domainEvent.TeeTimeRequestId);
-        if (request is null)
-        {
-            return new TeeTimeSlotFillFailed
-            {
-                TeeTimeRequestId = domainEvent.TeeTimeRequestId,
-                OfferId = domainEvent.WaitlistOfferId,
-                Reason = "Tee time request not found."
-            };
-        }
+        var request = await requestRepository.GetByIdAsync(domainEvent.TeeTimeRequestId)
+            ?? throw new InvalidOperationException(
+                $"TeeTimeRequest {domainEvent.TeeTimeRequestId} not found for accepted offer {domainEvent.WaitlistOfferId}.");
 
-        var result = request.Fill(domainEvent.GolferId, entry.GroupSize, domainEvent.BookingId);
-
-        if (!result.Success)
-        {
-            return new TeeTimeSlotFillFailed
-            {
-                TeeTimeRequestId = domainEvent.TeeTimeRequestId,
-                OfferId = domainEvent.WaitlistOfferId,
-                Reason = result.RejectionReason ?? "Unable to fill slot."
-            };
-        }
-
-        return new TeeTimeSlotFilled
-        {
-            TeeTimeRequestId = domainEvent.TeeTimeRequestId,
-            BookingId = domainEvent.BookingId,
-            GolferId = domainEvent.GolferId
-        };
+        request.Fill(domainEvent.GolferId, entry.GroupSize, domainEvent.BookingId, domainEvent.WaitlistOfferId);
     }
 }

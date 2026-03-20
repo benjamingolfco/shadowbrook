@@ -7,6 +7,7 @@ using Shadowbrook.Domain.BookingAggregate;
 namespace Shadowbrook.Api.Tests;
 
 [Collection("Integration")]
+[IntegrationTest]
 public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
     private readonly HttpClient client = factory.CreateClient();

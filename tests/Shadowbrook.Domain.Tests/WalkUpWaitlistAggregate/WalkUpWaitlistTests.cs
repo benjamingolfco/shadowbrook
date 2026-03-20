@@ -1,4 +1,6 @@
+using NSubstitute;
 using Shadowbrook.Domain.GolferAggregate;
+using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
 
@@ -6,8 +8,14 @@ namespace Shadowbrook.Domain.Tests.WalkUpWaitlistAggregate;
 
 public class WalkUpWaitlistTests
 {
-    private readonly StubShortCodeGenerator shortCodeGenerator = new("1234");
-    private readonly StubWalkUpWaitlistRepository repository = new();
+    private readonly IShortCodeGenerator shortCodeGenerator = Substitute.For<IShortCodeGenerator>();
+    private readonly IWalkUpWaitlistRepository repository = Substitute.For<IWalkUpWaitlistRepository>();
+    private readonly IGolferWaitlistEntryRepository entryRepository = Substitute.For<IGolferWaitlistEntryRepository>();
+
+    public WalkUpWaitlistTests()
+    {
+        shortCodeGenerator.GenerateAsync(Arg.Any<DateOnly>()).Returns("1234");
+    }
 
     [Fact]
     public async Task OpenAsync_CreatesOpenWaitlist()
@@ -16,7 +24,7 @@ public class WalkUpWaitlistTests
         var date = new DateOnly(2026, 3, 6);
 
         var waitlist = await Domain.WalkUpWaitlistAggregate.WalkUpWaitlist.OpenAsync(
-            courseId, date, this.shortCodeGenerator, this.repository);
+            courseId, date, shortCodeGenerator, repository);
 
         Assert.NotEqual(Guid.Empty, waitlist.Id);
         Assert.Equal(courseId, waitlist.CourseId);
@@ -33,12 +41,13 @@ public class WalkUpWaitlistTests
         var date = new DateOnly(2026, 3, 6);
 
         var existing = await Domain.WalkUpWaitlistAggregate.WalkUpWaitlist.OpenAsync(
-            courseId, date, this.shortCodeGenerator, this.repository);
-        this.repository.SetExisting(existing);
+            courseId, date, shortCodeGenerator, repository);
+        repository.GetByCourseDateAsync(courseId, date)
+            .Returns(existing);
 
         var ex = await Assert.ThrowsAsync<WaitlistAlreadyExistsException>(
             () => Domain.WalkUpWaitlistAggregate.WalkUpWaitlist.OpenAsync(
-                courseId, date, this.shortCodeGenerator, this.repository));
+                courseId, date, shortCodeGenerator, repository));
 
         Assert.Equal(WaitlistStatus.Open, ex.ExistingStatus);
         Assert.Contains("already open", ex.Message);
@@ -51,13 +60,14 @@ public class WalkUpWaitlistTests
         var date = new DateOnly(2026, 3, 6);
 
         var existing = await Domain.WalkUpWaitlistAggregate.WalkUpWaitlist.OpenAsync(
-            courseId, date, this.shortCodeGenerator, this.repository);
+            courseId, date, shortCodeGenerator, repository);
         existing.Close();
-        this.repository.SetExisting(existing);
+        repository.GetByCourseDateAsync(courseId, date)
+            .Returns(existing);
 
         var ex = await Assert.ThrowsAsync<WaitlistAlreadyExistsException>(
             () => Domain.WalkUpWaitlistAggregate.WalkUpWaitlist.OpenAsync(
-                courseId, date, this.shortCodeGenerator, this.repository));
+                courseId, date, shortCodeGenerator, repository));
 
         Assert.Equal(WaitlistStatus.Closed, ex.ExistingStatus);
         Assert.Contains("already used", ex.Message);
@@ -69,12 +79,11 @@ public class WalkUpWaitlistTests
         var courseId = Guid.NewGuid();
 
         var first = await Domain.WalkUpWaitlistAggregate.WalkUpWaitlist.OpenAsync(
-            courseId, new DateOnly(2026, 3, 6), this.shortCodeGenerator, this.repository);
+            courseId, new DateOnly(2026, 3, 6), shortCodeGenerator, repository);
 
-        // Repository only returns existing for matching course+date
-        // Different date = no existing = should succeed
+        // Repository returns null for different date — NSubstitute default is null
         var second = await Domain.WalkUpWaitlistAggregate.WalkUpWaitlist.OpenAsync(
-            courseId, new DateOnly(2026, 3, 7), this.shortCodeGenerator, this.repository);
+            courseId, new DateOnly(2026, 3, 7), shortCodeGenerator, repository);
 
         Assert.NotEqual(first.Id, second.Id);
     }
@@ -100,12 +109,12 @@ public class WalkUpWaitlistTests
     }
 
     [Fact]
-    public async Task AddGolfer_WhenOpen_ReturnsEntryWithCorrectProperties()
+    public async Task Join_WhenOpen_ReturnsEntryWithCorrectProperties()
     {
         var waitlist = await CreateOpenWaitlistAsync();
         var golfer = Golfer.Create("+12125551234", "Jane", "Doe");
 
-        var entry = waitlist.AddGolfer(golfer, groupSize: 2);
+        var entry = await waitlist.Join(golfer, entryRepository, groupSize: 2);
 
         Assert.NotEqual(Guid.Empty, entry.Id);
         Assert.Equal(waitlist.Id, entry.CourseWaitlistId);
@@ -115,53 +124,36 @@ public class WalkUpWaitlistTests
     }
 
     [Fact]
-    public async Task AddGolfer_WhenClosed_ThrowsWaitlistNotOpenException()
+    public async Task Join_WhenClosed_ThrowsWaitlistNotOpenException()
     {
         var waitlist = await CreateOpenWaitlistAsync();
         waitlist.Close();
         var golfer = Golfer.Create("+12125551234", "Jane", "Doe");
 
-        Assert.Throws<WaitlistNotOpenException>(() => waitlist.AddGolfer(golfer));
+        await Assert.ThrowsAsync<WaitlistNotOpenException>(
+            () => waitlist.Join(golfer, entryRepository));
+    }
+
+    [Fact]
+    public async Task Join_WhenGolferAlreadyOnWaitlist_ThrowsGolferAlreadyOnWaitlistException()
+    {
+        var waitlist = await CreateOpenWaitlistAsync();
+        var golfer = Golfer.Create("+12125551234", "Jane", "Doe");
+
+        // First join succeeds; prime the repository to return that entry on subsequent lookups
+        var firstEntry = await waitlist.Join(golfer, entryRepository);
+        entryRepository.GetActiveByWaitlistAndGolferAsync(waitlist.Id, golfer.Id)
+            .Returns(firstEntry);
+
+        var ex = await Assert.ThrowsAsync<GolferAlreadyOnWaitlistException>(
+            () => waitlist.Join(golfer, entryRepository));
+
+        Assert.Contains(golfer.Phone, ex.Message);
     }
 
     private async Task<Domain.WalkUpWaitlistAggregate.WalkUpWaitlist> CreateOpenWaitlistAsync()
     {
         return await Domain.WalkUpWaitlistAggregate.WalkUpWaitlist.OpenAsync(
-            Guid.NewGuid(), new DateOnly(2026, 3, 6), this.shortCodeGenerator, this.repository);
-    }
-
-    private class StubShortCodeGenerator(string code) : IShortCodeGenerator
-    {
-        public Task<string> GenerateAsync(DateOnly date) => Task.FromResult(code);
-    }
-
-    private class StubWalkUpWaitlistRepository : IWalkUpWaitlistRepository
-    {
-        private Domain.WalkUpWaitlistAggregate.WalkUpWaitlist? existing;
-
-        public void SetExisting(Domain.WalkUpWaitlistAggregate.WalkUpWaitlist waitlist) =>
-            this.existing = waitlist;
-
-        public Task<Domain.WalkUpWaitlistAggregate.WalkUpWaitlist?> GetByCourseDateAsync(Guid courseId, DateOnly date)
-        {
-            if (this.existing is not null
-                && this.existing.CourseId == courseId
-                && this.existing.Date == date)
-            {
-                return Task.FromResult<Domain.WalkUpWaitlistAggregate.WalkUpWaitlist?>(this.existing);
-            }
-
-            return Task.FromResult<Domain.WalkUpWaitlistAggregate.WalkUpWaitlist?>(null);
-        }
-
-        public Task<Domain.WalkUpWaitlistAggregate.WalkUpWaitlist?> GetOpenByCourseDateAsync(Guid courseId, DateOnly date)
-            => Task.FromResult<Domain.WalkUpWaitlistAggregate.WalkUpWaitlist?>(null);
-
-        public Task<Domain.WalkUpWaitlistAggregate.WalkUpWaitlist?> GetByIdAsync(Guid id)
-            => Task.FromResult<Domain.WalkUpWaitlistAggregate.WalkUpWaitlist?>(null);
-
-        public void Add(Domain.WalkUpWaitlistAggregate.WalkUpWaitlist waitlist) { }
-
-        public Task SaveAsync() => Task.CompletedTask;
+            Guid.NewGuid(), new DateOnly(2026, 3, 6), shortCodeGenerator, repository);
     }
 }

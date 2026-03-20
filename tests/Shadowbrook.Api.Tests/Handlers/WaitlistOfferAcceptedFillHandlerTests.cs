@@ -13,66 +13,67 @@ public class WaitlistOfferAcceptedFillHandlerTests
     private readonly IGolferWaitlistEntryRepository entryRepo = Substitute.For<IGolferWaitlistEntryRepository>();
 
     [Fact]
-    public async Task Handle_EntryNotFound_ReturnsNull()
+    public async Task Handle_EntryNotFound_Throws()
     {
         var evt = MakeEvent();
 
-        var result = await WaitlistOfferAcceptedFillHandler.Handle(evt, requestRepo, entryRepo);
-
-        Assert.Null(result);
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => WaitlistOfferAcceptedFillHandler.Handle(evt, requestRepo, entryRepo));
     }
 
     [Fact]
-    public async Task Handle_RequestNotFound_ReturnsFillFailed()
+    public async Task Handle_RequestNotFound_Throws()
     {
         var entry = new GolferWaitlistEntry(Guid.NewGuid(), Guid.NewGuid());
         entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var evt = MakeEvent(entryId: entry.Id);
 
-        var result = await WaitlistOfferAcceptedFillHandler.Handle(evt, requestRepo, entryRepo);
-
-        var failed = Assert.IsType<TeeTimeSlotFillFailed>(result);
-        Assert.Equal(evt.TeeTimeRequestId, failed.TeeTimeRequestId);
-        Assert.Equal("Tee time request not found.", failed.Reason);
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => WaitlistOfferAcceptedFillHandler.Handle(evt, requestRepo, entryRepo));
     }
 
     [Fact]
-    public async Task Handle_FillFails_ReturnsFillFailed()
+    public async Task Handle_FillFails_RaisesFillFailedDomainEvent()
     {
         var entry = new GolferWaitlistEntry(Guid.NewGuid(), Guid.NewGuid());
         entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
-        // Create a request that's already fulfilled so Fill() returns failure
+        // Create a request that's already fulfilled so Fill() raises failure
         var request = await CreateRequest();
-        request.Fill(Guid.NewGuid(), request.GolfersNeeded, Guid.CreateVersion7()); // fills all slots
+        request.Fill(Guid.NewGuid(), request.GolfersNeeded, Guid.CreateVersion7(), Guid.NewGuid()); // fills all slots
+        request.ClearDomainEvents();
         requestRepo.GetByIdAsync(request.Id).Returns(request);
 
         var evt = MakeEvent(teeTimeRequestId: request.Id, entryId: entry.Id);
 
-        var result = await WaitlistOfferAcceptedFillHandler.Handle(evt, requestRepo, entryRepo);
+        await WaitlistOfferAcceptedFillHandler.Handle(evt, requestRepo, entryRepo);
 
-        var failed = Assert.IsType<TeeTimeSlotFillFailed>(result);
+        var domainEvent = Assert.Single(request.DomainEvents);
+        var failed = Assert.IsType<TeeTimeSlotFillFailed>(domainEvent);
         Assert.Contains("already been filled", failed.Reason);
+        Assert.Equal(evt.WaitlistOfferId, failed.OfferId);
     }
 
     [Fact]
-    public async Task Handle_Success_ReturnsSlotFilled()
+    public async Task Handle_Success_RaisesSlotFilledDomainEvent()
     {
         var entry = new GolferWaitlistEntry(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1);
         entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var request = await CreateRequest(golfersNeeded: 2);
+        request.ClearDomainEvents();
         requestRepo.GetByIdAsync(request.Id).Returns(request);
 
         var evt = MakeEvent(teeTimeRequestId: request.Id, entryId: entry.Id);
 
-        var result = await WaitlistOfferAcceptedFillHandler.Handle(evt, requestRepo, entryRepo);
+        await WaitlistOfferAcceptedFillHandler.Handle(evt, requestRepo, entryRepo);
 
-        var filled = Assert.IsType<TeeTimeSlotFilled>(result);
-        Assert.Equal(request.Id, filled.TeeTimeRequestId);
-        Assert.Equal(evt.BookingId, filled.BookingId);
-        Assert.Equal(evt.GolferId, filled.GolferId);
+        var filledEvent = request.DomainEvents.OfType<TeeTimeSlotFilled>().SingleOrDefault();
+        Assert.NotNull(filledEvent);
+        Assert.Equal(request.Id, filledEvent.TeeTimeRequestId);
+        Assert.Equal(evt.BookingId, filledEvent.BookingId);
+        Assert.Equal(evt.GolferId, filledEvent.GolferId);
     }
 
     private static WaitlistOfferAccepted MakeEvent(

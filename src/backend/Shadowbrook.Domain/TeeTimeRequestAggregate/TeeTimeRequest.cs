@@ -44,22 +44,43 @@ public class TeeTimeRequest : Entity
         });
     }
 
-    internal FillResult Fill(Guid golferId, int groupSize, Guid bookingId)
+    internal FillResult Fill(Guid golferId, int groupSize, Guid bookingId, Guid offerId)
     {
         if (Status == TeeTimeRequestStatus.Fulfilled)
         {
-            return new FillResult(false, "This tee time has already been filled.");
+            var reason = "This tee time has already been filled.";
+            AddDomainEvent(new TeeTimeSlotFillFailed
+            {
+                TeeTimeRequestId = Id,
+                OfferId = offerId,
+                Reason = reason
+            });
+            return new FillResult(false, reason);
         }
 
         if (groupSize > RemainingSlots)
         {
-            return new FillResult(false, "Your group is too large for the remaining slots.");
+            var reason = "Your group is too large for the remaining slots.";
+            AddDomainEvent(new TeeTimeSlotFillFailed
+            {
+                TeeTimeRequestId = Id,
+                OfferId = offerId,
+                Reason = reason
+            });
+            return new FillResult(false, reason);
         }
 
         var fill = new TeeTimeSlotFill(Id, golferId, bookingId, groupSize);
         this.slotFills.Add(fill);
         UpdatedAt = DateTimeOffset.UtcNow;
         RowVersion = Guid.NewGuid();
+
+        AddDomainEvent(new TeeTimeSlotFilled
+        {
+            TeeTimeRequestId = Id,
+            BookingId = bookingId,
+            GolferId = golferId
+        });
 
         if (RemainingSlots <= 0)
         {
@@ -85,6 +106,13 @@ public class TeeTimeRequest : Entity
             }
             UpdatedAt = DateTimeOffset.UtcNow;
             RowVersion = Guid.NewGuid();
+
+            AddDomainEvent(new TeeTimeSlotUnfilled
+            {
+                TeeTimeRequestId = Id,
+                BookingId = bookingId,
+                GolferId = fill.GolferId
+            });
         }
     }
 

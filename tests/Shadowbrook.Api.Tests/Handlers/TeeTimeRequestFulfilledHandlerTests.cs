@@ -17,7 +17,9 @@ public class TeeTimeRequestFulfilledHandlerTests
 
         var evt = new TeeTimeRequestFulfilled { TeeTimeRequestId = requestId };
         await TeeTimeRequestFulfilledHandler.Handle(evt, offerRepo);
-        // No exception
+
+        offerRepo.DidNotReceive().Add(Arg.Any<WaitlistOffer>());
+        offerRepo.DidNotReceive().AddRange(Arg.Any<IEnumerable<WaitlistOffer>>());
     }
 
     [Fact]

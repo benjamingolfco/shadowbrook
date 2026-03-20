@@ -113,7 +113,7 @@ Shadowbrook.Api/
 - Each aggregate defines a consistency boundary — one transaction should ideally modify one aggregate
 - Reference other aggregates by ID only, not by holding direct navigation properties
 - Passing another aggregate as a **method parameter** for validation is acceptable (e.g., `offer.Accept(golfer)`)
-- An aggregate can serve as a **factory for another aggregate** — validate creation rules and return a new independent aggregate (e.g., `WalkUpWaitlist.AddGolfer()` validates waitlist rules and returns a new `GolferWaitlistEntry` aggregate). The returned aggregate is independent and not owned as a child.
+- An aggregate can serve as a **factory for another aggregate** — validate creation rules and return a new independent aggregate (e.g., `WalkUpWaitlist.Join()` validates waitlist rules and returns a new `GolferWaitlistEntry` aggregate). The returned aggregate is independent and not owned as a child.
 - Use `internal` methods for cross-aggregate operations within the Domain assembly (e.g., `TeeTimeRequest.Fill()` called by `WaitlistOffer.Accept()`)
 
 ### Domain Events
@@ -185,7 +185,7 @@ Unit tests first, integration tests second. Test at the cheapest layer that can 
 - Wolverine message handlers — call `Handle()` with fake repositories (see `tests/Shadowbrook.Api.Tests/Fakes/`)
 - Infrastructure utilities (e.g., `PhoneNormalizer`)
 
-**Integration tests** (TestWebApplicationFactory + SQL Server container) — only for what genuinely needs the real stack:
+**Integration tests** (TestWebApplicationFactory + SQL Server container) — only for what genuinely needs the real stack. Always apply both `[Collection("Integration")]` (fixture sharing) and `[IntegrationTest]` (category trait for `dotnet test --filter Category=Integration`):
 - Happy-path E2E flows (tenant → course → waitlist → join)
 - DB-dependent behavior (unique constraints, query filters, tenant isolation)
 - Middleware behavior (tenant claim, course-exists)
@@ -206,7 +206,7 @@ tests/Shadowbrook.Api.Tests/
 
 ### NSubstitute for Stubs
 
-Use NSubstitute (`Substitute.For<IRepository>()`) to stub repository interfaces in handler unit tests. Use real domain objects (aggregates, entities) — don't substitute those, they have behavior worth exercising. Use `Received()` / `DidNotReceive()` to verify side effects like SMS sends or repository writes.
+Use NSubstitute (`Substitute.For<IProvideAServiceInterface>()`) to stub interfaces in handler unit tests. Use real domain objects (aggregates, entities) — don't substitute those, they have behavior worth exercising. Use `Received()` / `DidNotReceive()` to verify side effects like SMS sends or repository writes.
 
 ### Read Models (CQRS-lite)
 

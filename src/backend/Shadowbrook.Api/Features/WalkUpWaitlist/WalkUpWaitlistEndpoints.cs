@@ -6,7 +6,6 @@ using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate;
-using Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
 using WalkUpWaitlistAggregate = Shadowbrook.Domain.WalkUpWaitlistAggregate.WalkUpWaitlist;
 using Wolverine.Http;
 
@@ -158,13 +157,7 @@ public static class WalkUpWaitlistEndpoints
             }
         }
 
-        var duplicate = await entryRepo.GetActiveByWaitlistAndGolferAsync(waitlist.Id, golfer.Id);
-        if (duplicate is not null)
-        {
-            throw new GolferAlreadyOnWaitlistException(golfer.Phone);
-        }
-
-        var entry = waitlist.AddGolfer(golfer, request.GroupSize ?? 1);
+        var entry = await waitlist.Join(golfer, entryRepo, request.GroupSize ?? 1);
         entryRepo.Add(entry);
 
         // Intentional mid-flow save: position query reads from DB,

@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 namespace Shadowbrook.Api.Tests;
 
 [Collection("Integration")]
+[IntegrationTest]
 public class TenantClaimMiddlewareTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
     private readonly HttpClient client = factory.CreateClient();

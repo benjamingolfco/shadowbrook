@@ -14,7 +14,9 @@ public class TeeTimeSlotFillFailedHandlerTests
     {
         var evt = new TeeTimeSlotFillFailed { TeeTimeRequestId = Guid.NewGuid(), OfferId = Guid.NewGuid(), Reason = "test" };
         await TeeTimeSlotFillFailedHandler.Handle(evt, offerRepo);
-        // No exception
+
+        offerRepo.DidNotReceive().Add(Arg.Any<WaitlistOffer>());
+        offerRepo.DidNotReceive().AddRange(Arg.Any<IEnumerable<WaitlistOffer>>());
     }
 
     [Fact]

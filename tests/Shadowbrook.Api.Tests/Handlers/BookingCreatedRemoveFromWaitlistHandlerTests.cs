@@ -16,7 +16,8 @@ public class BookingCreatedRemoveFromWaitlistHandlerTests
     {
         var evt = new BookingCreated { BookingId = Guid.CreateVersion7(), GolferId = Guid.NewGuid(), CourseId = Guid.NewGuid() };
         await BookingCreatedRemoveFromWaitlistHandler.Handle(evt, offerRepo, entryRepo);
-        // No exception — early return
+
+        await entryRepo.DidNotReceive().GetByIdAsync(Arg.Any<Guid>());
     }
 
     [Fact]
@@ -27,7 +28,8 @@ public class BookingCreatedRemoveFromWaitlistHandlerTests
 
         var evt = new BookingCreated { BookingId = offer.BookingId, GolferId = Guid.NewGuid(), CourseId = Guid.NewGuid() };
         await BookingCreatedRemoveFromWaitlistHandler.Handle(evt, offerRepo, entryRepo);
-        // No exception — early return
+
+        entryRepo.DidNotReceive().Add(Arg.Any<GolferWaitlistEntry>());
     }
 
     [Fact]
