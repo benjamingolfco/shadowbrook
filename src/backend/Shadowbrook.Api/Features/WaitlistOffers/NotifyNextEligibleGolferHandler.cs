@@ -45,8 +45,7 @@ public static class NotifyNextEligibleGolferHandler
             .ToListAsync(ct);
 
         // Find the next eligible golfer — active, walk-up, ready, not already offered, group fits
-        // Client-side ordering to avoid SQLite DateTimeOffset limitation in tests
-        var nextEntry = (await db.GolferWaitlistEntries
+        var nextEntry = await db.GolferWaitlistEntries
             .Where(e => e.CourseWaitlistId == waitlist.Id
                 && e.IsWalkUp == true
                 && e.IsReady == true
@@ -56,10 +55,9 @@ public static class NotifyNextEligibleGolferHandler
             .Join(db.Golfers.IgnoreQueryFilters(),
                 e => e.GolferId, g => g.Id,
                 (e, g) => new { Entry = e, Golfer = g })
-            .ToListAsync(ct))
             .OrderBy(eg => eg.Entry.JoinedAt)
-            .ThenBy(eg => eg.Entry.Id.ToString())
-            .FirstOrDefault();
+            .ThenBy(eg => eg.Entry.Id)
+            .FirstOrDefaultAsync(ct);
 
         if (nextEntry is null)
         {
