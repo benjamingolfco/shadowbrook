@@ -14,6 +14,7 @@ public class WaitlistOffer : Entity
     public OfferStatus Status { get; private set; }
     public string? RejectionReason { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
+    public DateTimeOffset? NotifiedAt { get; private set; }
 
     private WaitlistOffer() { } // EF
 
@@ -21,7 +22,7 @@ public class WaitlistOffer : Entity
         Guid teeTimeRequestId,
         Guid golferWaitlistEntryId)
     {
-        return new WaitlistOffer
+        var offer = new WaitlistOffer
         {
             Id = Guid.CreateVersion7(),
             Token = Guid.CreateVersion7(),
@@ -31,6 +32,15 @@ public class WaitlistOffer : Entity
             Status = OfferStatus.Pending,
             CreatedAt = DateTimeOffset.UtcNow
         };
+
+        offer.AddDomainEvent(new WaitlistOfferCreated
+        {
+            WaitlistOfferId = offer.Id,
+            TeeTimeRequestId = teeTimeRequestId,
+            GolferWaitlistEntryId = golferWaitlistEntryId
+        });
+
+        return offer;
     }
 
     public void Accept(Golfer golfer)
@@ -67,6 +77,22 @@ public class WaitlistOffer : Entity
             WaitlistOfferId = Id,
             GolferWaitlistEntryId = GolferWaitlistEntryId,
             Reason = reason
+        });
+    }
+
+    public void MarkNotified()
+    {
+        if (this.NotifiedAt is not null)
+        {
+            throw new InvalidOperationException("Offer has already been marked as notified.");
+        }
+
+        this.NotifiedAt = DateTimeOffset.UtcNow;
+
+        AddDomainEvent(new GolferNotifiedOfOffer
+        {
+            WaitlistOfferId = this.Id,
+            TeeTimeRequestId = this.TeeTimeRequestId
         });
     }
 }

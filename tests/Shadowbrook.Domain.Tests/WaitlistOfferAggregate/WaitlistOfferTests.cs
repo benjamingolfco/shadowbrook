@@ -25,9 +25,25 @@ public class WaitlistOfferTests
     }
 
     [Fact]
+    public void Create_RaisesWaitlistOfferCreatedEvent()
+    {
+        var requestId = Guid.NewGuid();
+        var entryId = Guid.NewGuid();
+
+        var offer = WaitlistOffer.Create(requestId, entryId);
+
+        var domainEvent = Assert.Single(offer.DomainEvents);
+        var created = Assert.IsType<WaitlistOfferCreated>(domainEvent);
+        Assert.Equal(offer.Id, created.WaitlistOfferId);
+        Assert.Equal(requestId, created.TeeTimeRequestId);
+        Assert.Equal(entryId, created.GolferWaitlistEntryId);
+    }
+
+    [Fact]
     public void Accept_PendingOffer_SetsAcceptedAndRaisesEvent()
     {
         var offer = WaitlistOffer.Create(Guid.NewGuid(), Guid.NewGuid());
+        offer.ClearDomainEvents();
         var golfer = Golfer.Create("+15558675309", "Jane", "Smith");
 
         offer.Accept(golfer);
@@ -66,6 +82,7 @@ public class WaitlistOfferTests
     public void Reject_PendingOffer_SetsRejectedWithReason()
     {
         var offer = WaitlistOffer.Create(Guid.NewGuid(), Guid.NewGuid());
+        offer.ClearDomainEvents();
 
         offer.Reject("Tee time has been filled.");
 
@@ -89,5 +106,30 @@ public class WaitlistOfferTests
 
         Assert.Equal(OfferStatus.Accepted, offer.Status);
         Assert.Empty(offer.DomainEvents);
+    }
+
+    [Fact]
+    public void MarkNotified_SetsNotifiedAtAndRaisesEvent()
+    {
+        var requestId = Guid.NewGuid();
+        var offer = WaitlistOffer.Create(requestId, Guid.NewGuid());
+        offer.ClearDomainEvents();
+
+        offer.MarkNotified();
+
+        Assert.NotNull(offer.NotifiedAt);
+        var domainEvent = Assert.Single(offer.DomainEvents);
+        var notified = Assert.IsType<GolferNotifiedOfOffer>(domainEvent);
+        Assert.Equal(offer.Id, notified.WaitlistOfferId);
+        Assert.Equal(requestId, notified.TeeTimeRequestId);
+    }
+
+    [Fact]
+    public void MarkNotified_AlreadyNotified_Throws()
+    {
+        var offer = WaitlistOffer.Create(Guid.NewGuid(), Guid.NewGuid());
+        offer.MarkNotified();
+
+        Assert.Throws<InvalidOperationException>(() => offer.MarkNotified());
     }
 }
