@@ -24,7 +24,7 @@ public class WaitlistOfferAcceptedSmsHandlerTests
     [Fact]
     public async Task Handle_GolferNotFound_NoSms()
     {
-        var entry = new GolferWaitlistEntry(Guid.NewGuid(), Guid.NewGuid());
+        var entry = await WaitlistEntryFactory.CreateAsync();
         entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var evt = MakeEvent(entryId: entry.Id);
@@ -38,7 +38,7 @@ public class WaitlistOfferAcceptedSmsHandlerTests
         var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
         golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
 
-        var entry = new GolferWaitlistEntry(Guid.NewGuid(), golfer.Id);
+        var entry = await WaitlistEntryFactory.CreateAsync(golfer);
         entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var evt = MakeEvent(entryId: entry.Id);

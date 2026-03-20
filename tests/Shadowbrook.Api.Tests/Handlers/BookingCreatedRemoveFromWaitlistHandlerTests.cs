@@ -35,7 +35,7 @@ public class BookingCreatedRemoveFromWaitlistHandlerTests
     [Fact]
     public async Task Handle_Success_RemovesEntry()
     {
-        var entry = new GolferWaitlistEntry(Guid.NewGuid(), Guid.NewGuid());
+        var entry = await WaitlistEntryFactory.CreateAsync();
         Assert.Null(entry.RemovedAt);
 
         var offer = WaitlistOffer.Create(Guid.NewGuid(), entry.Id);

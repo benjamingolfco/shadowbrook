@@ -76,7 +76,7 @@ public class TeeTimeSlotFilledBookingHandlerTests
         var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
         golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
 
-        var entry = new GolferWaitlistEntry(Guid.NewGuid(), golfer.Id, 2);
+        var entry = await WaitlistEntryFactory.CreateAsync(golfer, groupSize: 2);
         entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var offer = WaitlistOffer.Create(request.Id, entry.Id);

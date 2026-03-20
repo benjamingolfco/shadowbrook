@@ -52,7 +52,7 @@ public class WaitlistOfferRejectedSmsHandlerTests
         var offer = MakeNotifiedOffer();
         offerRepo.GetByIdAsync(offer.Id).Returns(offer);
 
-        var entry = new GolferWaitlistEntry(Guid.NewGuid(), Guid.NewGuid());
+        var entry = await WaitlistEntryFactory.CreateAsync();
         entry.Remove(); // Sets RemovedAt
         entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
@@ -67,7 +67,7 @@ public class WaitlistOfferRejectedSmsHandlerTests
         var offer = MakeNotifiedOffer();
         offerRepo.GetByIdAsync(offer.Id).Returns(offer);
 
-        var entry = new GolferWaitlistEntry(Guid.NewGuid(), Guid.NewGuid());
+        var entry = await WaitlistEntryFactory.CreateAsync();
         entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var evt = MakeEvent(offerId: offer.Id, entryId: entry.Id);
@@ -84,7 +84,7 @@ public class WaitlistOfferRejectedSmsHandlerTests
         var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
         golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
 
-        var entry = new GolferWaitlistEntry(Guid.NewGuid(), golfer.Id);
+        var entry = await WaitlistEntryFactory.CreateAsync(golfer);
         entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var evt = MakeEvent(offerId: offer.Id, entryId: entry.Id);

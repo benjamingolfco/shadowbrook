@@ -24,7 +24,7 @@ public class WaitlistOfferAcceptedFillHandlerTests
     [Fact]
     public async Task Handle_RequestNotFound_Throws()
     {
-        var entry = new GolferWaitlistEntry(Guid.NewGuid(), Guid.NewGuid());
+        var entry = await WaitlistEntryFactory.CreateAsync();
         entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var evt = MakeEvent(entryId: entry.Id);
@@ -36,7 +36,7 @@ public class WaitlistOfferAcceptedFillHandlerTests
     [Fact]
     public async Task Handle_FillFails_RaisesFillFailedDomainEvent()
     {
-        var entry = new GolferWaitlistEntry(Guid.NewGuid(), Guid.NewGuid());
+        var entry = await WaitlistEntryFactory.CreateAsync();
         entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         // Create a request that's already fulfilled so Fill() raises failure
@@ -58,7 +58,7 @@ public class WaitlistOfferAcceptedFillHandlerTests
     [Fact]
     public async Task Handle_Success_RaisesSlotFilledDomainEvent()
     {
-        var entry = new GolferWaitlistEntry(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1);
+        var entry = await WaitlistEntryFactory.CreateAsync(groupSize: 1);
         entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var request = await CreateRequest(golfersNeeded: 2);
