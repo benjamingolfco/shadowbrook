@@ -75,6 +75,7 @@ public class WaitlistOffer : Entity
         AddDomainEvent(new WaitlistOfferRejected
         {
             WaitlistOfferId = Id,
+            TeeTimeRequestId = TeeTimeRequestId,
             GolferWaitlistEntryId = GolferWaitlistEntryId,
             Reason = reason
         });

@@ -65,6 +65,7 @@ public class WaitlistOfferRejectedSmsHandlerTests
     private static WaitlistOfferRejected MakeEvent(Guid? entryId = null) => new()
     {
         WaitlistOfferId = Guid.NewGuid(),
+        TeeTimeRequestId = Guid.NewGuid(),
         GolferWaitlistEntryId = entryId ?? Guid.NewGuid(),
         Reason = "Tee time has been filled."
     };

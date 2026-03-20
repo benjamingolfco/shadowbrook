@@ -132,4 +132,20 @@ public class WaitlistOfferTests
 
         Assert.Throws<InvalidOperationException>(() => offer.MarkNotified());
     }
+
+    [Fact]
+    public void Reject_RaisesEventWithTeeTimeRequestId()
+    {
+        var requestId = Guid.NewGuid();
+        var offer = WaitlistOffer.Create(requestId, Guid.NewGuid());
+        offer.ClearDomainEvents();
+
+        offer.Reject("No longer available");
+
+        var domainEvent = Assert.Single(offer.DomainEvents);
+        var rejected = Assert.IsType<WaitlistOfferRejected>(domainEvent);
+        Assert.Equal(offer.Id, rejected.WaitlistOfferId);
+        Assert.Equal(requestId, rejected.TeeTimeRequestId);
+        Assert.Equal("No longer available", rejected.Reason);
+    }
 }
