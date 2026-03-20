@@ -136,7 +136,17 @@ The project uses [WolverineFx](https://wolverinefx.net) for message handling. Se
 - Handlers that need to publish follow-on events inject `IMessageBus` and call `bus.PublishAsync()`
 - `MultipleHandlerBehavior.Separated` — multiple handlers for the same event type run independently
 
-### Saga Pattern (Event-Driven Choreography)
+### Policies (Wolverine Sagas)
+
+Use Wolverine's `Saga` base class for stateful, long-running processes — but call them **policies**, not sagas. "Policy" communicates business intent (e.g., `TeeTimeOfferPolicy` governs how offers are sequenced). Name classes `*Policy` and place them in feature folders using the consumer rule.
+
+**Correlation:** Domain events carry `TeeTimeRequestId`, not `{SagaTypeName}Id`. Use `[SagaIdentityFrom("TeeTimeRequestId")]` from `Wolverine.Persistence.Sagas` on each `Handle` method parameter. `Start` methods set the `Id` directly — no attribute needed.
+
+**Persistence:** Map policy types in `ApplicationDbContext` with `IEntityTypeConfiguration`. Ignore the `Version` property from the `Saga` base class. Wolverine handles load/save/delete automatically.
+
+**Cascading messages:** Return commands and timeout messages from `Handle` methods. Wolverine persists them to the outbox as part of the same transaction.
+
+### Event-Driven Choreography
 
 For operations spanning multiple aggregates, use sequential event chains instead of locking multiple aggregates in one transaction:
 
