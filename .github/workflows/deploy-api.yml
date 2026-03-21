@@ -69,7 +69,8 @@ jobs:
           # activeRevisionsMode is Single on this app, so the platform deactivates the
           # previous active revision once the new one is healthy — no manual cleanup needed.
           # --revision-suffix pins a readable name to each revision for easier diagnosis.
-          REVISION_SUFFIX=$(echo "${{ inputs.image-tag }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | cut -c1-20 | sed 's/-$//')
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          REVISION_SUFFIX=$(echo "${{ inputs.image-tag }}-${SHORT_SHA}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | cut -c1-20 | sed 's/-$//')
           FRONTEND_URL="${{ steps.get-frontend-url.outputs.url }}"
           az containerapp update \
             --name ${{ env.CONTAINER_APP_NAME }} \
