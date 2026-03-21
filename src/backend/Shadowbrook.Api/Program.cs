@@ -59,8 +59,16 @@ builder.Host.UseWolverine(opts =>
 
     if (connectionString is not null)
     {
+        // Increase command timeout for Wolverine transport provisioning — Azure SQL Basic tier
+        // (5 DTU) is too slow for the default 30s timeout during schema migration.
+        var wolverineConnectionString = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString)
+        {
+            ConnectTimeout = 120,
+            CommandTimeout = 120
+        }.ConnectionString;
+
 #pragma warning disable CS0618 // EnableMessageTransport not implemented in 5.20.1
-        opts.UseSqlServerPersistenceAndTransport(connectionString, "wolverine")
+        opts.UseSqlServerPersistenceAndTransport(wolverineConnectionString, "wolverine")
             .AutoProvision();
 #pragma warning restore CS0618
     }
@@ -100,6 +108,7 @@ if (app.Environment.EnvironmentName != "Testing")
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.SetCommandTimeout(TimeSpan.FromSeconds(120));
     db.Database.Migrate();
 }
 
