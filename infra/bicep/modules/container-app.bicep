@@ -112,7 +112,6 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
                 port: 8080
                 scheme: 'HTTP'
               }
-              initialDelaySeconds: 30
               periodSeconds: 30
               failureThreshold: 3
               timeoutSeconds: 5
