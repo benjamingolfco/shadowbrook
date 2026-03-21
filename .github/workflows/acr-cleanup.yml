@@ -1,0 +1,110 @@
+# ACR Image Cleanup
+#
+# Removes old container images from Azure Container Registry to save storage.
+# Keeps the N most recent tags and deletes the rest.
+# Runs weekly on Sunday at midnight UTC, or on-demand via workflow_dispatch.
+
+name: ACR Cleanup
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Sunday midnight UTC
+  workflow_dispatch:
+    inputs:
+      keep-count:
+        description: 'Number of most recent images to keep'
+        required: false
+        default: '10'
+        type: string
+      dry-run:
+        description: 'Preview deletions without actually deleting'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  ACR_NAME: shadowbrookacr
+  IMAGE_NAME: shadowbrook
+  DEFAULT_KEEP_COUNT: '10'
+
+jobs:
+  cleanup:
+    name: Purge old images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Clean up old images
+        run: |
+          KEEP_COUNT="${{ inputs.keep-count || env.DEFAULT_KEEP_COUNT }}"
+          DRY_RUN="${{ inputs.dry-run || 'false' }}"
+
+          echo "Registry: $ACR_NAME"
+          echo "Repository: $IMAGE_NAME"
+          echo "Keeping: $KEEP_COUNT most recent images"
+          echo "Dry run: $DRY_RUN"
+          echo ""
+
+          # List all tags sorted by timestamp (newest first)
+          ALL_TAGS=$(az acr manifest list-metadata \
+            --registry "$ACR_NAME" \
+            --name "$IMAGE_NAME" \
+            --orderby time_desc \
+            --query "[].tags[0]" \
+            --output tsv 2>/dev/null || true)
+
+          if [ -z "$ALL_TAGS" ]; then
+            echo "No images found in $IMAGE_NAME repository."
+            exit 0
+          fi
+
+          TOTAL=$(echo "$ALL_TAGS" | wc -l)
+          echo "Total images: $TOTAL"
+
+          if [ "$TOTAL" -le "$KEEP_COUNT" ]; then
+            echo "Nothing to clean up ($TOTAL <= $KEEP_COUNT)."
+            exit 0
+          fi
+
+          # Tags to delete (skip the first KEEP_COUNT)
+          TAGS_TO_DELETE=$(echo "$ALL_TAGS" | tail -n +$((KEEP_COUNT + 1)))
+          DELETE_COUNT=$(echo "$TAGS_TO_DELETE" | wc -l)
+
+          echo ""
+          echo "Deleting $DELETE_COUNT image(s):"
+          echo "$TAGS_TO_DELETE"
+          echo ""
+
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run — no images were deleted."
+          else
+            echo "$TAGS_TO_DELETE" | while IFS= read -r tag; do
+              if [ -n "$tag" ]; then
+                echo "Deleting $IMAGE_NAME:$tag ..."
+                az acr repository delete \
+                  --name "$ACR_NAME" \
+                  --image "$IMAGE_NAME:$tag" \
+                  --yes
+              fi
+            done
+            echo ""
+            echo "Cleanup complete. Deleted $DELETE_COUNT image(s), kept $KEEP_COUNT."
+          fi
+
+      - name: Cleanup summary
+        run: |
+          echo "## ACR Cleanup" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Registry:** $ACR_NAME" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Repository:** $IMAGE_NAME" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Keep count:** ${{ inputs.keep-count || env.DEFAULT_KEEP_COUNT }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Dry run:** ${{ inputs.dry-run || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
