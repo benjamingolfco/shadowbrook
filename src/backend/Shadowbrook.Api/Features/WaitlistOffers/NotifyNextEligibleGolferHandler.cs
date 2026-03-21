@@ -76,7 +76,7 @@ public static class NotifyNextEligibleGolferHandler
 
         offerRepository.Add(offer);
 
-        var baseUrl = configuration["App:BaseUrl"] ?? "http://localhost:3000";
+        var baseUrl = configuration["App:FrontendUrl"] ?? "http://localhost:3000";
         var message = $"{courseName}: {request.TeeTime:h:mm tt} tee time available! Claim your spot: {baseUrl}/book/walkup/{offer.Token}";
         await textMessageService.SendAsync(nextEntry.Golfer.Phone, message, ct);
 

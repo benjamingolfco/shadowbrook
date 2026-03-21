@@ -80,7 +80,7 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
               secretRef: 'sql-connection-string'
             }
             {
-              name: 'App__BaseUrl'
+              name: 'App__FrontendUrl'
               value: frontendUrl
             }
             {
