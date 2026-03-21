@@ -74,7 +74,7 @@ jobs:
         if: inputs.action == 'upload'
         env:
           VITE_API_URL: ${{ steps.api-url.outputs.url }}
-        run: pnpm --dir src/web build
+        run: pnpm --dir src/web build --mode ${{ inputs.environment }}
 
       - name: Deploy to Static Web App
         id: swa-deploy
