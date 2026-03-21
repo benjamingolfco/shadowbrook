@@ -26,6 +26,9 @@ param sqlConnectionString string
 @description('Allowed CORS origin (e.g., https://my-swa.azurestaticapps.net)')
 param corsOrigin string
 
+@description('Frontend URL used in outbound links (e.g., SMS messages with claim URLs)')
+param frontendUrl string
+
 @description('Regex pattern for allowed CORS origins (e.g., PR staging URLs). When set, takes precedence over corsOrigin.')
 param corsOriginPattern string = ''
 
@@ -75,6 +78,10 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
             {
               name: 'ConnectionStrings__DefaultConnection'
               secretRef: 'sql-connection-string'
+            }
+            {
+              name: 'App__BaseUrl'
+              value: frontendUrl
             }
             {
               name: 'Cors__AllowedOrigins__0'

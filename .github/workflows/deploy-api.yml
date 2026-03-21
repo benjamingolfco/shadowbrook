@@ -54,17 +54,29 @@ jobs:
             --file src/backend/Shadowbrook.Api/Dockerfile \
             .
 
+      - name: Get frontend URL
+        id: get-frontend-url
+        run: |
+          HOSTNAME=$(az staticwebapp show \
+            --name shadowbrook-web-${{ inputs.environment }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query defaultHostname \
+            --output tsv)
+          echo "url=https://$HOSTNAME" >> "$GITHUB_OUTPUT"
+
       - name: Deploy to Container App
         run: |
           # activeRevisionsMode is Single on this app, so the platform deactivates the
           # previous active revision once the new one is healthy — no manual cleanup needed.
           # --revision-suffix pins a readable name to each revision for easier diagnosis.
           REVISION_SUFFIX=$(echo "${{ inputs.image-tag }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | cut -c1-20 | sed 's/-$//')
+          FRONTEND_URL="${{ steps.get-frontend-url.outputs.url }}"
           az containerapp update \
             --name ${{ env.CONTAINER_APP_NAME }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ inputs.image-tag }} \
-            --revision-suffix "$REVISION_SUFFIX"
+            --revision-suffix "$REVISION_SUFFIX" \
+            --set-env-vars "App__BaseUrl=$FRONTEND_URL"
 
       - name: Get app URL
         id: get-url
