@@ -1,15 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { useVerifyCode } from '../hooks/useWalkupJoin';
 import type { VerifyCodeResponse } from '@/types/waitlist';
 
 interface CodeEntryProps {
   onVerified: (data: VerifyCodeResponse) => void;
+  initialCode?: string;
 }
 
-export default function CodeEntry({ onVerified }: CodeEntryProps) {
-  const [code, setCode] = useState('');
+export default function CodeEntry({ onVerified, initialCode }: CodeEntryProps) {
+  const sanitized = initialCode ? initialCode.replace(/\D/g, '').slice(0, 4) : '';
+  const [code, setCode] = useState(sanitized);
   const verifyMutation = useVerifyCode();
+
+  useEffect(() => {
+    if (sanitized.length === 4) {
+      verifyMutation.mutate(sanitized, {
+        onSuccess: (data) => {
+          onVerified(data);
+        },
+      });
+    }
+    // Only run on mount — intentionally omitting deps that change after mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = e.target.value.replace(/\D/g, '').slice(0, 4);

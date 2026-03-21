@@ -5,6 +5,7 @@ export default function WalkupFeature() {
   return (
     <Routes>
       <Route index element={<WalkupJoinPage />} />
+      <Route path=":shortCode" element={<WalkupJoinPage />} />
     </Routes>
   );
 }
