@@ -99,7 +99,7 @@ public class TeeTimeRequest : Entity
             {
                 Status = TeeTimeRequestStatus.Pending;
             }
-    
+
 
             AddDomainEvent(new TeeTimeSlotUnfilled
             {
