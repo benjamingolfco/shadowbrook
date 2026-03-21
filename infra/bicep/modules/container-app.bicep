@@ -38,6 +38,7 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
   properties: {
     environmentId: containerAppEnvId
     configuration: {
+      activeRevisionsMode: 'Single'
       ingress: {
         external: true
         targetPort: 8080
