@@ -1,50 +1,48 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
+using Shadowbrook.Api.Features.WaitlistOffers;
+using Shadowbrook.Api.Features.WalkUpWaitlist;
 using Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
-using Shadowbrook.Api.Infrastructure.Events;
 using Shadowbrook.Api.Models;
+using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.GolferAggregate;
+using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate;
+using Shadowbrook.Domain.WaitlistOfferAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 
 namespace Shadowbrook.Api.Infrastructure.Data;
 
 public class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,
-    ICurrentUser? currentUser = null,
-    IDomainEventPublisher? eventPublisher = null) : DbContext(options)
+    ICurrentUser? currentUser = null) : DbContext(options)
 {
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<WalkUpWaitlist> WalkUpWaitlists => Set<WalkUpWaitlist>();
     public DbSet<TeeTimeRequest> TeeTimeRequests => Set<TeeTimeRequest>();
+    public DbSet<TeeTimeSlotFill> TeeTimeSlotFills => Set<TeeTimeSlotFill>();
     public DbSet<Golfer> Golfers => Set<Golfer>();
     public DbSet<GolferWaitlistEntry> GolferWaitlistEntries => Set<GolferWaitlistEntry>();
+    public DbSet<WaitlistOffer> WaitlistOffers => Set<WaitlistOffer>();
+    public DbSet<TeeTimeOfferPolicy> TeeTimeOfferPolicies => Set<TeeTimeOfferPolicy>();
+    public DbSet<TeeTimeRequestExpirationPolicy> TeeTimeRequestExpirationPolicies => Set<TeeTimeRequestExpirationPolicy>();
 
-    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        var result = await base.SaveChangesAsync(cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var userId = currentUser?.UserId;
 
-        var domainEvents = ChangeTracker.Entries<Entity>()
-            .SelectMany(e => e.Entity.DomainEvents)
-            .ToList();
-
-        foreach (var entity in ChangeTracker.Entries<Entity>())
+        foreach (var entry in ChangeTracker.Entries<Entity>()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified))
         {
-            entity.Entity.ClearDomainEvents();
+            entry.Property("UpdatedAt").CurrentValue = now;
+            entry.Property("UpdatedBy").CurrentValue = userId;
         }
 
-        if (eventPublisher is not null)
-        {
-            foreach (var domainEvent in domainEvents)
-            {
-                await eventPublisher.PublishAsync(domainEvent, cancellationToken);
-            }
-        }
-
-        return result;
+        return base.SaveChangesAsync(cancellationToken);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -71,19 +69,15 @@ public class ApplicationDbContext(
             .HasIndex(c => new { c.TenantId, c.Name })
             .IsUnique();
 
-        modelBuilder.Entity<Booking>()
-            .HasOne(b => b.Course)
-            .WithMany()
-            .HasForeignKey(b => b.CourseId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<Booking>()
-            .HasIndex(b => new { b.CourseId, b.Date, b.Time });
-
         // Apply domain entity configurations
+        modelBuilder.ApplyConfiguration(new BookingConfiguration());
         modelBuilder.ApplyConfiguration(new WalkUpWaitlistConfiguration());
         modelBuilder.ApplyConfiguration(new TeeTimeRequestConfiguration());
         modelBuilder.ApplyConfiguration(new GolferConfiguration());
         modelBuilder.ApplyConfiguration(new GolferWaitlistEntryConfiguration());
+        modelBuilder.ApplyConfiguration(new WaitlistOfferConfiguration());
+        modelBuilder.ApplyConfiguration(new TeeTimeSlotFillConfiguration());
+        modelBuilder.ApplyConfiguration(new TeeTimeOfferPolicyConfiguration());
+        modelBuilder.ApplyConfiguration(new TeeTimeRequestExpirationPolicyConfiguration());
     }
 }

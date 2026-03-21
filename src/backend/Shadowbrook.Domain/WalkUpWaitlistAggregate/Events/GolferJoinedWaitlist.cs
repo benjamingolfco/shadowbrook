@@ -9,8 +9,4 @@ public record GolferJoinedWaitlist : IDomainEvent
     public required Guid GolferWaitlistEntryId { get; init; }
     public required Guid CourseWaitlistId { get; init; }
     public required Guid GolferId { get; init; }
-    public required string GolferName { get; init; }
-    public required string GolferPhone { get; init; }
-    public required Guid CourseId { get; init; }
-    public required int Position { get; init; }
 }

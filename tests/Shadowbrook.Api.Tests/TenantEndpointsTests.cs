@@ -3,10 +3,15 @@ using System.Net.Http.Json;
 
 namespace Shadowbrook.Api.Tests;
 
-public class TenantEndpointsTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
+[Collection("Integration")]
+[IntegrationTest]
+public class TenantEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
     private readonly HttpClient client = factory.CreateClient();
     private readonly TestWebApplicationFactory factory = factory;
+
+    public Task InitializeAsync() => this.factory.ResetDatabaseAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task PostTenant_WithValidData_ReturnsCreated()
@@ -30,82 +35,6 @@ public class TenantEndpointsTests(TestWebApplicationFactory factory) : IClassFix
         Assert.Equal("john@pinecrest.com", body.ContactEmail);
         Assert.Equal("555-1234", body.ContactPhone);
         Assert.NotEqual(Guid.Empty, body.Id);
-    }
-
-    [Fact]
-    public async Task PostTenant_WithMissingOrganizationName_ReturnsBadRequest()
-    {
-        var request = new
-        {
-            ContactName = "John Smith",
-            ContactEmail = "john@test.com",
-            ContactPhone = "555-1234"
-        };
-
-        var response = await this.client.PostAsJsonAsync("/tenants", request);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostTenant_WithMissingContactName_ReturnsBadRequest()
-    {
-        var request = new
-        {
-            OrganizationName = "Test Org",
-            ContactEmail = "test@test.com",
-            ContactPhone = "555-1234"
-        };
-
-        var response = await this.client.PostAsJsonAsync("/tenants", request);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostTenant_WithMissingContactEmail_ReturnsBadRequest()
-    {
-        var request = new
-        {
-            OrganizationName = "Test Org",
-            ContactName = "John Smith",
-            ContactPhone = "555-1234"
-        };
-
-        var response = await this.client.PostAsJsonAsync("/tenants", request);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostTenant_WithMissingContactPhone_ReturnsBadRequest()
-    {
-        var request = new
-        {
-            OrganizationName = "Test Org",
-            ContactName = "John Smith",
-            ContactEmail = "test@test.com"
-        };
-
-        var response = await this.client.PostAsJsonAsync("/tenants", request);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostTenant_WithInvalidEmailFormat_ReturnsBadRequest()
-    {
-        var request = new
-        {
-            OrganizationName = "Test Org",
-            ContactName = "John Smith",
-            ContactEmail = "not-an-email",
-            ContactPhone = "555-1234"
-        };
-
-        var response = await this.client.PostAsJsonAsync("/tenants", request);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]

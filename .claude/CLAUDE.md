@@ -31,6 +31,7 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - Database: SQL Server (local via `docker compose up db -d`, EF Core migrations)
 - Frontend: React 19, TypeScript 5.9, Vite 7, React Router, TanStack Query, React Hook Form + Zod, Tailwind CSS, shadcn/ui
 - Package manager: pnpm (never npm or yarn)
+- Messaging: WolverineFx (SQL Server transport, migrating to Azure Service Bus)
 - SMS: ITextMessageService abstraction (Twilio planned)
 - Infra: Azure (planned)
 
@@ -38,23 +39,24 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - src/backend/Shadowbrook.Domain/ — Domain model (aggregates, entities, events, repository interfaces, domain services — zero dependencies)
 - src/backend/Shadowbrook.Api/ — .NET Web API (minimal API endpoints, Infrastructure/ for EF, repositories, event dispatch, services)
 - tests/Shadowbrook.Domain.Tests/ — Pure domain unit tests (no DB, no HTTP)
-- tests/Shadowbrook.Api.Tests/ — xUnit integration tests (TestWebApplicationFactory with SQLite in-memory)
+- tests/Shadowbrook.Api.Tests/ — xUnit tests: unit tests (validators, handlers, utilities) + integration tests (TestWebApplicationFactory with SQL Server via Testcontainers)
 - src/web/ — React SPA
 - docs/ — Documentation
 - docs/plans/ — Design docs and implementation plans
 - infra/ — Azure deployment config (planned)
 
 ## Code Conventions
-- C#: `.editorconfig` at repo root defines style rules; see `.claude/rules/backend/api-conventions.md` for full conventions
+- C#: `.editorconfig` at repo root defines style rules; see `.claude/rules/backend/backend-conventions.md` for full conventions
 - TypeScript: strict mode, ES modules, no CommonJS, path aliases (`@/*`)
 - Frontend: feature-based folders, TanStack Query for data fetching, RHF + Zod for forms (see `.claude/rules/frontend/react-conventions.md`)
 - Prefer existing patterns in the codebase over introducing new ones
 
 ## Workflow
 - Run `dotnet build shadowbrook.slnx` after C# changes to verify compilation
+- Run `dotnet format shadowbrook.slnx` after C# changes to fix IDE style warnings (braces, `this.` qualification, naming, etc.)
 - Run `pnpm --dir src/web lint` after TypeScript changes
 - Run `pnpm --dir src/web test` after frontend component changes
-- Prefer unit tests before integration tests
+- **Testing pyramid: unit tests first, integration tests second.** Test behavior at the cheapest layer possible — validators, handlers, domain logic should all be unit tested without spinning up a DB or HTTP server. Integration tests are for DB-dependent behavior, middleware, and E2E flows only. See `.claude/rules/backend/backend-conventions.md` for backend-specific patterns; the same principle applies to frontend (component tests before browser tests).
 - Prefer running single tests over full suites for speed
 - `dotnet-ef` tool path: `export PATH="$PATH:/home/aaron/.dotnet/tools"`
 - Add migration: `dotnet ef migrations add <Name> --project src/backend/Shadowbrook.Api`

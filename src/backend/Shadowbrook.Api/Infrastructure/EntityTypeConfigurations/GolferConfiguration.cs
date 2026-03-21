@@ -16,6 +16,9 @@ public class GolferConfiguration : IEntityTypeConfiguration<Golfer>
         builder.Property(g => g.FirstName).IsRequired().HasMaxLength(100);
         builder.Property(g => g.LastName).IsRequired().HasMaxLength(100);
 
+        builder.HasShadowRowVersion();
+        builder.HasShadowAuditProperties();
+
         builder.HasIndex(g => g.Phone).IsUnique();
     }
 }

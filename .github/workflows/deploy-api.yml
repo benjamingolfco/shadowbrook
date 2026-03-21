@@ -56,10 +56,16 @@ jobs:
 
       - name: Deploy to Container App
         run: |
+          # activeRevisionsMode is Single on this app, so the platform deactivates the
+          # previous active revision once the new one is healthy — no manual cleanup needed.
+          # --revision-suffix pins a readable name to each revision for easier diagnosis.
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          REVISION_SUFFIX=$(echo "${{ inputs.image-tag }}-${SHORT_SHA}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | cut -c1-20 | sed 's/-$//')
           az containerapp update \
             --name ${{ env.CONTAINER_APP_NAME }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
-            --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ inputs.image-tag }}
+            --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ inputs.image-tag }} \
+            --revision-suffix "$REVISION_SUFFIX"
 
       - name: Get app URL
         id: get-url

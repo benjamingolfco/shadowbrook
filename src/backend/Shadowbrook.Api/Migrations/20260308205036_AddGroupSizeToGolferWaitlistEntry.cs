@@ -1,29 +1,28 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Shadowbrook.Api.Migrations
+namespace Shadowbrook.Api.Migrations;
+
+/// <inheritdoc />
+public partial class AddGroupSizeToGolferWaitlistEntry : Migration
 {
     /// <inheritdoc />
-    public partial class AddGroupSizeToGolferWaitlistEntry : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.AddColumn<int>(
-                name: "GroupSize",
-                table: "GolferWaitlistEntries",
-                type: "int",
-                nullable: false,
-                defaultValue: 1);
-        }
+        migrationBuilder.AddColumn<int>(
+            name: "GroupSize",
+            table: "GolferWaitlistEntries",
+            type: "int",
+            nullable: false,
+            defaultValue: 1);
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "GroupSize",
-                table: "GolferWaitlistEntries");
-        }
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropColumn(
+            name: "GroupSize",
+            table: "GolferWaitlistEntries");
     }
 }

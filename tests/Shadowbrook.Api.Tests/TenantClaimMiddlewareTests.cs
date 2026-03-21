@@ -3,9 +3,14 @@ using System.Net.Http.Json;
 
 namespace Shadowbrook.Api.Tests;
 
-public class TenantClaimMiddlewareTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
+[Collection("Integration")]
+[IntegrationTest]
+public class TenantClaimMiddlewareTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
     private readonly HttpClient client = factory.CreateClient();
+
+    public Task InitializeAsync() => factory.ResetDatabaseAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task WithValidTenantIdHeader_ReturnsTenantId()

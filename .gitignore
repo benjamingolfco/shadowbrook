@@ -33,10 +33,11 @@ Thumbs.db
 # Worktrees
 .worktrees/
 
-# Env
-.env
-.env.*
+# Env - ignore local overrides, but commit environment-specific configs
+.env.local
+.env.*.local
 !.env.example
+!.env.*.example
 
 # Bicep build artifacts (compiled ARM templates)
 infra/bicep/*.json

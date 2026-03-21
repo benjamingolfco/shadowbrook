@@ -77,3 +77,19 @@ export interface DuplicateEntryError {
   error: string;
   position: number;
 }
+
+// Walk-up offer (golfer claim flow)
+export interface WaitlistOfferResponse {
+  token: string;
+  courseName: string;
+  date: string;       // "yyyy-MM-dd"
+  teeTime: string;    // "HH:mm"
+  golfersNeeded: number;
+  golferName: string;
+  status: 'Pending' | 'Accepted';
+}
+
+export interface WaitlistOfferAcceptResponse {
+  status: string;
+  message: string;
+}

@@ -3,9 +3,14 @@ using System.Net.Http.Json;
 
 namespace Shadowbrook.Api.Tests;
 
-public class CoursePricingTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
+[Collection("Integration")]
+[IntegrationTest]
+public class CoursePricingTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
     private readonly HttpClient client = factory.CreateClient();
+
+    public Task InitializeAsync() => factory.ResetDatabaseAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private async Task<Guid> CreateCourse()
     {
@@ -75,40 +80,6 @@ public class CoursePricingTests(TestWebApplicationFactory factory) : IClassFixtu
         var getResponse = await this.client.GetAsync($"/courses/{courseId}/pricing");
         var getBody = await getResponse.Content.ReadFromJsonAsync<PricingResponse>();
         Assert.Equal(50.00m, getBody!.FlatRatePrice);
-    }
-
-    // AC 4: Validation - negative price
-    [Fact]
-    public async Task UpdatePricing_NegativePrice_ReturnsBadRequest()
-    {
-        var courseId = await CreateCourse();
-
-        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
-        {
-            FlatRatePrice = -10.00m
-        });
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-
-        var body = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.Contains("greater than or equal to 0", body!.Error);
-    }
-
-    // AC 4: Validation - excessively large price
-    [Fact]
-    public async Task UpdatePricing_ExcessivelyLargePrice_ReturnsBadRequest()
-    {
-        var courseId = await CreateCourse();
-
-        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
-        {
-            FlatRatePrice = 10001.00m
-        });
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-
-        var body = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.Contains("less than or equal to 10000", body!.Error);
     }
 
     // AC 5: Validation - zero is valid
@@ -192,5 +163,4 @@ public class CoursePricingTests(TestWebApplicationFactory factory) : IClassFixtu
     private record CourseResponse(Guid Id, string Name);
     private record TenantResponse(Guid Id);
     private record PricingResponse(decimal FlatRatePrice);
-    private record ErrorResponse(string Error);
 }

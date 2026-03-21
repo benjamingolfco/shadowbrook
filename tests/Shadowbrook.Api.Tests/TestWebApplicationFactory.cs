@@ -1,19 +1,87 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Respawn;
 using Shadowbrook.Api.Infrastructure.Data;
+using Testcontainers.MsSql;
+using Wolverine;
 
 namespace Shadowbrook.Api.Tests;
 
-public class TestWebApplicationFactory : WebApplicationFactory<Program>
+public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
+    private readonly MsSqlContainer sqlContainer = new MsSqlBuilder()
+        .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
+        .Build();
+
+    private Respawner? respawner;
+    private string connectionString = string.Empty;
+
+    public async Task InitializeAsync()
+    {
+        await this.sqlContainer.StartAsync();
+        this.connectionString = this.sqlContainer.GetConnectionString();
+    }
+
+    public async Task ResetDatabaseAsync()
+    {
+        if (this.respawner is null)
+        {
+            await using var conn = new SqlConnection(this.connectionString);
+            await conn.OpenAsync();
+            // Wolverine tables live in the "wolverine" schema (configured in Program.cs),
+            // so SchemasToInclude = ["dbo"] already excludes them. Only EF migration
+            // history needs explicit protection.
+            this.respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
+            {
+                DbAdapter = DbAdapter.SqlServer,
+                SchemasToInclude = ["dbo"],
+                TablesToIgnore = [
+                    new Respawn.Graph.Table("__EFMigrationsHistory"),
+                ]
+            });
+        }
+
+        await using var connection = new SqlConnection(this.connectionString);
+        await connection.OpenAsync();
+        await this.respawner.ResetAsync(connection);
+    }
+
+    async Task IAsyncLifetime.DisposeAsync()
+    {
+        try
+        {
+            await base.DisposeAsync();
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            // Wolverine background services throw TaskCanceledException on host shutdown — expected
+        }
+
+        await this.sqlContainer.DisposeAsync();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        try
+        {
+            base.Dispose(disposing);
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            // Wolverine background services throw TaskCanceledException on host shutdown — expected
+        }
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseSetting("ConnectionStrings:DefaultConnection", this.connectionString);
+
         builder.ConfigureServices(services =>
         {
-            // Remove all EF Core registrations for ApplicationDbContext
             var descriptorsToRemove = services
                 .Where(d =>
                     d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
@@ -26,11 +94,14 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
                 services.Remove(descriptor);
             }
 
-            // Share a single connection so the in-memory database persists across scopes
-            var connection = new Microsoft.Data.Sqlite.SqliteConnection("DataSource=:memory:");
-            connection.Open();
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(this.connectionString));
 
-            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(connection));
+            services.DisableAllExternalWolverineTransports();
+            services.RunWolverineInSoloMode();
+
+            services.ConfigureWolverine(opts =>
+                opts.DefaultLocalQueue.BufferedInMemory());
         });
 
         builder.UseEnvironment("Testing");
@@ -42,7 +113,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
 
         using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        db.Database.EnsureCreated();
+        db.Database.Migrate();
 
         return host;
     }

@@ -3,9 +3,14 @@ using System.Net.Http.Json;
 
 namespace Shadowbrook.Api.Tests;
 
-public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
+[Collection("Integration")]
+[IntegrationTest]
+public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
     private readonly HttpClient client = factory.CreateClient();
+
+    public Task InitializeAsync() => factory.ResetDatabaseAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task GetCourseById_FromDifferentTenant_ReturnsNotFound()
@@ -88,50 +93,6 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : ICl
         var courses = await response.Content.ReadFromJsonAsync<List<CourseResponse>>();
         Assert.NotNull(courses);
         Assert.True(courses!.Count >= 2);
-    }
-
-    [Fact]
-    public async Task CreateCourse_DuplicateName_SameTenant_ReturnsConflict()
-    {
-        // Arrange
-        var tenantId = await CreateTestTenantAsync("Duplicate Test Tenant");
-        var request1 = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        request1.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request1.Content = JsonContent.Create(new { Name = "Duplicate Course" });
-        await this.client.SendAsync(request1);
-
-        // Act - Try to create another course with the same name
-        var request2 = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        request2.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request2.Content = JsonContent.Create(new { Name = "Duplicate Course" });
-        var response = await this.client.SendAsync(request2);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.Contains("already exists", error!.Error);
-    }
-
-    [Fact]
-    public async Task CreateCourse_DuplicateName_DifferentTenants_Succeeds()
-    {
-        // Arrange
-        var tenantAId = await CreateTestTenantAsync("Tenant A Duplicate");
-        var tenantBId = await CreateTestTenantAsync("Tenant B Duplicate");
-
-        var requestA = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        requestA.Headers.Add("X-Tenant-Id", tenantAId.ToString());
-        requestA.Content = JsonContent.Create(new { Name = "Shared Name Course" });
-        await this.client.SendAsync(requestA);
-
-        // Act - Create course with same name for different tenant
-        var requestB = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        requestB.Headers.Add("X-Tenant-Id", tenantBId.ToString());
-        requestB.Content = JsonContent.Create(new { Name = "Shared Name Course" });
-        var response = await this.client.SendAsync(requestB);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
     [Fact]

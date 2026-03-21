@@ -4,6 +4,8 @@ public class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUse
 {
     private readonly IHttpContextAccessor httpContextAccessor = httpContextAccessor;
 
+    public string? UserId => this.httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value;
+
     public Guid? TenantId
     {
         get

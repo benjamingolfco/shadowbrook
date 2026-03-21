@@ -20,7 +20,8 @@ Review criteria for the Shadowbrook tee time booking platform. The Code Reviewer
 - Are critical paths tested? Check that acceptance criteria from the user story have corresponding tests.
 - Are edge cases covered (empty inputs, boundary values, not-found scenarios)?
 - Do tests actually assert meaningful behavior, not just "it doesn't throw"?
-- Are tests using the project's existing patterns (xUnit, TestWebApplicationFactory, SQLite in-memory)?
+- Are tests at the right pyramid level? Validators and handlers should have unit tests (NSubstitute for repos, no DB). Integration tests only for DB-dependent behavior.
+- Are tests using the project's existing patterns (xUnit, NSubstitute for stubs, TestWebApplicationFactory for integration)?
 
 ## Naming Conventions
 

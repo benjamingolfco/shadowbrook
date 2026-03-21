@@ -14,6 +14,8 @@ public class TeeTimeRequestConfiguration : IEntityTypeConfiguration<TeeTimeReque
         builder.Property(r => r.Id).ValueGeneratedNever();
 
         builder.Property(r => r.Status).HasConversion<string>();
+        builder.HasShadowRowVersion();
+        builder.HasShadowAuditProperties();
 
         builder.HasOne<Course>()
             .WithMany()
@@ -24,5 +26,13 @@ public class TeeTimeRequestConfiguration : IEntityTypeConfiguration<TeeTimeReque
             .HasDatabaseName("IX_WaitlistRequests_CourseId_Date_TeeTime");
         builder.HasIndex(r => new { r.CourseId, r.Date, r.Status })
             .HasDatabaseName("IX_WaitlistRequests_CourseId_Date_Status");
+
+        builder.HasMany(r => r.SlotFills)
+            .WithOne()
+            .HasForeignKey(f => f.TeeTimeRequestId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(r => r.SlotFills)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

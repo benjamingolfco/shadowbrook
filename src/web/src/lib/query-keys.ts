@@ -18,4 +18,10 @@ export const queryKeys = {
   walkupJoin: {
     verify: (code: string) => ['walkup-join', 'verify', code] as const,
   },
+  walkUpOffer: {
+    byToken: (token: string) => ['walk-up-offer', token] as const,
+  },
+  devSms: {
+    all: ['dev-sms'] as const,
+  },
 };

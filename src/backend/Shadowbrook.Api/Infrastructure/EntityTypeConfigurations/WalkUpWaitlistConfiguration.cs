@@ -21,15 +21,10 @@ public class WalkUpWaitlistConfiguration : IEntityTypeConfiguration<WalkUpWaitli
             .HasForeignKey(w => w.CourseId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasShadowRowVersion();
+        builder.HasShadowAuditProperties();
+
         builder.HasIndex(w => new { w.CourseId, w.Date }).IsUnique();
         builder.HasIndex(w => new { w.ShortCode, w.Date });
-
-        builder.HasMany(w => w.Entries)
-            .WithOne()
-            .HasForeignKey(e => e.CourseWaitlistId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Navigation(w => w.Entries)
-            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

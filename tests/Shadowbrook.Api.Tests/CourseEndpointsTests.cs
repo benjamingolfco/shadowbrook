@@ -3,10 +3,15 @@ using System.Net.Http.Json;
 
 namespace Shadowbrook.Api.Tests;
 
-public class CourseEndpointsTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
+[Collection("Integration")]
+[IntegrationTest]
+public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
     private readonly HttpClient client = factory.CreateClient();
     private readonly TestWebApplicationFactory factory = factory;
+
+    public Task InitializeAsync() => this.factory.ResetDatabaseAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task GetAllCourses_ReturnsOk()
@@ -130,19 +135,6 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IClassFix
         Assert.NotNull(body.Tenant);
         Assert.Equal(tenantId, body.Tenant.Id);
         Assert.Equal(tenantName, body.Tenant.OrganizationName);
-    }
-
-    [Fact]
-    public async Task PostCourse_WithoutName_ReturnsBadRequest()
-    {
-        var (tenantId, _) = await CreateTestTenantAsync();
-        var request = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        request.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request.Content = JsonContent.Create(new { StreetAddress = "123 Main St" });
-
-        var response = await this.client.SendAsync(request);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]

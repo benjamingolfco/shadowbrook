@@ -3,9 +3,14 @@ using System.Net.Http.Json;
 
 namespace Shadowbrook.Api.Tests;
 
-public class TeeTimeSettingsTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
+[Collection("Integration")]
+[IntegrationTest]
+public class TeeTimeSettingsTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
     private readonly HttpClient client = factory.CreateClient();
+
+    public Task InitializeAsync() => factory.ResetDatabaseAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private async Task<Guid> CreateCourse()
     {
@@ -51,51 +56,6 @@ public class TeeTimeSettingsTests(TestWebApplicationFactory factory) : IClassFix
         Assert.Equal(10, body!.TeeTimeIntervalMinutes);
         Assert.Equal("07:00:00", body.FirstTeeTime);
         Assert.Equal("18:00:00", body.LastTeeTime);
-    }
-
-    [Fact]
-    public async Task UpdateTeeTimeSettings_InvalidInterval_ReturnsBadRequest()
-    {
-        var courseId = await CreateCourse();
-
-        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
-        {
-            TeeTimeIntervalMinutes = 15,
-            FirstTeeTime = "07:00",
-            LastTeeTime = "18:00"
-        });
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task UpdateTeeTimeSettings_FirstAfterLast_ReturnsBadRequest()
-    {
-        var courseId = await CreateCourse();
-
-        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
-        {
-            TeeTimeIntervalMinutes = 10,
-            FirstTeeTime = "18:00",
-            LastTeeTime = "07:00"
-        });
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task UpdateTeeTimeSettings_FirstEqualsLast_ReturnsBadRequest()
-    {
-        var courseId = await CreateCourse();
-
-        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
-        {
-            TeeTimeIntervalMinutes = 10,
-            FirstTeeTime = "07:00",
-            LastTeeTime = "07:00"
-        });
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
