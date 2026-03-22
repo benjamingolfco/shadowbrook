@@ -18,7 +18,7 @@ Multi-agent system for automating the Shadowbrook development workflow on GitHub
 | **Shadowbrook Implementation** | `claude-implementation.yml` | workflow_dispatch, pull_request, pull_request_review, check_suite, schedule (every 2h) | `sprint-{issue\|pr\|event}`, cancel-in-progress: false |
 | **Claude Code Review** | `claude-code-review.yml` | pull_request | `review-{pr}`, cancel-in-progress: true |
 
-**Unchanged:** `owner-gate.yml`, `pr.yml`
+**Unchanged:** `pr.yml`
 
 ### Agent Responsibility Split
 
@@ -84,24 +84,19 @@ Issues with **no status set** are the backlog — new/untouched issues that the 
 
 | Status | Meaning | Workflow |
 |--------|---------|----------|
-| Needs Story | BA refining the user story | Planning |
-| Story Review | Owner reviewing story | Planning |
-| Needs Architecture | Architect doing lightweight review (concerns, notes, points). UX Designer adding UI/UX notes. | Planning |
-| Architecture Review | Owner reviewing architectural notes and UI/UX guidance | Planning |
-| **Ready** | Fully reviewed. **The sprint gate.** Waits for iteration assignment. | Planning |
-| Implementing | In sprint — Architect writes detailed impl plan, then dev agents write code. | Implementation |
-| CI Pending | Code pushed, waiting for CI | Implementation |
-| In Review | PR open, code review in progress | Implementation |
-| Changes Requested | Code review requested changes | Implementation |
-| Ready to Merge | CI green + review approved, waiting for owner PR approval | Implementation |
-| Awaiting Owner | Blocked on human input — escalation or repeated failures | Either |
-| Done | Merged and complete | Implementation |
+| Needs Story | BA refining the user story, Architect doing feasibility check | Planning |
+| **Ready** | Planned and estimated. **The sprint gate.** Waits for iteration assignment. | Planning |
+| Implementing | In sprint — Architect writes detailed impl plan, dev agents write code, PR lifecycle managed | Implementation |
+| Awaiting Owner | Blocked on human input — BA open questions or repeated CI failures | Either |
+| Done | Merged to sprint branch and complete | Implementation |
 
 **Key design points:**
 - **Ready** is the sprint gate — issues wait here until assigned to an iteration
-- Architecture in planning = **lightweight review** (concerns, patterns, story points)
+- **No owner review gates** between Needs Story and Ready — the pipeline is autonomous
+- Architecture in planning = **feasibility check** (verdict, dependencies, story points)
 - Architecture in sprint = **detailed implementation plan** (file-by-file, just-in-time)
-- Status IDs for `gh project item-edit` are in CLAUDE.md § GitHub Project Management
+- CI, code review, and changes-requested states are tracked by **PR mechanics**, not board statuses
+- Status IDs for `gh project item-edit` are in the github-project skill
 
 ---
 
@@ -111,13 +106,13 @@ The Architect's work is split across workflows:
 
 | Phase | Workflow | Depth | Output |
 |-------|----------|-------|--------|
-| **Architectural Review** | Planning | Lightweight | Technical notes: patterns, data model concerns, API design direction, risks, story points estimate. |
+| **Feasibility Check** | Planning | Lightweight | Verdict (straightforward / structural), dependencies, story points estimate. |
 | **Implementation Plan** | Implementation | Detailed | File-by-file plan: what to create, what to modify, exact approach, test strategy. May be written as a plan file on the issue branch. |
 
 **Why split?**
-- Lightweight review during planning gives the owner early visibility into technical concerns
+- Feasibility check during planning catches structural concerns early and estimates effort
 - Detailed planning just-in-time in the sprint means plans are always fresh (no staleness)
-- Owner can influence direction during Architecture Review before implementation details are locked in
+- If the feasibility check flags "structural," the note carries forward to inform the detailed plan
 
 ---
 
@@ -132,29 +127,17 @@ The planning workflow uses story points for **sprint capacity planning:**
 
 ---
 
-## Product Owner Review Gates
+## Awaiting Owner
 
-The pipeline pauses at three checkpoints for product owner review. The manager (Planning Manager or Sprint Manager, depending on phase) sets the appropriate status, assigns the issue to the product owner (`gh issue edit {number} --add-assignee aarongbenjamin`), and tags them with an **Action Required** comment. When the owner responds, the manager unassigns them.
+The pipeline has **no owner review gates** during normal flow. The only time the pipeline pauses for the owner is when it genuinely needs human input:
 
-### Gate 1: Story Review
+- **BA open questions:** The BA flagged something unclear in the story that requires a decision from the owner.
+- **CI escalation:** 3+ consecutive CI failures without resolution.
+- **Agent blocked:** An agent explicitly states it cannot proceed.
 
-After the BA refines the user story, the Planning Manager sets status to **Story Review** and tags the owner.
+When entering Awaiting Owner, the manager assigns `@aarongbenjamin` and posts an **Action Required** comment. When the owner responds, the manager unassigns them and resumes the pipeline.
 
-- **Owner approves:** Planning Manager advances to **Needs Architecture**.
-- **Owner requests changes:** Planning Manager re-dispatches the BA with feedback.
-
-### Gate 2: Architecture Review
-
-After the Architect posts the lightweight technical review (and the UX Designer posts the interaction spec, if dispatched), the Planning Manager sets status to **Architecture Review** and tags the owner.
-
-- **Owner approves:** Planning Manager sets status to **Ready**.
-- **Owner requests changes:** Planning Manager re-dispatches the Architect with feedback.
-
-### Gate 3: PR Approval
-
-After CI passes and the code reviewer approves, the Sprint Manager sets status to **Ready to Merge** and tags the owner. The owner reviews the PR on GitHub, approves it, and merges it manually.
-
-**The Sprint Manager must NEVER enable auto-merge or merge the PR. Only the product owner merges.**
+**Sprint-level review:** The owner reviews the sprint as a whole (sprint PR from sprint branch → main), not individual issue PRs. The Sprint Manager may merge issue PRs to the sprint branch after CI + review pass, but **must NEVER merge to main or enable auto-merge to main**.
 
 ---
 
@@ -231,9 +214,9 @@ All comments posted by the managers (Planning Manager / Sprint Manager) use a st
 ```markdown
 ### 📋 Planning Manager → @aarongbenjamin
 
-> **Action Required:** Review the user story and comment to approve or request changes.
+> **Action Required:** The BA flagged open questions on this story that need your input.
 
-The BA refined the story with 6 acceptance criteria covering pricing setup, validation, and display.
+The BA refined the story with 6 acceptance criteria but has 2 open questions about scope.
 
 [View the Issue Plan](#link-to-comment)
 
@@ -328,9 +311,11 @@ The Planning Manager creates and maintains **one pinned comment** on every activ
 ### Story
 {refined story and acceptance criteria from BA — added after BA completes}
 
-### Technical Review
-{architect's lightweight review — concerns, patterns, risks, story points — added during planning}
+### Feasibility
+{architect's feasibility check — verdict, dependencies, story points — added during planning}
 
+**Verdict:** straightforward | structural — [reason]
+**Dependencies:** [list or "None identified"]
 **Story Points:** {N}
 
 ### Interaction Spec
@@ -351,9 +336,8 @@ The Planning Manager creates and maintains **one pinned comment** on every activ
 ### History
 - Classified as P1/M, routed to BA · [Run #10](link)
 - BA refined story with 5 acceptance criteria · [Run #12](link)
-- Owner approved story · [Run #13](link)
-- Architect reviewed: 5pt, endpoint extension pattern · [Run #14](link)
-- Owner approved architecture, status: Ready · [Run #16](link)
+- Architect feasibility: straightforward, 5pt · [Run #12](link)
+- Status: Ready · [Run #12](link)
 - Sprint dispatched, Architect writing impl plan · [Run #20](link)
 - Implementation complete, PR #42 opened · [Run #22](link)
 ```
@@ -363,12 +347,11 @@ The Planning Manager creates and maintains **one pinned comment** on every activ
 | Phase | What the manager adds to the Issue Plan |
 |-------|------------------------------------|
 | New (no status) | Create comment with Phase line + History entry. Pin it. |
-| Needs Story → Story Review | Add `### Story` section with BA's refined story. Update Phase. |
-| Needs Architecture → Architecture Review | Add `### Technical Review` and optionally `### Interaction Spec`. Update Phase. |
-| Architecture Review → Ready | Update Phase. Dev Tasks added later during sprint execution. |
+| Needs Story (BA completes) | Add `### Story` section with BA's refined story. Update Phase. |
+| Needs Story (Architect completes) | Add `### Feasibility` section with verdict, dependencies, points. Optionally add `### Interaction Spec`. Update Phase. |
+| Needs Story → Ready | Update Phase to Ready. Dev Tasks added later during sprint execution. |
 | Implementing (sprint start) | Add `### Implementation Plan` with Architect's detailed plan. Add `### Dev Tasks`. Update Phase. |
-| Implementing (agents working) | Check off dev task items as agents complete them. |
-| CI Pending / In Review / etc. | Update Phase. Add PR link. |
+| Implementing (agents working) | Check off dev task items as agents complete them. Add PR link. |
 | Done | Update Phase to Done. Final History entry. |
 
 ## Handoff Protocol
@@ -378,48 +361,44 @@ All routing flows through the managers. Agents **never** hand off directly to ot
 ### Planning Agent Flow (Planning Manager)
 
 ```
-Planning Manager analyzes event → determines BA/architect/UX needed
+Planning Manager analyzes event → determines BA needed
   → gathers issue context
-  → spawns agent via Task (issue context + specialist instructions)
-  → agent returns work product text
-  → Planning Manager adds output to Issue Plan comment (appropriate section)
-  → Planning Manager updates status, tags owner if entering review gate
-  → Planning Manager advances to next phase
-```
-
-### Architect + UX Parallel Flow
-
-```
-Planning Manager spawns architect → returns lightweight technical review + story points
-Planning Manager spawns UX designer → returns interaction spec
-Planning Manager merges both outputs:
-  → adds Technical Review + Interaction Spec sections to Issue Plan
-  → sets status to Architecture Review, tags owner
-Owner approves → Planning Manager sets Ready
+  → spawns BA via Task (issue context + specialist instructions)
+  → BA returns refined story
+  → Planning Manager updates issue body with refined story
+  → Planning Manager adds Story section to Issue Plan
+  → if BA flagged open questions → set Awaiting Owner, tag owner, stop
+  → spawns Architect for feasibility check (+ UX Designer if UI involved)
+  → Architect returns verdict, dependencies, story points
+  → Planning Manager adds Feasibility section to Issue Plan
+  → Planning Manager sets dependencies on GitHub
+  → Planning Manager sets status to Ready
 ```
 
 ### Sprint Execution Flow (Sprint Manager)
 
 ```
 Sprint Manager finds unblocked Ready issue in current iteration
-  → creates branch (or checks out existing branch)
+  → ensures sprint branch exists (sprint/iteration-{N})
+  → creates issue branch from sprint branch (or checks out existing)
+  → sets status to Implementing
   → spawns Architect for detailed implementation plan
-  → Architect returns file-by-file plan
+  → Architect returns file-by-file plan with Dev Tasks
   → Sprint Manager adds Implementation Plan + Dev Tasks to Issue Plan
   → for each agent (backend → frontend → devops):
       → spawns agent via Task (context + unchecked tasks for this agent)
       → agent implements on the branch, commits, pushes
       → agent returns: files changed, tasks completed, summary
       → Sprint Manager posts handback comment, checks off Dev Tasks
-  → creates PR with `agentic` label (or updates existing PR)
-  → sets status to CI Pending
+  → creates PR targeting sprint branch with `agentic` label (or updates existing PR)
+  → monitors PR lifecycle (CI, review) — re-dispatches agents as needed
 ```
 
 ### Merge Cascade Flow
 
 ```
-PR merged → Sprint Manager detects
-  → verifies linked issue is Done
+PR merged to sprint branch → Sprint Manager detects
+  → sets linked issue status to Done
   → queries: what was this issue blocking?
   → for each blocked sprint issue: check if ALL blockers now Done
   → if unblocked → triggers workflow_dispatch for parallel execution
@@ -431,20 +410,15 @@ PR merged → Sprint Manager detects
 | Current Phase | Trigger | Action |
 |---------------|---------|--------|
 | No status (new) | Cron scan | Classify, create Issue Plan, route to Needs Story (Planning) |
-| Needs Story | BA returns | Add Story section, set Story Review, tag owner (Planning) |
-| Story Review | Owner approves | Spawn Architect (+UX), set Needs Architecture (Planning) |
-| Story Review | Owner requests changes | Re-spawn BA with feedback (Planning) |
-| Needs Architecture | Architect + UX return | Add Technical Review + Interaction Spec, set Architecture Review, tag owner (Planning) |
-| Architecture Review | Owner approves | Set Ready (Planning) |
-| Architecture Review | Owner requests changes | Re-spawn Architect with feedback (Planning) |
-| Ready (in iteration) | Cron / dependency unblock | Spawn Architect for detailed plan, then implement (Sprint) |
-| Implementing | Agents complete | Create/update PR, set CI Pending (Sprint) |
-| CI Pending | CI passes | Set In Review (Sprint) |
-| CI Pending | CI fails | Re-dispatch agent, set Implementing (Sprint) |
-| In Review | Review passes | Set Ready to Merge, tag owner (Sprint) |
-| In Review | Review requests changes | Re-dispatch agent, set Changes Requested (Sprint) |
-| Changes Requested | Agent fixes | Set CI Pending (Sprint) |
-| Ready to Merge | Owner merges | Set Done, trigger merge cascade (Sprint) |
+| Needs Story | BA returns (no questions) | Add Story, spawn Architect feasibility check (+UX if UI) (Planning) |
+| Needs Story | BA returns (open questions) | Add Story, set Awaiting Owner, tag owner (Planning) |
+| Needs Story | Architect returns | Add Feasibility, set dependencies, set Ready (Planning) |
+| Awaiting Owner | Owner responds | Unassign owner, resume from where stalled (Either) |
+| Ready (in iteration) | Cron / dependency unblock | Set Implementing, create sprint/issue branches, spawn Architect for detailed plan, implement (Sprint) |
+| Implementing | Agents complete | Create/update PR targeting sprint branch (Sprint) |
+| Implementing | CI fails | Re-dispatch agent with failure details (Sprint) |
+| Implementing | Review requests changes | Re-dispatch agent with feedback (Sprint) |
+| Implementing | CI + review pass | Merge to sprint branch, set Done, trigger merge cascade (Sprint) |
 
 ## Inter-Agent Questions
 
@@ -459,15 +433,16 @@ When an agent encounters ambiguity, it includes the question in its Task respons
 |-----------|--------|
 | 3 round-trips between agents on the same issue without phase progression | Manager escalates to product owner with Action Required comment |
 | Agent hasn't produced output within expected time | Manager pings and re-spawns the agent |
-| Issue stalled for 48h+ in any review gate | Planning Manager posts Action Required reminder to `@aarongbenjamin` |
+| Issue stalled for 48h+ in Awaiting Owner | Planning Manager posts Action Required reminder to `@aarongbenjamin` |
 | Agent explicitly states it is blocked | Manager immediately escalates with Action Required comment |
 
 ## Guardrails
 
-- Agents must **never** merge PRs — including via `gh pr merge`, `gh pr merge --auto`, or any other merge mechanism.
-- Agents must **never** enable auto-merge on PRs.
+- Agents must **never** merge PRs to main — including via `gh pr merge`, `gh pr merge --auto`, or any other merge mechanism targeting main.
+- Agents must **never** enable auto-merge on PRs targeting main.
+- The Sprint Manager **may** merge issue PRs to the sprint branch after CI passes and code review approves.
 - Agents must **never** submit formal GitHub PR approvals (`gh pr review --approve`).
-- Only the **product owner** approves and merges PRs.
+- Only the **product owner** reviews and merges the sprint PR (sprint branch → main).
 
 ---
 

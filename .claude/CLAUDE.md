@@ -106,15 +106,8 @@ Issues with **no status set** are the backlog — new/untouched issues.
 | Status | Option ID |
 |--------|-----------|
 | Needs Story | `4e3e5768` |
-| Story Review | `8d427c9e` |
-| Needs Architecture | `c7611935` |
-| Architecture Review | `8039d58d` |
 | Ready | `e82ffa87` |
 | Implementing | `40275ace` |
-| CI Pending | `7acb30e5` |
-| In Review | `663d782f` |
-| Changes Requested | `c3f67294` |
-| Ready to Merge | `4aef6ef4` |
 | Awaiting Owner | `4fd57247` |
 | Done | `b9a85561` |
 
@@ -179,10 +172,11 @@ This project uses an automated multi-agent pipeline via GitHub Actions, split in
 See `.claude/skills/agent-pipeline/SKILL.md` for the full protocol.
 
 - **Workflow files:**
-  - `.github/workflows/claude-planning.yml` — planning pipeline + cron (backlog processing, story refinement, architecture review, sprint planning)
-  - `.github/workflows/claude-implementation.yml` — sprint execution (architecture detail, implementation, CI, review, merge cascade)
+  - `.github/workflows/claude-planning.yml` — planning pipeline + cron (backlog processing, story refinement, feasibility check, sprint planning)
+  - `.github/workflows/claude-implementation.yml` — sprint execution (architecture detail, implementation, PR lifecycle, merge cascade)
   - `.github/workflows/claude-code-review.yml` — standalone code review on all PRs
 - **Agent manager instructions:** `.claude/agents/planning-manager.md`, `.claude/agents/sprint-manager.md`
 - **Agent definitions:** `.claude/agents/*.md`
-- **Pipeline statuses:** (no status) → Needs Story → **Story Review** → Needs Architecture → **Architecture Review** → **Ready** → Implementing → CI Pending → In Review → Changes Requested → **Ready to Merge** → Done
+- **Pipeline statuses:** (no status) → Needs Story → **Ready** → Implementing → Done
+- **Awaiting Owner** — used when BA has open questions or after repeated CI failures (not a pipeline phase — a hold state)
 - **Sprint gate:** Ready — issues wait here until assigned to an iteration for sprint execution
