@@ -52,6 +52,7 @@ public static class CourseEndpoints
             ZipCode = request.ZipCode,
             ContactEmail = request.ContactEmail,
             ContactPhone = request.ContactPhone,
+            TimeZoneId = request.TimeZoneId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
@@ -67,6 +68,7 @@ public static class CourseEndpoints
             course.ZipCode,
             course.ContactEmail,
             course.ContactPhone,
+            course.TimeZoneId,
             course.CreatedAt,
             course.UpdatedAt,
             new TenantInfo(tenant.Id, tenant.OrganizationName));
@@ -89,6 +91,7 @@ public static class CourseEndpoints
                 c.ZipCode,
                 c.ContactEmail,
                 c.ContactPhone,
+                c.TimeZoneId,
                 c.CreatedAt,
                 c.UpdatedAt,
                 new TenantInfo(c.Tenant!.Id, c.Tenant.OrganizationName)))
@@ -111,6 +114,7 @@ public static class CourseEndpoints
                 c.ZipCode,
                 c.ContactEmail,
                 c.ContactPhone,
+                c.TimeZoneId,
                 c.CreatedAt,
                 c.UpdatedAt,
                 new TenantInfo(c.Tenant!.Id, c.Tenant.OrganizationName)))
@@ -203,6 +207,7 @@ public static class CourseEndpoints
 
 public record CreateCourseRequest(
     string Name,
+    string TimeZoneId,
     Guid? TenantId = null,
     string? StreetAddress = null,
     string? City = null,
@@ -220,6 +225,7 @@ public record CourseResponse(
     string? ZipCode,
     string? ContactEmail,
     string? ContactPhone,
+    string TimeZoneId,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     TenantInfo Tenant);
@@ -245,6 +251,16 @@ public class CreateCourseRequestValidator : AbstractValidator<CreateCourseReques
     public CreateCourseRequestValidator()
     {
         RuleFor(x => x.Name).NotEmpty();
+        RuleFor(x => x.TimeZoneId)
+            .NotEmpty().WithMessage("TimeZoneId is required.");
+        RuleFor(x => x.TimeZoneId)
+            .Must(id =>
+            {
+                try { TimeZoneInfo.FindSystemTimeZoneById(id); return true; }
+                catch { return false; }
+            })
+            .When(x => !string.IsNullOrEmpty(x.TimeZoneId))
+            .WithMessage("TimeZoneId is not a valid IANA timezone.");
     }
 }
 

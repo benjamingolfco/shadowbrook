@@ -12,13 +12,11 @@ namespace Shadowbrook.Api.Features.WalkUpWaitlist;
 public static class WalkUpJoinEndpoints
 {
     [WolverinePost("/walkup/verify")]
-    public static async Task<IResult> VerifyShortCode(VerifyCodeRequest request, ApplicationDbContext db)
+    public static async Task<IResult> VerifyShortCode(VerifyCodeRequest request, ApplicationDbContext db, TimeProvider timeProvider)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-
         var waitlist = await db.WalkUpWaitlists
             .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(w => w.ShortCode == request.Code && w.Date == today);
+            .FirstOrDefaultAsync(w => w.ShortCode == request.Code);
 
         if (waitlist is null)
         {
@@ -31,11 +29,20 @@ public static class WalkUpJoinEndpoints
         }
 
         // Course guaranteed to exist via FK
-        var courseName = await db.Courses
+        var course = await db.Courses
             .IgnoreQueryFilters()
             .Where(c => c.Id == waitlist.CourseId)
-            .Select(c => c.Name)
+            .Select(c => new { c.Name, c.TimeZoneId })
             .FirstAsync();
+
+        var today = CourseTime.Today(timeProvider, course.TimeZoneId);
+
+        if (waitlist.Date != today)
+        {
+            return Results.NotFound(new { error = "Code not found or waitlist is not active." });
+        }
+
+        var courseName = course.Name;
 
         return Results.Ok(new VerifyCodeResponse(
             waitlist.Id,

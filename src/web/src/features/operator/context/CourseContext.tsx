@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useCallback, type ReactNode } from
 export interface SelectedCourse {
   id: string;
   name: string;
+  timeZoneId: string;
 }
 
 interface CourseContextValue {

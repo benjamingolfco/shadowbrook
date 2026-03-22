@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Shadowbrook.Api.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Shadowbrook.Api.Infrastructure.Data;
 namespace Shadowbrook.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260321230300_AddCourseTimeZone")]
+    partial class AddCourseTimeZone
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,38 +46,6 @@ namespace Shadowbrook.Api.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TeeTimeRequestExpirationPolicies", (string)null);
-                });
-
-            modelBuilder.Entity("Shadowbrook.Api.Infrastructure.Dev.DevSmsMessage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Body")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Direction")
-                        .HasColumnType("int");
-
-                    b.Property<string>("From")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<DateTimeOffset>("Timestamp")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("To")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Timestamp");
-
-                    b.ToTable("DevSmsMessages", (string)null);
                 });
 
             modelBuilder.Entity("Shadowbrook.Api.Models.Course", b =>

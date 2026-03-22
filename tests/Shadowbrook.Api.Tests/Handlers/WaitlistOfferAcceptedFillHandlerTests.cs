@@ -92,6 +92,6 @@ public class WaitlistOfferAcceptedFillHandlerTests
         var repo = Substitute.For<ITeeTimeRequestRepository>();
         repo.ExistsAsync(Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<TimeOnly>()).Returns(false);
         return await TeeTimeRequest.CreateAsync(
-            Guid.NewGuid(), new DateOnly(2026, 6, 15), new TimeOnly(9, 0), golfersNeeded, repo);
+            Guid.NewGuid(), new DateOnly(2026, 6, 15), new TimeOnly(9, 0), golfersNeeded, "America/Chicago", repo);
     }
 }

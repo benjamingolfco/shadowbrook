@@ -3,6 +3,7 @@ export interface Course {
   name: string;
   tenantId: string;
   tenantName?: string;
+  timeZoneId: string;
   streetAddress?: string;
   city?: string;
   state?: string;

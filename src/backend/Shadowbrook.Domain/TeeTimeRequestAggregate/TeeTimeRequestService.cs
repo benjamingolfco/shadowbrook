@@ -11,7 +11,8 @@ public class TeeTimeRequestService(
         Guid courseId,
         DateOnly date,
         TimeOnly teeTime,
-        int golfersNeeded)
+        int golfersNeeded,
+        string timeZoneId)
     {
         var waitlist = await walkUpWaitlistRepository.GetOpenByCourseDateAsync(courseId, date);
 
@@ -20,6 +21,6 @@ public class TeeTimeRequestService(
             throw new WaitlistNotOpenForRequestsException(date);
         }
 
-        return await TeeTimeRequest.CreateAsync(courseId, date, teeTime, golfersNeeded, teeTimeRequestRepository);
+        return await TeeTimeRequest.CreateAsync(courseId, date, teeTime, golfersNeeded, timeZoneId, teeTimeRequestRepository);
     }
 }

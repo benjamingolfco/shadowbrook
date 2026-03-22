@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { formatCourseTime } from '@/lib/course-time';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,12 +26,7 @@ import { CloseWaitlistDialog } from '../components/CloseWaitlistDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { WalkUpWaitlistEntry, WaitlistRequestEntry } from '@/types/waitlist';
 
-function formatJoinedAt(joinedAt: string): string {
-  const date = new Date(joinedAt);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-function QueueTable({ entries }: { entries: WalkUpWaitlistEntry[] }) {
+function QueueTable({ entries, timeZoneId }: { entries: WalkUpWaitlistEntry[]; timeZoneId: string }) {
   if (entries.length === 0) {
     return (
       <p className="text-muted-foreground text-sm py-4">
@@ -61,7 +57,7 @@ function QueueTable({ entries }: { entries: WalkUpWaitlistEntry[] }) {
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{entry.golferName}</TableCell>
                 <TableCell>{entry.groupSize}</TableCell>
-                <TableCell>{formatJoinedAt(entry.joinedAt)}</TableCell>
+                <TableCell>{formatCourseTime(entry.joinedAt, timeZoneId)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -83,7 +79,7 @@ function QueueTable({ entries }: { entries: WalkUpWaitlistEntry[] }) {
                 <span className="text-muted-foreground text-xs">({entry.groupSize})</span>
               )}
             </div>
-            <span className="text-muted-foreground">{formatJoinedAt(entry.joinedAt)}</span>
+            <span className="text-muted-foreground">{formatCourseTime(entry.joinedAt, timeZoneId)}</span>
           </div>
         ))}
       </div>
@@ -283,7 +279,7 @@ export default function WalkUpWaitlist() {
             <TabsTrigger value="requests">Tee Time Requests</TabsTrigger>
           </TabsList>
           <TabsContent value="queue">
-            <QueueTable entries={entries} />
+            <QueueTable entries={entries} timeZoneId={course.timeZoneId} />
           </TabsContent>
           <TabsContent value="requests">
             <RequestsTable requests={requests} />
@@ -367,7 +363,7 @@ export default function WalkUpWaitlist() {
           <TabsTrigger value="requests">Tee Time Requests</TabsTrigger>
         </TabsList>
         <TabsContent value="queue">
-          <QueueTable entries={entries} />
+          <QueueTable entries={entries} timeZoneId={course.timeZoneId} />
         </TabsContent>
         <TabsContent value="requests">
           <RequestsTable requests={requests} />

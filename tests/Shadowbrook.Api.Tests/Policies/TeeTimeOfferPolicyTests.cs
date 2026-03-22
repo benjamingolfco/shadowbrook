@@ -16,7 +16,8 @@ public class TeeTimeOfferPolicyTests
             CourseId = Guid.NewGuid(),
             Date = new DateOnly(2026, 3, 20),
             TeeTime = new TimeOnly(10, 0),
-            GolfersNeeded = 2
+            GolfersNeeded = 2,
+            TimeZoneId = TestTimeZones.Chicago
         };
 
         var (policy, command) = TeeTimeOfferPolicy.Start(evt);

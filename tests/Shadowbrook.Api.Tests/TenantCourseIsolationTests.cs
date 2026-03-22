@@ -19,7 +19,7 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
         var tenantAId = await CreateTestTenantAsync("Tenant A");
         var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
         createRequest.Headers.Add("X-Tenant-Id", tenantAId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = "Tenant A Course" });
+        createRequest.Content = JsonContent.Create(new { Name = "Tenant A Course", TimeZoneId = TestTimeZones.Chicago });
         var createResponse = await this.client.SendAsync(createRequest);
         var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
@@ -42,17 +42,17 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
 
         var requestA = new HttpRequestMessage(HttpMethod.Post, "/courses");
         requestA.Headers.Add("X-Tenant-Id", tenantAId.ToString());
-        requestA.Content = JsonContent.Create(new { Name = "Tenant A Course 1" });
+        requestA.Content = JsonContent.Create(new { Name = "Tenant A Course 1", TimeZoneId = TestTimeZones.Chicago });
         await this.client.SendAsync(requestA);
 
         var requestA2 = new HttpRequestMessage(HttpMethod.Post, "/courses");
         requestA2.Headers.Add("X-Tenant-Id", tenantAId.ToString());
-        requestA2.Content = JsonContent.Create(new { Name = "Tenant A Course 2" });
+        requestA2.Content = JsonContent.Create(new { Name = "Tenant A Course 2", TimeZoneId = TestTimeZones.Chicago });
         await this.client.SendAsync(requestA2);
 
         var requestB = new HttpRequestMessage(HttpMethod.Post, "/courses");
         requestB.Headers.Add("X-Tenant-Id", tenantBId.ToString());
-        requestB.Content = JsonContent.Create(new { Name = "Tenant B Course 1" });
+        requestB.Content = JsonContent.Create(new { Name = "Tenant B Course 1", TimeZoneId = TestTimeZones.Chicago });
         await this.client.SendAsync(requestB);
 
         // Act - Get courses for Tenant A
@@ -77,12 +77,12 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
 
         var requestA = new HttpRequestMessage(HttpMethod.Post, "/courses");
         requestA.Headers.Add("X-Tenant-Id", tenantAId.ToString());
-        requestA.Content = JsonContent.Create(new { Name = "Admin Tenant A Course" });
+        requestA.Content = JsonContent.Create(new { Name = "Admin Tenant A Course", TimeZoneId = TestTimeZones.Chicago });
         await this.client.SendAsync(requestA);
 
         var requestB = new HttpRequestMessage(HttpMethod.Post, "/courses");
         requestB.Headers.Add("X-Tenant-Id", tenantBId.ToString());
-        requestB.Content = JsonContent.Create(new { Name = "Admin Tenant B Course" });
+        requestB.Content = JsonContent.Create(new { Name = "Admin Tenant B Course", TimeZoneId = TestTimeZones.Chicago });
         await this.client.SendAsync(requestB);
 
         // Act - Get all courses without tenant header (admin path)
@@ -99,7 +99,7 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
     public async Task CreateCourse_WithoutTenantHeaderOrBody_ReturnsBadRequest()
     {
         // Act
-        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "No Tenant Course" });
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "No Tenant Course", TimeZoneId = TestTimeZones.Chicago });
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -114,7 +114,7 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
         var tenantId = await CreateTestTenantAsync("Body Tenant");
 
         // Act - Create course with TenantId in body (no header)
-        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Body Tenant Course", TenantId = tenantId });
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Body Tenant Course", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -130,7 +130,7 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
         var tenantAId = await CreateTestTenantAsync("Tenant A Settings");
         var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
         createRequest.Headers.Add("X-Tenant-Id", tenantAId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = "Settings Test Course" });
+        createRequest.Content = JsonContent.Create(new { Name = "Settings Test Course", TimeZoneId = TestTimeZones.Chicago });
         var createResponse = await this.client.SendAsync(createRequest);
         var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
@@ -157,7 +157,7 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
         var tenantAId = await CreateTestTenantAsync("Tenant A Pricing");
         var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
         createRequest.Headers.Add("X-Tenant-Id", tenantAId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = "Pricing Test Course" });
+        createRequest.Content = JsonContent.Create(new { Name = "Pricing Test Course", TimeZoneId = TestTimeZones.Chicago });
         var createResponse = await this.client.SendAsync(createRequest);
         var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 

@@ -1,3 +1,4 @@
+using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.TeeTimeRequestAggregate.Events;
 using Wolverine;
 using Wolverine.Persistence.Sagas;
@@ -8,12 +9,14 @@ public class TeeTimeRequestExpirationPolicy : Saga
 {
     public Guid Id { get; set; }
 
-    public static (TeeTimeRequestExpirationPolicy, TeeTimeRequestExpirationTimeout) Start(TeeTimeRequestAdded evt)
+    public static (TeeTimeRequestExpirationPolicy, TeeTimeRequestExpirationTimeout) Start(
+        TeeTimeRequestAdded evt,
+        TimeProvider timeProvider)
     {
         var policy = new TeeTimeRequestExpirationPolicy { Id = evt.TeeTimeRequestId };
 
-        var teeTimeUtc = evt.Date.ToDateTime(evt.TeeTime, DateTimeKind.Utc);
-        var delay = teeTimeUtc - DateTimeOffset.UtcNow;
+        var teeTimeUtc = CourseTime.ToUtc(evt.Date, evt.TeeTime, evt.TimeZoneId);
+        var delay = teeTimeUtc - timeProvider.GetUtcNow();
         if (delay < TimeSpan.Zero)
         {
             delay = TimeSpan.Zero;

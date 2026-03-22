@@ -30,7 +30,7 @@ public class TeeTimeRequestServiceTests
 
         var service = new TeeTimeRequestService(this.teeTimeRequestRepo, this.waitlistRepo);
 
-        var request = await service.CreateAsync(courseId, date, teeTime, 2);
+        var request = await service.CreateAsync(courseId, date, teeTime, 2, "America/Chicago");
 
         Assert.Equal(courseId, request.CourseId);
         Assert.Equal(date, request.Date);
@@ -49,7 +49,7 @@ public class TeeTimeRequestServiceTests
         var service = new TeeTimeRequestService(this.teeTimeRequestRepo, this.waitlistRepo);
 
         await Assert.ThrowsAsync<WaitlistNotOpenForRequestsException>(
-            () => service.CreateAsync(courseId, date, new TimeOnly(10, 0), 2));
+            () => service.CreateAsync(courseId, date, new TimeOnly(10, 0), 2, "America/Chicago"));
     }
 
     [Fact]
@@ -67,6 +67,6 @@ public class TeeTimeRequestServiceTests
         var service = new TeeTimeRequestService(this.teeTimeRequestRepo, this.waitlistRepo);
 
         await Assert.ThrowsAsync<WaitlistNotOpenForRequestsException>(
-            () => service.CreateAsync(courseId, date, new TimeOnly(10, 0), 2));
+            () => service.CreateAsync(courseId, date, new TimeOnly(10, 0), 2, "America/Chicago"));
     }
 }

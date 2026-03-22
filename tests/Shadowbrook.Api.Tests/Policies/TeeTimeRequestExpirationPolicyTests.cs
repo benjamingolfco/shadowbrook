@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Time.Testing;
 using Shadowbrook.Api.Features.WalkUpWaitlist;
 using Shadowbrook.Domain.TeeTimeRequestAggregate.Events;
 
@@ -6,22 +7,45 @@ namespace Shadowbrook.Api.Tests.Policies;
 public class TeeTimeRequestExpirationPolicyTests
 {
     [Fact]
-    public void Start_TeeTimeRequestAdded_SchedulesTimeout()
+    public void Start_SchedulesTimeoutWithCorrectDelay()
     {
-        var requestId = Guid.NewGuid();
+        // 2:30 PM Chicago (CDT) = 7:30 PM UTC; current time is 5:00 PM UTC → 2.5 hour delay
+        var fakeTime = new FakeTimeProvider(new DateTimeOffset(2026, 3, 25, 17, 0, 0, TimeSpan.Zero));
         var evt = new TeeTimeRequestAdded
         {
-            TeeTimeRequestId = requestId,
+            TeeTimeRequestId = Guid.NewGuid(),
             CourseId = Guid.NewGuid(),
             Date = new DateOnly(2026, 3, 25),
             TeeTime = new TimeOnly(14, 30),
-            GolfersNeeded = 2
+            GolfersNeeded = 2,
+            TimeZoneId = TestTimeZones.Chicago
         };
 
-        var (policy, timeout) = TeeTimeRequestExpirationPolicy.Start(evt);
+        var (policy, timeout) = TeeTimeRequestExpirationPolicy.Start(evt, fakeTime);
 
-        Assert.Equal(requestId, policy.Id);
-        Assert.Equal(requestId, timeout.TeeTimeRequestId);
+        Assert.Equal(evt.TeeTimeRequestId, policy.Id);
+        Assert.Equal(evt.TeeTimeRequestId, timeout.TeeTimeRequestId);
+        Assert.Equal(TimeSpan.FromHours(2.5), timeout.Delay);
+    }
+
+    [Fact]
+    public void Start_PastTeeTime_ClampsDelayToZero()
+    {
+        // Tee time is 2:30 PM Chicago (7:30 PM UTC), current time is 8:00 PM UTC → past
+        var fakeTime = new FakeTimeProvider(new DateTimeOffset(2026, 3, 25, 20, 0, 0, TimeSpan.Zero));
+        var evt = new TeeTimeRequestAdded
+        {
+            TeeTimeRequestId = Guid.NewGuid(),
+            CourseId = Guid.NewGuid(),
+            Date = new DateOnly(2026, 3, 25),
+            TeeTime = new TimeOnly(14, 30),
+            GolfersNeeded = 2,
+            TimeZoneId = TestTimeZones.Chicago
+        };
+
+        var (_, timeout) = TeeTimeRequestExpirationPolicy.Start(evt, fakeTime);
+
+        Assert.Equal(TimeSpan.Zero, timeout.Delay);
     }
 
     [Fact]
