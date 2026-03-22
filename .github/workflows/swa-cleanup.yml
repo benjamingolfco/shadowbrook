@@ -1,0 +1,54 @@
+name: SWA Cleanup
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  cleanup:
+    name: List & Delete Stale SWA Environments
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: List SWA environments
+        run: |
+          echo "### Current SWA Environments" >> "$GITHUB_STEP_SUMMARY"
+          az staticwebapp environment list \
+            --name shadowbrook-web-dev \
+            --resource-group shadowbrook-dev-rg \
+            --output table | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Delete staging environments
+        run: |
+          # Get all non-default environments
+          ENVS=$(az staticwebapp environment list \
+            --name shadowbrook-web-dev \
+            --resource-group shadowbrook-dev-rg \
+            --query "[?buildId != 'default'].buildId" \
+            --output tsv)
+
+          if [ -z "$ENVS" ]; then
+            echo "No staging environments to delete."
+            exit 0
+          fi
+
+          for env in $ENVS; do
+            echo "Deleting environment: $env"
+            az staticwebapp environment delete \
+              --name shadowbrook-web-dev \
+              --resource-group shadowbrook-dev-rg \
+              --environment-name "$env" \
+              --yes
+          done
+
+          echo "### Deleted Environments" >> "$GITHUB_STEP_SUMMARY"
+          echo "$ENVS" >> "$GITHUB_STEP_SUMMARY"
