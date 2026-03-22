@@ -44,6 +44,9 @@ export default function CodeEntry({ onVerified, initialCode }: CodeEntryProps) {
     if (err.status === 404) {
       return 'Code not found. Check the code posted at the course and try again.';
     }
+    if (err.status === 410) {
+      return 'This waitlist is closed and is no longer accepting new golfers.';
+    }
     return 'Something went wrong. Please try again.';
   }
 

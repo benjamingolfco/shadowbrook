@@ -40,21 +40,21 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IAsyn
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
 
         var body = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.Equal("Code not found or waitlist is not active.", body!.Error);
+        Assert.Equal("Code not found. Check the code posted at the course and try again.", body!.Error);
     }
 
     [Fact]
-    public async Task Verify_ClosedWaitlistCode_Returns404()
+    public async Task Verify_ClosedWaitlistCode_Returns410()
     {
         var (_, courseId, shortCode) = await CreateOpenWaitlistAsync();
         await PostCloseWaitlistAsync(courseId);
 
         var response = await PostVerifyAsync(shortCode);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Gone, response.StatusCode);
 
         var body = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.Equal("Code not found or waitlist is not active.", body!.Error);
+        Assert.Equal("This waitlist is closed.", body!.Error);
     }
 
     // -------------------------------------------------------------------------
@@ -228,7 +228,7 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IAsyn
     // -------------------------------------------------------------------------
 
     [Fact]
-    public async Task Join_ExistingGolfer_EntryUsesGolferName()
+    public async Task Join_ExistingGolfer_ReturnsSubmittedName()
     {
         // First join creates golfer as "Original Name"
         var (_, _, shortCode1) = await CreateOpenWaitlistAsync();
@@ -239,15 +239,15 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IAsyn
         var b1 = await r1.Content.ReadFromJsonAsync<JoinWaitlistResponse>();
         Assert.Equal("Original Name", b1!.GolferName);
 
-        // Second join on different waitlist with different submitted name
+        // Second join on different waitlist with a different submitted name (same phone)
         var (_, _, shortCode2) = await CreateOpenWaitlistAsync();
         var v2 = await (await PostVerifyAsync(shortCode2)).Content.ReadFromJsonAsync<VerifyCodeResponse>();
         var r2 = await PostJoinAsync(v2!.CourseWaitlistId, "Changed", "Name", phone);
         Assert.Equal(HttpStatusCode.Created, r2.StatusCode);
 
-        // Entry uses the golfer entity's name (source of truth)
+        // Response uses the submitted name, not the stale DB name
         var b2 = await r2.Content.ReadFromJsonAsync<JoinWaitlistResponse>();
-        Assert.Equal("Original Name", b2!.GolferName);
+        Assert.Equal("Changed Name", b2!.GolferName);
     }
 
     [Fact]

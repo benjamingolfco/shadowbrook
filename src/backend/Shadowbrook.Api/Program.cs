@@ -85,7 +85,8 @@ builder.Host.UseWolverine(opts =>
 });
 
 builder.Services.AddSingleton<InMemoryTextMessageService>();
-builder.Services.AddSingleton<ITextMessageService>(sp => sp.GetRequiredService<InMemoryTextMessageService>());
+builder.Services.AddScoped<DatabaseTextMessageService>();
+builder.Services.AddScoped<ITextMessageService>(sp => sp.GetRequiredService<DatabaseTextMessageService>());
 builder.Services.AddScoped<IGolferRepository, GolferRepository>();
 builder.Services.AddScoped<ITeeTimeRequestRepository, TeeTimeRequestRepository>();
 builder.Services.AddScoped<TeeTimeRequestService>();
