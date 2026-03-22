@@ -172,11 +172,13 @@ public static class WalkUpWaitlistEndpoints
             .ToListAsync();
         var position = activeEntries.Count(t => t <= joinedAt);
 
+        var submittedName = $"{request.FirstName.Trim()} {request.LastName.Trim()}";
+
         return Results.Created(
             $"/courses/{courseId}/walkup-waitlist/entries/{entry.Id}",
             new AddGolferToWaitlistResponse(
                 entry.Id,
-                golfer.FullName,
+                submittedName,
                 golfer.Phone,
                 entry.GroupSize,
                 position,
