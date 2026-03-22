@@ -31,6 +31,7 @@ const mockCourse1 = {
   id: 'course-1',
   name: 'Augusta National',
   tenantId: 'tenant-1',
+  timeZoneId: 'America/New_York',
   city: 'Augusta',
   state: 'GA',
   createdAt: '2024-01-01T00:00:00Z',
@@ -41,6 +42,7 @@ const mockCourse2 = {
   id: 'course-2',
   name: 'Pebble Beach',
   tenantId: 'tenant-1',
+  timeZoneId: 'America/Los_Angeles',
   city: 'Pebble Beach',
   state: 'CA',
   createdAt: '2024-01-01T00:00:00Z',
@@ -59,7 +61,7 @@ beforeEach(() => {
   });
 
   mockUseCourseContext.mockReturnValue({
-    course: { id: 'course-1', name: 'Augusta National' },
+    course: { id: 'course-1', name: 'Augusta National', timeZoneId: 'America/New_York' },
     selectCourse: mockSelectCourse,
     clearCourse: mockClearCourse,
     isDirty: false,
@@ -159,7 +161,7 @@ describe('CourseSwitcher', () => {
 
     render(<CourseSwitcher />);
 
-    expect(mockSelectCourse).toHaveBeenCalledWith({ id: 'course-1', name: 'Augusta National' });
+    expect(mockSelectCourse).toHaveBeenCalledWith({ id: 'course-1', name: 'Augusta National', timeZoneId: 'America/New_York' });
   });
 
   it('displays single course as plain text when course is selected', () => {
@@ -200,7 +202,7 @@ describe('CourseSwitcher', () => {
     } as unknown as ReturnType<typeof useCourses>);
 
     mockUseCourseContext.mockReturnValue({
-      course: { id: 'course-1', name: 'Augusta National' },
+      course: { id: 'course-1', name: 'Augusta National', timeZoneId: 'America/New_York' },
       selectCourse: mockSelectCourse,
       clearCourse: mockClearCourse,
       isDirty: false,
@@ -215,7 +217,7 @@ describe('CourseSwitcher', () => {
 
   it('shows AlertDialog when switching course with dirty forms', () => {
     mockUseCourseContext.mockReturnValue({
-      course: { id: 'course-1', name: 'Augusta National' },
+      course: { id: 'course-1', name: 'Augusta National', timeZoneId: 'America/New_York' },
       selectCourse: mockSelectCourse,
       clearCourse: mockClearCourse,
       isDirty: true,
@@ -239,7 +241,7 @@ describe('CourseSwitcher', () => {
 
   it('does not call selectCourse immediately when dirty and course changes', () => {
     mockUseCourseContext.mockReturnValue({
-      course: { id: 'course-1', name: 'Augusta National' },
+      course: { id: 'course-1', name: 'Augusta National', timeZoneId: 'America/New_York' },
       selectCourse: mockSelectCourse,
       clearCourse: mockClearCourse,
       isDirty: true,
@@ -258,7 +260,7 @@ describe('CourseSwitcher', () => {
     // We test this by verifying the component renders a select with two options
     // and that the initial state is correct (not dirty, multi-course)
     mockUseCourseContext.mockReturnValue({
-      course: { id: 'course-1', name: 'Augusta National' },
+      course: { id: 'course-1', name: 'Augusta National', timeZoneId: 'America/New_York' },
       selectCourse: mockSelectCourse,
       clearCourse: mockClearCourse,
       isDirty: false,

@@ -20,7 +20,7 @@ const mockUseCloseWalkUpWaitlist = vi.mocked(useCloseWalkUpWaitlist);
 const mockUseAddGolferToWaitlist = vi.mocked(useAddGolferToWaitlist);
 const mockUseCreateWaitlistRequest = vi.mocked(useCreateWaitlistRequest);
 
-const mockCourse = { id: 'course-1', name: 'Pine Valley' };
+const mockCourse = { id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' };
 
 const openWaitlist = {
   id: 'wl-1',

@@ -12,7 +12,7 @@ public class TeeTimeRequestCloseTests
     public async Task Close_PendingRequest_SetsClosedStatusAndRaisesEvent()
     {
         var request = await TeeTimeRequest.CreateAsync(
-            Guid.NewGuid(), new DateOnly(2026, 3, 20), new TimeOnly(10, 0), 2, this.repository);
+            Guid.NewGuid(), new DateOnly(2026, 3, 20), new TimeOnly(10, 0), 2, "America/Chicago", this.repository);
         request.ClearDomainEvents();
 
         request.Close();
@@ -27,7 +27,7 @@ public class TeeTimeRequestCloseTests
     public async Task Close_AlreadyClosed_DoesNothing()
     {
         var request = await TeeTimeRequest.CreateAsync(
-            Guid.NewGuid(), new DateOnly(2026, 3, 20), new TimeOnly(10, 0), 2, this.repository);
+            Guid.NewGuid(), new DateOnly(2026, 3, 20), new TimeOnly(10, 0), 2, "America/Chicago", this.repository);
         request.Close();
         request.ClearDomainEvents();
 
@@ -41,7 +41,7 @@ public class TeeTimeRequestCloseTests
     public async Task Close_FulfilledRequest_DoesNothing()
     {
         var request = await TeeTimeRequest.CreateAsync(
-            Guid.NewGuid(), new DateOnly(2026, 3, 20), new TimeOnly(10, 0), 1, this.repository);
+            Guid.NewGuid(), new DateOnly(2026, 3, 20), new TimeOnly(10, 0), 1, "America/Chicago", this.repository);
         request.Fill(Guid.NewGuid(), groupSize: 1, Guid.NewGuid(), Guid.NewGuid());
         request.ClearDomainEvents();
 

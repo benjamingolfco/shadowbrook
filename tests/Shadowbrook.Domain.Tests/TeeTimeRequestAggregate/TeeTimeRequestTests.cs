@@ -16,7 +16,7 @@ public class TeeTimeRequestTests
         var date = new DateOnly(2026, 3, 6);
         var teeTime = new TimeOnly(10, 0);
 
-        var request = await TeeTimeRequest.CreateAsync(courseId, date, teeTime, 2, this.repository);
+        var request = await TeeTimeRequest.CreateAsync(courseId, date, teeTime, 2, "America/Chicago", this.repository);
 
         Assert.NotEqual(Guid.Empty, request.Id);
         Assert.Equal(courseId, request.CourseId);
@@ -44,7 +44,7 @@ public class TeeTimeRequestTests
         this.repository.ExistsAsync(courseId, date, teeTime).Returns(true);
 
         await Assert.ThrowsAsync<DuplicateTeeTimeRequestException>(
-            () => TeeTimeRequest.CreateAsync(courseId, date, teeTime, 2, this.repository));
+            () => TeeTimeRequest.CreateAsync(courseId, date, teeTime, 2, "America/Chicago", this.repository));
     }
 
     [Fact]
@@ -53,8 +53,8 @@ public class TeeTimeRequestTests
         var courseId = Guid.NewGuid();
         var date = new DateOnly(2026, 3, 6);
 
-        var first = await TeeTimeRequest.CreateAsync(courseId, date, new TimeOnly(10, 0), 2, this.repository);
-        var second = await TeeTimeRequest.CreateAsync(courseId, date, new TimeOnly(11, 0), 3, this.repository);
+        var first = await TeeTimeRequest.CreateAsync(courseId, date, new TimeOnly(10, 0), 2, "America/Chicago", this.repository);
+        var second = await TeeTimeRequest.CreateAsync(courseId, date, new TimeOnly(11, 0), 3, "America/Chicago", this.repository);
 
         Assert.NotEqual(first.Id, second.Id);
     }
@@ -63,7 +63,7 @@ public class TeeTimeRequestTests
     public async Task Fill_Success_AddsSlotFillAndRaisesEvent()
     {
         var request = await TeeTimeRequest.CreateAsync(
-            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 4, this.repository);
+            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 4, "America/Chicago", this.repository);
         request.ClearDomainEvents();
 
         var golferId = Guid.NewGuid();
@@ -86,7 +86,7 @@ public class TeeTimeRequestTests
     public async Task Fill_GroupTooLarge_RaisesFailedEventAndReturnsFailure()
     {
         var request = await TeeTimeRequest.CreateAsync(
-            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 2, this.repository);
+            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 2, "America/Chicago", this.repository);
         request.ClearDomainEvents();
 
         var offerId = Guid.NewGuid();
@@ -107,7 +107,7 @@ public class TeeTimeRequestTests
     public async Task Fill_AlreadyFulfilled_RaisesFailedEventAndReturnsFailure()
     {
         var request = await TeeTimeRequest.CreateAsync(
-            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 1, this.repository);
+            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 1, "America/Chicago", this.repository);
         request.Fill(Guid.NewGuid(), groupSize: 1, Guid.NewGuid(), Guid.NewGuid()); // fills all slots
         request.ClearDomainEvents();
 
@@ -128,7 +128,7 @@ public class TeeTimeRequestTests
     public async Task Fill_ExactFit_MarksFulfilled_RaisesBothEvents()
     {
         var request = await TeeTimeRequest.CreateAsync(
-            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 2, this.repository);
+            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 2, "America/Chicago", this.repository);
         request.ClearDomainEvents();
 
         request.Fill(Guid.NewGuid(), groupSize: 2, Guid.NewGuid(), Guid.NewGuid());
@@ -143,7 +143,7 @@ public class TeeTimeRequestTests
     public async Task Unfill_RemovesSlotFill_ResetsToPending()
     {
         var request = await TeeTimeRequest.CreateAsync(
-            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 1, this.repository);
+            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 1, "America/Chicago", this.repository);
         var bookingId = Guid.NewGuid();
         request.Fill(Guid.NewGuid(), groupSize: 1, bookingId, Guid.NewGuid());
         Assert.Equal(TeeTimeRequestStatus.Fulfilled, request.Status);
@@ -161,7 +161,7 @@ public class TeeTimeRequestTests
         var golferId = Guid.NewGuid();
         var bookingId = Guid.NewGuid();
         var request = await TeeTimeRequest.CreateAsync(
-            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 2, this.repository);
+            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 2, "America/Chicago", this.repository);
         request.Fill(golferId, groupSize: 1, bookingId, Guid.NewGuid());
         request.ClearDomainEvents();
 
@@ -178,7 +178,7 @@ public class TeeTimeRequestTests
     public async Task Unfill_UnknownBookingId_RaisesNoEvent()
     {
         var request = await TeeTimeRequest.CreateAsync(
-            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 2, this.repository);
+            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 2, "America/Chicago", this.repository);
         request.ClearDomainEvents();
 
         request.Unfill(Guid.NewGuid());
@@ -190,7 +190,7 @@ public class TeeTimeRequestTests
     public async Task RemainingSlots_CalculatesCorrectly()
     {
         var request = await TeeTimeRequest.CreateAsync(
-            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 4, this.repository);
+            Guid.NewGuid(), new DateOnly(2026, 3, 16), new TimeOnly(10, 0), 4, "America/Chicago", this.repository);
 
         Assert.Equal(4, request.RemainingSlots);
 

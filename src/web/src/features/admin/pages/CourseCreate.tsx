@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { useNavigate, Link } from 'react-router';
+import { getBrowserTimeZone } from '@/lib/course-time';
 import { api } from '@/lib/api-client';
 import type { Course } from '@/types/course';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ import { useTenants } from '../hooks/useTenants';
 const courseSchema = z.object({
   tenantId: z.string().min(1, 'Tenant assignment is required'),
   name: z.string().min(1, 'Course name is required'),
+  timeZoneId: z.string().min(1, 'Timezone is required'),
   streetAddress: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
@@ -47,6 +49,7 @@ export default function CourseCreate() {
     defaultValues: {
       tenantId: '',
       name: '',
+      timeZoneId: getBrowserTimeZone(),
       streetAddress: '',
       city: '',
       state: '',
@@ -130,6 +133,20 @@ export default function CourseCreate() {
                 <FormLabel>Course Name *</FormLabel>
                 <FormControl>
                   <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="timeZoneId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Timezone</FormLabel>
+                <FormControl>
+                  <Input placeholder="America/Chicago" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

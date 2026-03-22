@@ -25,7 +25,7 @@ public class CloseTeeTimeRequestHandlerTests
     {
         var request = await TeeTimeRequest.CreateAsync(
             Guid.NewGuid(), new DateOnly(2026, 3, 20), new TimeOnly(10, 0), 2,
-            Substitute.For<ITeeTimeRequestRepository>());
+            "America/Chicago", Substitute.For<ITeeTimeRequestRepository>());
         request.ClearDomainEvents();
 
         this.requestRepo.GetByIdAsync(request.Id).Returns(request);

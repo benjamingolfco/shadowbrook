@@ -19,7 +19,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         var (tenantId, tenantName) = await CreateTestTenantAsync();
         var request = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request.Content = JsonContent.Create(new { Name = "Test Course" });
+        request.Content = JsonContent.Create(new { Name = "Test Course", TimeZoneId = TestTimeZones.Chicago });
         await this.client.SendAsync(request);
 
         var getRequest = new HttpRequestMessage(HttpMethod.Get, "/courses");
@@ -39,7 +39,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         var (tenantId, tenantName) = await CreateTestTenantAsync();
         var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
         createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = "Test Course for Tenant Info" });
+        createRequest.Content = JsonContent.Create(new { Name = "Test Course for Tenant Info", TimeZoneId = TestTimeZones.Chicago });
         var createResponse = await this.client.SendAsync(createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
@@ -61,7 +61,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         var (tenantId, _) = await CreateTestTenantAsync();
         var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
         createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = "Lookup Course" });
+        createRequest.Content = JsonContent.Create(new { Name = "Lookup Course", TimeZoneId = TestTimeZones.Chicago });
         var createResponse = await this.client.SendAsync(createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
@@ -81,7 +81,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         var (tenantId, tenantName) = await CreateTestTenantAsync();
         var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
         createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = "Lookup Course with Tenant Info" });
+        createRequest.Content = JsonContent.Create(new { Name = "Lookup Course with Tenant Info", TimeZoneId = TestTimeZones.Chicago });
         var createResponse = await this.client.SendAsync(createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
@@ -121,7 +121,8 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
             State = "MN",
             ZipCode = "55439",
             ContactEmail = "pro@braemargolf.com",
-            ContactPhone = "952-826-6799"
+            ContactPhone = "952-826-6799",
+            TimeZoneId = TestTimeZones.Chicago
         });
 
         var response = await this.client.SendAsync(httpRequest);
@@ -131,6 +132,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         var body = await response.Content.ReadFromJsonAsync<CourseResponse>();
         Assert.NotNull(body);
         Assert.Equal("Braemar Golf Course", body!.Name);
+        Assert.Equal(TestTimeZones.Chicago, body.TimeZoneId);
         Assert.NotEqual(Guid.Empty, body.Id);
         Assert.NotNull(body.Tenant);
         Assert.Equal(tenantId, body.Tenant.Id);
@@ -144,12 +146,12 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
 
         var request1 = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request1.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request1.Content = JsonContent.Create(new { Name = "Duplicate Course" });
+        request1.Content = JsonContent.Create(new { Name = "Duplicate Course", TimeZoneId = TestTimeZones.Chicago });
         await this.client.SendAsync(request1);
 
         var request2 = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request2.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request2.Content = JsonContent.Create(new { Name = "Duplicate Course" });
+        request2.Content = JsonContent.Create(new { Name = "Duplicate Course", TimeZoneId = TestTimeZones.Chicago });
         var response = await this.client.SendAsync(request2);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -162,12 +164,12 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
 
         var request1 = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request1.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request1.Content = JsonContent.Create(new { Name = "Pine Valley" });
+        request1.Content = JsonContent.Create(new { Name = "Pine Valley", TimeZoneId = TestTimeZones.Chicago });
         await this.client.SendAsync(request1);
 
         var request2 = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request2.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request2.Content = JsonContent.Create(new { Name = "PINE VALLEY" });
+        request2.Content = JsonContent.Create(new { Name = "PINE VALLEY", TimeZoneId = TestTimeZones.Chicago });
         var response = await this.client.SendAsync(request2);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -182,12 +184,12 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
 
         var request1 = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request1.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request1.Content = JsonContent.Create(new { Name = "Pine%Valley" });
+        request1.Content = JsonContent.Create(new { Name = "Pine%Valley", TimeZoneId = TestTimeZones.Chicago });
         await this.client.SendAsync(request1);
 
         var request2 = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request2.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request2.Content = JsonContent.Create(new { Name = "Pine%Valley" });
+        request2.Content = JsonContent.Create(new { Name = "Pine%Valley", TimeZoneId = TestTimeZones.Chicago });
         var response = await this.client.SendAsync(request2);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -201,12 +203,12 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
 
         var request1 = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request1.Headers.Add("X-Tenant-Id", tenantId1.ToString());
-        request1.Content = JsonContent.Create(new { Name = "Shared Name Course" });
+        request1.Content = JsonContent.Create(new { Name = "Shared Name Course", TimeZoneId = TestTimeZones.Chicago });
         await this.client.SendAsync(request1);
 
         var request2 = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request2.Headers.Add("X-Tenant-Id", tenantId2.ToString());
-        request2.Content = JsonContent.Create(new { Name = "Shared Name Course" });
+        request2.Content = JsonContent.Create(new { Name = "Shared Name Course", TimeZoneId = TestTimeZones.Chicago });
         var response = await this.client.SendAsync(request2);
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -236,6 +238,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         string? ZipCode,
         string? ContactEmail,
         string? ContactPhone,
+        string TimeZoneId,
         DateTimeOffset CreatedAt,
         DateTimeOffset UpdatedAt,
         TenantInfo Tenant);

@@ -19,7 +19,7 @@ public class TeeTimeRequest : Entity
 
     private TeeTimeRequest() { } // EF
 
-    private TeeTimeRequest(Guid courseId, DateOnly date, TimeOnly teeTime, int golfersNeeded)
+    private TeeTimeRequest(Guid courseId, DateOnly date, TimeOnly teeTime, int golfersNeeded, string timeZoneId)
     {
         var now = DateTimeOffset.UtcNow;
         Id = Guid.CreateVersion7();
@@ -36,7 +36,8 @@ public class TeeTimeRequest : Entity
             CourseId = courseId,
             Date = date,
             TeeTime = teeTime,
-            GolfersNeeded = golfersNeeded
+            GolfersNeeded = golfersNeeded,
+            TimeZoneId = timeZoneId
         });
     }
 
@@ -131,6 +132,7 @@ public class TeeTimeRequest : Entity
         DateOnly date,
         TimeOnly teeTime,
         int golfersNeeded,
+        string timeZoneId,
         ITeeTimeRequestRepository repository)
     {
         var exists = await repository.ExistsAsync(courseId, date, teeTime);
@@ -139,6 +141,6 @@ public class TeeTimeRequest : Entity
             throw new DuplicateTeeTimeRequestException(teeTime);
         }
 
-        return new TeeTimeRequest(courseId, date, teeTime, golfersNeeded);
+        return new TeeTimeRequest(courseId, date, teeTime, golfersNeeded, timeZoneId);
     }
 }

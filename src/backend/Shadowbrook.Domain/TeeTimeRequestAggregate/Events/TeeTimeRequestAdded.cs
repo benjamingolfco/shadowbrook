@@ -11,4 +11,5 @@ public record TeeTimeRequestAdded : IDomainEvent
     public required DateOnly Date { get; init; }
     public required TimeOnly TeeTime { get; init; }
     public required int GolfersNeeded { get; init; }
+    public required string TimeZoneId { get; init; }
 }

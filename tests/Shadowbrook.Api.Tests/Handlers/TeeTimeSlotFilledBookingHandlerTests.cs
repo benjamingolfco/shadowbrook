@@ -115,6 +115,6 @@ public class TeeTimeSlotFilledBookingHandlerTests
         var repo = Substitute.For<ITeeTimeRequestRepository>();
         repo.ExistsAsync(Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<TimeOnly>()).Returns(false);
         return await TeeTimeRequest.CreateAsync(
-            Guid.NewGuid(), new DateOnly(2026, 6, 15), new TimeOnly(9, 0), 2, repo);
+            Guid.NewGuid(), new DateOnly(2026, 6, 15), new TimeOnly(9, 0), 2, "America/Chicago", repo);
     }
 }
