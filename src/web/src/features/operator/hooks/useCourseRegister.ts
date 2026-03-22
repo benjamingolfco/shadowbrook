@@ -5,6 +5,7 @@ import type { Course } from '@/types/course';
 
 export interface RegisterCourseRequest {
   name: string;
+  timeZoneId: string;
   streetAddress?: string;
   city?: string;
   state?: string;

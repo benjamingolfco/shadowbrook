@@ -17,7 +17,7 @@ public class TeeTimeSettingsTests(TestWebApplicationFactory factory) : IAsyncLif
         var tenantId = await CreateTestTenantAsync();
         var request = new HttpRequestMessage(HttpMethod.Post, "/courses");
         request.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request.Content = JsonContent.Create(new { Name = "Test Course" });
+        request.Content = JsonContent.Create(new { Name = "Test Course", TimeZoneId = TestTimeZones.Chicago });
         var response = await this.client.SendAsync(request);
         var course = await response.Content.ReadFromJsonAsync<CourseResponse>();
         return course!.Id;

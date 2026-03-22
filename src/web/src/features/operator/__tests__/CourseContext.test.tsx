@@ -12,7 +12,7 @@ function TestConsumer() {
       <span data-testid="course-name">{course?.name ?? 'null'}</span>
       <span data-testid="is-dirty">{String(isDirty)}</span>
       <button
-        onClick={() => selectCourse({ id: 'course-1', name: 'Pine Valley' })}
+        onClick={() => selectCourse({ id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' })}
         data-testid="select-btn"
       >
         Select Course
@@ -62,7 +62,7 @@ describe('CourseContext', () => {
 
   it('restores course from localStorage on mount', () => {
     const stored = {
-      course: { id: 'course-1', name: 'Pine Valley' },
+      course: { id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' },
       tenantId: 'tenant-1',
     };
     localStorage.setItem('shadowbrook-dev-course', JSON.stringify(stored));
@@ -84,10 +84,10 @@ describe('CourseContext', () => {
     expect(screen.getByTestId('course-name').textContent).toBe('Pine Valley');
 
     const stored = JSON.parse(localStorage.getItem('shadowbrook-dev-course') ?? 'null') as {
-      course: { id: string; name: string };
+      course: { id: string; name: string; timeZoneId: string };
       tenantId: string;
     };
-    expect(stored.course).toEqual({ id: 'course-1', name: 'Pine Valley' });
+    expect(stored.course).toEqual({ id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' });
   });
 
   it('clearCourse resets state and removes localStorage', () => {
@@ -110,7 +110,7 @@ describe('CourseContext', () => {
   it('clears course when tenantId changes (remount via key)', () => {
     // Store a course for tenant-1
     const stored = {
-      course: { id: 'course-1', name: 'Pine Valley' },
+      course: { id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' },
       tenantId: 'tenant-1',
     };
     localStorage.setItem('shadowbrook-dev-course', JSON.stringify(stored));
@@ -144,7 +144,7 @@ describe('CourseContext', () => {
 
   it('does not restore course when tenantId in storage mismatches current tenant', () => {
     const stored = {
-      course: { id: 'course-1', name: 'Pine Valley' },
+      course: { id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' },
       tenantId: 'tenant-1',
     };
     localStorage.setItem('shadowbrook-dev-course', JSON.stringify(stored));

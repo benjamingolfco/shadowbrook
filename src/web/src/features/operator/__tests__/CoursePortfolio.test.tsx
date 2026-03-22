@@ -119,6 +119,7 @@ describe('CoursePortfolio', () => {
           id: 'course-1',
           name: 'Spyglass Hill',
           tenantId: 'tenant-1',
+          timeZoneId: 'America/Los_Angeles',
           city: 'Pebble Beach',
           state: 'CA',
           createdAt: '2024-01-01T00:00:00Z',
@@ -132,7 +133,7 @@ describe('CoursePortfolio', () => {
 
     render(<CoursePortfolio />);
 
-    expect(mockSelectCourse).toHaveBeenCalledWith({ id: 'course-1', name: 'Spyglass Hill' });
+    expect(mockSelectCourse).toHaveBeenCalledWith({ id: 'course-1', name: 'Spyglass Hill', timeZoneId: 'America/Los_Angeles' });
   });
 
   it('renders multiple course cards', () => {
@@ -181,6 +182,7 @@ describe('CoursePortfolio', () => {
           id: 'course-1',
           name: 'Pine Valley',
           tenantId: 'tenant-1',
+          timeZoneId: 'America/New_York',
           city: 'Augusta',
           state: 'GA',
           createdAt: '2024-01-01T00:00:00Z',
@@ -190,6 +192,7 @@ describe('CoursePortfolio', () => {
           id: 'course-2',
           name: 'Spyglass Hill',
           tenantId: 'tenant-1',
+          timeZoneId: 'America/Los_Angeles',
           city: 'Pebble Beach',
           state: 'CA',
           createdAt: '2024-01-01T00:00:00Z',
@@ -207,7 +210,7 @@ describe('CoursePortfolio', () => {
       screen.getByLabelText('Manage Pine Valley, Augusta, GA').click();
     });
 
-    expect(mockSelectCourse).toHaveBeenCalledWith({ id: 'course-1', name: 'Pine Valley' });
+    expect(mockSelectCourse).toHaveBeenCalledWith({ id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/New_York' });
   });
 
   it('calls selectCourse on Enter keydown on a course card', () => {
@@ -218,6 +221,7 @@ describe('CoursePortfolio', () => {
           id: 'course-1',
           name: 'Pine Valley',
           tenantId: 'tenant-1',
+          timeZoneId: 'America/New_York',
           city: 'Augusta',
           state: 'GA',
           createdAt: '2024-01-01T00:00:00Z',
@@ -236,7 +240,7 @@ describe('CoursePortfolio', () => {
       card.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     });
 
-    expect(mockSelectCourse).toHaveBeenCalledWith({ id: 'course-1', name: 'Pine Valley' });
+    expect(mockSelectCourse).toHaveBeenCalledWith({ id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/New_York' });
   });
 
   it('calls selectCourse on Space keydown on a course card', () => {
@@ -247,6 +251,7 @@ describe('CoursePortfolio', () => {
           id: 'course-1',
           name: 'Pine Valley',
           tenantId: 'tenant-1',
+          timeZoneId: 'America/New_York',
           city: 'Augusta',
           state: 'GA',
           createdAt: '2024-01-01T00:00:00Z',
@@ -265,7 +270,7 @@ describe('CoursePortfolio', () => {
       card.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
     });
 
-    expect(mockSelectCourse).toHaveBeenCalledWith({ id: 'course-1', name: 'Pine Valley' });
+    expect(mockSelectCourse).toHaveBeenCalledWith({ id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/New_York' });
   });
 
   it('shows organization name in subtitle', () => {

@@ -163,7 +163,8 @@ public class TenantEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
             Name = "Location Course",
             TenantId = tenant!.Id,
             City = "Scottsdale",
-            State = "AZ"
+            State = "AZ",
+            TimeZoneId = TestTimeZones.Phoenix
         });
 
         // Fetch tenant detail

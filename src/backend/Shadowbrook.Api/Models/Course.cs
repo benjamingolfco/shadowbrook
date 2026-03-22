@@ -16,6 +16,7 @@ public class Course
     public TimeOnly? LastTeeTime { get; set; }
     public decimal? FlatRatePrice { get; set; }
     public bool? WaitlistEnabled { get; set; }
+    public required string TimeZoneId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 

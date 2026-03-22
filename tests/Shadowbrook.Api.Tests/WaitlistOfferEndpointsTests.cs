@@ -381,7 +381,7 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IA
 
         var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
         createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = $"Test Course {Guid.NewGuid()}" });
+        createRequest.Content = JsonContent.Create(new { Name = $"Test Course {Guid.NewGuid()}", TimeZoneId = TestTimeZones.Chicago });
         var createResponse = await this.client.SendAsync(createRequest);
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 

@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
 import { useNavigate } from 'react-router';
 import { useTenantContext } from '../context/TenantContext';
+import { getBrowserTimeZone } from '@/lib/course-time';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -17,6 +18,7 @@ import { useRegisterCourse } from '../hooks/useCourseRegister';
 
 const courseRegisterSchema = z.object({
   name: z.string().min(1, 'Course name is required'),
+  timeZoneId: z.string().min(1, 'Timezone is required'),
   streetAddress: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
@@ -41,6 +43,7 @@ export default function CourseRegister() {
     resolver: zodResolver(courseRegisterSchema),
     defaultValues: {
       name: '',
+      timeZoneId: getBrowserTimeZone(),
       streetAddress: '',
       city: '',
       state: '',
@@ -87,6 +90,20 @@ export default function CourseRegister() {
                   <FormLabel>Course Name *</FormLabel>
                   <FormControl>
                     <Input placeholder="Pine Valley Golf Club" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="timeZoneId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Timezone</FormLabel>
+                  <FormControl>
+                    <Input placeholder="America/Chicago" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
