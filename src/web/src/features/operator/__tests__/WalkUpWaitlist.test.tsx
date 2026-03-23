@@ -6,6 +6,7 @@ import {
   useWalkUpWaitlistToday,
   useOpenWalkUpWaitlist,
   useCloseWalkUpWaitlist,
+  useReopenWalkUpWaitlist,
 } from '../hooks/useWalkUpWaitlist';
 import { useAddGolferToWaitlist, useCreateWaitlistRequest, useRemoveGolferFromWaitlist } from '../hooks/useWaitlist';
 
@@ -17,6 +18,7 @@ const mockUseCourseContext = vi.mocked(useCourseContext);
 const mockUseWalkUpWaitlistToday = vi.mocked(useWalkUpWaitlistToday);
 const mockUseOpenWalkUpWaitlist = vi.mocked(useOpenWalkUpWaitlist);
 const mockUseCloseWalkUpWaitlist = vi.mocked(useCloseWalkUpWaitlist);
+const mockUseReopenWalkUpWaitlist = vi.mocked(useReopenWalkUpWaitlist);
 const mockUseAddGolferToWaitlist = vi.mocked(useAddGolferToWaitlist);
 const mockUseCreateWaitlistRequest = vi.mocked(useCreateWaitlistRequest);
 const mockUseRemoveGolferFromWaitlist = vi.mocked(useRemoveGolferFromWaitlist);
@@ -46,6 +48,7 @@ const mockEntries = [
 
 const mockOpenMutate = vi.fn();
 const mockCloseMutate = vi.fn();
+const mockReopenMutate = vi.fn();
 
 function defaultCourseContext() {
   mockUseCourseContext.mockReturnValue({
@@ -78,6 +81,17 @@ function defaultCloseMutation(overrides = {}) {
     error: null,
     ...overrides,
   } as unknown as ReturnType<typeof useCloseWalkUpWaitlist>);
+}
+
+function defaultReopenMutation(overrides = {}) {
+  mockUseReopenWalkUpWaitlist.mockReturnValue({
+    mutate: mockReopenMutate,
+    isPending: false,
+    isError: false,
+    isSuccess: false,
+    error: null,
+    ...overrides,
+  } as unknown as ReturnType<typeof useReopenWalkUpWaitlist>);
 }
 
 function defaultAddGolferToWaitlist() {
@@ -118,6 +132,7 @@ beforeEach(() => {
   defaultCourseContext();
   defaultOpenMutation();
   defaultCloseMutation();
+  defaultReopenMutation();
   defaultAddGolferToWaitlist();
   defaultCreateWaitlistRequest();
   defaultRemoveGolferFromWaitlist();
@@ -404,7 +419,7 @@ describe('WalkUpWaitlist', () => {
 
     // Click the first Remove button (desktop view)
     const removeButtons = screen.getAllByRole('button', { name: 'Remove Alice Smith from waitlist' });
-    fireEvent.click(removeButtons[0]);
+    fireEvent.click(removeButtons[0]!);
 
     await waitFor(() => {
       expect(screen.getByText('Remove from Waitlist?')).toBeInTheDocument();
@@ -437,7 +452,7 @@ describe('WalkUpWaitlist', () => {
 
     // Click the first Remove button (desktop view)
     const removeButtons = screen.getAllByRole('button', { name: 'Remove Alice Smith from waitlist' });
-    fireEvent.click(removeButtons[0]);
+    fireEvent.click(removeButtons[0]!);
 
     await waitFor(() => {
       expect(screen.getByText('Remove from Waitlist?')).toBeInTheDocument();
