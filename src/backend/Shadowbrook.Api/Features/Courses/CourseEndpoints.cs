@@ -2,7 +2,8 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Api.Models;
+using Shadowbrook.Domain.CourseAggregate;
+using Shadowbrook.Domain.TenantAggregate;
 using Wolverine.Http;
 
 namespace Shadowbrook.Api.Features.Courses;
@@ -12,52 +13,33 @@ public static class CourseEndpoints
     [WolverinePost("/courses")]
     public static async Task<IResult> CreateCourse(
         CreateCourseRequest request,
-        ApplicationDbContext db,
-        ICurrentUser currentUser)
+        [NotBody] ICourseRepository courseRepository,
+        [NotBody] ITenantRepository tenantRepository,
+        [NotBody] ICurrentUser currentUser)
     {
-        // Derive TenantId from X-Tenant-Id header, fallback to request.TenantId
         var tenantId = currentUser.TenantId ?? request.TenantId;
         if (tenantId is null)
         {
             return Results.BadRequest(new { error = "TenantId is required (via X-Tenant-Id header or request body)." });
         }
 
-        // Validate that the tenant exists
-        var tenant = await db.Tenants.FindAsync(tenantId.Value);
+        var tenant = await tenantRepository.GetByIdAsync(tenantId.Value);
         if (tenant is null)
         {
             return Results.BadRequest(new { error = "Tenant does not exist." });
         }
 
-        // Check for duplicate course name within the tenant (case-insensitive).
-        // ToLower() translates to LOWER() in SQL, providing portable case-insensitivity
-        // across SQLite and SQL Server without relying on column collation.
-        var normalizedName = request.Name.ToLower();
-        var duplicateExists = await db.Courses
-            .IgnoreQueryFilters()
-            .AnyAsync(c => c.TenantId == tenantId.Value && c.Name.ToLower() == normalizedName);
+        var duplicateExists = await courseRepository.ExistsByNameAsync(tenantId.Value, request.Name);
         if (duplicateExists)
         {
             return Results.Conflict(new { error = "A course with this name already exists for this tenant." });
         }
 
-        var course = new Course
-        {
-            Id = Guid.NewGuid(),
-            TenantId = tenantId.Value,
-            Name = request.Name,
-            StreetAddress = request.StreetAddress,
-            City = request.City,
-            State = request.State,
-            ZipCode = request.ZipCode,
-            ContactEmail = request.ContactEmail,
-            ContactPhone = request.ContactPhone,
-            TimeZoneId = request.TimeZoneId,
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow
-        };
+        var course = Course.Create(tenantId.Value, request.Name, request.TimeZoneId,
+            request.StreetAddress, request.City, request.State, request.ZipCode,
+            request.ContactEmail, request.ContactPhone);
 
-        db.Courses.Add(course);
+        courseRepository.Add(course);
 
         var response = new CourseResponse(
             course.Id,
@@ -70,19 +52,18 @@ public static class CourseEndpoints
             course.ContactPhone,
             course.TimeZoneId,
             course.CreatedAt,
-            course.UpdatedAt,
             new TenantInfo(tenant.Id, tenant.OrganizationName));
 
         return Results.Created($"/courses/{course.Id}", response);
     }
 
     [WolverineGet("/courses")]
-    public static async Task<IResult> GetAllCourses(ApplicationDbContext db, ICurrentUser currentUser)
+    public static async Task<IResult> GetAllCourses(ApplicationDbContext db)
     {
-        // Query filter automatically scopes to tenant when TenantId is present
-        var courses = await db.Courses
-            .Include(c => c.Tenant)
-            .Select(c => new CourseResponse(
+        var courses = await (
+            from c in db.Courses
+            join t in db.Tenants on c.TenantId equals t.Id
+            select new CourseResponse(
                 c.Id,
                 c.Name,
                 c.StreetAddress,
@@ -93,19 +74,20 @@ public static class CourseEndpoints
                 c.ContactPhone,
                 c.TimeZoneId,
                 c.CreatedAt,
-                c.UpdatedAt,
-                new TenantInfo(c.Tenant!.Id, c.Tenant.OrganizationName)))
+                new TenantInfo(t.Id, t.OrganizationName)))
             .ToListAsync();
+
         return Results.Ok(courses);
     }
 
     [WolverineGet("/courses/{id}")]
     public static async Task<IResult> GetCourseById(Guid id, ApplicationDbContext db)
     {
-        var course = await db.Courses
-            .Include(c => c.Tenant)
-            .Where(c => c.Id == id)
-            .Select(c => new CourseResponse(
+        var course = await (
+            from c in db.Courses
+            join t in db.Tenants on c.TenantId equals t.Id
+            where c.Id == id
+            select new CourseResponse(
                 c.Id,
                 c.Name,
                 c.StreetAddress,
@@ -116,9 +98,9 @@ public static class CourseEndpoints
                 c.ContactPhone,
                 c.TimeZoneId,
                 c.CreatedAt,
-                c.UpdatedAt,
-                new TenantInfo(c.Tenant!.Id, c.Tenant.OrganizationName)))
+                new TenantInfo(t.Id, t.OrganizationName)))
             .FirstOrDefaultAsync();
+
         return course is null ? Results.NotFound() : Results.Ok(course);
     }
 
@@ -135,15 +117,12 @@ public static class CourseEndpoints
             return Results.NotFound(new { error = "Course not found." });
         }
 
-        course.TeeTimeIntervalMinutes = request.TeeTimeIntervalMinutes;
-        course.FirstTeeTime = request.FirstTeeTime;
-        course.LastTeeTime = request.LastTeeTime;
-        course.UpdatedAt = DateTimeOffset.UtcNow;
+        course.UpdateTeeTimeSettings(request.TeeTimeIntervalMinutes, request.FirstTeeTime, request.LastTeeTime);
 
         return Results.Ok(new TeeTimeSettingsResponse(
-            course.TeeTimeIntervalMinutes.Value,
-            course.FirstTeeTime.Value,
-            course.LastTeeTime.Value));
+            course.TeeTimeIntervalMinutes!.Value,
+            course.FirstTeeTime!.Value,
+            course.LastTeeTime!.Value));
     }
 
     [WolverineGet("/courses/{id}/tee-time-settings")]
@@ -180,10 +159,9 @@ public static class CourseEndpoints
             return Results.NotFound(new { error = "Course not found." });
         }
 
-        course.FlatRatePrice = request.FlatRatePrice;
-        course.UpdatedAt = DateTimeOffset.UtcNow;
+        course.UpdatePricing(request.FlatRatePrice);
 
-        return Results.Ok(new PricingResponse(course.FlatRatePrice.Value));
+        return Results.Ok(new PricingResponse(course.FlatRatePrice!.Value));
     }
 
     [WolverineGet("/courses/{id}/pricing")]
@@ -227,7 +205,6 @@ public record CourseResponse(
     string? ContactPhone,
     string TimeZoneId,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt,
     TenantInfo Tenant);
 
 public record TenantInfo(Guid Id, string OrganizationName);

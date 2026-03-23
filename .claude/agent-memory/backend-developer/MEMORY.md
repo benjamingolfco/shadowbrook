@@ -19,9 +19,10 @@
 ## Key Files
 
 - `src/backend/Shadowbrook.Api/Program.cs` — app bootstrap, DI registration, Wolverine config
-- `src/backend/Shadowbrook.Api/Data/ApplicationDbContext.cs` — EF context with global query filters for multi-tenancy
+- `src/backend/Shadowbrook.Api/Infrastructure/Data/ApplicationDbContext.cs` — EF context with CurrentTenantId property for query filter
 - `src/backend/Shadowbrook.Api/Features/` — Wolverine HTTP endpoints and handlers (feature-based folders)
 - `src/backend/Shadowbrook.Api/Infrastructure/Middleware/CourseExistsMiddleware.cs` — Wolverine Before middleware for course existence check
+- `src/backend/Shadowbrook.Api/Infrastructure/EntityTypeConfigurations/` — IEntityTypeConfiguration classes for domain entities
 - `tests/Shadowbrook.Api.Tests/TestWebApplicationFactory.cs` — Testcontainers SQL Server test host
 
 ## Domain Project Conventions
@@ -33,29 +34,43 @@
 - Enums live directly in the feature folder
 - Interfaces (e.g., `IShortCodeGenerator`) live directly in the feature folder
 - Domain test project is empty by default — add unit tests for aggregate behavior
+- Domain entities use factory methods (e.g., `Course.Create(...)`, `Tenant.Create(...)`) — do NOT use object initializers
+- Domain entities use private setters; mutation via domain methods
+
+## Domain Entities
+
+- `Shadowbrook.Domain.CourseAggregate.Course` — factory: `Course.Create(tenantId, name, timeZoneId, ...)`; mutation: `UpdateTeeTimeSettings(...)`, `UpdatePricing(...)`
+- `Shadowbrook.Domain.TenantAggregate.Tenant` — factory: `Tenant.Create(orgName, contactName, contactEmail, contactPhone)`
+- Both have `ICourseRepository` / `ITenantRepository` with `GetByIdAsync`, `GetByTenantIdAsync`/`GetAllAsync`, `ExistsByNameAsync`, `Add`
 
 ## Patterns
 
 - Endpoints: Wolverine HTTP `[WolverineGet]`/`[WolverinePost]` static methods in `Features/` folders, discovered by convention
 - DTOs: inline records within endpoint files
-- Multi-tenancy: `ICurrentUser.TenantId` injected via `TenantClaimMiddleware`, applied via EF global query filters
+- Multi-tenancy: `ICurrentUser.TenantId` injected via `TenantClaimMiddleware` (reads `X-Tenant-Id` header → adds `tenant_id` claim)
+- EF query filter on Course: defined in `ApplicationDbContext.OnModelCreating` as `c => CurrentTenantId == null || c.TenantId == CurrentTenantId` — BUT this filter does NOT reliably enforce isolation per request (see Known Issues). Read/write course endpoints explicitly inject `ICurrentUser` and apply `IgnoreQueryFilters()` + manual `WHERE` clause.
 - Domain events: Wolverine `IMessageBus` + `PublishDomainEventsFromEntityFrameworkCore` (auto-scraped on save)
 - Transactional middleware: `UseEntityFrameworkCoreTransactions()` + `AutoApplyTransactions()` — do NOT call `SaveChangesAsync()` in endpoints or handlers, EXCEPT for intentional mid-flow saves (position queries that need the new row flushed before reading)
 - Return types: `Results.Ok()`, `Results.BadRequest()`, `Results.NotFound()` — `IResult` return type
 - Validation: FluentValidation via `WolverineFx.Http.FluentValidation` (automatic for HTTP endpoints)
 - Cross-cutting: Wolverine `Before` middleware via policy (e.g., `CourseExistsMiddleware` in `Infrastructure/Middleware/`)
+- Non-body parameters in Wolverine POST/PUT endpoints require `[NotBody]` attribute (repositories, services, currentUser)
+- Shadow properties (`UpdatedAt`, `UpdatedBy`, `RowVersion`) set in `SaveChangesAsync` — NOT on domain entity classes; use `HasShadowAuditProperties()` and `HasShadowRowVersion()` extension methods in entity configurations
+- Response DTOs do NOT include `UpdatedAt` (shadow-only)
 
 ## Test Conventions
 
 - Integration tests use Testcontainers SQL Server via `TestWebApplicationFactory`
-- Each test class gets its own database via unique name (`test_{Guid:N}[..30]`) in a shared container
+- Each test class calls `factory.ResetDatabaseAsync()` in `InitializeAsync` via Respawn
 - Full Wolverine pipeline active in tests (transactional middleware, domain event scraping)
 - Handler unit tests in `tests/Shadowbrook.Api.Tests/Handlers/` — use NSubstitute, no factory, call `Handle()` directly
 - Validator unit tests in `tests/Shadowbrook.Api.Tests/Validators/` — no factory, call `Validate()` directly
-- 200 passing API tests + 39 domain tests as of 2026-03-19
-- 13 WaitlistOfferEndpointsTests known-failing: async domain event chain tests (Wolverine background handlers) need work
+- 223 passing API tests + 49 domain tests as of 2026-03-23 (PR #245)
+- 11 WaitlistOfferEndpointsTests known-skipped: async domain event chain tests (Wolverine background handlers) need work
 - Domain test folder structure mirrors domain: `Shadowbrook.Domain.Tests/WalkUpWaitlist/`
 
-## Known Issues on chore/wolverine-http-migration branch
+## Known Issues
 
-- `WaitlistOfferEndpointsTests` (13 tests): Depend on Wolverine processing `TeeTimeRequestAdded` domain event asynchronously after HTTP response. Tests assert state immediately after the HTTP call — the background handler hasn't run yet. Fix requires either polling/await or a test helper that waits for Wolverine to process messages.
+- **EF Core query filter not enforcing tenant isolation reliably**: The `HasQueryFilter` on `Course` in `ApplicationDbContext.OnModelCreating` uses `CurrentTenantId` (snapshotted at DbContext construction). This should work in theory (EF Core re-evaluates `this.Property` per DbContext instance) but in practice does not enforce isolation. Root cause unclear — may be EF Core model caching with primary constructor syntax, or DbContext construction timing relative to middleware. Course endpoints work around this by using `IgnoreQueryFilters()` + explicit `WHERE tenantId == null || c.TenantId == tenantId` with injected `ICurrentUser`.
+- `CourseExistsMiddleware` still uses `db.Courses.AnyAsync(c => c.Id == courseId)` which depends on the query filter — tenant isolation for middleware is unverified.
+- `WaitlistOfferEndpointsTests` (11 tests): Skipped — depend on Wolverine processing `TeeTimeRequestAdded` domain event asynchronously after HTTP response.
