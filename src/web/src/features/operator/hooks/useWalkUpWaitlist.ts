@@ -33,3 +33,14 @@ export function useCloseWalkUpWaitlist() {
     },
   });
 }
+
+export function useReopenWalkUpWaitlist() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ courseId }: { courseId: string }) =>
+      api.post<WalkUpWaitlist>(`/courses/${courseId}/walkup-waitlist/reopen`, {}),
+    onSuccess: (_, { courseId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.walkUpWaitlist.today(courseId) });
+    },
+  });
+}
