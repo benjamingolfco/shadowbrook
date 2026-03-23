@@ -13,6 +13,11 @@ import { useAddGolferToWaitlist, useCreateWaitlistRequest, useRemoveGolferFromWa
 vi.mock('../context/CourseContext');
 vi.mock('../hooks/useWalkUpWaitlist');
 vi.mock('../hooks/useWaitlist');
+vi.mock('qrcode.react', () => ({
+  QRCodeCanvas: ({ value }: { value: string }) => (
+    <canvas data-testid="qr-canvas" data-value={value} />
+  ),
+}));
 
 const mockUseCourseContext = vi.mocked(useCourseContext);
 const mockUseWalkUpWaitlistToday = vi.mocked(useWalkUpWaitlistToday);
@@ -469,5 +474,34 @@ describe('WalkUpWaitlist', () => {
         onSuccess: expect.any(Function),
       })
     );
+  });
+
+  it('shows QR code panel when waitlist is open', () => {
+    mockUseWalkUpWaitlistToday.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: { waitlist: openWaitlist, entries: [], requests: [] },
+      error: null,
+    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+    render(<WalkUpWaitlist />);
+
+    const qrCanvas = screen.getByTestId('qr-canvas');
+    expect(qrCanvas).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /download png/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /print/i })).toBeInTheDocument();
+  });
+
+  it('does not show QR code panel when waitlist is closed', () => {
+    mockUseWalkUpWaitlistToday.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: { waitlist: closedWaitlist, entries: [], requests: [] },
+      error: null,
+    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+    render(<WalkUpWaitlist />);
+
+    expect(screen.queryByTestId('qr-canvas')).not.toBeInTheDocument();
   });
 });
