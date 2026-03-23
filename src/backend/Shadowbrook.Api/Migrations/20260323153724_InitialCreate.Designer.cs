@@ -12,8 +12,8 @@ using Shadowbrook.Api.Infrastructure.Data;
 namespace Shadowbrook.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260322021643_AddDevSmsMessages")]
-    partial class AddDevSmsMessages
+    [Migration("20260323153724_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -122,6 +122,10 @@ namespace Shadowbrook.Api.Migrations
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TimeZoneId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
