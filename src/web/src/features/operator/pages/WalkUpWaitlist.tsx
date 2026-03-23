@@ -17,12 +17,14 @@ import {
   useWalkUpWaitlistToday,
   useOpenWalkUpWaitlist,
   useCloseWalkUpWaitlist,
+  useReopenWalkUpWaitlist,
 } from '../hooks/useWalkUpWaitlist';
 import { useCourseContext } from '../context/CourseContext';
 import { OpenWaitlistDialog } from '../components/OpenWaitlistDialog';
 import { AddGolferDialog } from '../components/AddGolferDialog';
 import { AddTeeTimeRequestDialog } from '../components/AddTeeTimeRequestDialog';
 import { CloseWaitlistDialog } from '../components/CloseWaitlistDialog';
+import { ReopenWaitlistDialog } from '../components/ReopenWaitlistDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { WalkUpWaitlistEntry, WaitlistRequestEntry } from '@/types/waitlist';
 
@@ -159,10 +161,12 @@ export default function WalkUpWaitlist() {
   const [addGolferDialogOpen, setAddGolferDialogOpen] = useState(false);
   const [addRequestDialogOpen, setAddRequestDialogOpen] = useState(false);
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
+  const [reopenDialogOpen, setReopenDialogOpen] = useState(false);
 
   const todayQuery = useWalkUpWaitlistToday(course?.id);
   const openMutation = useOpenWalkUpWaitlist();
   const closeMutation = useCloseWalkUpWaitlist();
+  const reopenMutation = useReopenWalkUpWaitlist();
 
   if (!course) {
     return (
@@ -189,6 +193,10 @@ export default function WalkUpWaitlist() {
 
   function handleClose() {
     closeMutation.mutate({ courseId });
+  }
+
+  function handleReopen() {
+    reopenMutation.mutate({ courseId });
   }
 
   // Loading state
@@ -265,13 +273,36 @@ export default function WalkUpWaitlist() {
 
   // Closed state
   if (waitlist.status === 'Closed') {
+    const closedActions: PageAction[] = [
+      {
+        id: 'reopen-waitlist',
+        label: 'Reopen Waitlist',
+        description: 'Reopen the walk-up waitlist for today',
+        onClick: () => setReopenDialogOpen(true),
+        disabled: reopenMutation.isPending,
+        disabledLabel: 'Reopening...',
+      },
+    ];
+
     return (
       <div className="p-6 max-w-2xl">
-        <PageHeader title="Walk-Up Waitlist">
+        <PageHeader title="Walk-Up Waitlist" actions={closedActions}>
           <div className="flex items-center gap-2">
             <Badge variant="secondary">Closed</Badge>
           </div>
         </PageHeader>
+
+        <ReopenWaitlistDialog
+          open={reopenDialogOpen}
+          onOpenChange={setReopenDialogOpen}
+          onConfirm={handleReopen}
+        />
+
+        {reopenMutation.isError && (
+          <p className="text-destructive text-sm mb-4">
+            Error reopening waitlist: {(reopenMutation.error as Error).message}
+          </p>
+        )}
 
         <Tabs defaultValue="queue" className="mb-6">
           <TabsList>

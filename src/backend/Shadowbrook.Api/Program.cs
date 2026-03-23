@@ -125,6 +125,7 @@ app.UseExceptionHandler(error => error.Run(async context =>
             DuplicateTeeTimeRequestException => StatusCodes.Status409Conflict,
             GolferAlreadyOnWaitlistException => StatusCodes.Status409Conflict,
             WaitlistAlreadyExistsException => StatusCodes.Status409Conflict,
+            WaitlistNotClosedException => StatusCodes.Status409Conflict,
             OfferNotPendingException => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status400BadRequest
         };
