@@ -14,22 +14,22 @@ public class WaitlistOfferAcceptedSmsHandlerTests
     private readonly ITextMessageService sms = Substitute.For<ITextMessageService>();
 
     [Fact]
-    public async Task Handle_EntryNotFound_NoSms()
+    public async Task Handle_EntryNotFound_Throws()
     {
         var evt = MakeEvent();
-        await WaitlistOfferAcceptedSmsHandler.Handle(evt, this.entryRepo, this.golferRepo, this.sms, CancellationToken.None);
-        await this.sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => WaitlistOfferAcceptedSmsHandler.Handle(evt, this.entryRepo, this.golferRepo, this.sms, CancellationToken.None));
     }
 
     [Fact]
-    public async Task Handle_GolferNotFound_NoSms()
+    public async Task Handle_GolferNotFound_Throws()
     {
         var entry = await WaitlistEntryFactory.CreateAsync();
         this.entryRepo.GetByIdAsync(entry.Id).Returns(entry);
 
         var evt = MakeEvent(entryId: entry.Id);
-        await WaitlistOfferAcceptedSmsHandler.Handle(evt, this.entryRepo, this.golferRepo, this.sms, CancellationToken.None);
-        await this.sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => WaitlistOfferAcceptedSmsHandler.Handle(evt, this.entryRepo, this.golferRepo, this.sms, CancellationToken.None));
     }
 
     [Fact]
