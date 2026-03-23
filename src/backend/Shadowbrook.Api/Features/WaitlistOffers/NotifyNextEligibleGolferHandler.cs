@@ -76,7 +76,11 @@ public static class NotifyNextEligibleGolferHandler
 
         offerRepository.Add(offer);
 
-        var baseUrl = configuration["App:FrontendUrl"] ?? "http://localhost:3000";
+        var baseUrl = configuration["App:FrontendUrl"];
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            throw new InvalidOperationException("App:FrontendUrl is not configured. Set the App__FrontendUrl environment variable.");
+        }
         var message = $"{courseName}: {request.TeeTime:h:mm tt} tee time available! Claim your spot: {baseUrl}/book/walkup/{offer.Token}";
         await textMessageService.SendAsync(nextEntry.Golfer.Phone, message, ct);
 

@@ -33,10 +33,6 @@ export default function AcceptConfirmation({ response }: AcceptConfirmationProps
           {response.message}
         </p>
       </div>
-
-      <p className="text-sm text-muted-foreground">
-        We're processing your request — you'll receive a confirmation text shortly.
-      </p>
     </div>
   );
 }

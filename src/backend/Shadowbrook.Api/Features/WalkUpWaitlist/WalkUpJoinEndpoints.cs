@@ -18,11 +18,16 @@ public static class WalkUpJoinEndpoints
 
         var waitlist = await db.WalkUpWaitlists
             .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(w => w.ShortCode == request.Code && w.Date == today && w.Status == WaitlistStatus.Open);
+            .FirstOrDefaultAsync(w => w.ShortCode == request.Code && w.Date == today);
 
         if (waitlist is null)
         {
-            return Results.NotFound(new { error = "Code not found or waitlist is not active." });
+            return Results.NotFound(new { error = "Code not found. Check the code posted at the course and try again." });
+        }
+
+        if (waitlist.Status != WaitlistStatus.Open)
+        {
+            return Results.Json(new { error = "This waitlist is closed." }, statusCode: 410);
         }
 
         // Course guaranteed to exist via FK
@@ -102,9 +107,11 @@ public static class WalkUpJoinEndpoints
             .ToListAsync();
         var position = activeEntries.Count(t => t <= joinedAt);
 
+        var submittedName = $"{request.FirstName.Trim()} {request.LastName.Trim()}";
+
         return Results.Created($"/walkup/join", new JoinWaitlistResponse(
             entry.Id,
-            golfer.FullName,
+            submittedName,
             position,
             courseName));
     }
