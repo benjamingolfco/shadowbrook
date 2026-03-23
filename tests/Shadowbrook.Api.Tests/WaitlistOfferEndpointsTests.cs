@@ -90,7 +90,7 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IA
         var (_, courseId) = await CreateTestCourseAsync();
         await OpenWaitlistAsync(courseId);
         var phone = await AddGolferToWaitlistAsync(courseId, "Jane", "Smith", "555-867-5309");
-        await CreateTeeTimeRequestAsync(courseId, "10:00", 2);
+        await CreateTeeTimeRequestAsync(courseId, "23:50", 2);
         var token = await GetOfferTokenFromSmsAsync(phone);
 
         await this.client.PostAsync($"/waitlist/offers/{token}/accept", null);
@@ -113,7 +113,7 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IA
         var (_, courseId) = await CreateTestCourseAsync();
         await OpenWaitlistAsync(courseId);
         var phone = await AddGolferToWaitlistAsync(courseId, "Jane", "Smith", "555-867-5309");
-        await CreateTeeTimeRequestAsync(courseId, "10:00", 2);
+        await CreateTeeTimeRequestAsync(courseId, "23:50", 2);
         var token = await GetOfferTokenFromSmsAsync(phone);
 
         this.smsService.Clear();
@@ -132,7 +132,7 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IA
         var (_, courseId) = await CreateTestCourseAsync();
         await OpenWaitlistAsync(courseId);
         var phone = await AddGolferToWaitlistAsync(courseId, "Jane", "Smith", "555-867-5309");
-        await CreateTeeTimeRequestAsync(courseId, "10:00", 2);
+        await CreateTeeTimeRequestAsync(courseId, "23:50", 2);
         var token = await GetOfferTokenFromSmsAsync(phone);
 
         this.smsService.Clear();
@@ -180,7 +180,7 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IA
         var phone1 = await AddGolferToWaitlistAsync(courseId, "Alice", "Cap", "555-900-0001");
         await AddGolferToWaitlistAsync(courseId, "Bob", "Cap", "555-900-0002");
 
-        await CreateTeeTimeRequestAsync(courseId, "10:00", 1); // Only 1 slot
+        await CreateTeeTimeRequestAsync(courseId, "23:50", 1); // Only 1 slot
 
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<Shadowbrook.Api.Infrastructure.Data.ApplicationDbContext>();
@@ -216,7 +216,7 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IA
         var phone2 = await AddGolferToWaitlistAsync(courseId, "John", "Doe", "555-111-2222");
 
         this.smsService.Clear();
-        await CreateTeeTimeRequestAsync(courseId, "10:00", 1); // Only 1 slot
+        await CreateTeeTimeRequestAsync(courseId, "23:50", 1); // Only 1 slot
 
         var messages = this.smsService.GetAll();
         var offerToPhone1 = messages.FirstOrDefault(m => m.To == phone1 && m.Body.Contains("tee time just opened"));
@@ -238,7 +238,7 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IA
         var phone = await AddGolferToWaitlistAsync(courseId, "Jane", "Smith", "555-867-5309");
 
         this.smsService.Clear();
-        await CreateTeeTimeRequestAsync(courseId, "10:00", 2);
+        await CreateTeeTimeRequestAsync(courseId, "23:50", 2);
 
         var messages = this.smsService.GetAll();
         var offerSms = messages.FirstOrDefault(m => m.To == phone && m.Body.Contains("tee time just opened"));
@@ -253,7 +253,7 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IA
         await OpenWaitlistAsync(courseId);
 
         this.smsService.Clear();
-        await CreateTeeTimeRequestAsync(courseId, "10:00", 2);
+        await CreateTeeTimeRequestAsync(courseId, "23:50", 2);
 
         var messages = this.smsService.GetAll();
         Assert.Empty(messages);
@@ -267,7 +267,7 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IA
         await AddGolferToWaitlistAsync(courseId, "Jane", "Smith", "555-867-5309");
         await AddGolferToWaitlistAsync(courseId, "John", "Doe", "555-111-2222");
 
-        await CreateTeeTimeRequestAsync(courseId, "10:00", 2);
+        await CreateTeeTimeRequestAsync(courseId, "23:50", 2);
 
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<Shadowbrook.Api.Infrastructure.Data.ApplicationDbContext>();
@@ -291,7 +291,7 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IA
         var (_, courseId) = await CreateTestCourseAsync();
         await OpenWaitlistAsync(courseId);
         var phone = await AddGolferToWaitlistAsync(courseId, "Jane", "Smith", "555-867-5309");
-        await CreateTeeTimeRequestAsync(courseId, "10:00", 2);
+        await CreateTeeTimeRequestAsync(courseId, "23:50", 2);
         return await GetOfferTokenFromSmsAsync(phone);
     }
 
@@ -351,7 +351,7 @@ public class WaitlistOfferEndpointsTests(TestWebApplicationFactory factory) : IA
 
     private async Task CreateTeeTimeRequestAsync(Guid courseId, string teeTime, int golfersNeeded)
     {
-        var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var today = CourseTime.Today(TimeProvider.System, TestTimeZones.Chicago).ToString("yyyy-MM-dd");
         var request = new HttpRequestMessage(HttpMethod.Post, $"/courses/{courseId}/walkup-waitlist/requests");
         var tenantId = await GetTenantIdForCourseAsync(courseId);
         request.Headers.Add("X-Tenant-Id", tenantId.ToString());

@@ -111,4 +111,67 @@ public class CourseTimeTests
         Assert.Equal(new DateTimeOffset(2026, 3, 7, 19, 0, 0, TimeSpan.Zero), beforeDst);
         Assert.Equal(new DateTimeOffset(2026, 3, 9, 18, 0, 0, TimeSpan.Zero), afterDst);
     }
+
+    [Fact]
+    public void Now_returns_course_local_time()
+    {
+        // 2026-03-22 15:30 UTC = 2026-03-22 10:30 Central (CDT, UTC-5)
+        var fakeTime = new FakeTimeProvider(new DateTimeOffset(2026, 3, 22, 15, 30, 0, TimeSpan.Zero));
+
+        var result = CourseTime.Now(fakeTime, TestTimeZones.Chicago);
+
+        Assert.Equal(new TimeOnly(10, 30), result);
+    }
+
+    [Fact]
+    public void Now_returns_utc_time_when_course_is_utc()
+    {
+        var fakeTime = new FakeTimeProvider(new DateTimeOffset(2026, 3, 22, 15, 30, 45, TimeSpan.Zero));
+
+        var result = CourseTime.Now(fakeTime, TestTimeZones.Utc);
+
+        Assert.Equal(new TimeOnly(15, 30, 45), result);
+    }
+
+    [Fact]
+    public void Now_handles_dst_spring_forward()
+    {
+        // 2026-03-08 06:30 UTC = 2026-03-08 01:30 EST (before spring forward at 2:00 AM)
+        // After spring forward at 2:00 AM, clocks jump to 3:00 AM
+        var fakeTime = new FakeTimeProvider(new DateTimeOffset(2026, 3, 8, 6, 30, 0, TimeSpan.Zero));
+
+        var result = CourseTime.Now(fakeTime, TestTimeZones.NewYork);
+
+        Assert.Equal(new TimeOnly(1, 30), result);
+    }
+
+    [Fact]
+    public void Now_handles_dst_fall_back()
+    {
+        // 2026-11-01 06:30 UTC = 2026-11-01 01:30 EST (during ambiguous hour)
+        var fakeTime = new FakeTimeProvider(new DateTimeOffset(2026, 11, 1, 6, 30, 0, TimeSpan.Zero));
+
+        var result = CourseTime.Now(fakeTime, TestTimeZones.NewYork);
+
+        Assert.Equal(new TimeOnly(1, 30), result);
+    }
+
+    [Fact]
+    public void Now_works_with_eastern_time()
+    {
+        // 2026-03-22 20:15 UTC = 2026-03-22 16:15 EDT (UTC-4)
+        var fakeTime = new FakeTimeProvider(new DateTimeOffset(2026, 3, 22, 20, 15, 0, TimeSpan.Zero));
+
+        var result = CourseTime.Now(fakeTime, TestTimeZones.NewYork);
+
+        Assert.Equal(new TimeOnly(16, 15), result);
+    }
+
+    [Fact]
+    public void Now_throws_for_invalid_timezone()
+    {
+        var fakeTime = new FakeTimeProvider();
+
+        Assert.Throws<TimeZoneNotFoundException>(() => CourseTime.Now(fakeTime, "Invalid/Timezone"));
+    }
 }
