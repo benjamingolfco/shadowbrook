@@ -8,7 +8,7 @@ export function useWalkUpWaitlistToday(courseId: string | undefined) {
     queryKey: courseId ? queryKeys.walkUpWaitlist.today(courseId) : ['disabled'],
     queryFn: () => api.get<WalkUpWaitlistTodayResponse>(`/courses/${courseId}/walkup-waitlist/today`),
     enabled: !!courseId,
-    refetchInterval: 30000,
+    refetchInterval: 15000,
   });
 }
 
