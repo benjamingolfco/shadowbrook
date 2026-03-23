@@ -25,6 +25,7 @@ import { OpenWaitlistDialog } from '../components/OpenWaitlistDialog';
 import { AddGolferDialog } from '../components/AddGolferDialog';
 import { AddTeeTimeRequestDialog } from '../components/AddTeeTimeRequestDialog';
 import { CloseWaitlistDialog } from '../components/CloseWaitlistDialog';
+import { QrCodePanel } from '../components/QrCodePanel';
 import { ReopenWaitlistDialog } from '../components/ReopenWaitlistDialog';
 import { RemoveGolferDialog } from '../components/RemoveGolferDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -481,6 +482,8 @@ export default function WalkUpWaitlist() {
           </Button>
         </div>
       )}
+
+      <QrCodePanel shortCode={waitlist.shortCode} />
 
       <Tabs defaultValue="queue" className="mb-6">
         <TabsList>

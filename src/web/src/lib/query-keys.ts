@@ -24,4 +24,7 @@ export const queryKeys = {
   devSms: {
     all: ['dev-sms'] as const,
   },
+  walkUpQr: {
+    status: (shortCode: string) => ['walkup-qr', 'status', shortCode] as const,
+  },
 };
