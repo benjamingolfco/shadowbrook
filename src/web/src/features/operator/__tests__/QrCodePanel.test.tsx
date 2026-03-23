@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@/test/test-utils';
 import { QrCodePanel } from '../components/QrCodePanel';
 
@@ -12,16 +12,12 @@ vi.mock('qrcode.react', () => ({
 describe('QrCodePanel', () => {
   const mockShortCode = '4827';
   const mockOrigin = 'http://localhost:3000';
-  let originalLocation: Location;
 
   beforeEach(() => {
-    originalLocation = window.location;
-    delete (window as { location?: Location }).location;
-    window.location = { ...originalLocation, origin: mockOrigin } as Location;
-  });
-
-  afterEach(() => {
-    window.location = originalLocation;
+    Object.defineProperty(window, 'location', {
+      value: { origin: mockOrigin },
+      writable: true,
+    });
   });
 
   it('renders QR code canvas with correct URL', () => {
