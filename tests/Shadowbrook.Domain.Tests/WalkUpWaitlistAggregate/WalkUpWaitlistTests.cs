@@ -2,6 +2,7 @@ using NSubstitute;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate;
+using Shadowbrook.Domain.WalkUpWaitlistAggregate.Events;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
 
 namespace Shadowbrook.Domain.Tests.WalkUpWaitlistAggregate;
@@ -149,6 +150,52 @@ public class WalkUpWaitlistTests
             () => waitlist.Join(golfer, this.entryRepository));
 
         Assert.Contains(golfer.Phone, ex.Message);
+    }
+
+    [Fact]
+    public async Task Reopen_WhenClosed_TransitionsToOpenStatus()
+    {
+        var waitlist = await CreateOpenWaitlistAsync();
+        waitlist.Close();
+
+        waitlist.Reopen();
+
+        Assert.Equal(WaitlistStatus.Open, waitlist.Status);
+        Assert.Null(waitlist.ClosedAt);
+    }
+
+    [Fact]
+    public async Task Reopen_WhenAlreadyOpen_ThrowsWaitlistNotClosedException()
+    {
+        var waitlist = await CreateOpenWaitlistAsync();
+
+        Assert.Throws<WaitlistNotClosedException>(() => waitlist.Reopen());
+    }
+
+    [Fact]
+    public async Task Reopen_PublishesWaitlistReopenedEvent()
+    {
+        var waitlist = await CreateOpenWaitlistAsync();
+        waitlist.Close();
+
+        waitlist.Reopen();
+
+        Assert.Contains(waitlist.DomainEvents, e => e is WaitlistReopened reopened && reopened.CourseWaitlistId == waitlist.Id);
+    }
+
+    [Fact]
+    public async Task Join_AfterReopen_Succeeds()
+    {
+        var waitlist = await CreateOpenWaitlistAsync();
+        waitlist.Close();
+        waitlist.Reopen();
+
+        var golfer = Golfer.Create("+12125551234", "Jane", "Doe");
+        var entry = await waitlist.Join(golfer, this.entryRepository, groupSize: 1);
+
+        Assert.NotNull(entry);
+        Assert.Equal(waitlist.Id, entry.CourseWaitlistId);
+        Assert.Equal(golfer.Id, entry.GolferId);
     }
 
     private async Task<Domain.WalkUpWaitlistAggregate.WalkUpWaitlist> CreateOpenWaitlistAsync()

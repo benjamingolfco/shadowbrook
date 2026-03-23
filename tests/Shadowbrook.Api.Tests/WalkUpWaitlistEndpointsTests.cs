@@ -156,6 +156,107 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     }
 
     // -------------------------------------------------------------------------
+    // POST /reopen
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task Reopen_WhenClosed_ReturnsOk_WithOpenStatus()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+
+        await PostOpenAsync(courseId);
+        await PostCloseAsync(courseId);
+        var response = await PostReopenAsync(courseId);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<WalkUpWaitlistResponse>();
+        Assert.NotNull(body);
+        Assert.Equal("Open", body!.Status);
+        Assert.Null(body.ClosedAt);
+    }
+
+    [Fact]
+    public async Task Reopen_WhenAlreadyOpen_Returns409()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+
+        await PostOpenAsync(courseId);
+        var response = await PostReopenAsync(courseId);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal("Walk-up waitlist is not closed.", body!.Error);
+    }
+
+    [Fact]
+    public async Task Reopen_WhenNoWaitlist_Returns404()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+
+        var response = await PostReopenAsync(courseId);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal("No walk-up waitlist found for today.", body!.Error);
+    }
+
+    [Fact]
+    public async Task Reopen_CourseNotFound_Returns404()
+    {
+        var response = await PostReopenAsync(Guid.NewGuid());
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal("Course not found.", body!.Error);
+    }
+
+    [Fact]
+    public async Task Reopen_PreservesEntries()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+
+        await PostOpenAsync(courseId);
+        await PostAddGolferAsync(courseId, new { FirstName = "Alice", LastName = "A", Phone = "555-111-0001" });
+        await PostAddGolferAsync(courseId, new { FirstName = "Bob", LastName = "B", Phone = "555-111-0002" });
+        await PostCloseAsync(courseId);
+        await PostReopenAsync(courseId);
+
+        var response = await GetTodayAsync(courseId);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<WalkUpWaitlistTodayResponse>();
+        Assert.NotNull(body);
+        Assert.NotNull(body!.Waitlist);
+        Assert.Equal("Open", body.Waitlist!.Status);
+        Assert.Equal(2, body.Entries.Count);
+        Assert.Equal("Alice A", body.Entries[0].GolferName);
+        Assert.Equal("Bob B", body.Entries[1].GolferName);
+    }
+
+    [Fact]
+    public async Task Reopen_ThenAddGolfer_Succeeds()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+
+        await PostOpenAsync(courseId);
+        await PostAddGolferAsync(courseId, new { FirstName = "Alice", LastName = "A", Phone = "555-111-0001" });
+        await PostCloseAsync(courseId);
+        await PostReopenAsync(courseId);
+
+        var response = await PostAddGolferAsync(courseId, new { FirstName = "Bob", LastName = "B", Phone = "555-111-0002" });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<AddGolferToWaitlistResponse>();
+        Assert.NotNull(body);
+        Assert.Equal("Bob B", body!.GolferName);
+        Assert.Equal(2, body.Position);
+    }
+
+    // -------------------------------------------------------------------------
     // GET /today
     // -------------------------------------------------------------------------
 
@@ -520,6 +621,12 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     private async Task<HttpResponseMessage> PostCloseAsync(Guid courseId)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, $"/courses/{courseId}/walkup-waitlist/close");
+        return await this.client.SendAsync(request);
+    }
+
+    private async Task<HttpResponseMessage> PostReopenAsync(Guid courseId)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, $"/courses/{courseId}/walkup-waitlist/reopen");
         return await this.client.SendAsync(request);
     }
 
