@@ -43,3 +43,16 @@ export function useCreateWaitlistRequest() {
     },
   });
 }
+
+export function useRemoveGolferFromWaitlist() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ courseId, entryId }: { courseId: string; entryId: string }) =>
+      api.delete(`/courses/${courseId}/walkup-waitlist/entries/${entryId}`),
+    onSuccess: (_, { courseId }) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.walkUpWaitlist.today(courseId),
+      });
+    },
+  });
+}

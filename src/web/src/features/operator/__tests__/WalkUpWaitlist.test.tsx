@@ -7,7 +7,7 @@ import {
   useOpenWalkUpWaitlist,
   useCloseWalkUpWaitlist,
 } from '../hooks/useWalkUpWaitlist';
-import { useAddGolferToWaitlist, useCreateWaitlistRequest } from '../hooks/useWaitlist';
+import { useAddGolferToWaitlist, useCreateWaitlistRequest, useRemoveGolferFromWaitlist } from '../hooks/useWaitlist';
 
 vi.mock('../context/CourseContext');
 vi.mock('../hooks/useWalkUpWaitlist');
@@ -19,6 +19,7 @@ const mockUseOpenWalkUpWaitlist = vi.mocked(useOpenWalkUpWaitlist);
 const mockUseCloseWalkUpWaitlist = vi.mocked(useCloseWalkUpWaitlist);
 const mockUseAddGolferToWaitlist = vi.mocked(useAddGolferToWaitlist);
 const mockUseCreateWaitlistRequest = vi.mocked(useCreateWaitlistRequest);
+const mockUseRemoveGolferFromWaitlist = vi.mocked(useRemoveGolferFromWaitlist);
 
 const mockCourse = { id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' };
 
@@ -101,6 +102,17 @@ function defaultCreateWaitlistRequest() {
   } as unknown as ReturnType<typeof useCreateWaitlistRequest>);
 }
 
+function defaultRemoveGolferFromWaitlist() {
+  mockUseRemoveGolferFromWaitlist.mockReturnValue({
+    mutate: vi.fn(),
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
+    reset: vi.fn(),
+  } as unknown as ReturnType<typeof useRemoveGolferFromWaitlist>);
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   defaultCourseContext();
@@ -108,6 +120,7 @@ beforeEach(() => {
   defaultCloseMutation();
   defaultAddGolferToWaitlist();
   defaultCreateWaitlistRequest();
+  defaultRemoveGolferFromWaitlist();
 });
 
 describe('WalkUpWaitlist', () => {
@@ -262,7 +275,7 @@ describe('WalkUpWaitlist', () => {
     render(<WalkUpWaitlist />);
 
     expect(
-      screen.getByText('No golfers have joined yet. Share the short code with walk-up golfers.')
+      screen.getByText('No one is on the walk-up waitlist right now.')
     ).toBeInTheDocument();
   });
 
@@ -281,18 +294,24 @@ describe('WalkUpWaitlist', () => {
   });
 
   it('renders error state when query fails', () => {
+    const mockRefetch = vi.fn();
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: true,
       data: undefined,
       error: new Error('Failed to fetch'),
-      refetch: vi.fn(),
+      refetch: mockRefetch,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
     render(<WalkUpWaitlist />);
 
     expect(screen.getByText(/Error loading waitlist: Failed to fetch/)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+
+    const retryButton = screen.getByRole('button', { name: 'Retry' });
+    expect(retryButton).toBeInTheDocument();
+
+    fireEvent.click(retryButton);
+    expect(mockRefetch).toHaveBeenCalled();
   });
 
   it('shows 409 error message when waitlist is already open', () => {
@@ -342,5 +361,98 @@ describe('WalkUpWaitlist', () => {
     render(<WalkUpWaitlist />);
 
     expect(screen.queryByRole('button', { name: 'Add Tee Time Request' })).not.toBeInTheDocument();
+  });
+
+  it('renders Remove buttons with correct aria-labels when waitlist is open', () => {
+    mockUseWalkUpWaitlistToday.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: { waitlist: openWaitlist, entries: mockEntries, requests: [] },
+      error: null,
+    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+    render(<WalkUpWaitlist />);
+
+    // Both desktop and mobile views render Remove buttons, so we check for at least one of each
+    expect(screen.getAllByRole('button', { name: 'Remove Alice Smith from waitlist' })).toHaveLength(2);
+    expect(screen.getAllByRole('button', { name: 'Remove Bob Jones from waitlist' })).toHaveLength(2);
+  });
+
+  it('does not render Remove buttons when waitlist is closed', () => {
+    mockUseWalkUpWaitlistToday.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: { waitlist: closedWaitlist, entries: mockEntries, requests: [] },
+      error: null,
+    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+    render(<WalkUpWaitlist />);
+
+    expect(screen.queryByRole('button', { name: 'Remove Alice Smith from waitlist' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Remove Bob Jones from waitlist' })).not.toBeInTheDocument();
+  });
+
+  it('opens confirmation dialog with golfer name when Remove is clicked', async () => {
+    mockUseWalkUpWaitlistToday.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: { waitlist: openWaitlist, entries: mockEntries, requests: [] },
+      error: null,
+    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+    render(<WalkUpWaitlist />);
+
+    // Click the first Remove button (desktop view)
+    const removeButtons = screen.getAllByRole('button', { name: 'Remove Alice Smith from waitlist' });
+    fireEvent.click(removeButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText('Remove from Waitlist?')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/Remove Alice Smith from the waitlist/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Keep on Waitlist' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove' })).toBeInTheDocument();
+  });
+
+  it('calls remove mutation with correct parameters when confirmed', async () => {
+    const mockRemoveMutate = vi.fn();
+    mockUseRemoveGolferFromWaitlist.mockReturnValue({
+      mutate: mockRemoveMutate,
+      isPending: false,
+      isSuccess: false,
+      isError: false,
+      error: null,
+      reset: vi.fn(),
+    } as unknown as ReturnType<typeof useRemoveGolferFromWaitlist>);
+
+    mockUseWalkUpWaitlistToday.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: { waitlist: openWaitlist, entries: mockEntries, requests: [] },
+      error: null,
+    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+    render(<WalkUpWaitlist />);
+
+    // Click the first Remove button (desktop view)
+    const removeButtons = screen.getAllByRole('button', { name: 'Remove Alice Smith from waitlist' });
+    fireEvent.click(removeButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText('Remove from Waitlist?')).toBeInTheDocument();
+    });
+
+    // Click confirm in the AlertDialog
+    const confirmButton = document.querySelector('[data-slot="alert-dialog-action"]');
+    expect(confirmButton).toBeInTheDocument();
+    fireEvent.click(confirmButton!);
+
+    expect(mockRemoveMutate).toHaveBeenCalledWith(
+      { courseId: 'course-1', entryId: 'e-1' },
+      expect.objectContaining({
+        onSuccess: expect.any(Function),
+      })
+    );
   });
 });
