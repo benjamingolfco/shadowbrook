@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Shadowbrook.Api.Models;
+using Shadowbrook.Domain.CourseAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 
 namespace Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;

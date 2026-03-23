@@ -4,12 +4,13 @@ using Shadowbrook.Api.Features.WaitlistOffers;
 using Shadowbrook.Api.Features.WalkUpWaitlist;
 using Shadowbrook.Api.Infrastructure.Dev;
 using Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
-using Shadowbrook.Api.Models;
 using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.CourseAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeRequestAggregate;
+using Shadowbrook.Domain.TenantAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 
@@ -19,6 +20,11 @@ public class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,
     ICurrentUser? currentUser = null) : DbContext(options)
 {
+    // Snapshot TenantId at DbContext construction time so the query filter sees the correct
+    // tenant for this request. EF Core evaluates query filters referencing 'this' against the
+    // specific DbContext instance executing the query, so a new instance per request is required.
+    public Guid? CurrentTenantId { get; } = currentUser?.TenantId;
+
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<Booking> Bookings => Set<Booking>();
@@ -51,26 +57,6 @@ public class ApplicationDbContext(
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Tenant>()
-            .HasIndex(t => t.OrganizationName)
-            .IsUnique();
-
-        modelBuilder.Entity<Course>()
-            .HasOne(c => c.Tenant)
-            .WithMany(t => t.Courses)
-            .HasForeignKey(c => c.TenantId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<Course>()
-            .HasQueryFilter(c => currentUser == null || currentUser.TenantId == null || c.TenantId == currentUser.TenantId);
-
-        modelBuilder.Entity<Course>()
-            .HasIndex(c => c.TenantId);
-
-        modelBuilder.Entity<Course>()
-            .HasIndex(c => new { c.TenantId, c.Name })
-            .IsUnique();
-
         // Dev tooling — no tenant filter, no audit properties
         modelBuilder.Entity<DevSmsMessage>(b =>
         {
@@ -83,7 +69,14 @@ public class ApplicationDbContext(
             b.HasIndex(m => m.Timestamp);
         });
 
+        // Apply tenant query filter — reference 'this' so EF Core substitutes the actual
+        // DbContext instance at query time, ensuring CurrentTenantId is re-read per request.
+        modelBuilder.Entity<Course>()
+            .HasQueryFilter(c => CurrentTenantId == null || c.TenantId == CurrentTenantId);
+
         // Apply domain entity configurations
+        modelBuilder.ApplyConfiguration(new CourseConfiguration());
+        modelBuilder.ApplyConfiguration(new TenantConfiguration());
         modelBuilder.ApplyConfiguration(new BookingConfiguration());
         modelBuilder.ApplyConfiguration(new WalkUpWaitlistConfiguration());
         modelBuilder.ApplyConfiguration(new TeeTimeRequestConfiguration());
