@@ -1,6 +1,8 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
+import { getCourseToday } from '@/lib/course-time';
+import { useCourseContext } from '../context/CourseContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -35,12 +37,6 @@ const addTeeTimeRequestSchema = z.object({
 
 type AddTeeTimeRequestFormData = z.infer<typeof addTeeTimeRequestSchema>;
 
-function getTodayDate(): string {
-  const today = new Date();
-  const isoString = today.toISOString().split('T')[0];
-  return isoString ?? '';
-}
-
 interface AddTeeTimeRequestDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -49,7 +45,8 @@ interface AddTeeTimeRequestDialogProps {
 
 export function AddTeeTimeRequestDialog({ open, onOpenChange, courseId }: AddTeeTimeRequestDialogProps) {
   const createMutation = useCreateWaitlistRequest();
-  const todayDate = getTodayDate();
+  const { course } = useCourseContext();
+  const todayDate = getCourseToday(course?.timeZoneId ?? 'UTC');
 
   const form = useForm<AddTeeTimeRequestFormData>({
     resolver: zodResolver(addTeeTimeRequestSchema),

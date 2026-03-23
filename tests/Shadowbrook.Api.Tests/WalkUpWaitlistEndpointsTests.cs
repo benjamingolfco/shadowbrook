@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Shadowbrook.Api.Infrastructure.Services;
 
 namespace Shadowbrook.Api.Tests;
 
@@ -249,7 +250,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     {
         var (_, courseId) = await CreateTestCourseAsync();
         await PostOpenAsync(courseId);
-        var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var today = CourseTime.Today(TimeProvider.System, TestTimeZones.Chicago).ToString("yyyy-MM-dd");
 
         var response = await this.client.PostAsJsonAsync(
             $"/courses/{courseId}/walkup-waitlist/requests",
@@ -267,7 +268,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     public async Task CreateRequest_NoOpenWaitlist_Returns400()
     {
         var (_, courseId) = await CreateTestCourseAsync();
-        var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var today = CourseTime.Today(TimeProvider.System, TestTimeZones.Chicago).ToString("yyyy-MM-dd");
 
         var response = await this.client.PostAsJsonAsync(
             $"/courses/{courseId}/walkup-waitlist/requests",
@@ -282,7 +283,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         var (_, courseId) = await CreateTestCourseAsync();
         await PostOpenAsync(courseId);
         await PostCloseAsync(courseId);
-        var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var today = CourseTime.Today(TimeProvider.System, TestTimeZones.Chicago).ToString("yyyy-MM-dd");
 
         var response = await this.client.PostAsJsonAsync(
             $"/courses/{courseId}/walkup-waitlist/requests",
@@ -296,7 +297,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     {
         var (_, courseId) = await CreateTestCourseAsync();
         await PostOpenAsync(courseId);
-        var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var today = CourseTime.Today(TimeProvider.System, TestTimeZones.Chicago).ToString("yyyy-MM-dd");
 
         await this.client.PostAsJsonAsync(
             $"/courses/{courseId}/walkup-waitlist/requests",
@@ -312,7 +313,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     [Fact]
     public async Task CreateRequest_CourseNotFound_Returns404()
     {
-        var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var today = CourseTime.Today(TimeProvider.System, TestTimeZones.Chicago).ToString("yyyy-MM-dd");
 
         var response = await this.client.PostAsJsonAsync(
             $"/courses/{Guid.NewGuid()}/walkup-waitlist/requests",
@@ -534,7 +535,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
 
         var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
         createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = $"Test Course {Guid.NewGuid()}" });
+        createRequest.Content = JsonContent.Create(new { Name = $"Test Course {Guid.NewGuid()}", TimeZoneId = TestTimeZones.Chicago });
         var createResponse = await this.client.SendAsync(createRequest);
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 

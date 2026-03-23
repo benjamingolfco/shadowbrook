@@ -31,13 +31,13 @@ export default function CoursePortfolio() {
       hasAutoSelected.current = true;
       const course = coursesQuery.data[0];
       if (course) {
-        selectCourse({ id: course.id, name: course.name });
+        selectCourse({ id: course.id, name: course.name, timeZoneId: course.timeZoneId });
       }
     }
   }, [coursesQuery.isLoading, coursesQuery.data, selectCourse]);
 
   function handleSelectCourse(course: Course) {
-    selectCourse({ id: course.id, name: course.name });
+    selectCourse({ id: course.id, name: course.name, timeZoneId: course.timeZoneId });
   }
 
   if (coursesQuery.isLoading) {

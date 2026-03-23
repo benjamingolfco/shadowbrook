@@ -85,7 +85,8 @@ builder.Host.UseWolverine(opts =>
 });
 
 builder.Services.AddSingleton<InMemoryTextMessageService>();
-builder.Services.AddSingleton<ITextMessageService>(sp => sp.GetRequiredService<InMemoryTextMessageService>());
+builder.Services.AddScoped<DatabaseTextMessageService>();
+builder.Services.AddScoped<ITextMessageService>(sp => sp.GetRequiredService<DatabaseTextMessageService>());
 builder.Services.AddScoped<IGolferRepository, GolferRepository>();
 builder.Services.AddScoped<ITeeTimeRequestRepository, TeeTimeRequestRepository>();
 builder.Services.AddScoped<TeeTimeRequestService>();
@@ -93,7 +94,9 @@ builder.Services.AddScoped<IWalkUpWaitlistRepository, WalkUpWaitlistRepository>(
 builder.Services.AddScoped<IWaitlistOfferRepository, WaitlistOfferRepository>();
 builder.Services.AddScoped<IGolferWaitlistEntryRepository, GolferWaitlistEntryRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<ICourseTimeZoneProvider, CourseTimeZoneProvider>();
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddWolverineHttp();
 

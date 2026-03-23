@@ -1,15 +1,38 @@
-name: SWA Cleanup
+# SWA Staging Environment Cleanup
+#
+# Removes orphaned Azure Static Web Apps staging environments whose PRs are
+# no longer open. The pr.yml cleanup-web job fires on PR close, but if that
+# event is missed (race condition, runner failure, etc.) environments are left
+# behind. Azure SWA Free tier caps staging slots, so this runs weekly to catch
+# anything that slipped through.
+#
+# Runs weekly on Sunday at midnight UTC, or on-demand via workflow_dispatch.
+
+name: SWA Staging Cleanup
 
 on:
+  schedule:
+    - cron: '0 0 * * 0' # Sunday midnight UTC
   workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Preview deletions without actually deleting'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   id-token: write
   contents: read
+  pull-requests: read
+
+env:
+  SWA_NAME: shadowbrook-web-dev
+  RESOURCE_GROUP: shadowbrook-dev-rg
 
 jobs:
   cleanup:
-    name: List & Delete Stale SWA Environments
+    name: Purge orphaned staging environments
     runs-on: ubuntu-latest
     steps:
       - name: Azure login
@@ -19,36 +42,135 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: List SWA environments
+      - name: Clean up orphaned environments
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AZURE_STATIC_WEB_APPS_API_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          DRY_RUN: ${{ inputs.dry-run || 'false' }}
         run: |
-          echo "### Current SWA Environments" >> "$GITHUB_STEP_SUMMARY"
-          az staticwebapp environment list \
-            --name shadowbrook-web-dev \
-            --resource-group shadowbrook-dev-rg \
-            --output table | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "SWA resource: $SWA_NAME"
+          echo "Resource group: $RESOURCE_GROUP"
+          echo "Dry run: $DRY_RUN"
+          echo ""
 
-      - name: Delete staging environments
-        run: |
-          # Get all non-default environments
-          ENVS=$(az staticwebapp environment list \
-            --name shadowbrook-web-dev \
-            --resource-group shadowbrook-dev-rg \
+          # Fetch all SWA environments; exclude 'default' (production slot)
+          ENVIRONMENTS=$(az staticwebapp environment list \
+            --name "$SWA_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
             --query "[?buildId != 'default'].buildId" \
-            --output tsv)
+            --output tsv 2>/dev/null || true)
 
-          if [ -z "$ENVS" ]; then
-            echo "No staging environments to delete."
+          if [ -z "$ENVIRONMENTS" ]; then
+            echo "No staging environments found."
+            {
+              echo "## SWA Staging Cleanup"
+              echo ""
+              echo "No staging environments found."
+            } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 
-          for env in $ENVS; do
-            echo "Deleting environment: $env"
-            az staticwebapp environment delete \
-              --name shadowbrook-web-dev \
-              --resource-group shadowbrook-dev-rg \
-              --environment-name "$env" \
-              --yes
-          done
+          echo "Staging environments found:"
+          echo "$ENVIRONMENTS"
+          echo ""
 
-          echo "### Deleted Environments" >> "$GITHUB_STEP_SUMMARY"
-          echo "$ENVS" >> "$GITHUB_STEP_SUMMARY"
+          # Fetch all open PR numbers from the GitHub API
+          OPEN_PRS=$(gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --state open \
+            --json number \
+            --jq '.[].number | tostring')
+
+          echo "Open PRs:"
+          if [ -z "$OPEN_PRS" ]; then
+            echo "(none)"
+          else
+            echo "$OPEN_PRS"
+          fi
+          echo ""
+
+          DELETED=()
+          KEPT=()
+          FAILED=()
+
+          while IFS= read -r env_id; do
+            [ -z "$env_id" ] && continue
+
+            # Check if this environment's PR number is still open
+            if echo "$OPEN_PRS" | grep -qx "$env_id"; then
+              echo "PR #$env_id is open — keeping environment."
+              KEPT+=("$env_id")
+            else
+              echo "PR #$env_id is closed/merged — environment is orphaned."
+              if [ "$DRY_RUN" = "true" ]; then
+                echo "  [dry-run] would delete environment $env_id"
+                DELETED+=("$env_id (dry run)")
+              else
+                echo "  Deleting environment $env_id ..."
+                if az staticwebapp environment delete \
+                  --name "$SWA_NAME" \
+                  --resource-group "$RESOURCE_GROUP" \
+                  --environment-name "$env_id" \
+                  --yes 2>&1; then
+                  echo "  Deleted."
+                  DELETED+=("$env_id")
+                else
+                  echo "  Failed to delete environment $env_id."
+                  FAILED+=("$env_id")
+                fi
+              fi
+            fi
+          done <<< "$ENVIRONMENTS"
+
+          echo ""
+          echo "Done."
+          echo "  Deleted: ${#DELETED[@]}"
+          echo "  Kept:    ${#KEPT[@]}"
+          echo "  Failed:  ${#FAILED[@]}"
+
+          # Write job summary
+          {
+            echo "## SWA Staging Cleanup"
+            echo ""
+            echo "- **SWA resource:** \`$SWA_NAME\`"
+            echo "- **Resource group:** \`$RESOURCE_GROUP\`"
+            echo "- **Dry run:** $DRY_RUN"
+            echo ""
+
+            if [ "${#DELETED[@]}" -gt 0 ]; then
+              echo "### Deleted environments (${#DELETED[@]})"
+              echo ""
+              for item in "${DELETED[@]}"; do
+                echo "- PR #$item"
+              done
+              echo ""
+            fi
+
+            if [ "${#KEPT[@]}" -gt 0 ]; then
+              echo "### Kept environments (${#KEPT[@]})"
+              echo ""
+              for item in "${KEPT[@]}"; do
+                echo "- PR #$item (still open)"
+              done
+              echo ""
+            fi
+
+            if [ "${#FAILED[@]}" -gt 0 ]; then
+              echo "### Failed deletions (${#FAILED[@]})"
+              echo ""
+              for item in "${FAILED[@]}"; do
+                echo "- PR #$item"
+              done
+              echo ""
+            fi
+
+            if [ "${#DELETED[@]}" -eq 0 ] && [ "${#FAILED[@]}" -eq 0 ]; then
+              echo "Nothing to clean up — all staging environments have open PRs."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # Fail the job if any deletions errored
+          if [ "${#FAILED[@]}" -gt 0 ]; then
+            echo "::error::${#FAILED[@]} environment(s) could not be deleted. See log for details."
+            exit 1
+          fi

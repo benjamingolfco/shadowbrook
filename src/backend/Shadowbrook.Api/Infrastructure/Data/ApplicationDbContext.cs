@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Features.WaitlistOffers;
 using Shadowbrook.Api.Features.WalkUpWaitlist;
+using Shadowbrook.Api.Infrastructure.Dev;
 using Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
 using Shadowbrook.Api.Models;
 using Shadowbrook.Domain.BookingAggregate;
@@ -29,6 +30,7 @@ public class ApplicationDbContext(
     public DbSet<WaitlistOffer> WaitlistOffers => Set<WaitlistOffer>();
     public DbSet<TeeTimeOfferPolicy> TeeTimeOfferPolicies => Set<TeeTimeOfferPolicy>();
     public DbSet<TeeTimeRequestExpirationPolicy> TeeTimeRequestExpirationPolicies => Set<TeeTimeRequestExpirationPolicy>();
+    public DbSet<DevSmsMessage> DevSmsMessages => Set<DevSmsMessage>();
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
@@ -68,6 +70,18 @@ public class ApplicationDbContext(
         modelBuilder.Entity<Course>()
             .HasIndex(c => new { c.TenantId, c.Name })
             .IsUnique();
+
+        // Dev tooling — no tenant filter, no audit properties
+        modelBuilder.Entity<DevSmsMessage>(b =>
+        {
+            b.ToTable("DevSmsMessages");
+            b.HasKey(m => m.Id);
+            b.Property(m => m.Id).ValueGeneratedNever();
+            b.Property(m => m.From).IsRequired().HasMaxLength(20);
+            b.Property(m => m.To).IsRequired().HasMaxLength(20);
+            b.Property(m => m.Body).IsRequired();
+            b.HasIndex(m => m.Timestamp);
+        });
 
         // Apply domain entity configurations
         modelBuilder.ApplyConfiguration(new BookingConfiguration());

@@ -31,7 +31,7 @@ export default function CourseSwitcher() {
   const queryClient = useQueryClient();
   const coursesQuery = useCourses(tenant?.id);
 
-  const [pendingCourse, setPendingCourse] = useState<{ id: string; name: string } | null>(null);
+  const [pendingCourse, setPendingCourse] = useState<{ id: string; name: string; timeZoneId: string } | null>(null);
 
   const hasAutoSelected = useRef(false);
 
@@ -47,7 +47,7 @@ export default function CourseSwitcher() {
       hasAutoSelected.current = true;
       const singleCourse = coursesQuery.data[0];
       if (singleCourse) {
-        selectCourse({ id: singleCourse.id, name: singleCourse.name });
+        selectCourse({ id: singleCourse.id, name: singleCourse.name, timeZoneId: singleCourse.timeZoneId });
       }
     }
   }, [coursesQuery.isLoading, coursesQuery.data, course, selectCourse]);
@@ -74,14 +74,14 @@ export default function CourseSwitcher() {
     if (target.id === course?.id) return;
 
     if (isDirty) {
-      setPendingCourse({ id: target.id, name: target.name });
+      setPendingCourse({ id: target.id, name: target.name, timeZoneId: target.timeZoneId });
       return;
     }
 
-    performSwitch({ id: target.id, name: target.name });
+    performSwitch({ id: target.id, name: target.name, timeZoneId: target.timeZoneId });
   }
 
-  function performSwitch(newCourse: { id: string; name: string }) {
+  function performSwitch(newCourse: { id: string; name: string; timeZoneId: string }) {
     queryClient.removeQueries({ queryKey: ['tee-sheets'] });
     queryClient.removeQueries({ queryKey: ['courses', course?.id] });
 

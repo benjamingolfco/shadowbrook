@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTeeSheet } from '@/features/operator/hooks/useTeeSheet';
 import { useCourseContext } from '../context/CourseContext';
+import { getCourseToday, getBrowserTimeZone } from '@/lib/course-time';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -13,7 +14,9 @@ import {
 
 export default function TeeSheet() {
   const { course } = useCourseContext();
-  const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
+  const [selectedDate, setSelectedDate] = useState<string>(() =>
+    getCourseToday(course?.timeZoneId ?? getBrowserTimeZone())
+  );
   const teeSheetQuery = useTeeSheet(course?.id, selectedDate);
 
   if (!course) {
@@ -97,12 +100,6 @@ export default function TeeSheet() {
       )}
     </div>
   );
-}
-
-function getTodayDate(): string {
-  const today = new Date();
-  const isoString = today.toISOString().split('T')[0];
-  return isoString ?? '';
 }
 
 function formatDate(dateString: string): string {
