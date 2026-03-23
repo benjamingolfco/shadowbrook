@@ -58,8 +58,13 @@ export function AddTeeTimeRequestDialog({ open, onOpenChange, courseId }: AddTee
 
           // Parse entered time and current time with 5-minute grace period
           const now = getCourseNow(timeZoneId);
-          const [nowHours, nowMinutes] = now.split(':').map(Number);
-          const [timeHours, timeMinutes] = time.split(':').map(Number);
+          const nowParts = now.split(':').map(Number);
+          const timeParts = time.split(':').map(Number);
+
+          const nowHours = nowParts[0] ?? 0;
+          const nowMinutes = nowParts[1] ?? 0;
+          const timeHours = timeParts[0] ?? 0;
+          const timeMinutes = timeParts[1] ?? 0;
 
           const nowTotalMinutes = nowHours * 60 + nowMinutes;
           const timeTotalMinutes = timeHours * 60 + timeMinutes;
