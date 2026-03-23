@@ -106,8 +106,15 @@ Issues with **no status set** are the backlog — new/untouched issues.
 | Status | Option ID |
 |--------|-----------|
 | Needs Story | `4e3e5768` |
+| Story Review | `8d427c9e` |
+| Needs Architecture | `c7611935` |
+| Architecture Review | `8039d58d` |
 | Ready | `e82ffa87` |
 | Implementing | `40275ace` |
+| CI Pending | `7acb30e5` |
+| In Review | `663d782f` |
+| Changes Requested | `c3f67294` |
+| Ready to Merge | `4aef6ef4` |
 | Awaiting Owner | `4fd57247` |
 | Done | `b9a85561` |
 
