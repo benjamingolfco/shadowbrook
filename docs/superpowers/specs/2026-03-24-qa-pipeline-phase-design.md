@@ -71,8 +71,8 @@ A user-invocable skill with two modes:
 5. Collect the structured report
 6. Post the QA report as a comment on the issue
 7. Handle results:
-   - **All ACs pass, no open `qa-bug` sub-issues** — move issue to Done, close it
-   - **Failures found** — create bug issues labeled `qa-bug` and linked as sub-issues to the parent story. Leave the issue in QA status. QA bugs skip BA story refinement and go straight to Ready with the QA report as context (the reproduction steps and screenshots are the story). The parent story gets re-tested on a future `/qa` run.
+   - **All ACs pass, no open sub-issues** — move issue to Done, close it
+   - **Failures found** — create bug issues linked as sub-issues to the parent story. Leave the issue in QA status. QA bugs skip BA story refinement and go straight to Ready with the QA report as context (the reproduction steps and screenshots are the story). The parent story gets re-tested on a future `/qa` run.
    - **Gaps discovered** — offer to create new feature/story issues (not linked as sub-issues — they are new scope)
 
 **QA queue: `/qa`** (no arguments)
@@ -82,9 +82,7 @@ A user-invocable skill with two modes:
 4. After each issue: post report, file bugs, move to Done if clean
 5. After all issues: print session summary ("3 issues tested, 2 passed, 1 had 2 bugs filed")
 
-**Re-testing flow:** When bugs filed from QA get fixed and merged, the parent story stays in QA. The next `/qa` run picks it up again. The agent always re-tests the full AC suite (not just previously-failed criteria) to catch regressions. If all ACs pass and no open `qa-bug` sub-issues remain, the story moves to Done.
-
-**Identifying QA bugs:** The `qa-bug` label distinguishes bugs filed by the `/qa` skill from other sub-issues. Only open sub-issues with this label block the parent story from moving to Done.
+**Re-testing flow:** When bugs filed from QA get fixed and merged, the parent story stays in QA. The next `/qa` run picks it up again. The agent always re-tests the full AC suite (not just previously-failed criteria) to catch regressions. If all ACs pass and no open sub-issues remain, the story moves to Done.
 
 ### 5. What This Does Not Include
 

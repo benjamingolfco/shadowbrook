@@ -170,7 +170,6 @@ The Architect estimates story points using the Fibonacci sequence (1, 2, 3, 5, 8
 | `v2` | Enhanced — post-MVP improvements |
 | `v3` | Future — long-term roadmap items |
 | `agent/ignore` | Escape hatch — both workflows skip issues with this label |
-| `qa-bug` | Bug filed from QA validation — skip BA refinement, goes straight to Ready |
 
 Apply audience labels based on who benefits — many features get **both** `golfers love` and `course operators love` (see "Features Both Golfers AND Courses Will Love" in the roadmap). Always apply exactly one version label (`v1`, `v2`, or `v3`) based on the roadmap tier.
 

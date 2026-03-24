@@ -53,12 +53,12 @@ When an issue number is provided:
 6. **Handle results:**
 
    **All ACs pass:**
-   - Check for open sub-issues with the `qa-bug` label:
+   - Check for open sub-issues:
      ```bash
-     gh api repos/benjamingolfco/shadowbrook/issues/{number}/sub_issues --jq '[.[] | select(.state == "open") | select(.labels[].name == "qa-bug")] | length'
+     gh api repos/benjamingolfco/shadowbrook/issues/{number}/sub_issues --jq '[.[] | select(.state == "open")] | length'
      ```
-   - If open qa-bugs exist: tell the user "All ACs pass but {N} qa-bug(s) are still open. Leaving in QA."
-   - If no open qa-bugs: move issue to Done and close it
+   - If open sub-issues exist: tell the user "All ACs pass but {N} sub-issue(s) are still open. Leaving in QA."
+   - If no open sub-issues: move issue to Done and close it
      ```bash
      # Move to Done status (update option ID after creating QA status)
      gh project item-edit --project-id {id} --id {item_id} --field-id PVTSSF_lADOD3a3vs4BOVqOzg9EexU --single-select-option-id b9a85561
@@ -73,10 +73,6 @@ When an issue number is provided:
        -f title="{suggested bug title}" \
        -f body="Filed from QA validation of #{number}.\n\n**Expected:** {expected}\n**Actual:** {actual}\n\n**Screenshot:** {path}" \
        -f type="Bug"
-     ```
-   - Add the `qa-bug` label to each created bug:
-     ```bash
-     gh issue edit {bug_number} --add-label "qa-bug" --repo benjamingolfco/shadowbrook
      ```
    - Link each bug as a sub-issue of the parent story:
      ```bash
@@ -131,12 +127,11 @@ When no issue number is provided:
 When a story is re-tested (bugs were previously filed):
 - The agent runs the full AC suite again (not just previously-failed criteria)
 - New bugs may be filed if regressions are found
-- The story moves to Done only when all ACs pass AND no open `qa-bug` sub-issues remain
+- The story moves to Done only when all ACs pass AND no open sub-issues remain
 
 ## QA Bug Lifecycle
 
 Bugs created by this skill:
-- Are labeled `qa-bug`
 - Are linked as sub-issues to the parent story
 - Skip BA story refinement — the QA report provides the reproduction steps and screenshots
 - Should be set to Ready status immediately (they are implementation-ready)
