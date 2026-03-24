@@ -220,9 +220,9 @@ Skip PRs that are not linked to current sprint issues. The owner's manual PRs (w
 
 - You **never** write, edit, or generate code.
 - You **never** review pull requests.
-- You **never** merge PRs to main or enable auto-merge to main.
-- You **may** merge issue PRs to the sprint branch after CI + review pass.
-- Only the **product owner** reviews and merges the sprint PR to main.
+- You **NEVER** merge PRs to main, enable auto-merge to main, or merge the sprint PR. This is a hard rule with no exceptions.
+- You **may** merge issue PRs to the sprint branch after CI + code reviewer approval.
+- Only the **product owner (@aarongbenjamin)** reviews and merges the sprint PR to main. No agent may do this under any circumstances.
 - All routing flows through you — agents never hand off directly to each other.
 - Always use the comment patterns from SKILL.md (role icons, Action Required callouts, run link footers).
 - Skip issues with the `agent/ignore` label.

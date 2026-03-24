@@ -1,7 +1,8 @@
-# PR — CI + Preview Deployment
+# PR — CI + SWA Preview
 #
-# Runs build/test/lint, then deploys API to dev and creates SWA preview.
+# Runs build/test/lint, then creates SWA preview for frontend changes.
 # Each job only runs when its relevant files changed.
+# API deploys to dev via deploy-dev.yml on sprint branch merge.
 # Tears down SWA preview on PR close.
 #
 # Required GitHub Secrets:
@@ -218,31 +219,14 @@ jobs:
         run: pnpm --dir src/web build
 
   # ============================================================
-  # Deploy API to dev (after CI passes)
-  # ============================================================
-  deploy-api:
-    needs: [detect-changes, unit-test-api, integration-test-api]
-    if: |
-      !cancelled() &&
-      needs.detect-changes.outputs.api == 'true' &&
-      needs.unit-test-api.result == 'success' &&
-      needs.integration-test-api.result == 'success'
-    uses: ./.github/workflows/deploy-api.yml
-    with:
-      environment: dev
-      image-tag: pr-${{ github.event.pull_request.number }}
-    secrets: inherit
-
-  # ============================================================
-  # Deploy frontend SWA preview (after CI + API deploy)
+  # Deploy frontend SWA preview (after CI passes)
   # ============================================================
   deploy-web:
-    needs: [detect-changes, lint-web, deploy-api]
+    needs: [detect-changes, lint-web]
     if: |
       !cancelled() &&
       needs.detect-changes.outputs.web == 'true' &&
-      needs.lint-web.result == 'success' &&
-      (needs.deploy-api.result == 'success' || needs.deploy-api.result == 'skipped')
+      needs.lint-web.result == 'success'
     uses: ./.github/workflows/deploy-web.yml
     with:
       environment: dev

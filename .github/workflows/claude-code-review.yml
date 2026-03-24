@@ -61,9 +61,9 @@ jobs:
 
             If Agentic is true:
             - Use `gh pr review --request-changes` when issues are found
-            - Use `gh pr review --comment` when the review passes
+            - Use `gh pr review --approve` when the review passes
             If Agentic is false:
-            - Always use `gh pr review --comment` (never request-changes)
+            - Always use `gh pr review --comment` (never request-changes or approve)
 
             CRITICAL: You MUST post a review via `gh pr review` before finishing. This is required for the pipeline to advance. If you fail to post a review, the pipeline will stall indefinitely.
 
