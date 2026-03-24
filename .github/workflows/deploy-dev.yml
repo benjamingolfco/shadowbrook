@@ -1,19 +1,13 @@
 # Deploy to Dev Environment
 #
-# Orchestrates API and web deployments to dev.
-# Runs on push to main or manual trigger. Only deploys what changed
-# (workflow_dispatch always deploys everything).
-# Infrastructure is deployed separately via deploy-infra.yml.
+# DISABLED — replaced by deploy-test.yml. Will be removed once dev environment is torn down.
 #
-# Required GitHub Secrets:
-#   - AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (OIDC login)
-#   - AZURE_STATIC_WEB_APPS_API_TOKEN (SWA deployment token)
+# Orchestrates API and web deployments to dev.
+# Infrastructure is deployed separately via deploy-infra.yml.
 
-name: Deploy Dev
+name: Deploy Dev (disabled)
 
 on:
-  push:
-    branches: [main, 'sprint/iteration-*']
   workflow_dispatch:
 
 concurrency:

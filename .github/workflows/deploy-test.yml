@@ -13,7 +13,7 @@ name: Deploy Test
 
 on:
   push:
-    branches: [main, 'sprint/iteration-*']
+    branches: [main]
   workflow_dispatch:
 
 concurrency:

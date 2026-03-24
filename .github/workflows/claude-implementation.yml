@@ -49,7 +49,7 @@ jobs:
           echo "::group::Querying project for all issues in current iteration"
 
           # Server-side filter: all issues in the current iteration.
-          # Fetch status so we can exclude owner-gated statuses client-side.
+          # Fetch status so we can filter by actionable statuses client-side.
           # Limit 100 — max allowed by GitHub GraphQL API.
           ITEMS=$(gh api graphql -f query='
             query {
