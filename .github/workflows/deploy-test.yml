@@ -1,6 +1,6 @@
-# Deploy to Dev Environment
+# Deploy to Test Environment
 #
-# Orchestrates API and web deployments to dev.
+# Orchestrates API and web deployments to test.
 # Runs on push to main or manual trigger. Only deploys what changed
 # (workflow_dispatch always deploys everything).
 # Infrastructure is deployed separately via deploy-infra.yml.
@@ -9,7 +9,7 @@
 #   - AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (OIDC login)
 #   - AZURE_STATIC_WEB_APPS_API_TOKEN (SWA deployment token)
 
-name: Deploy Dev
+name: Deploy Test
 
 on:
   push:
@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: deploy-dev
+  group: deploy-test
   cancel-in-progress: false
 
 permissions:
@@ -56,7 +56,7 @@ jobs:
     if: needs.detect-changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/deploy-api.yml
     with:
-      environment: dev
+      environment: test
       image-tag: ${{ github.sha }}
     secrets: inherit
 
@@ -71,5 +71,5 @@ jobs:
       (needs.api.result == 'success' || needs.api.result == 'skipped')
     uses: ./.github/workflows/deploy-web.yml
     with:
-      environment: dev
+      environment: test
     secrets: inherit
