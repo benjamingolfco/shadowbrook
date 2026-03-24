@@ -1,0 +1,75 @@
+# Deploy to Test Environment
+#
+# Orchestrates API and web deployments to test.
+# Runs on push to main or manual trigger. Only deploys what changed
+# (workflow_dispatch always deploys everything).
+# Infrastructure is deployed separately via deploy-infra.yml.
+#
+# Required GitHub Secrets:
+#   - AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (OIDC login)
+#   - AZURE_STATIC_WEB_APPS_API_TOKEN (SWA deployment token)
+
+name: Deploy Test
+
+on:
+  push:
+    branches: [main, 'sprint/iteration-*']
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-test
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  # ============================================================
+  # Detect which directories changed
+  # ============================================================
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            api:
+              - 'src/backend/**'
+            web:
+              - 'src/web/**'
+
+  # ============================================================
+  # Deploy API (if API files changed or manual)
+  # ============================================================
+  api:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/deploy-api.yml
+    with:
+      environment: test
+      image-tag: ${{ github.sha }}
+    secrets: inherit
+
+  # ============================================================
+  # Deploy web (if web files changed or manual)
+  # ============================================================
+  web:
+    needs: [detect-changes, api]
+    if: |
+      !cancelled() &&
+      (needs.detect-changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch') &&
+      (needs.api.result == 'success' || needs.api.result == 'skipped')
+    uses: ./.github/workflows/deploy-web.yml
+    with:
+      environment: test
+    secrets: inherit
