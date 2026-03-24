@@ -105,7 +105,7 @@ Preview changes without deploying:
 
 ## Teardown
 
-To delete the dev environment and stop incurring costs:
+To delete the test environment and stop incurring costs:
 
 ```bash
 # Delete environment only (preserves shared ACR)
@@ -115,7 +115,7 @@ To delete the dev environment and stop incurring costs:
 ./infra/scripts/teardown.sh --shared
 ```
 
-By default, teardown only deletes the environment resource group (`shadowbrook-dev-rg`).
+By default, teardown only deletes the environment resource group (`shadowbrook-test-rg`).
 The shared resource group (`shadowbrook-shared-rg`) with ACR is preserved since it's
 used across environments. Use the `--shared` flag to explicitly delete shared resources too.
 
@@ -162,7 +162,7 @@ Parameter files use `.bicepparam` format with `readEnvironmentVariable()` for se
 ### Container App not starting
 
 Check logs in Azure Portal:
-1. Navigate to Container Apps -> shadowbrook-app-dev
+1. Navigate to Container Apps -> shadowbrook-app-test
 2. Click "Log stream" or "Logs"
 3. Look for startup errors
 
@@ -171,8 +171,8 @@ Check logs in Azure Portal:
 Verify connection string:
 ```bash
 az containerapp show \
-  --name shadowbrook-app-dev \
-  --resource-group shadowbrook-dev-rg \
+  --name shadowbrook-app-test \
+  --resource-group shadowbrook-test-rg \
   --query properties.template.containers[0].env
 ```
 
@@ -201,8 +201,8 @@ To completely stop the environment without deleting resources:
 
 ```bash
 az containerapp update \
-  --name shadowbrook-app-dev \
-  --resource-group shadowbrook-dev-rg \
+  --name shadowbrook-app-test \
+  --resource-group shadowbrook-test-rg \
   --min-replicas 0 \
   --max-replicas 0
 ```
@@ -211,8 +211,8 @@ To restart:
 
 ```bash
 az containerapp update \
-  --name shadowbrook-app-dev \
-  --resource-group shadowbrook-dev-rg \
+  --name shadowbrook-app-test \
+  --resource-group shadowbrook-test-rg \
   --min-replicas 0 \
   --max-replicas 1
 ```
@@ -224,7 +224,7 @@ View logs and metrics:
 ```bash
 # Stream live logs
 az containerapp logs show \
-  --name shadowbrook-app-dev \
-  --resource-group shadowbrook-dev-rg \
+  --name shadowbrook-app-test \
+  --resource-group shadowbrook-test-rg \
   --follow
 ```
