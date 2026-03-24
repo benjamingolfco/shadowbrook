@@ -64,7 +64,8 @@ if (!string.IsNullOrEmpty(appInsightsConnectionString))
         .UseAzureMonitor(o => o.ConnectionString = appInsightsConnectionString);
 }
 
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ApplicationDbContext>();
 builder.Services.AddOpenApi();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
