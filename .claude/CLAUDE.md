@@ -115,6 +115,7 @@ Issues with **no status set** are the backlog — new/untouched issues.
 | In Review | `663d782f` |
 | Changes Requested | `c3f67294` |
 | Ready to Merge | `4aef6ef4` |
+| QA | `3adaa787` |
 | Awaiting Owner | `4fd57247` |
 | Done | `b9a85561` |
 
@@ -169,6 +170,7 @@ The Architect estimates story points using the Fibonacci sequence (1, 2, 3, 5, 8
 | `v2` | Enhanced — post-MVP improvements |
 | `v3` | Future — long-term roadmap items |
 | `agent/ignore` | Escape hatch — both workflows skip issues with this label |
+| `qa-bug` | Bug filed from QA validation — skip BA refinement, goes straight to Ready |
 
 Apply audience labels based on who benefits — many features get **both** `golfers love` and `course operators love` (see "Features Both Golfers AND Courses Will Love" in the roadmap). Always apply exactly one version label (`v1`, `v2`, or `v3`) based on the roadmap tier.
 
@@ -184,6 +186,6 @@ See `.claude/skills/agent-pipeline/SKILL.md` for the full protocol.
   - `.github/workflows/claude-code-review.yml` — standalone code review on all PRs
 - **Agent manager instructions:** `.claude/agents/planning-manager.md`, `.claude/agents/sprint-manager.md`
 - **Agent definitions:** `.claude/agents/*.md`
-- **Pipeline statuses:** (no status) → Needs Story → **Ready** → Implementing → Done
+- **Pipeline statuses:** (no status) → Needs Story → **Ready** → Implementing → QA → Done
 - **Awaiting Owner** — used when BA has open questions or after repeated CI failures (not a pipeline phase — a hold state)
 - **Sprint gate:** Ready — issues wait here until assigned to an iteration for sprint execution
