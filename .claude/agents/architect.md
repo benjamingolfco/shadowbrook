@@ -74,6 +74,13 @@ The Sprint Manager spawns you when an issue enters the sprint. Now you write the
 2. Read existing endpoints, models, services, and tests in the relevant area
 3. Understand conventions before proposing new ones
 
+**Determine which layer owns each rule before deciding how to implement it:**
+
+- **Format/shape validation** (required fields, string formats, numeric ranges) → FluentValidation on the request DTO
+- **Business invariants** (domain rules about what's allowed) → Domain layer (aggregate, entity, or domain service). These throw `DomainException`.
+- Don't put business rules in the API layer just because the API layer has convenient access to the dependencies. If the domain service needs a capability (e.g., current time), expose an interface in the domain and adapt the infrastructure implementation to it.
+- When citing framework limitations as justification for a design choice, verify the claim by reading the actual code or documentation — don't guess.
+
 ### What to produce
 
 A detailed, file-by-file implementation plan that a developer agent can execute without further design decisions:

@@ -55,6 +55,28 @@ public static class WalkUpWaitlistEndpoints
         return Results.Ok(ToResponse(waitlist));
     }
 
+    [WolverinePost("/courses/{courseId}/walkup-waitlist/reopen")]
+    public static async Task<IResult> ReopenWaitlist(
+        Guid courseId,
+        [NotBody] ApplicationDbContext db,
+        IWalkUpWaitlistRepository repo,
+        TimeProvider timeProvider)
+    {
+        var timeZoneId = await db.Courses.Where(c => c.Id == courseId).Select(c => c.TimeZoneId).FirstAsync();
+        var today = CourseTime.Today(timeProvider, timeZoneId);
+
+        var waitlist = await repo.GetByCourseDateAsync(courseId, today);
+
+        if (waitlist is null)
+        {
+            return Results.NotFound(new { error = "No walk-up waitlist found for today." });
+        }
+
+        waitlist.Reopen();
+
+        return Results.Ok(ToResponse(waitlist));
+    }
+
     [WolverineGet("/courses/{courseId}/walkup-waitlist/today")]
     public static async Task<IResult> GetToday(
         Guid courseId,
@@ -96,15 +118,13 @@ public static class WalkUpWaitlistEndpoints
         CreateWalkUpWaitlistRequestRequest request,
         ApplicationDbContext db,
         TeeTimeRequestService teeTimeRequestService,
-        ITeeTimeRequestRepository teeTimeRequestRepo,
-        ICourseTimeZoneProvider courseTimeZoneProvider)
+        ITeeTimeRequestRepository teeTimeRequestRepo)
     {
         var parsedDate = DateOnly.ParseExact(request.Date, "yyyy-MM-dd");
         var parsedTeeTime = TimeOnly.ParseExact(request.TeeTime, ["HH:mm", "HH:mm:ss"]);
-        var timeZoneId = await courseTimeZoneProvider.GetTimeZoneIdAsync(courseId);
 
         var teeTimeRequest = await teeTimeRequestService.CreateAsync(
-            courseId, parsedDate, parsedTeeTime, request.GolfersNeeded, timeZoneId);
+            courseId, parsedDate, parsedTeeTime, request.GolfersNeeded);
 
         teeTimeRequestRepo.Add(teeTimeRequest);
 

@@ -68,9 +68,6 @@ jobs:
           echo "Using image tag: ${TAG:-latest}"
 
       - name: Deploy environment infrastructure
-        env:
-          SQL_ADMIN_LOGIN: ${{ secrets.SQL_ADMIN_LOGIN }}
-          SQL_ADMIN_PASSWORD: ${{ secrets.SQL_ADMIN_PASSWORD }}
         run: |
           az deployment sub create \
             --name "shadowbrook-${{ inputs.environment }}" \

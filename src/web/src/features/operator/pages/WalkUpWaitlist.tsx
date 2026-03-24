@@ -17,20 +17,37 @@ import {
   useWalkUpWaitlistToday,
   useOpenWalkUpWaitlist,
   useCloseWalkUpWaitlist,
+  useReopenWalkUpWaitlist,
 } from '../hooks/useWalkUpWaitlist';
+import { useRemoveGolferFromWaitlist } from '../hooks/useWaitlist';
 import { useCourseContext } from '../context/CourseContext';
 import { OpenWaitlistDialog } from '../components/OpenWaitlistDialog';
 import { AddGolferDialog } from '../components/AddGolferDialog';
 import { AddTeeTimeRequestDialog } from '../components/AddTeeTimeRequestDialog';
 import { CloseWaitlistDialog } from '../components/CloseWaitlistDialog';
+import { QrCodePanel } from '../components/QrCodePanel';
+import { ReopenWaitlistDialog } from '../components/ReopenWaitlistDialog';
+import { RemoveGolferDialog } from '../components/RemoveGolferDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { WalkUpWaitlistEntry, WaitlistRequestEntry } from '@/types/waitlist';
 
-function QueueTable({ entries, timeZoneId }: { entries: WalkUpWaitlistEntry[]; timeZoneId: string }) {
+function QueueTable({
+  entries,
+  timeZoneId,
+  onRemove,
+  removingEntryId,
+  isWaitlistOpen,
+}: {
+  entries: WalkUpWaitlistEntry[];
+  timeZoneId: string;
+  onRemove: (entry: WalkUpWaitlistEntry) => void;
+  removingEntryId: string | null;
+  isWaitlistOpen: boolean;
+}) {
   if (entries.length === 0) {
     return (
       <p className="text-muted-foreground text-sm py-4">
-        No golfers have joined yet. Share the short code with walk-up golfers.
+        No one is on the walk-up waitlist right now.
       </p>
     );
   }
@@ -49,15 +66,29 @@ function QueueTable({ entries, timeZoneId }: { entries: WalkUpWaitlistEntry[]; t
               <TableHead>Name</TableHead>
               <TableHead>Group</TableHead>
               <TableHead>Joined At</TableHead>
+              {isWaitlistOpen && <TableHead className="w-24">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {entries.map((entry, index) => (
-              <TableRow key={entry.id}>
+              <TableRow key={entry.id} className={removingEntryId === entry.id ? 'opacity-50' : ''}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{entry.golferName}</TableCell>
                 <TableCell>{entry.groupSize}</TableCell>
                 <TableCell>{formatCourseTime(entry.joinedAt, timeZoneId)}</TableCell>
+                {isWaitlistOpen && (
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onRemove(entry)}
+                      disabled={removingEntryId === entry.id}
+                      aria-label={`Remove ${entry.golferName} from waitlist`}
+                    >
+                      Remove
+                    </Button>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
@@ -68,7 +99,9 @@ function QueueTable({ entries, timeZoneId }: { entries: WalkUpWaitlistEntry[]; t
         {entries.map((entry, index) => (
           <div
             key={entry.id}
-            className="flex items-center justify-between rounded-md border p-3 text-sm"
+            className={`flex items-center justify-between rounded-md border p-3 text-sm ${
+              removingEntryId === entry.id ? 'opacity-50' : ''
+            }`}
           >
             <div className="flex items-center gap-3">
               <span className="text-muted-foreground font-mono w-6 text-right">
@@ -79,7 +112,20 @@ function QueueTable({ entries, timeZoneId }: { entries: WalkUpWaitlistEntry[]; t
                 <span className="text-muted-foreground text-xs">({entry.groupSize})</span>
               )}
             </div>
-            <span className="text-muted-foreground">{formatCourseTime(entry.joinedAt, timeZoneId)}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">{formatCourseTime(entry.joinedAt, timeZoneId)}</span>
+              {isWaitlistOpen && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onRemove(entry)}
+                  disabled={removingEntryId === entry.id}
+                  aria-label={`Remove ${entry.golferName} from waitlist`}
+                >
+                  Remove
+                </Button>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -159,10 +205,15 @@ export default function WalkUpWaitlist() {
   const [addGolferDialogOpen, setAddGolferDialogOpen] = useState(false);
   const [addRequestDialogOpen, setAddRequestDialogOpen] = useState(false);
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
+  const [reopenDialogOpen, setReopenDialogOpen] = useState(false);
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+  const [removalTarget, setRemovalTarget] = useState<WalkUpWaitlistEntry | null>(null);
 
   const todayQuery = useWalkUpWaitlistToday(course?.id);
   const openMutation = useOpenWalkUpWaitlist();
   const closeMutation = useCloseWalkUpWaitlist();
+  const reopenMutation = useReopenWalkUpWaitlist();
+  const removeMutation = useRemoveGolferFromWaitlist();
 
   if (!course) {
     return (
@@ -191,6 +242,28 @@ export default function WalkUpWaitlist() {
     closeMutation.mutate({ courseId });
   }
 
+  function handleReopen() {
+    reopenMutation.mutate({ courseId });
+  }
+
+  function handleRemoveClick(entry: WalkUpWaitlistEntry) {
+    setRemovalTarget(entry);
+    setRemoveDialogOpen(true);
+  }
+
+  function handleRemoveConfirm() {
+    if (!removalTarget || !courseId) return;
+    removeMutation.mutate(
+      { courseId, entryId: removalTarget.id },
+      {
+        onSuccess: () => {
+          setRemoveDialogOpen(false);
+          setRemovalTarget(null);
+        },
+      }
+    );
+  }
+
   // Loading state
   if (todayQuery.isLoading) {
     return (
@@ -209,9 +282,14 @@ export default function WalkUpWaitlist() {
     return (
       <div className="p-6 max-w-2xl">
         <PageHeader title="Walk-Up Waitlist" />
-        <p className="text-destructive text-sm">
-          Error loading waitlist: {todayQuery.error.message}
-        </p>
+        <div className="space-y-2">
+          <p className="text-destructive text-sm" role="alert">
+            Error loading waitlist: {todayQuery.error.message}
+          </p>
+          <Button onClick={() => todayQuery.refetch()} variant="outline" size="sm">
+            Retry
+          </Button>
+        </div>
       </div>
     );
   }
@@ -265,13 +343,36 @@ export default function WalkUpWaitlist() {
 
   // Closed state
   if (waitlist.status === 'Closed') {
+    const closedActions: PageAction[] = [
+      {
+        id: 'reopen-waitlist',
+        label: 'Reopen Waitlist',
+        description: 'Reopen the walk-up waitlist for today',
+        onClick: () => setReopenDialogOpen(true),
+        disabled: reopenMutation.isPending,
+        disabledLabel: 'Reopening...',
+      },
+    ];
+
     return (
       <div className="p-6 max-w-2xl">
-        <PageHeader title="Walk-Up Waitlist">
+        <PageHeader title="Walk-Up Waitlist" actions={closedActions}>
           <div className="flex items-center gap-2">
             <Badge variant="secondary">Closed</Badge>
           </div>
         </PageHeader>
+
+        <ReopenWaitlistDialog
+          open={reopenDialogOpen}
+          onOpenChange={setReopenDialogOpen}
+          onConfirm={handleReopen}
+        />
+
+        {reopenMutation.isError && (
+          <p className="text-destructive text-sm mb-4">
+            Error reopening waitlist: {(reopenMutation.error as Error).message}
+          </p>
+        )}
 
         <Tabs defaultValue="queue" className="mb-6">
           <TabsList>
@@ -279,7 +380,13 @@ export default function WalkUpWaitlist() {
             <TabsTrigger value="requests">Tee Time Requests</TabsTrigger>
           </TabsList>
           <TabsContent value="queue">
-            <QueueTable entries={entries} timeZoneId={course.timeZoneId} />
+            <QueueTable
+              entries={entries}
+              timeZoneId={course.timeZoneId}
+              onRemove={handleRemoveClick}
+              removingEntryId={removeMutation.isPending ? removalTarget?.id ?? null : null}
+              isWaitlistOpen={false}
+            />
           </TabsContent>
           <TabsContent value="requests">
             <RequestsTable requests={requests} />
@@ -351,11 +458,32 @@ export default function WalkUpWaitlist() {
         onConfirm={handleClose}
       />
 
+      <RemoveGolferDialog
+        open={removeDialogOpen}
+        onOpenChange={setRemoveDialogOpen}
+        onConfirm={handleRemoveConfirm}
+        golferName={removalTarget?.golferName ?? ''}
+        isPending={removeMutation.isPending}
+      />
+
       {closeMutation.isError && (
-        <p className="text-destructive text-sm mb-4">
+        <p className="text-destructive text-sm mb-4" role="alert">
           Error closing waitlist: {(closeMutation.error as Error).message}
         </p>
       )}
+
+      {removeMutation.isError && (
+        <div className="mb-4 space-y-2">
+          <p className="text-destructive text-sm" role="alert">
+            Error removing golfer: {(removeMutation.error as Error).message}
+          </p>
+          <Button onClick={() => removeMutation.reset()} variant="outline" size="sm">
+            Dismiss
+          </Button>
+        </div>
+      )}
+
+      <QrCodePanel shortCode={waitlist.shortCode} />
 
       <Tabs defaultValue="queue" className="mb-6">
         <TabsList>
@@ -363,7 +491,13 @@ export default function WalkUpWaitlist() {
           <TabsTrigger value="requests">Tee Time Requests</TabsTrigger>
         </TabsList>
         <TabsContent value="queue">
-          <QueueTable entries={entries} timeZoneId={course.timeZoneId} />
+          <QueueTable
+            entries={entries}
+            timeZoneId={course.timeZoneId}
+            onRemove={handleRemoveClick}
+            removingEntryId={removeMutation.isPending ? removalTarget?.id ?? null : null}
+            isWaitlistOpen={true}
+          />
         </TabsContent>
         <TabsContent value="requests">
           <RequestsTable requests={requests} />

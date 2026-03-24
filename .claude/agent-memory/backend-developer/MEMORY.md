@@ -18,11 +18,12 @@
 
 ## Key Files
 
-- `src/backend/Shadowbrook.Api/Program.cs` — app bootstrap, DI registration, Wolverine config
+- `src/backend/Shadowbrook.Api/Program.cs` — app bootstrap, DI registration, Wolverine config, Serilog + OTel setup
 - `src/backend/Shadowbrook.Api/Infrastructure/Data/ApplicationDbContext.cs` — EF context with CurrentTenantId property for query filter
 - `src/backend/Shadowbrook.Api/Features/` — Wolverine HTTP endpoints and handlers (feature-based folders)
 - `src/backend/Shadowbrook.Api/Infrastructure/Middleware/CourseExistsMiddleware.cs` — Wolverine Before middleware for course existence check
 - `src/backend/Shadowbrook.Api/Infrastructure/EntityTypeConfigurations/` — IEntityTypeConfiguration classes for domain entities
+- `src/backend/Shadowbrook.Api/Infrastructure/Observability/TenantIdEnricher.cs` — Serilog enricher that adds TenantId from tenant_id claim
 - `tests/Shadowbrook.Api.Tests/TestWebApplicationFactory.cs` — Testcontainers SQL Server test host
 
 ## Domain Project Conventions
@@ -57,6 +58,15 @@
 - Non-body parameters in Wolverine POST/PUT endpoints require `[NotBody]` attribute (repositories, services, currentUser)
 - Shadow properties (`UpdatedAt`, `UpdatedBy`, `RowVersion`) set in `SaveChangesAsync` — NOT on domain entity classes; use `HasShadowAuditProperties()` and `HasShadowRowVersion()` extension methods in entity configurations
 - Response DTOs do NOT include `UpdatedAt` (shadow-only)
+
+## Observability Stack
+
+- Serilog: `Serilog.AspNetCore` 9.0.0, `Serilog.Sinks.Console` 6.0.0, `Serilog.Enrichers.Environment` 3.0.1
+- OTel: `OpenTelemetry.Instrumentation.AspNetCore` 1.14.0, `OpenTelemetry.Instrumentation.Http` 1.14.0, `OpenTelemetry.Instrumentation.EntityFrameworkCore` 1.15.0-beta.1 (no stable release exists), `Azure.Monitor.OpenTelemetry.AspNetCore` 1.4.0
+- Wolverine OTel: `WolverineFx.OpenTelemetry` package does NOT exist — use `AddSource("Wolverine")` in tracing builder (activity source is in core WolverineFx). No `opts.OpenTelemetryInstrumentation()` method in 5.20.1.
+- Azure Monitor is conditional on `APPLICATIONINSIGHTS_CONNECTION_STRING` env var being set
+- OTel extension methods require explicit usings: `OpenTelemetry.Trace`, `OpenTelemetry.Metrics`, `Azure.Monitor.OpenTelemetry.AspNetCore`
+- `EntityFrameworkInstrumentationOptions` in 1.15.0-beta.1 only has `EnrichWithIDbCommand` and `Filter` — no statement capture options
 
 ## Test Conventions
 

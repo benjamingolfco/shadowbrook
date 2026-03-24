@@ -1,7 +1,8 @@
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
-import { getCourseToday } from '@/lib/course-time';
+import { getCourseToday, getCourseNow } from '@/lib/course-time';
 import { useCourseContext } from '../context/CourseContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,13 +31,6 @@ import {
 } from '@/components/ui/dialog';
 import { useCreateWaitlistRequest } from '../hooks/useWaitlist';
 
-const addTeeTimeRequestSchema = z.object({
-  teeTime: z.string().min(1, 'Tee time is required'),
-  golfersNeeded: z.number().min(1, 'At least 1 golfer needed').max(4, 'Maximum 4 golfers'),
-});
-
-type AddTeeTimeRequestFormData = z.infer<typeof addTeeTimeRequestSchema>;
-
 interface AddTeeTimeRequestDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -46,7 +40,42 @@ interface AddTeeTimeRequestDialogProps {
 export function AddTeeTimeRequestDialog({ open, onOpenChange, courseId }: AddTeeTimeRequestDialogProps) {
   const createMutation = useCreateWaitlistRequest();
   const { course } = useCourseContext();
-  const todayDate = getCourseToday(course?.timeZoneId ?? 'UTC');
+  const timeZoneId = course?.timeZoneId ?? 'UTC';
+  const todayDate = getCourseToday(timeZoneId);
+
+  const addTeeTimeRequestSchema = useMemo(
+    () =>
+      z.object({
+        teeTime: z
+          .string()
+          .min(1, 'Tee time is required')
+          .refine(
+            (time) => {
+              if (!time) return true;
+
+              const now = getCourseNow(timeZoneId);
+              const nowParts = now.split(':').map(Number);
+              const timeParts = time.split(':').map(Number);
+
+              const nowHours = nowParts[0] ?? 0;
+              const nowMinutes = nowParts[1] ?? 0;
+              const timeHours = timeParts[0] ?? 0;
+              const timeMinutes = timeParts[1] ?? 0;
+
+              const nowTotalMinutes = nowHours * 60 + nowMinutes;
+              const timeTotalMinutes = timeHours * 60 + timeMinutes;
+              const gracePeriodMinutes = 5;
+
+              return timeTotalMinutes >= nowTotalMinutes - gracePeriodMinutes;
+            },
+            { message: 'Tee time must be in the future' }
+          ),
+        golfersNeeded: z.number().min(1, 'At least 1 golfer needed').max(4, 'Maximum 4 golfers'),
+      }),
+    [timeZoneId],
+  );
+
+  type AddTeeTimeRequestFormData = z.infer<typeof addTeeTimeRequestSchema>;
 
   const form = useForm<AddTeeTimeRequestFormData>({
     resolver: zodResolver(addTeeTimeRequestSchema),

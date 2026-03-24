@@ -1,5 +1,6 @@
 // Azure SQL Database module
-// Creates SQL Server and database (Basic tier for dev)
+// Creates SQL Server and database (Basic tier)
+// Uses Entra-only auth — managed identity is the sole admin (no SQL credentials)
 
 @description('Environment name (dev, staging, prod)')
 param environment string
@@ -7,28 +8,32 @@ param environment string
 @description('Azure region for resources')
 param location string
 
-@description('SQL Server administrator login')
-@secure()
-param sqlAdminLogin string
+@description('Principal ID (object ID) of the managed identity to set as AD admin')
+param managedIdentityPrincipalId string
 
-@description('SQL Server administrator password')
-@secure()
-param sqlAdminPassword string
+@description('Display name of the managed identity (used as the AD admin login)')
+param managedIdentityName string
 
 // Resource names
 var sqlServerName = 'shadowbrook-sql-${environment}'
 var databaseName = 'shadowbrook-db-${environment}'
 
-// Azure SQL Server
+// Azure SQL Server — Entra-only authentication, no SQL admin credentials
 resource sqlServer 'Microsoft.Sql/servers@2023-08-01' = {
   name: sqlServerName
   location: location
   properties: {
-    administratorLogin: sqlAdminLogin
-    administratorLoginPassword: sqlAdminPassword
     version: '12.0'
     minimalTlsVersion: '1.2'
     publicNetworkAccess: 'Enabled'
+    administrators: {
+      administratorType: 'ActiveDirectory'
+      azureADOnlyAuthentication: true
+      login: managedIdentityName
+      principalType: 'Application'
+      sid: managedIdentityPrincipalId
+      tenantId: tenant().tenantId
+    }
   }
 }
 

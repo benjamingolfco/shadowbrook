@@ -54,6 +54,22 @@ public class WalkUpWaitlist : Entity
         ClosedAt = now;
     }
 
+    public void Reopen()
+    {
+        if (Status != WaitlistStatus.Closed)
+        {
+            throw new WaitlistNotClosedException();
+        }
+
+        Status = WaitlistStatus.Open;
+        ClosedAt = null;
+
+        AddDomainEvent(new WaitlistReopened
+        {
+            CourseWaitlistId = Id
+        });
+    }
+
     public async Task<GolferWaitlistEntry> Join(
         Golfer golfer, IGolferWaitlistEntryRepository entryRepository, int groupSize = 1)
     {

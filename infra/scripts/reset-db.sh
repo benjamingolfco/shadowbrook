@@ -5,7 +5,7 @@ set -euo pipefail
 # Drops the Azure SQL database so the container app recreates it via EF migrations on next startup.
 #
 # Usage: ./reset-db.sh [environment]
-#   environment: dev (default), staging, prod
+#   environment: dev (default), test, staging, prod
 
 ENVIRONMENT="${1:-dev}"
 SQL_SERVER="shadowbrook-sql-${ENVIRONMENT}"

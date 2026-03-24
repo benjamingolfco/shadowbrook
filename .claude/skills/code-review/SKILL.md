@@ -42,6 +42,12 @@ Review criteria for the Shadowbrook tee time booking platform. The Code Reviewer
 - **Unnecessary allocations:** large objects in hot paths, string concatenation in loops?
 - **Async all the way:** no `.Result` or `.Wait()` on async calls?
 
+## Convention Adherence
+
+- Read the relevant rules file for changed code (`.claude/rules/backend/backend-conventions.md` for C# files, `.claude/rules/frontend/react-conventions.md` for TypeScript files)
+- Do the changes follow established patterns? If not, is the divergence justified?
+- Pay special attention to: validation layer (FluentValidation vs domain), test pyramid level, file organization, and DDD boundaries
+
 ## Adherence to Technical Plan
 
 - If the Architect posted a technical plan comment on the issue, verify the implementation follows it.

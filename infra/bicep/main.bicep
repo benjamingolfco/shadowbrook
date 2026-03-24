@@ -7,12 +7,14 @@
 //
 // Deployment order (with explicit dependsOn):
 // 0. environmentRg    — Resource group (created first)
-// 1. database          — Azure SQL (independent)
+// 1. managedIdentity   — user-assigned identity (independent)
 // 2. staticWebApp      — SWA for React frontend (independent)
-// 3. managedIdentity   — user-assigned identity (independent)
-// 4. containerAppEnv   — Container Apps Environment (independent)
-// 5. acrRoleAssignment — depends on managedIdentity (deployed to shared RG)
-// 6. containerApp      — depends on acrRoleAssignment, containerAppEnv, database
+// 3. logAnalytics      — Log Analytics workspace (independent)
+// 4. database          — Azure SQL with Entra-only auth (depends on managedIdentity)
+// 5. appInsights       — depends on logAnalytics
+// 6. containerAppEnv   — depends on logAnalytics (appLogsConfiguration)
+// 7. acrRoleAssignment — depends on managedIdentity (deployed to shared RG)
+// 8. containerApp      — depends on acrRoleAssignment, containerAppEnv, database, appInsights
 
 targetScope = 'subscription'
 
@@ -21,14 +23,6 @@ param environment string = 'dev'
 
 @description('Azure region for resources')
 param location string = 'eastus2'
-
-@description('SQL Server administrator login')
-@secure()
-param sqlAdminLogin string
-
-@description('SQL Server administrator password')
-@secure()
-param sqlAdminPassword string
 
 @description('Container image tag')
 param imageTag string = 'latest'
@@ -71,8 +65,8 @@ module database 'modules/database.bicep' = {
   params: {
     environment: environment
     location: location
-    sqlAdminLogin: sqlAdminLogin
-    sqlAdminPassword: sqlAdminPassword
+    managedIdentityPrincipalId: managedIdentity.outputs.principalId
+    managedIdentityName: 'id-shadowbrook-${environment}'
   }
 }
 
@@ -93,6 +87,27 @@ module managedIdentity 'modules/managed-identity.bicep' = {
   params: {
     environment: environment
     location: location
+  }
+}
+
+// Log Analytics Workspace (observability sink for App Insights + Container Apps)
+module logAnalytics 'modules/log-analytics.bicep' = {
+  name: 'log-analytics-deployment'
+  scope: environmentRg
+  params: {
+    environment: environment
+    location: location
+  }
+}
+
+// Application Insights (linked to Log Analytics workspace)
+module appInsights 'modules/app-insights.bicep' = {
+  name: 'app-insights-deployment'
+  scope: environmentRg
+  params: {
+    environment: environment
+    location: location
+    logAnalyticsWorkspaceId: logAnalytics.outputs.id
   }
 }
 
@@ -120,6 +135,8 @@ module containerAppEnv 'modules/container-app-env.bicep' = {
   params: {
     environment: environment
     location: location
+    logAnalyticsWorkspaceCustomerId: logAnalytics.outputs.customerId
+    logAnalyticsSharedKey: logAnalytics.outputs.sharedKey
   }
 }
 
@@ -140,7 +157,8 @@ module containerApp 'modules/container-app.bicep' = {
     containerRegistryLoginServer: existingAcr.properties.loginServer
     userAssignedIdentityId: managedIdentity.outputs.id
     imageTag: imageTag
-    sqlConnectionString: 'Server=tcp:${database.outputs.sqlServerFqdn},1433;Initial Catalog=${database.outputs.databaseName};Persist Security Info=False;User ID=${sqlAdminLogin};Password=${sqlAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+    sqlConnectionString: 'Server=tcp:${database.outputs.sqlServerFqdn},1433;Initial Catalog=${database.outputs.databaseName};Authentication=Active Directory Managed Identity;User Id=${managedIdentity.outputs.clientId};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+    appInsightsConnectionString: appInsights.outputs.connectionString
     frontendUrl: 'https://${staticWebApp.outputs.defaultHostname}'
     corsOrigin: 'https://${staticWebApp.outputs.defaultHostname}'
     // Match main hostname and PR staging URLs (e.g., <name>-123.<region>.<slot>.azurestaticapps.net)
@@ -158,3 +176,5 @@ output swaName string = staticWebApp.outputs.name
 output sqlServerFqdn string = database.outputs.sqlServerFqdn
 output databaseName string = database.outputs.databaseName
 output registryLoginServer string = existingAcr.properties.loginServer
+output appInsightsName string = appInsights.outputs.name
+output logAnalyticsName string = logAnalytics.outputs.name

@@ -8,7 +8,7 @@ export function useWalkUpWaitlistToday(courseId: string | undefined) {
     queryKey: courseId ? queryKeys.walkUpWaitlist.today(courseId) : ['disabled'],
     queryFn: () => api.get<WalkUpWaitlistTodayResponse>(`/courses/${courseId}/walkup-waitlist/today`),
     enabled: !!courseId,
-    refetchInterval: 30000,
+    refetchInterval: 15000,
   });
 }
 
@@ -28,6 +28,17 @@ export function useCloseWalkUpWaitlist() {
   return useMutation({
     mutationFn: ({ courseId }: { courseId: string }) =>
       api.post<WalkUpWaitlist>(`/courses/${courseId}/walkup-waitlist/close`, {}),
+    onSuccess: (_, { courseId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.walkUpWaitlist.today(courseId) });
+    },
+  });
+}
+
+export function useReopenWalkUpWaitlist() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ courseId }: { courseId: string }) =>
+      api.post<WalkUpWaitlist>(`/courses/${courseId}/walkup-waitlist/reopen`, {}),
     onSuccess: (_, { courseId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.walkUpWaitlist.today(courseId) });
     },

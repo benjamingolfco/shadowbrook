@@ -11,18 +11,14 @@ set -euo pipefail
 # Bicep is the single source of truth — resource groups are created
 # by the templates, not by this script.
 #
-# Required environment variables:
-#   SQL_ADMIN_LOGIN    — SQL Server admin username
-#   SQL_ADMIN_PASSWORD — SQL Server admin password
+# No environment variables required — SQL uses Entra-only auth via managed identity.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BICEP_DIR="$SCRIPT_DIR/../bicep"
 
 if [ $# -eq 0 ]; then
   echo "Usage: $0 <environment> [--what-if]"
-  echo "  environment: dev, staging, prod"
-  echo ""
-  echo "Required env vars: SQL_ADMIN_LOGIN, SQL_ADMIN_PASSWORD"
+  echo "  environment: dev, test, staging, prod"
   exit 1
 fi
 
@@ -31,10 +27,6 @@ WHAT_IF_FLAG=""
 if [ "${2:-}" == "--what-if" ]; then
   WHAT_IF_FLAG="--what-if"
 fi
-
-# Validate required environment variables (read by .bicepparam via readEnvironmentVariable)
-: "${SQL_ADMIN_LOGIN:?Environment variable SQL_ADMIN_LOGIN is required}"
-: "${SQL_ADMIN_PASSWORD:?Environment variable SQL_ADMIN_PASSWORD is required}"
 
 SUBSCRIPTION_ID="37109c89-82e6-4907-8cd1-ca80800d0730"  # benjamingolfco
 LOCATION="eastus2"
