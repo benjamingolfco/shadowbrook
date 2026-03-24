@@ -88,6 +88,7 @@ Issues with **no status set** are the backlog — new/untouched issues that the 
 | **Ready** | Planned and estimated. **The sprint gate.** Waits for iteration assignment. | Planning |
 | Implementing | In sprint — Architect writes detailed impl plan, dev agents write code, PR lifecycle managed | Implementation |
 | Awaiting Owner | Blocked on human input — BA open questions or repeated CI failures | Either |
+| QA | Merged — awaiting acceptance criteria validation via `/qa` skill | Implementation |
 | Done | Merged to sprint branch and complete | Implementation |
 
 **Key design points:**
@@ -206,6 +207,7 @@ All comments posted by the managers (Planning Manager / Sprint Manager) use a st
 | ⚙️ | Backend Developer |
 | 🎨 | Frontend Developer |
 | 🔧 | DevOps Engineer |
+| 🔍 | QA Tester |
 
 ### Comment Patterns
 
@@ -352,7 +354,8 @@ The Planning Manager creates and maintains **one pinned comment** on every activ
 | Needs Story → Ready | Update Phase to Ready. Dev Tasks added later during sprint execution. |
 | Implementing (sprint start) | Add `### Implementation Plan` with Architect's detailed plan. Add `### Dev Tasks`. Update Phase. |
 | Implementing (agents working) | Check off dev task items as agents complete them. Add PR link. |
-| Done | Update Phase to Done. Final History entry. |
+| QA | Update Phase to QA. History entry for merge. |
+| Done | Update Phase to Done after QA passes. Final History entry. |
 
 ## Handoff Protocol
 
@@ -392,15 +395,16 @@ Sprint Manager finds unblocked Ready issue in current iteration
       → Sprint Manager posts handback comment, checks off Dev Tasks
   → creates PR targeting sprint branch with `agentic` label (or updates existing PR)
   → monitors PR lifecycle (CI, review) — re-dispatches agents as needed
+  → on merge: sets status to QA (owner validates via /qa skill)
 ```
 
 ### Merge Cascade Flow
 
 ```
 PR merged to sprint branch → Sprint Manager detects
-  → sets linked issue status to Done
+  → sets linked issue status to QA
   → queries: what was this issue blocking?
-  → for each blocked sprint issue: check if ALL blockers now Done
+  → for each blocked sprint issue: check if ALL blockers now QA or Done
   → if unblocked → triggers workflow_dispatch for parallel execution
   → updates Current Sprint Overview
 ```
@@ -418,7 +422,7 @@ PR merged to sprint branch → Sprint Manager detects
 | Implementing | Agents complete | Create/update PR targeting sprint branch (Sprint) |
 | Implementing | CI fails | Re-dispatch agent with failure details (Sprint) |
 | Implementing | Review requests changes | Re-dispatch agent with feedback (Sprint) |
-| Implementing | CI + review pass | Merge to sprint branch, set Done, trigger merge cascade (Sprint) |
+| Implementing | CI + review pass | Merge to sprint branch, set QA, trigger merge cascade (Sprint) |
 
 ## Inter-Agent Questions
 

@@ -72,7 +72,7 @@ gh workflow run claude-implementation.yml --repo benjamingolfco/shadowbrook -f i
 
 ## Status-Based Routing
 
-Implementation uses only two board statuses: **Implementing** and **Done**. All intermediate states (CI, review, changes requested) are tracked by PR mechanics — the Sprint Manager reads PR/CI/review state directly rather than updating board fields.
+Implementation uses three board statuses: **Implementing**, **QA**, and **Done**. All intermediate states (CI, review, changes requested) are tracked by PR mechanics — the Sprint Manager reads PR/CI/review state directly rather than updating board fields. After merge, issues move to QA; the owner validates via the `/qa` skill and moves to Done.
 
 When you receive an issue via `workflow_dispatch`, read its current project status and route:
 
@@ -81,7 +81,7 @@ When you receive an issue via `workflow_dispatch`, read its current project stat
 | **Ready** | Start the full sprint flow from Step 1 |
 | **Implementing** | Resume — check the Issue Plan for completed Dev Tasks, check PR state. Re-dispatch the next uncompleted agent or handle CI/review feedback. |
 
-If the issue is Done, skip it.
+If the issue is QA or Done, skip it.
 
 ---
 
@@ -134,14 +134,14 @@ For each agent:
 After all agents have completed:
 - If no PR exists: create one targeting the **sprint branch** with `--label agentic`
   - Title: summarize all work done
-  - Body: cover all agents' contributions with a test plan. Include "Closes #{number}"
+  - Body: cover all agents' contributions with a test plan. Include "Relates to #{number}"
 - If a PR already exists: update with `gh pr edit`
 
 ### Step 5: Monitor PR Lifecycle
 
 After creating/updating the PR, the Sprint Manager monitors its lifecycle through subsequent workflow triggers (PR events, check suite events):
 
-**CI passes + review approved:** Set status to **Done**. The PR merges to the sprint branch automatically (or the Sprint Manager merges it — these are sprint-branch merges, not main merges). Trigger merge cascade.
+**CI passes + review approved:** Set status to **QA**. The PR merges to the sprint branch automatically (or the Sprint Manager merges it — these are sprint-branch merges, not main merges). Trigger merge cascade.
 
 **CI fails:**
 1. Read the CI failure logs
@@ -167,9 +167,9 @@ Write a `GITHUB_STEP_SUMMARY` table (see SKILL.md § Observability for format).
 When a PR merges to the sprint branch:
 
 1. **Find the linked issue** from the PR body or branch name.
-2. **Set the issue status to Done.**
+2. **Set the issue status to QA.** (The issue moves to Done only after QA validation passes via the `/qa` skill.)
 3. **Query what this issue was blocking** (see CLAUDE.md § GitHub Issue Dependencies).
-4. **For each blocked sprint issue:** check if ALL of its blockers are now Done.
+4. **For each blocked sprint issue:** check if ALL of its blockers are now QA or Done.
 5. **If newly unblocked** → trigger a `workflow_dispatch` for it.
 6. **Update the Current Sprint Overview** with the merge event.
 
@@ -177,7 +177,7 @@ When a PR merges to the sprint branch:
 
 ## Sprint Completion
 
-When all sprint issues are Done:
+When all sprint issues are Done or QA:
 
 1. **Convert the draft sprint PR to ready:**
    ```bash
