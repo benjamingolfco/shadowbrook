@@ -10,6 +10,14 @@ public static class CourseTime
         return DateOnly.FromDateTime(courseLocal.DateTime);
     }
 
+    public static TimeOnly Now(TimeProvider timeProvider, string timeZoneId)
+    {
+        var tz = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        var utcNow = timeProvider.GetUtcNow();
+        var courseLocal = TimeZoneInfo.ConvertTime(utcNow, tz);
+        return TimeOnly.FromDateTime(courseLocal.DateTime);
+    }
+
     public static DateTimeOffset ToUtc(DateOnly date, TimeOnly time, string timeZoneId)
     {
         var tz = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);

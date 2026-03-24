@@ -99,6 +99,7 @@ builder.Services.AddScoped<IWaitlistOfferRepository, WaitlistOfferRepository>();
 builder.Services.AddScoped<IGolferWaitlistEntryRepository, GolferWaitlistEntryRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<ICourseTimeZoneProvider, CourseTimeZoneProvider>();
+builder.Services.AddScoped<ITimeProvider, Shadowbrook.Api.Infrastructure.Services.TimeZoneProvider>();
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
@@ -131,6 +132,7 @@ app.UseExceptionHandler(error => error.Run(async context =>
             WaitlistAlreadyExistsException => StatusCodes.Status409Conflict,
             WaitlistNotClosedException => StatusCodes.Status409Conflict,
             OfferNotPendingException => StatusCodes.Status409Conflict,
+            TeeTimePastException => StatusCodes.Status422UnprocessableEntity,
             _ => StatusCodes.Status400BadRequest
         };
         await context.Response.WriteAsJsonAsync(new { error = domainEx.Message });

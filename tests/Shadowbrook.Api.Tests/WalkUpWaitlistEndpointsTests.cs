@@ -355,12 +355,12 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
 
         var response = await this.client.PostAsJsonAsync(
             $"/courses/{courseId}/walkup-waitlist/requests",
-            new { Date = today, TeeTime = "10:00", GolfersNeeded = 2 });
+            new { Date = today, TeeTime = "23:50", GolfersNeeded = 2 });
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<WaitlistRequestResponse>();
         Assert.NotNull(body);
-        Assert.Equal("10:00", body!.TeeTime);
+        Assert.Equal("23:50", body!.TeeTime);
         Assert.Equal(2, body.GolfersNeeded);
         Assert.Equal("Pending", body.Status);
     }
@@ -373,7 +373,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
 
         var response = await this.client.PostAsJsonAsync(
             $"/courses/{courseId}/walkup-waitlist/requests",
-            new { Date = today, TeeTime = "10:00", GolfersNeeded = 2 });
+            new { Date = today, TeeTime = "23:50", GolfersNeeded = 2 });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -388,7 +388,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
 
         var response = await this.client.PostAsJsonAsync(
             $"/courses/{courseId}/walkup-waitlist/requests",
-            new { Date = today, TeeTime = "10:00", GolfersNeeded = 2 });
+            new { Date = today, TeeTime = "23:50", GolfersNeeded = 2 });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -402,11 +402,11 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
 
         await this.client.PostAsJsonAsync(
             $"/courses/{courseId}/walkup-waitlist/requests",
-            new { Date = today, TeeTime = "11:00", GolfersNeeded = 2 });
+            new { Date = today, TeeTime = "23:40", GolfersNeeded = 2 });
 
         var response = await this.client.PostAsJsonAsync(
             $"/courses/{courseId}/walkup-waitlist/requests",
-            new { Date = today, TeeTime = "11:00", GolfersNeeded = 3 });
+            new { Date = today, TeeTime = "23:40", GolfersNeeded = 3 });
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -418,9 +418,37 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
 
         var response = await this.client.PostAsJsonAsync(
             $"/courses/{Guid.NewGuid()}/walkup-waitlist/requests",
-            new { Date = today, TeeTime = "10:00", GolfersNeeded = 2 });
+            new { Date = today, TeeTime = "23:50", GolfersNeeded = 2 });
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateRequest_PastTeeTime_Returns422()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+        await PostOpenAsync(courseId);
+        var today = CourseTime.Today(TimeProvider.System, TestTimeZones.Chicago).ToString("yyyy-MM-dd");
+
+        var response = await this.client.PostAsJsonAsync(
+            $"/courses/{courseId}/walkup-waitlist/requests",
+            new { Date = today, TeeTime = "00:01", GolfersNeeded = 2 });
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateRequest_PastDate_Returns422()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+        await PostOpenAsync(courseId);
+        var yesterday = CourseTime.Today(TimeProvider.System, TestTimeZones.Chicago).AddDays(-1).ToString("yyyy-MM-dd");
+
+        var response = await this.client.PostAsJsonAsync(
+            $"/courses/{courseId}/walkup-waitlist/requests",
+            new { Date = yesterday, TeeTime = "10:00", GolfersNeeded = 2 });
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
 
     // -------------------------------------------------------------------------

@@ -118,15 +118,13 @@ public static class WalkUpWaitlistEndpoints
         CreateWalkUpWaitlistRequestRequest request,
         ApplicationDbContext db,
         TeeTimeRequestService teeTimeRequestService,
-        ITeeTimeRequestRepository teeTimeRequestRepo,
-        ICourseTimeZoneProvider courseTimeZoneProvider)
+        ITeeTimeRequestRepository teeTimeRequestRepo)
     {
         var parsedDate = DateOnly.ParseExact(request.Date, "yyyy-MM-dd");
         var parsedTeeTime = TimeOnly.ParseExact(request.TeeTime, ["HH:mm", "HH:mm:ss"]);
-        var timeZoneId = await courseTimeZoneProvider.GetTimeZoneIdAsync(courseId);
 
         var teeTimeRequest = await teeTimeRequestService.CreateAsync(
-            courseId, parsedDate, parsedTeeTime, request.GolfersNeeded, timeZoneId);
+            courseId, parsedDate, parsedTeeTime, request.GolfersNeeded);
 
         teeTimeRequestRepo.Add(teeTimeRequest);
 
