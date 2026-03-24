@@ -1,3 +1,4 @@
+using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.TeeTimeRequestAggregate.Exceptions;
 using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 
@@ -5,20 +6,19 @@ namespace Shadowbrook.Domain.TeeTimeRequestAggregate;
 
 public class TeeTimeRequestService(
     ITeeTimeRequestRepository teeTimeRequestRepository,
-    IWalkUpWaitlistRepository walkUpWaitlistRepository)
+    IWalkUpWaitlistRepository walkUpWaitlistRepository,
+    ICourseTimeZoneProvider courseTimeZoneProvider,
+    ITimeProvider timeProvider)
 {
     public async Task<TeeTimeRequest> CreateAsync(
         Guid courseId,
         DateOnly date,
         TimeOnly teeTime,
-        int golfersNeeded,
-        string timeZoneId,
-        TimeProvider timeProvider)
+        int golfersNeeded)
     {
-        var tz = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
-        var courseLocalNow = TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), tz);
-        var today = DateOnly.FromDateTime(courseLocalNow.DateTime);
-        var now = TimeOnly.FromDateTime(courseLocalNow.DateTime);
+        var timeZoneId = await courseTimeZoneProvider.GetTimeZoneIdAsync(courseId);
+        var today = timeProvider.GetCurrentDateByTimeZone(timeZoneId);
+        var now = timeProvider.GetCurrentTimeByTimeZone(timeZoneId);
         var gracePeriod = TimeSpan.FromMinutes(5);
 
         if (date < today || (date == today && teeTime < now.Add(-gracePeriod)))
