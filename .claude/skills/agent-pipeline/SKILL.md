@@ -419,7 +419,8 @@ PR merged to main → Sprint Manager detects
 | Implementing | Agents complete | Create/update PR targeting main (Sprint) |
 | Implementing | CI fails | Re-dispatch agent with failure details (Sprint) |
 | Implementing | Review requests changes | Re-dispatch agent with feedback (Sprint) |
-| Implementing | CI + review pass | Merge to main, set QA, trigger merge cascade (Sprint) |
+| Implementing | CI + review pass | Set Ready to Merge, owner approves and merges to main (Sprint) |
+| Ready to Merge | PR merged | Set QA, trigger merge cascade (Sprint) |
 
 ## Inter-Agent Questions
 
@@ -439,9 +440,10 @@ When an agent encounters ambiguity, it includes the question in its Task respons
 
 ## Guardrails
 
-- Implementation agents must **never** merge PRs — only the Sprint Manager merges.
-- The Sprint Manager **may** merge issue PRs to main after CI passes and code review approves.
+- Agents must **never** merge PRs to main — only the product owner merges.
+- The Sprint Manager sets status to **Ready to Merge** after CI + code review pass; the owner approves and merges.
 - Agents must **never** submit formal GitHub PR approvals (`gh pr review --approve`).
+- The `owner-gate` workflow enforces owner approval as a required status check on agentic PRs.
 
 ---
 
