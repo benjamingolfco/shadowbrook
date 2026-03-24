@@ -29,6 +29,16 @@ Examples:
 - `shadowbrook-sql-dev` - SQL Server (dev)
 - `shadowbrook-db-dev` - SQL Database (dev)
 - `id-shadowbrook-dev` - Managed Identity (dev)
+- `shadowbrook-app-test` - Container App (test)
+- `shadowbrook-sql-test` - SQL Server (test)
+- `shadowbrook-db-test` - SQL Database (test)
+- `id-shadowbrook-test` - Managed Identity (test)
+
+### SQL Authentication
+
+**dev** uses SQL admin username/password (passed via `SQL_ADMIN_LOGIN` / `SQL_ADMIN_PASSWORD` env vars and stored as a Container App secret).
+
+**test** uses the managed identity for SQL auth — no username/password in the connection string. The Container App's user-assigned identity is set as the Entra AD admin on the SQL Server, and the connection string uses `Authentication=Active Directory Managed Identity`.
 
 ### Deployment Order
 
@@ -44,7 +54,8 @@ Both phases use subscription-level deployments (`az deployment sub create`). Bic
 3. **staticWebApp** — SWA for React frontend (independent)
 4. **managedIdentity** — User-assigned identity (independent)
 5. **acrRoleAssignment** — AcrPull role (depends on identity, deployed to shared RG)
-6. **containerApp** — App + environment (depends on role assignment + database)
+6. **sqlAadAdmin** — Entra AD admin on SQL Server (depends on database + identity)
+7. **containerApp** — App + environment (depends on role assignments + database)
 
 The environment deployment references the shared ACR cross-resource-group via Bicep's
 `existing` resource + `scope: resourceGroup(...)` pattern.
@@ -128,12 +139,14 @@ infra/bicep/
 ├── main.bicep                        # Environment orchestration (subscription-scoped)
 ├── shared.bicep                      # Shared infrastructure (subscription-scoped)
 ├── parameters.dev.bicepparam         # Dev environment parameters
+├── parameters.test.bicepparam        # Test environment parameters (managed identity SQL auth)
 ├── parameters.shared.bicepparam      # Shared infrastructure parameters
 └── modules/                          # Resource modules
     ├── database.bicep                # Azure SQL Server and Database
     ├── registry.bicep                # Azure Container Registry
     ├── managed-identity.bicep        # User-assigned managed identity
     ├── acr-role-assignment.bicep     # AcrPull role assignment
+    ├── sql-aad-admin.bicep           # SQL Server Entra AD admin assignment
     ├── container-app.bicep           # Container Apps Environment and App
     └── static-web-app.bicep          # Azure Static Web Apps (React frontend)
 ```

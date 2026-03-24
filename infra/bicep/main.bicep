@@ -14,7 +14,8 @@
 // 5. appInsights       — depends on logAnalytics
 // 6. containerAppEnv   — depends on logAnalytics (appLogsConfiguration)
 // 7. acrRoleAssignment — depends on managedIdentity (deployed to shared RG)
-// 8. containerApp      — depends on acrRoleAssignment, containerAppEnv, database, appInsights
+// 8. sqlAadAdmin       — depends on database, managedIdentity (Entra AD admin on SQL Server)
+// 9. containerApp      — depends on acrRoleAssignment, sqlAadAdmin, containerAppEnv, database, appInsights
 
 targetScope = 'subscription'
 
@@ -133,6 +134,17 @@ module acrRoleAssignment 'modules/acr-role-assignment.bicep' = {
   }
 }
 
+// SQL Server Entra AD admin — identity can authenticate to SQL before Container App exists
+module sqlAadAdmin 'modules/sql-aad-admin.bicep' = {
+  name: 'sql-aad-admin-deployment'
+  scope: environmentRg
+  params: {
+    sqlServerName: database.outputs.sqlServerName
+    managedIdentityPrincipalId: managedIdentity.outputs.principalId
+    managedIdentityName: 'id-shadowbrook-${environment}'
+  }
+}
+
 // ============================================================================
 // Container Apps Environment (independent — can host multiple apps)
 // ============================================================================
@@ -157,6 +169,7 @@ module containerApp 'modules/container-app.bicep' = {
   scope: environmentRg
   dependsOn: [
     acrRoleAssignment
+    sqlAadAdmin
   ]
   params: {
     environment: environment
@@ -165,7 +178,7 @@ module containerApp 'modules/container-app.bicep' = {
     containerRegistryLoginServer: existingAcr.properties.loginServer
     userAssignedIdentityId: managedIdentity.outputs.id
     imageTag: imageTag
-    sqlConnectionString: 'Server=tcp:${database.outputs.sqlServerFqdn},1433;Initial Catalog=${database.outputs.databaseName};Persist Security Info=False;User ID=${sqlAdminLogin};Password=${sqlAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+    sqlConnectionString: 'Server=tcp:${database.outputs.sqlServerFqdn},1433;Initial Catalog=${database.outputs.databaseName};Authentication=Active Directory Managed Identity;User Id=${managedIdentity.outputs.clientId};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
     appInsightsConnectionString: appInsights.outputs.connectionString
     frontendUrl: 'https://${staticWebApp.outputs.defaultHostname}'
     corsOrigin: 'https://${staticWebApp.outputs.defaultHostname}'

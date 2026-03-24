@@ -20,7 +20,7 @@ BICEP_DIR="$SCRIPT_DIR/../bicep"
 
 if [ $# -eq 0 ]; then
   echo "Usage: $0 <environment> [--what-if]"
-  echo "  environment: dev, staging, prod"
+  echo "  environment: dev, test, staging, prod"
   echo ""
   echo "Required env vars: SQL_ADMIN_LOGIN, SQL_ADMIN_PASSWORD"
   exit 1

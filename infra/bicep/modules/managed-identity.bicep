@@ -24,3 +24,6 @@ output id string = managedIdentity.id
 
 @description('The principal ID (object ID) of the managed identity')
 output principalId string = managedIdentity.properties.principalId
+
+@description('The client ID of the managed identity')
+output clientId string = managedIdentity.properties.clientId

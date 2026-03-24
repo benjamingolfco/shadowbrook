@@ -65,3 +65,6 @@ resource database 'Microsoft.Sql/servers/databases@2023-08-01' = {
 // Outputs
 output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
 output databaseName string = database.name
+
+@description('The name of the SQL Server resource')
+output sqlServerName string = sqlServer.name
