@@ -10,9 +10,11 @@
 // 1. database          — Azure SQL (independent)
 // 2. staticWebApp      — SWA for React frontend (independent)
 // 3. managedIdentity   — user-assigned identity (independent)
-// 4. containerAppEnv   — Container Apps Environment (independent)
-// 5. acrRoleAssignment — depends on managedIdentity (deployed to shared RG)
-// 6. containerApp      — depends on acrRoleAssignment, containerAppEnv, database
+// 4. logAnalytics      — Log Analytics workspace (independent)
+// 5. appInsights       — depends on logAnalytics
+// 6. containerAppEnv   — depends on logAnalytics (appLogsConfiguration)
+// 7. acrRoleAssignment — depends on managedIdentity (deployed to shared RG)
+// 8. containerApp      — depends on acrRoleAssignment, containerAppEnv, database, appInsights
 
 targetScope = 'subscription'
 
@@ -96,6 +98,27 @@ module managedIdentity 'modules/managed-identity.bicep' = {
   }
 }
 
+// Log Analytics Workspace (observability sink for App Insights + Container Apps)
+module logAnalytics 'modules/log-analytics.bicep' = {
+  name: 'log-analytics-deployment'
+  scope: environmentRg
+  params: {
+    environment: environment
+    location: location
+  }
+}
+
+// Application Insights (linked to Log Analytics workspace)
+module appInsights 'modules/app-insights.bicep' = {
+  name: 'app-insights-deployment'
+  scope: environmentRg
+  params: {
+    environment: environment
+    location: location
+    logAnalyticsWorkspaceId: logAnalytics.outputs.id
+  }
+}
+
 // ============================================================================
 // Role assignments (deployed after identity exists, scoped to shared RG)
 // ============================================================================
@@ -120,6 +143,8 @@ module containerAppEnv 'modules/container-app-env.bicep' = {
   params: {
     environment: environment
     location: location
+    logAnalyticsWorkspaceCustomerId: logAnalytics.outputs.customerId
+    logAnalyticsSharedKey: logAnalytics.outputs.sharedKey
   }
 }
 
@@ -141,6 +166,7 @@ module containerApp 'modules/container-app.bicep' = {
     userAssignedIdentityId: managedIdentity.outputs.id
     imageTag: imageTag
     sqlConnectionString: 'Server=tcp:${database.outputs.sqlServerFqdn},1433;Initial Catalog=${database.outputs.databaseName};Persist Security Info=False;User ID=${sqlAdminLogin};Password=${sqlAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+    appInsightsConnectionString: appInsights.outputs.connectionString
     frontendUrl: 'https://${staticWebApp.outputs.defaultHostname}'
     corsOrigin: 'https://${staticWebApp.outputs.defaultHostname}'
     // Match main hostname and PR staging URLs (e.g., <name>-123.<region>.<slot>.azurestaticapps.net)
@@ -158,3 +184,5 @@ output swaName string = staticWebApp.outputs.name
 output sqlServerFqdn string = database.outputs.sqlServerFqdn
 output databaseName string = database.outputs.databaseName
 output registryLoginServer string = existingAcr.properties.loginServer
+output appInsightsName string = appInsights.outputs.name
+output logAnalyticsName string = logAnalytics.outputs.name
