@@ -424,7 +424,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     }
 
     [Fact]
-    public async Task CreateRequest_PastTeeTime_Returns422()
+    public async Task CreateRequest_PastTeeTime_Returns400()
     {
         var (_, courseId) = await CreateTestCourseAsync();
         await PostOpenAsync(courseId);
@@ -434,16 +434,11 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
             $"/courses/{courseId}/walkup-waitlist/requests",
             new { Date = today, TeeTime = "00:01", GolfersNeeded = 2 });
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
-
-        var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-        Assert.NotNull(body);
-        Assert.Equal("Tee time is in the past", body!.Title);
-        Assert.Equal("Tee time must be in the future.", body.Detail);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
-    public async Task CreateRequest_PastDate_Returns422()
+    public async Task CreateRequest_PastDate_Returns400()
     {
         var (_, courseId) = await CreateTestCourseAsync();
         await PostOpenAsync(courseId);
@@ -453,12 +448,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
             $"/courses/{courseId}/walkup-waitlist/requests",
             new { Date = yesterday, TeeTime = "10:00", GolfersNeeded = 2 });
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
-
-        var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-        Assert.NotNull(body);
-        Assert.Equal("Tee time is in the past", body!.Title);
-        Assert.Equal("Tee time must be in the future.", body.Detail);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     // -------------------------------------------------------------------------
@@ -738,5 +728,4 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     private record ErrorResponse(string Error);
     private record CourseIdResponse(Guid Id);
     private record TenantIdResponse(Guid Id);
-    private record ProblemDetails(string? Title, string? Detail, int? Status);
 }

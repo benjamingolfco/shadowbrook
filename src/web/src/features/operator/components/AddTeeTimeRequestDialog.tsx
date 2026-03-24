@@ -72,7 +72,6 @@ export function AddTeeTimeRequestDialog({ open, onOpenChange, courseId }: AddTee
           ),
         golfersNeeded: z.number().min(1, 'At least 1 golfer needed').max(4, 'Maximum 4 golfers'),
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [timeZoneId],
   );
 
