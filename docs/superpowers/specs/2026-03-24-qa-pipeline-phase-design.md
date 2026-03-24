@@ -12,14 +12,14 @@ Add a QA phase to the pipeline that validates each user story's acceptance crite
 
 ### 1. New Pipeline Status: QA
 
-A new `QA` status on the GitHub Project board, positioned between Ready to Merge and Done.
+A new `QA` status on the GitHub Project board, positioned between Implementing and Done. (The sprint manager only tracks two board statuses during implementation — Implementing and Done. Intermediate states like CI and review are tracked by PR mechanics, not board statuses.)
 
-**Updated pipeline flow:**
+**Updated board flow:**
 ```
-Ready -> Implementing -> CI Pending -> In Review -> Changes Requested -> Ready to Merge -> QA -> Done
+Implementing -> QA -> Done
 ```
 
-After a PR merges, the sprint manager moves the issue to QA instead of Done. The issue stays in QA until all acceptance criteria pass with no open bugs.
+After a PR merges, the sprint manager moves the issue to QA instead of Done. The issue stays in QA until all acceptance criteria pass with no open QA bugs.
 
 **Merge cascade is unchanged** — dependent issues unblock on PR merge, not on QA completion. QA validates the story; it does not gate downstream work.
 
@@ -29,13 +29,15 @@ After a PR merges, the sprint manager moves the issue to QA instead of Done. The
 
 Three modifications to `.claude/agents/sprint-manager.md`:
 
-1. **PR body format:** Use `Relates to #N` instead of `Closes #N` so merging the PR does not auto-close the issue. Issues are closed when they move to Done after QA.
+1. **PR body format:** Use `Relates to #N` instead of `Closes #N`. Currently, `Closes #N` auto-closes the issue on merge, which would skip the QA phase entirely. With the QA phase, issues should only close when they move to Done after passing QA.
 2. **Post-merge status:** Move issues to `QA` instead of `Done` after merge.
 3. **Merge cascade:** No changes — still triggers on merge, unblocks dependent issues as before.
 
 ### 3. QA Agent Definition
 
 A new file `.claude/agents/qa-tester.md` defining the QA tester role.
+
+**Role icon:** (magnifying glass — for QA report comments on issues)
 
 **Role:** Verify acceptance criteria against a running application using a headed browser.
 
@@ -64,13 +66,13 @@ A user-invocable skill with two modes:
 **Single issue: `/qa 247`**
 1. Fetch the issue via `gh issue view 247`
 2. Extract the user story and acceptance criteria from the Issue Plan comment
-3. Determine the deployed environment URL (dev environment, with option to override)
+3. Determine the deployed environment URL. Default is read from a project config (e.g., environment variable or `.claude/config`). Override via argument: `/qa 247 --url http://localhost:3000`.
 4. Dispatch the qa-tester agent with full context and Playwright MCP access in headed mode
 5. Collect the structured report
 6. Post the QA report as a comment on the issue
 7. Handle results:
-   - **All ACs pass, no bugs** — move issue to Done, close it
-   - **Failures found** — create bug issues linked as sub-issues to the parent story. Leave the issue in QA status. Bugs go through the normal pipeline (planning, implementation, merge) and the story gets re-tested on a future `/qa` run.
+   - **All ACs pass, no open `qa-bug` sub-issues** — move issue to Done, close it
+   - **Failures found** — create bug issues labeled `qa-bug` and linked as sub-issues to the parent story. Leave the issue in QA status. QA bugs skip BA story refinement and go straight to Ready with the QA report as context (the reproduction steps and screenshots are the story). The parent story gets re-tested on a future `/qa` run.
    - **Gaps discovered** — offer to create new feature/story issues (not linked as sub-issues — they are new scope)
 
 **QA queue: `/qa`** (no arguments)
@@ -80,7 +82,9 @@ A user-invocable skill with two modes:
 4. After each issue: post report, file bugs, move to Done if clean
 5. After all issues: print session summary ("3 issues tested, 2 passed, 1 had 2 bugs filed")
 
-**Re-testing flow:** When bugs filed from QA get fixed and merged, the parent story stays in QA. The next `/qa` run picks it up again. If all ACs now pass and no open bug sub-issues remain, the story moves to Done.
+**Re-testing flow:** When bugs filed from QA get fixed and merged, the parent story stays in QA. The next `/qa` run picks it up again. The agent always re-tests the full AC suite (not just previously-failed criteria) to catch regressions. If all ACs pass and no open `qa-bug` sub-issues remain, the story moves to Done.
+
+**Identifying QA bugs:** The `qa-bug` label distinguishes bugs filed by the `/qa` skill from other sub-issues. Only open sub-issues with this label block the parent story from moving to Done.
 
 ### 5. What This Does Not Include
 
