@@ -12,8 +12,20 @@ public class TeeTimeRequestService(
         DateOnly date,
         TimeOnly teeTime,
         int golfersNeeded,
-        string timeZoneId)
+        string timeZoneId,
+        TimeProvider timeProvider)
     {
+        var tz = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        var courseLocalNow = TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), tz);
+        var today = DateOnly.FromDateTime(courseLocalNow.DateTime);
+        var now = TimeOnly.FromDateTime(courseLocalNow.DateTime);
+        var gracePeriod = TimeSpan.FromMinutes(5);
+
+        if (date < today || (date == today && teeTime < now.Add(-gracePeriod)))
+        {
+            throw new TeeTimePastException();
+        }
+
         var waitlist = await walkUpWaitlistRepository.GetOpenByCourseDateAsync(courseId, date);
 
         if (waitlist is null)

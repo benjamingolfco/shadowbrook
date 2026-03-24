@@ -126,29 +126,8 @@ public static class WalkUpWaitlistEndpoints
         var parsedTeeTime = TimeOnly.ParseExact(request.TeeTime, ["HH:mm", "HH:mm:ss"]);
         var timeZoneId = await courseTimeZoneProvider.GetTimeZoneIdAsync(courseId);
 
-        // Validate that the tee time is not in the past (with 5-minute grace period)
-        var today = CourseTime.Today(timeProvider, timeZoneId);
-        var now = CourseTime.Now(timeProvider, timeZoneId);
-        var gracePeriod = TimeSpan.FromMinutes(5);
-
-        if (parsedDate < today)
-        {
-            return Results.Problem(
-                title: "Tee time is in the past",
-                detail: "Tee time must be in the future.",
-                statusCode: 422);
-        }
-
-        if (parsedDate == today && parsedTeeTime < now.Add(-gracePeriod))
-        {
-            return Results.Problem(
-                title: "Tee time is in the past",
-                detail: "Tee time must be in the future.",
-                statusCode: 422);
-        }
-
         var teeTimeRequest = await teeTimeRequestService.CreateAsync(
-            courseId, parsedDate, parsedTeeTime, request.GolfersNeeded, timeZoneId);
+            courseId, parsedDate, parsedTeeTime, request.GolfersNeeded, timeZoneId, timeProvider);
 
         teeTimeRequestRepo.Add(teeTimeRequest);
 
