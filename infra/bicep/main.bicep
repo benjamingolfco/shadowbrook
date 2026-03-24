@@ -7,15 +7,14 @@
 //
 // Deployment order (with explicit dependsOn):
 // 0. environmentRg    — Resource group (created first)
-// 1. database          — Azure SQL (independent)
+// 1. managedIdentity   — user-assigned identity (independent)
 // 2. staticWebApp      — SWA for React frontend (independent)
-// 3. managedIdentity   — user-assigned identity (independent)
-// 4. logAnalytics      — Log Analytics workspace (independent)
+// 3. logAnalytics      — Log Analytics workspace (independent)
+// 4. database          — Azure SQL with Entra-only auth (depends on managedIdentity)
 // 5. appInsights       — depends on logAnalytics
 // 6. containerAppEnv   — depends on logAnalytics (appLogsConfiguration)
 // 7. acrRoleAssignment — depends on managedIdentity (deployed to shared RG)
-// 8. sqlAadAdmin       — depends on database, managedIdentity (Entra AD admin on SQL Server)
-// 9. containerApp      — depends on acrRoleAssignment, sqlAadAdmin, containerAppEnv, database, appInsights
+// 8. containerApp      — depends on acrRoleAssignment, containerAppEnv, database, appInsights
 
 targetScope = 'subscription'
 
@@ -24,14 +23,6 @@ param environment string = 'dev'
 
 @description('Azure region for resources')
 param location string = 'eastus2'
-
-@description('SQL Server administrator login')
-@secure()
-param sqlAdminLogin string
-
-@description('SQL Server administrator password')
-@secure()
-param sqlAdminPassword string
 
 @description('Container image tag')
 param imageTag string = 'latest'
@@ -74,8 +65,8 @@ module database 'modules/database.bicep' = {
   params: {
     environment: environment
     location: location
-    sqlAdminLogin: sqlAdminLogin
-    sqlAdminPassword: sqlAdminPassword
+    managedIdentityPrincipalId: managedIdentity.outputs.principalId
+    managedIdentityName: 'id-shadowbrook-${environment}'
   }
 }
 
@@ -134,17 +125,6 @@ module acrRoleAssignment 'modules/acr-role-assignment.bicep' = {
   }
 }
 
-// SQL Server Entra AD admin — identity can authenticate to SQL before Container App exists
-module sqlAadAdmin 'modules/sql-aad-admin.bicep' = {
-  name: 'sql-aad-admin-deployment'
-  scope: environmentRg
-  params: {
-    sqlServerName: database.outputs.sqlServerName
-    managedIdentityPrincipalId: managedIdentity.outputs.principalId
-    managedIdentityName: 'id-shadowbrook-${environment}'
-  }
-}
-
 // ============================================================================
 // Container Apps Environment (independent — can host multiple apps)
 // ============================================================================
@@ -169,7 +149,6 @@ module containerApp 'modules/container-app.bicep' = {
   scope: environmentRg
   dependsOn: [
     acrRoleAssignment
-    sqlAadAdmin
   ]
   params: {
     environment: environment
