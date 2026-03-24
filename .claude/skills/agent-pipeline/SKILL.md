@@ -89,7 +89,7 @@ Issues with **no status set** are the backlog — new/untouched issues that the 
 | Implementing | In sprint — Architect writes detailed impl plan, dev agents write code, PR lifecycle managed | Implementation |
 | Awaiting Owner | Blocked on human input — BA open questions or repeated CI failures | Either |
 | QA | Merged — awaiting acceptance criteria validation via `/qa` skill | Implementation |
-| Done | Merged to sprint branch and complete | Implementation |
+| Done | Merged to main and complete | Implementation |
 
 **Key design points:**
 - **Ready** is the sprint gate — issues wait here until assigned to an iteration
@@ -137,8 +137,6 @@ The pipeline has **no owner review gates** during normal flow. The only time the
 - **Agent blocked:** An agent explicitly states it cannot proceed.
 
 When entering Awaiting Owner, the manager assigns `@aarongbenjamin` and posts an **Action Required** comment. When the owner responds, the manager unassigns them and resumes the pipeline.
-
-**Sprint-level review:** The owner reviews the sprint as a whole (sprint PR from sprint branch → main), not individual issue PRs. The Sprint Manager may merge issue PRs to the sprint branch after CI + review pass, but **must NEVER merge to main or enable auto-merge to main**.
 
 ---
 
@@ -382,8 +380,7 @@ Planning Manager analyzes event → determines BA needed
 
 ```
 Sprint Manager finds unblocked Ready issue in current iteration
-  → ensures sprint branch exists (sprint/iteration-{N})
-  → creates issue branch from sprint branch (or checks out existing)
+  → creates issue branch from main (or checks out existing)
   → sets status to Implementing
   → spawns Architect for detailed implementation plan
   → Architect returns file-by-file plan with Dev Tasks
@@ -393,7 +390,7 @@ Sprint Manager finds unblocked Ready issue in current iteration
       → agent implements on the branch, commits, pushes
       → agent returns: files changed, tasks completed, summary
       → Sprint Manager posts handback comment, checks off Dev Tasks
-  → creates PR targeting sprint branch with `agentic` label (or updates existing PR)
+  → creates PR targeting main with `agentic` label (or updates existing PR)
   → monitors PR lifecycle (CI, review) — re-dispatches agents as needed
   → on merge: sets status to QA (owner validates via /qa skill)
 ```
@@ -401,7 +398,7 @@ Sprint Manager finds unblocked Ready issue in current iteration
 ### Merge Cascade Flow
 
 ```
-PR merged to sprint branch → Sprint Manager detects
+PR merged to main → Sprint Manager detects
   → sets linked issue status to QA
   → queries: what was this issue blocking?
   → for each blocked sprint issue: check if ALL blockers now QA or Done
@@ -418,11 +415,11 @@ PR merged to sprint branch → Sprint Manager detects
 | Needs Story | BA returns (open questions) | Add Story, set Awaiting Owner, tag owner (Planning) |
 | Needs Story | Architect returns | Add Feasibility, set dependencies, set Ready (Planning) |
 | Awaiting Owner | Owner responds | Unassign owner, resume from where stalled (Either) |
-| Ready (in iteration) | Cron / dependency unblock | Set Implementing, create sprint/issue branches, spawn Architect for detailed plan, implement (Sprint) |
-| Implementing | Agents complete | Create/update PR targeting sprint branch (Sprint) |
+| Ready (in iteration) | Cron / dependency unblock | Set Implementing, create issue branch from main, spawn Architect for detailed plan, implement (Sprint) |
+| Implementing | Agents complete | Create/update PR targeting main (Sprint) |
 | Implementing | CI fails | Re-dispatch agent with failure details (Sprint) |
 | Implementing | Review requests changes | Re-dispatch agent with feedback (Sprint) |
-| Implementing | CI + review pass | Merge to sprint branch, set QA, trigger merge cascade (Sprint) |
+| Implementing | CI + review pass | Merge to main, set QA, trigger merge cascade (Sprint) |
 
 ## Inter-Agent Questions
 
@@ -442,11 +439,9 @@ When an agent encounters ambiguity, it includes the question in its Task respons
 
 ## Guardrails
 
-- Agents must **never** merge PRs to main — including via `gh pr merge`, `gh pr merge --auto`, or any other merge mechanism targeting main.
-- Agents must **never** enable auto-merge on PRs targeting main.
-- The Sprint Manager **may** merge issue PRs to the sprint branch after CI passes and code review approves.
+- Implementation agents must **never** merge PRs — only the Sprint Manager merges.
+- The Sprint Manager **may** merge issue PRs to main after CI passes and code review approves.
 - Agents must **never** submit formal GitHub PR approvals (`gh pr review --approve`).
-- Only the **product owner** reviews and merges the sprint PR (sprint branch → main).
 
 ---
 
