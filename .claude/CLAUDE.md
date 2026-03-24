@@ -115,6 +115,7 @@ Issues with **no status set** are the backlog — new/untouched issues.
 | In Review | `663d782f` |
 | Changes Requested | `c3f67294` |
 | Ready to Merge | `4aef6ef4` |
+| QA | `3adaa787` |
 | Awaiting Owner | `4fd57247` |
 | Done | `b9a85561` |
 
@@ -184,6 +185,6 @@ See `.claude/skills/agent-pipeline/SKILL.md` for the full protocol.
   - `.github/workflows/claude-code-review.yml` — standalone code review on all PRs
 - **Agent manager instructions:** `.claude/agents/planning-manager.md`, `.claude/agents/sprint-manager.md`
 - **Agent definitions:** `.claude/agents/*.md`
-- **Pipeline statuses:** (no status) → Needs Story → **Ready** → Implementing → Done
+- **Pipeline statuses:** (no status) → Needs Story → **Ready** → Implementing → QA → Done
 - **Awaiting Owner** — used when BA has open questions or after repeated CI failures (not a pipeline phase — a hold state)
 - **Sprint gate:** Ready — issues wait here until assigned to an iteration for sprint execution
