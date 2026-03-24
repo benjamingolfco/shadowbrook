@@ -23,6 +23,10 @@ param imageTag string
 @secure()
 param sqlConnectionString string
 
+@description('Application Insights connection string')
+@secure()
+param appInsightsConnectionString string
+
 @description('Allowed CORS origin (e.g., https://my-swa.azurestaticapps.net)')
 param corsOrigin string
 
@@ -59,6 +63,10 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
           name: 'sql-connection-string'
           value: sqlConnectionString
         }
+        {
+          name: 'app-insights-connection-string'
+          value: appInsightsConnectionString
+        }
       ]
     }
     template: {
@@ -90,6 +98,10 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
             {
               name: 'Cors__AllowedOriginPattern'
               value: corsOriginPattern
+            }
+            {
+              name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+              secretRef: 'app-insights-connection-string'
             }
           ]
           probes: [

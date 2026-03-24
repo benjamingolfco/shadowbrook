@@ -29,6 +29,14 @@ Examples:
 - `shadowbrook-sql-dev` - SQL Server (dev)
 - `shadowbrook-db-dev` - SQL Database (dev)
 - `id-shadowbrook-dev` - Managed Identity (dev)
+- `shadowbrook-app-test` - Container App (test)
+- `shadowbrook-sql-test` - SQL Server (test)
+- `shadowbrook-db-test` - SQL Database (test)
+- `id-shadowbrook-test` - Managed Identity (test)
+
+### SQL Authentication
+
+All environments use **Entra-only authentication** — the Container App's user-assigned managed identity is set as the SQL Server AD admin at creation time, and the connection string uses `Authentication=Active Directory Managed Identity`. No SQL admin credentials are needed.
 
 ### Deployment Order
 
@@ -56,7 +64,7 @@ The environment deployment references the shared ACR cross-resource-group via Bi
 1. **Azure CLI**: Install from https://aka.ms/azure-cli
 2. **Azure Subscription**: Active Azure subscription
 3. **Permissions**: Contributor + User Access Administrator role on the subscription
-4. **Secrets**: SQL admin credentials
+4. **Secrets**: Azure OIDC credentials (for GitHub Actions)
 
 ### GitHub Actions (Recommended)
 
@@ -67,8 +75,6 @@ Deploy via GitHub Actions workflow:
    AZURE_CLIENT_ID - Azure service principal client ID
    AZURE_TENANT_ID - Azure tenant ID
    AZURE_SUBSCRIPTION_ID - Azure subscription ID
-   SQL_ADMIN_LOGIN - SQL Server admin username
-   SQL_ADMIN_PASSWORD - SQL Server admin password
    ```
 
 2. Trigger deployment:
@@ -82,10 +88,6 @@ Deploy via GitHub Actions workflow:
 Deploy from your local machine:
 
 ```bash
-# Set required environment variables
-export SQL_ADMIN_LOGIN="sqladmin"
-export SQL_ADMIN_PASSWORD="YourSecurePassword123!"
-
 # Login to Azure
 az login
 
@@ -128,6 +130,7 @@ infra/bicep/
 ├── main.bicep                        # Environment orchestration (subscription-scoped)
 ├── shared.bicep                      # Shared infrastructure (subscription-scoped)
 ├── parameters.dev.bicepparam         # Dev environment parameters
+├── parameters.test.bicepparam        # Test environment parameters (managed identity SQL auth)
 ├── parameters.shared.bicepparam      # Shared infrastructure parameters
 └── modules/                          # Resource modules
     ├── database.bicep                # Azure SQL Server and Database
