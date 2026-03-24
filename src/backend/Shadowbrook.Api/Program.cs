@@ -128,6 +128,7 @@ app.UseExceptionHandler(error => error.Run(async context =>
             WaitlistAlreadyExistsException => StatusCodes.Status409Conflict,
             WaitlistNotClosedException => StatusCodes.Status409Conflict,
             OfferNotPendingException => StatusCodes.Status409Conflict,
+            TeeTimePastException => StatusCodes.Status422UnprocessableEntity,
             _ => StatusCodes.Status400BadRequest
         };
         await context.Response.WriteAsJsonAsync(new { error = domainEx.Message });
