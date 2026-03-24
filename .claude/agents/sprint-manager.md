@@ -72,7 +72,7 @@ gh workflow run claude-implementation.yml --repo benjamingolfco/shadowbrook -f i
 
 ## Status-Based Routing
 
-Implementation uses only two board statuses: **Implementing** and **Done**. All intermediate states (CI, review, changes requested) are tracked by PR mechanics — the Sprint Manager reads PR/CI/review state directly rather than updating board fields.
+Implementation uses three board statuses: **Implementing**, **QA**, and **Done**. All intermediate states (CI, review, changes requested) are tracked by PR mechanics — the Sprint Manager reads PR/CI/review state directly rather than updating board fields. After merge, issues move to QA; the owner validates via the `/qa` skill and moves to Done.
 
 When you receive an issue via `workflow_dispatch`, read its current project status and route:
 
@@ -81,7 +81,7 @@ When you receive an issue via `workflow_dispatch`, read its current project stat
 | **Ready** | Start the full sprint flow from Step 1 |
 | **Implementing** | Resume — check the Issue Plan for completed Dev Tasks, check PR state. Re-dispatch the next uncompleted agent or handle CI/review feedback. |
 
-If the issue is Done, skip it.
+If the issue is QA or Done, skip it.
 
 ---
 
