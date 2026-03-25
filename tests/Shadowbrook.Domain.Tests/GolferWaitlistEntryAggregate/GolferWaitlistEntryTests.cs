@@ -46,7 +46,6 @@ public class GolferWaitlistEntryTests
         Assert.Equal(golfer.Id, entry.GolferId);
         Assert.Equal(3, entry.GroupSize);
         Assert.True(entry.IsWalkUp);
-        Assert.True(entry.IsReady);
         Assert.InRange(entry.JoinedAt, before, after);
         Assert.Null(entry.RemovedAt);
     }

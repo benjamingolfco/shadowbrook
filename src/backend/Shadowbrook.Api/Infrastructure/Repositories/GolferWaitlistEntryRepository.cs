@@ -27,4 +27,8 @@ public class GolferWaitlistEntryRepository(ApplicationDbContext db) : IGolferWai
 
     public void Add(GolferWaitlistEntry entry) =>
         db.GolferWaitlistEntries.Add(entry);
+
+    public Task<List<GolferWaitlistEntry>> FindEligibleEntriesAsync(
+        Guid courseId, DateOnly date, TimeOnly teeTime, int maxGroupSize, CancellationToken ct = default) =>
+        throw new NotImplementedException();
 }

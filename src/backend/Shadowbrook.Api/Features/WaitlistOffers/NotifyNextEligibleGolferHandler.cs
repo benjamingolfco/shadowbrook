@@ -48,7 +48,6 @@ public static class NotifyNextEligibleGolferHandler
         var nextEntry = await db.GolferWaitlistEntries
             .Where(e => e.CourseWaitlistId == waitlist.Id
                 && e.IsWalkUp == true
-                && e.IsReady == true
                 && e.RemovedAt == null
                 && !alreadyOfferedEntryIds.Contains(e.Id)
                 && e.GroupSize <= request.RemainingSlots)
