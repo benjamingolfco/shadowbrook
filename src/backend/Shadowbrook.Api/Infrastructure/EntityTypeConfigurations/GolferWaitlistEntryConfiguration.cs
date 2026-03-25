@@ -16,6 +16,18 @@ public class GolferWaitlistEntryConfiguration : IEntityTypeConfiguration<GolferW
 
         builder.Property(e => e.GroupSize).HasDefaultValue(1);
 
+        // TPH discriminator — EF Core uses IsWalkUp as the discriminator column.
+        // WalkUpGolferWaitlistEntry maps to IsWalkUp = true, OnlineGolferWaitlistEntry to false.
+        builder.HasDiscriminator(e => e.IsWalkUp)
+            .HasValue<WalkUpGolferWaitlistEntry>(true)
+            .HasValue<OnlineGolferWaitlistEntry>(false);
+
+        builder.Property(e => e.WindowStart)
+            .HasColumnType("time");
+
+        builder.Property(e => e.WindowEnd)
+            .HasColumnType("time");
+
         builder.HasOne<Golfer>()
             .WithMany()
             .HasForeignKey(e => e.GolferId)
