@@ -61,6 +61,7 @@ if (!string.IsNullOrEmpty(appInsightsConnectionString))
         .WithMetrics(metrics => metrics
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation())
+        .WithLogging()
         .UseAzureMonitor(o => o.ConnectionString = appInsightsConnectionString);
 }
 
