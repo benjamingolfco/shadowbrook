@@ -158,6 +158,11 @@ if (app.Environment.EnvironmentName != "Testing")
     db.Database.Migrate();
 }
 
+if (!app.Environment.IsProduction())
+{
+    await E2ESeedData.EnsureAsync(app.Services);
+}
+
 app.UseExceptionHandler(error => error.Run(async context =>
 {
     var ex = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
