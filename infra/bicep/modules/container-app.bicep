@@ -51,6 +51,12 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
         targetPort: 8080
         transport: 'auto'
         allowInsecure: false
+        corsPolicy: {
+          allowedOrigins: ['*']
+          allowedMethods: ['*']
+          allowedHeaders: ['*']
+          maxAge: 3600
+        }
       }
       registries: [
         {
