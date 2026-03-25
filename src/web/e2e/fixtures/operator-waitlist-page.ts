@@ -30,7 +30,8 @@ export class OperatorWaitlistPage {
     await this.openWaitlistButton.click();
     const dialog = this.page.getByRole('alertdialog');
     await dialog.getByRole('button', { name: 'Open Waitlist' }).click();
-    await this.page.getByText('Open').waitFor();
+    // Wait for the short code to appear — confirms waitlist is open
+    await this.page.locator('span.font-mono.font-bold.tracking-widest').waitFor();
   }
 
   async getShortCode(): Promise<string> {

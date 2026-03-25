@@ -16,7 +16,9 @@ export class OperatorRegisterPage {
     await this.page.getByLabel('Course Name *').fill(courseName);
     // Timezone is auto-filled from browser — leave it
     await this.page.getByRole('button', { name: 'Register Course' }).click();
-    // Wait for success message
-    await this.page.getByText('Course registered successfully!').waitFor();
+    // After registration, the app redirects to /operator/settings
+    // which shows CoursePortfolio if no course is selected.
+    // Wait for the redirect to complete.
+    await this.page.waitForURL(/\/operator\//);
   }
 }
