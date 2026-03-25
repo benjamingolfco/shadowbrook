@@ -45,7 +45,8 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
     .Enrich.WithEnvironmentName()
     .Enrich.With(services.GetRequiredService<TenantIdEnricher>())
     .WriteTo.Console(outputTemplate:
-        "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}"));
+        "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}"),
+    writeToProviders: true);
 
 builder.Services.AddSingleton<TenantIdEnricher>();
 
