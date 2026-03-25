@@ -33,7 +33,8 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - Package manager: pnpm (never npm or yarn)
 - Messaging: WolverineFx (SQL Server transport, migrating to Azure Service Bus)
 - SMS: ITextMessageService abstraction (Twilio planned)
-- Infra: Azure (planned)
+- Observability: OpenTelemetry + Application Insights + Serilog (TenantId enrichment, Wolverine tracing)
+- Infra: Azure (Container Apps, Static Web Apps, SQL Database, Log Analytics, App Insights)
 
 ## Project Structure
 - src/backend/Shadowbrook.Domain/ — Domain model (aggregates, entities, events, repository interfaces, domain services — zero dependencies)
@@ -43,7 +44,8 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - src/web/ — React SPA
 - docs/ — Documentation
 - docs/plans/ — Design docs and implementation plans
-- infra/ — Azure deployment config (planned)
+- infra/ — Azure deployment config (Bicep modules, deploy scripts, parameter files)
+- src/backend/Shadowbrook.Api/Infrastructure/Observability/ — Serilog enrichers (TenantIdEnricher)
 
 ## Code Conventions
 - C#: `.editorconfig` at repo root defines style rules; see `.claude/rules/backend/backend-conventions.md` for full conventions
