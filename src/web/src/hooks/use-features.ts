@@ -7,7 +7,7 @@ type FeatureFlags = Record<string, boolean>;
 export function useFeatures() {
   return useQuery({
     queryKey: queryKeys.features.all,
-    queryFn: () => api.get<FeatureFlags>('/api/features'),
+    queryFn: () => api.get<FeatureFlags>('/features'),
     staleTime: 5 * 60 * 1000, // 5 minutes — flags change infrequently
   });
 }

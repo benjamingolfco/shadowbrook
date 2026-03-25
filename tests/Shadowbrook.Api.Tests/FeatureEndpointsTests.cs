@@ -15,7 +15,7 @@ public class FeatureEndpointsTests(TestWebApplicationFactory factory) : IClassFi
     {
         var client = factory.CreateClient();
 
-        var response = await client.GetAsync("/api/features");
+        var response = await client.GetAsync("/features");
 
         response.EnsureSuccessStatusCode();
         var result = await response.Content.ReadFromJsonAsync<Dictionary<string, bool>>();
