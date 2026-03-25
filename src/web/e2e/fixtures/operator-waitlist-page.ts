@@ -11,23 +11,25 @@ export class OperatorWaitlistPage {
     await this.page.goto('/operator/waitlist');
   }
 
+  async selectTenant(tenantName: string) {
+    // Fresh browser context — need to select tenant first
+    await this.page.getByRole('cell', { name: tenantName }).click();
+  }
+
   async selectCourse(courseName: string) {
-    // If course switcher is visible (multiple courses), select the course
+    // Course switcher is visible when multiple courses exist
     const switcher = this.page.getByRole('combobox', { name: 'Switch course' });
     if (await switcher.isVisible()) {
       await switcher.click();
       await this.page.getByRole('option', { name: courseName }).click();
     }
-    // If single course, it's auto-selected — wait for the page to load
     await this.page.getByRole('heading', { name: 'Walk-Up Waitlist' }).waitFor();
   }
 
   async openWaitlist() {
     await this.openWaitlistButton.click();
-    // Confirm in the dialog
     const dialog = this.page.getByRole('alertdialog');
     await dialog.getByRole('button', { name: 'Open Waitlist' }).click();
-    // Wait for the Open badge to appear
     await this.page.getByText('Open').waitFor();
   }
 
