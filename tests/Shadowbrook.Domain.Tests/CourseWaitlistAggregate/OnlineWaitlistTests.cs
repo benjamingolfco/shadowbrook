@@ -18,14 +18,14 @@ public class OnlineWaitlistTests
     }
 
     [Fact]
-    public async Task JoinWithWindow_CreatesOnlineEntry()
+    public async Task Join_CreatesOnlineEntry()
     {
         var waitlist = OnlineWaitlist.Create(Guid.NewGuid(), new DateOnly(2026, 4, 1));
         var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
         var windowStart = new TimeOnly(8, 0);
         var windowEnd = new TimeOnly(10, 0);
 
-        var entry = await waitlist.JoinWithWindow(golfer, this.entryRepository, 2, windowStart, windowEnd);
+        var entry = await waitlist.Join(golfer, this.entryRepository, 2, windowStart, windowEnd);
 
         var onlineEntry = Assert.IsType<OnlineGolferWaitlistEntry>(entry);
         Assert.NotEqual(Guid.Empty, onlineEntry.Id);
@@ -38,14 +38,14 @@ public class OnlineWaitlistTests
     }
 
     [Fact]
-    public async Task JoinWithWindow_RaisesGolferJoinedWaitlist()
+    public async Task Join_RaisesGolferJoinedWaitlist()
     {
         var waitlist = OnlineWaitlist.Create(Guid.NewGuid(), new DateOnly(2026, 4, 1));
         var golfer = Golfer.Create("+15559990000", "Test", "Golfer");
         var windowStart = new TimeOnly(9, 0);
         var windowEnd = new TimeOnly(11, 0);
 
-        var entry = await waitlist.JoinWithWindow(golfer, this.entryRepository, 1, windowStart, windowEnd);
+        var entry = await waitlist.Join(golfer, this.entryRepository, 1, windowStart, windowEnd);
 
         var evt = Assert.Single(waitlist.DomainEvents.OfType<GolferJoinedWaitlist>());
         Assert.Equal(entry.Id, evt.GolferWaitlistEntryId);
@@ -54,18 +54,18 @@ public class OnlineWaitlistTests
     }
 
     [Fact]
-    public async Task JoinWithWindow_WhenDuplicate_Throws()
+    public async Task Join_WhenDuplicate_Throws()
     {
         var waitlist = OnlineWaitlist.Create(Guid.NewGuid(), new DateOnly(2026, 4, 1));
         var golfer = Golfer.Create("+15552222222", "Dup", "Golfer");
         var windowStart = new TimeOnly(8, 0);
         var windowEnd = new TimeOnly(10, 0);
 
-        var firstEntry = await waitlist.JoinWithWindow(golfer, this.entryRepository, 1, windowStart, windowEnd);
+        var firstEntry = await waitlist.Join(golfer, this.entryRepository, 1, windowStart, windowEnd);
         this.entryRepository.GetActiveByWaitlistAndGolferAsync(waitlist.Id, golfer.Id)
             .Returns(firstEntry);
 
         await Assert.ThrowsAsync<GolferAlreadyOnWaitlistException>(
-            () => waitlist.JoinWithWindow(golfer, this.entryRepository, 1, windowStart, windowEnd));
+            () => waitlist.Join(golfer, this.entryRepository, 1, windowStart, windowEnd));
     }
 }

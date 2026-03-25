@@ -21,11 +21,7 @@ public class OnlineWaitlist : CourseWaitlist
         };
     }
 
-    public override Task<GolferWaitlistEntry> Join(
-        Golfer golfer, IGolferWaitlistEntryRepository entryRepository, int groupSize = 1) =>
-        throw new InvalidOperationException("Use JoinWithWindow for online waitlists.");
-
-    public async Task<GolferWaitlistEntry> JoinWithWindow(
+    public async Task<OnlineGolferWaitlistEntry> Join(
         Golfer golfer,
         IGolferWaitlistEntryRepository entryRepository,
         int groupSize,

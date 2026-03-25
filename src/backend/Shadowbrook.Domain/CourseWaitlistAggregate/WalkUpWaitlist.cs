@@ -42,7 +42,7 @@ public class WalkUpWaitlist : CourseWaitlist
         return waitlist;
     }
 
-    public override async Task<GolferWaitlistEntry> Join(
+    public async Task<WalkUpGolferWaitlistEntry> Join(
         Golfer golfer, IGolferWaitlistEntryRepository entryRepository, int groupSize = 1)
     {
         if (Status != WaitlistStatus.Open)
