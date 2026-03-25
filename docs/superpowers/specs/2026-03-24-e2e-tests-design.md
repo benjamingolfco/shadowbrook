@@ -75,17 +75,18 @@ This approach is simple and fast (no per-run API setup). If test isolation becom
 
 ## Test Scope — Walkup Waitlist Flow
 
-### Happy Path
-Enter a valid walkup code, fill out the join form, see confirmation.
+### E2E: Happy Path Only
 
-### Invalid Code
-Enter a bad code, see appropriate error feedback.
+One test: enter a valid walkup code, fill out the join form, see confirmation. This verifies the full deployed stack works end to end — browser, frontend, API, database.
 
-### Form Validation
-Submit with missing/invalid fields, see validation errors.
+### Testing Philosophy
 
-### Edge Cases
-Expired code, already-joined golfer (as applicable to current implementation).
+E2E tests verify that the deployed system works as a whole. They are not the place to test individual error states, validation rules, or edge cases. Those belong at cheaper, faster layers:
+
+- **Form validation** (missing fields, invalid input) — React component tests via Vitest + Testing Library
+- **Invalid/expired codes, already-joined golfer** — Backend unit tests (domain/handler) and integration tests (API + Testcontainers)
+
+This keeps the e2e suite fast, stable, and focused on deployment confidence rather than duplicating coverage that already exists closer to the code.
 
 ### Page Object
 
