@@ -12,18 +12,17 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Target environment (dev, staging, prod)'
+        description: 'Target environment (test, staging, prod)'
         required: true
         type: choice
         options:
-          - dev
           - test
           - staging
           - prod
   workflow_call:
     inputs:
       environment:
-        description: 'Target environment (dev, staging, prod)'
+        description: 'Target environment (test, staging, prod)'
         required: true
         type: string
 

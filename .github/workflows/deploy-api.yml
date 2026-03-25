@@ -1,7 +1,7 @@
 # Reusable — Build and Deploy API to Container App
 #
 # Builds Docker image, pushes to ACR, updates Container App, and health checks.
-# Called by deploy-dev.yml and pr-preview.yml.
+# Called by deploy-test.yml and pr.yml.
 
 name: Deploy API
 
@@ -9,7 +9,7 @@ on:
   workflow_call:
     inputs:
       environment:
-        description: 'Target environment (dev, staging, prod)'
+        description: 'Target environment (test, staging, prod)'
         required: true
         type: string
       image-tag:
