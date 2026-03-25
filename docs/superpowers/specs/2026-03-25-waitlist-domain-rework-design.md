@@ -16,53 +16,16 @@ The current waitlist/offer domain has naming and structural issues:
 
 ## Key Decisions
 
-1. **Walk-up waitlist and TeeTime booking are separate systems.** The walk-up waitlist is a self-contained feature. The TeeTime aggregate is minimal for now and grows later.
-2. **No cross-domain queries.** Domains communicate through events only. The waitlist domain maintains its own view of tee time state via the `TeeTimeOpening` entity.
-3. **TeeTimeOpening is persistent.** Each opening cycle is its own record with a lifecycle (Open/Filled/Expired). Useful for analytics (fill rates, response times, filled by waitlist vs other).
+1. **Walk-up waitlist and TeeTime booking are separate systems.** The walk-up waitlist is a self-contained feature. The TeeTime aggregate is deferred (see `docs/plans/2026-03-25-teetime-aggregate-thoughts.md`).
+2. **No TeeTime aggregate in this phase.** Operator-owned openings are the source of truth for slot availability. The TeeTimeOpening itself tracks and controls slots via a `Claim` method. When the TeeTime aggregate arrives later, non-operator openings will use the TeeTime as the authority instead.
+3. **TeeTimeOpening is persistent.** Each opening cycle is its own record with a lifecycle (Open/Filled/Expired). Useful for analytics (fill rates, response times).
 4. **Entries stay as separate aggregate roots.** Conceptually the waitlist owns entries, but technically they're independent for concurrency (multiple golfers joining/leaving simultaneously).
 5. **Matching logic lives in a domain service** that delegates to repository queries — no in-memory filtering of large entry lists.
 6. **Offer policy manages concurrent offers** — multiple golfers offered simultaneously, throttled by remaining slots.
 7. **Fresh EF migration** at the end — no incremental migration gymnastics.
+8. **Bookings start as Pending.** A BookingConfirmationPolicy coordinates between the offer acceptance and the opening's slot claim. Bookings are confirmed only after the opening successfully claims the slots.
 
 ## Domain Model
-
-### TeeTime Aggregate (TeeTime Domain)
-
-The TeeTime is a logical concept — it always exists for every interval on the tee sheet. A DB record is materialized on first booking. No creation event.
-
-Composite key: `(CourseId, Date, Time)`
-
-```
-TeeTime (aggregate root)
-  CourseId        Guid
-  Date            DateOnly
-  Time            TimeOnly
-  Bookings        List<TeeTimeBooking>  (child collection)
-  SlotsRemaining  calculated: 4 - active bookings (hardcoded foursome for now)
-
-  Book(golferId, groupSize)
-    → creates TeeTimeBooking
-    → raises TeeTimeBooked { CourseId, Date, Time, GolferId, SlotsRemaining }
-    → if SlotsRemaining == 0, raises TeeTimeFull { CourseId, Date, Time }
-
-  CancelBooking(bookingId)
-    → marks booking cancelled
-    → raises TeeTimeBookingCancelled { CourseId, Date, Time, SlotsRemaining }
-```
-
-```
-TeeTimeBooking (child entity)
-  Id              Guid
-  GolferId        Guid
-  GroupSize       int (1-4)
-  BookedAt        DateTimeOffset
-  CancelledAt     DateTimeOffset?
-```
-
-**Events:**
-- `TeeTimeBooked { CourseId, Date, Time, GolferId, SlotsRemaining }`
-- `TeeTimeFull { CourseId, Date, Time }`
-- `TeeTimeBookingCancelled { CourseId, Date, Time, SlotsRemaining }`
 
 ### CourseWaitlist Hierarchy (Waitlist Domain)
 
@@ -75,8 +38,8 @@ CourseWaitlist (abstract aggregate root)
   Date            DateOnly
   CreatedAt       DateTimeOffset
 
-  Join(golfer, entryRepository, groupSize, ...) → GolferWaitlistEntry
-    → raises GolferJoinedWaitlist { EntryId, CourseWaitlistId, GolferId }
+  Join(golfer, entryRepository, groupSize, ...) -> GolferWaitlistEntry
+    -> raises GolferJoinedWaitlist { EntryId, CourseWaitlistId, GolferId }
 ```
 
 ```
@@ -86,21 +49,21 @@ WalkUpWaitlist extends CourseWaitlist
   OpenedAt        DateTimeOffset
   ClosedAt        DateTimeOffset?
 
-  Open()          → raises WalkUpWaitlistOpened
-  Close()         → raises WalkUpWaitlistClosed
-  Reopen()        → raises WalkUpWaitlistReopened
+  Open()          -> raises WalkUpWaitlistOpened
+  Close()         -> raises WalkUpWaitlistClosed
+  Reopen()        -> raises WalkUpWaitlistReopened
 
   Join() override
-    → creates WalkUpGolferWaitlistEntry
-    → sets WindowStart = now, WindowEnd = now + 30min
+    -> creates WalkUpGolferWaitlistEntry
+    -> sets WindowStart = now, WindowEnd = now + 30min
 ```
 
 ```
 OnlineWaitlist extends CourseWaitlist
 
   Join(golfer, entryRepository, groupSize, windowStart, windowEnd) override
-    → creates OnlineGolferWaitlistEntry
-    → sets golfer-specified time window
+    -> creates OnlineGolferWaitlistEntry
+    -> sets golfer-specified time window
 ```
 
 **EF mapping:** TPH (table-per-hierarchy) with discriminator column.
@@ -122,13 +85,13 @@ GolferWaitlistEntry (abstract aggregate root)
   WindowEnd           TimeOnly
   CreatedAt           DateTimeOffset
 
-  Remove() → raises GolferRemovedFromWaitlist { EntryId, GolferId }
+  Remove() -> raises GolferRemovedFromWaitlist { EntryId, GolferId }
 ```
 
 ```
 WalkUpGolferWaitlistEntry extends GolferWaitlistEntry
   ExtendWindow(newEnd)
-    → raises WalkUpEntryWindowExtended { EntryId, NewEnd }
+    -> raises WalkUpEntryWindowExtended { EntryId, NewEnd }
 ```
 
 ```
@@ -147,7 +110,11 @@ builder.HasDiscriminator(e => e.IsWalkUp)
 
 ### TeeTimeOpening (Waitlist Domain)
 
-Persistent record of each opening cycle. One per tee time per opening event (not composite keyed — each cycle gets its own Id for analytics).
+Persistent record of each opening cycle. Each cycle gets its own Id for analytics tracking.
+
+For operator-owned openings, the TeeTimeOpening is the **source of truth** for slot availability. The `Claim` method is the atomic operation that reserves slots — if slots remain, it claims them; if not, it rejects.
+
+When the TeeTime aggregate is introduced later, non-operator openings will mirror TeeTime state via events instead of managing slots directly.
 
 ```
 TeeTimeOpening (aggregate root)
@@ -155,33 +122,35 @@ TeeTimeOpening (aggregate root)
   CourseId          Guid
   Date              DateOnly
   TeeTime           TimeOnly
-  SlotsAvailable    int (what operator announced — informational)
-  SlotsRemaining    int (updated from TeeTime events)
+  SlotsAvailable    int (what operator announced)
+  SlotsRemaining    int (decremented by claims)
+  OperatorOwned     bool (true for walk-up phase; future: false for cancellation-triggered)
   Status            Open | Filled | Expired
   CreatedAt         DateTimeOffset
   FilledAt          DateTimeOffset?
   ExpiredAt         DateTimeOffset?
 
-  UpdateSlots(remaining)
-    → sets SlotsRemaining
-    → raises TeeTimeOpeningSlotsUpdated { OpeningId, SlotsRemaining }
-
-  Fill()
-    → sets Status = Filled, FilledAt
-    → raises TeeTimeOpeningFilled { OpeningId }
+  Claim(bookingId, golferId, groupSize)
+    -> if SlotsRemaining >= groupSize:
+         decrement SlotsRemaining
+         raises TeeTimeOpeningClaimed { OpeningId, BookingId, GolferId, CourseId, Date, TeeTime }
+         if SlotsRemaining == 0: set Status = Filled, raises TeeTimeOpeningFilled { OpeningId }
+    -> if SlotsRemaining < groupSize:
+         raises TeeTimeOpeningClaimRejected { OpeningId, BookingId, GolferId }
 
   Expire()
-    → sets Status = Expired, ExpiredAt
-    → raises TeeTimeOpeningExpired { OpeningId }
+    -> sets Status = Expired, ExpiredAt
+    -> raises TeeTimeOpeningExpired { OpeningId }
 ```
 
 **Events:**
 - `TeeTimeOpeningCreated { OpeningId, CourseId, Date, TeeTime, SlotsAvailable }`
-- `TeeTimeOpeningSlotsUpdated { OpeningId, SlotsRemaining }`
+- `TeeTimeOpeningClaimed { OpeningId, BookingId, GolferId, CourseId, Date, TeeTime }`
+- `TeeTimeOpeningClaimRejected { OpeningId, BookingId, GolferId }`
 - `TeeTimeOpeningFilled { OpeningId }`
 - `TeeTimeOpeningExpired { OpeningId }`
 
-### WaitlistOffer (Waitlist Domain — deferred)
+### WaitlistOffer (Waitlist Domain — design deferred)
 
 The offer aggregate will be revisited when implementation reaches the offer flow. Current design assumptions:
 - Separate aggregate root (one per golfer per opening)
@@ -190,7 +159,17 @@ The offer aggregate will be revisited when implementation reaches the offer flow
 - Statuses: Pending, Accepted, Rejected
 - Events: WaitlistOfferSent, WaitlistOfferAccepted, WaitlistOfferRejected
 
-Details TBD during implementation.
+The policies below reference these events. The offer's internal structure and state transitions will be finalized during implementation — the event contract is what matters for policy design.
+
+### Booking (Booking Domain — minimal changes)
+
+The existing Booking aggregate gains a Pending state. Bookings start as Pending and are confirmed or rejected by the BookingConfirmationPolicy based on the opening's claim result.
+
+Booking creation is owned by the **booking domain**. A handler in the booking domain listens for `WaitlistOfferAccepted` and creates the Booking (Pending). The waitlist domain never creates bookings directly.
+
+- `BookingCreated` event now includes a Pending status
+- `BookingConfirmed` — new event, raised when claim succeeds
+- `BookingRejected` — new event, raised when claim fails
 
 ## Domain Service
 
@@ -202,15 +181,15 @@ Finds eligible waitlist entries for an opening. Queries at the DB level for fres
 WaitlistMatchingService
   Dependencies: IGolferWaitlistEntryRepository
 
-  FindEligibleEntries(opening: TeeTimeOpening) → List<GolferWaitlistEntry>
-    → calls repository.FindEligibleEntries(opening.CourseId, opening.Date, opening.TeeTime, ...)
-    → returns entries ordered by JoinedAt (FIFO)
+  FindEligibleEntries(opening: TeeTimeOpening) -> List<GolferWaitlistEntry>
+    -> calls repository.FindEligibleEntries(...)
+    -> returns entries ordered by JoinedAt (FIFO)
 ```
 
 **Repository query criteria:**
 - Active entries (`RemovedAt IS NULL`)
 - Entry's time window covers the opening's tee time (`WindowStart <= TeeTime <= WindowEnd`)
-- `GroupSize <= SlotsRemaining` on the opening
+- `GroupSize <= opening.SlotsRemaining`
 - No pending offer for this opening
 - Ordered by `JoinedAt` ascending (FIFO)
 
@@ -232,32 +211,32 @@ State:
 
 Handlers:
   Start(TeeTimeOpeningCreated)
-    → set SlotsRemaining = SlotsAvailable
-    → dispatch FindAndOfferEligibleGolfers
+    -> set SlotsRemaining = SlotsAvailable
+    -> dispatch FindAndOfferEligibleGolfers
 
   Handle(WaitlistOfferSent)
-    → increment PendingOfferCount
+    -> increment PendingOfferCount
 
   Handle(WaitlistOfferAccepted)
-    → decrement PendingOfferCount
+    -> decrement PendingOfferCount
 
-  Handle(TeeTimeOpeningSlotsUpdated)
-    → update SlotsRemaining
-    → if PendingOfferCount < SlotsRemaining, dispatch more offers
+  Handle(TeeTimeOpeningClaimed)
+    -> update SlotsRemaining
+    -> if PendingOfferCount < SlotsRemaining, dispatch more offers
 
   Handle(WaitlistOfferRejected)
-    → decrement PendingOfferCount
-    → if PendingOfferCount < SlotsRemaining, dispatch more offers
+    -> decrement PendingOfferCount
+    -> if PendingOfferCount < SlotsRemaining, dispatch more offers
 
   Handle(WaitlistOfferStale)
-    → decrement PendingOfferCount
-    → if PendingOfferCount < SlotsRemaining, dispatch more offers
+    -> decrement PendingOfferCount
+    -> if PendingOfferCount < SlotsRemaining, dispatch more offers
 
   Handle(TeeTimeOpeningFilled)
-    → reject all pending offers, mark complete
+    -> reject all pending offers, mark complete
 
   Handle(TeeTimeOpeningExpired)
-    → reject all pending offers, mark complete
+    -> reject all pending offers, mark complete
 ```
 
 ### WaitlistOfferResponsePolicy (per offer)
@@ -271,17 +250,40 @@ State:
 
 Handlers:
   Start(WaitlistOfferSent)
-    → set IsWalkUp from entry type
-    → schedule buffer timeout (60s for walk-up, longer for online)
+    -> set IsWalkUp from entry type
+    -> schedule buffer timeout (60s for walk-up, longer for online)
 
   Handle(BufferTimeout)
-    → raise WaitlistOfferStale { OfferId, OpeningId }
+    -> raise WaitlistOfferStale { OfferId, OpeningId }
 
   Handle(WaitlistOfferAccepted)
-    → mark complete
+    -> mark complete
 
   Handle(WaitlistOfferRejected)
-    → mark complete
+    -> mark complete
+```
+
+### BookingConfirmationPolicy (per booking)
+
+Coordinates between offer acceptance and the opening's slot claim. Ensures bookings are only confirmed when slots are actually available.
+
+```
+State:
+  Id          Guid (BookingId)
+
+Handlers:
+  Start(BookingCreated) where Status = Pending
+    -> dispatch ClaimOpeningSlots command (opening.Claim)
+
+  Handle(TeeTimeOpeningClaimed) where BookingId matches
+    -> confirm booking -> raises BookingConfirmed
+
+  Handle(TeeTimeOpeningClaimRejected) where BookingId matches
+    -> reject booking -> raises BookingRejected
+    -> mark complete
+
+  Handle(BookingConfirmed)
+    -> mark complete
 ```
 
 ### TeeTimeOpeningExpirationPolicy (per opening)
@@ -294,15 +296,15 @@ State:
 
 Handlers:
   Start(TeeTimeOpeningCreated)
-    → calculate delay until tee time
-    → schedule expiration timeout
+    -> calculate delay until tee time
+    -> schedule expiration timeout
 
   Handle(ExpirationTimeout)
-    → call opening.Expire()
-    → mark complete
+    -> call opening.Expire()
+    -> mark complete
 
   Handle(TeeTimeOpeningFilled)
-    → mark complete (no need to expire)
+    -> mark complete (no need to expire)
 ```
 
 ## Event Flow — Walk-Up Phase
@@ -311,114 +313,98 @@ Handlers:
 
 ```
 1. Operator opens WalkUpWaitlist for today
-   → WalkUpWaitlistOpened
+   -> WalkUpWaitlistOpened
 
 2. Golfers join via QR/walk-up
-   → GolferJoinedWaitlist (x3)
-   → Each entry gets 30-min window from join time
+   -> GolferJoinedWaitlist (x3)
+   -> Each entry gets 30-min window from join time
 
-3. Operator creates TeeTimeOpening (3 slots at 10:30)
-   → TeeTimeOpeningCreated
-   → TeeTimeOpeningOfferPolicy starts (SlotsRemaining=3, Pending=0)
-   → TeeTimeOpeningExpirationPolicy starts
-   → WaitlistMatchingService finds 3 eligible entries
-   → 3 WaitlistOffers created and sent
-   → 3 WaitlistOfferResponsePolicies start (60s buffer each)
-   → TeeTimeOpeningOfferPolicy: Pending=3, SlotsRemaining=3 — balanced
+3. Operator creates TeeTimeOpening (OperatorOwned=true, 3 slots at 10:30)
+   -> TeeTimeOpeningCreated
+   -> TeeTimeOpeningOfferPolicy starts (SlotsRemaining=3, Pending=0)
+   -> TeeTimeOpeningExpirationPolicy starts
+   -> WaitlistMatchingService finds 3 eligible entries
+   -> 3 WaitlistOffers created and sent
+   -> 3 WaitlistOfferResponsePolicies start (60s buffer each)
+   -> TeeTimeOpeningOfferPolicy: Pending=3, SlotsRemaining=3 -- balanced
 
 4. Golfer A accepts (group of 1)
-   → WaitlistOfferAccepted
-   → Handler: find-or-create TeeTime(CourseId, Date, 10:30)
-   → TeeTime.Book(golferA, 1) → TeeTimeBooked { SlotsRemaining: 3 }
-   → Handler: find active opening, call UpdateSlots(3)
-   → TeeTimeOpeningSlotsUpdated
-   → OfferPolicy: SlotsRemaining=3, Pending=2 — offer 1 more
+   -> WaitlistOfferAccepted
+   -> Booking domain handler creates Booking (Pending)
+   -> BookingCreated (Pending)
+   -> BookingConfirmationPolicy starts
+   -> opening.Claim(bookingId, golferA, 1) -> TeeTimeOpeningClaimed
+   -> BookingConfirmed
+   -> OfferPolicy: SlotsRemaining=2, Pending=2 -- balanced
 
 5. Golfer B's 60s buffer expires
-   → BufferTimeout → WaitlistOfferStale
-   → OfferPolicy: Pending drops to 2, SlotsRemaining=3 — offer 1 more
+   -> BufferTimeout -> WaitlistOfferStale
+   -> OfferPolicy: Pending drops to 1, SlotsRemaining=2 -- offer 1 more
 
 6. Golfer C accepts (group of 2)
-   → TeeTime.Book(golferC, 2) → TeeTimeBooked { SlotsRemaining: 1 }
-   → Opening.UpdateSlots(1)
-   → OfferPolicy adjusts: SlotsRemaining=1
-
-7. Golfer D accepts (group of 1)
-   → TeeTime.Book(golferD, 1) → TeeTimeBooked { SlotsRemaining: 0 }
-   → TeeTimeFull
-   → Handler: opening.Fill() → TeeTimeOpeningFilled
-   → OfferPolicy: reject remaining pending offers, complete
-   → ExpirationPolicy: complete
+   -> opening.Claim(bookingId, golferC, 2) -> TeeTimeOpeningClaimed { SlotsRemaining: 0 }
+   -> TeeTimeOpeningFilled
+   -> BookingConfirmed
+   -> OfferPolicy: reject remaining pending offers, complete
+   -> ExpirationPolicy: complete
 ```
 
 ### Edge Case: Opening Created, No Waitlist Entries
 
 ```
 1. Operator creates TeeTimeOpening
-   → TeeTimeOpeningCreated
-   → OfferPolicy starts, finds no eligible entries — sits idle
-   → ExpirationPolicy starts timer
+   -> TeeTimeOpeningCreated
+   -> OfferPolicy starts, finds no eligible entries -- sits idle
+   -> ExpirationPolicy starts timer
 
 2. Golfer joins waitlist later
-   → GolferJoinedWaitlist
-   → Handler checks for active openings matching this golfer's window
-   → If match found, notifies OfferPolicy to try again
+   -> GolferJoinedWaitlist
+   -> Handler checks for active openings matching this golfer's window
+   -> If match found, dispatches WakeUpOfferPolicy { OpeningId } command
 ```
 
-### Edge Case: Golfer Joins, Opening Already Exists
+### Edge Case: Concurrent Acceptances Exceed Slots
 
 ```
-1. TeeTimeOpening exists, OfferPolicy is idle (no eligible entries)
-2. Golfer joins waitlist
-   → GolferJoinedWaitlist
-   → Handler: find active openings for this course+date where tee time is in golfer's window
-   → Dispatch event/command to wake up the OfferPolicy
-```
+1. Opening has 1 slot remaining, 1 pending offer
+2. Golfer accepts -> Booking domain creates Booking (Pending) -> BookingCreated
+   -> BookingConfirmationPolicy -> opening.Claim(bookingId, golfer, 1)
+   -> TeeTimeOpeningClaimed, SlotsRemaining=0 -> TeeTimeOpeningFilled
+   -> BookingConfirmed
 
-## Cross-Domain Event Flow
-
-```
-TeeTime Domain                    Waitlist Domain
-──────────────                    ───────────────
-
-TeeTimeBooked ──────────────────→ Handler: find active opening by (CourseId, Date, Time)
-                                  → opening.UpdateSlots(slotsRemaining)
-                                  → raises TeeTimeOpeningSlotsUpdated
-
-TeeTimeFull ────────────────────→ Handler: find active opening by (CourseId, Date, Time)
-                                  → opening.Fill()
-                                  → raises TeeTimeOpeningFilled
-
-TeeTimeBookingCancelled ────────→ Handler: find active opening or create new one
-                                  → opening.UpdateSlots(slotsRemaining)
-                                  → raises TeeTimeOpeningSlotsUpdated
-                                  (future: may create new TeeTimeOpening)
+3. Meanwhile, stale offer's golfer also accepts -> Booking domain creates Booking (Pending)
+   -> BookingConfirmationPolicy -> opening.Claim(...)
+   -> TeeTimeOpeningClaimRejected (no slots left)
+   -> BookingRejected
+   -> SMS: "Sorry, that tee time is no longer available."
 ```
 
 ## What's Removed
 
-- `TeeTimeRequest` aggregate — replaced by `TeeTimeOpening`
-- `TeeTimeSlotFill` entity — bookings now live on `TeeTime` aggregate
-- `TeeTimeRequestService` domain service — replaced by `WaitlistMatchingService`
-- `IsReady` field on entries — speculative, always true
-- `TeeTimeRequestAdded`, `TeeTimeRequestFulfilled`, `TeeTimeRequestClosed` events — replaced by opening events
-- `TeeTimeOfferPolicy` — replaced by `TeeTimeOpeningOfferPolicy` + `WaitlistOfferResponsePolicy`
-- `TeeTimeRequestExpirationPolicy` — replaced by `TeeTimeOpeningExpirationPolicy`
-- `NotifyNextEligibleGolferHandler` — replaced by handler using `WaitlistMatchingService`
-- All existing EF migrations — fresh migration created at the end
+- `TeeTimeRequest` aggregate -- replaced by `TeeTimeOpening`
+- `TeeTimeSlotFill` entity -- replaced by `Claim` on opening + existing Booking
+- `TeeTimeRequestService` domain service -- replaced by `WaitlistMatchingService`
+- `IsReady` field on entries -- speculative, always true
+- `TeeTimeRequestAdded`, `TeeTimeRequestFulfilled`, `TeeTimeRequestClosed` events -- replaced by opening events
+- `TeeTimeOfferPolicy` -- replaced by `TeeTimeOpeningOfferPolicy` + `WaitlistOfferResponsePolicy`
+- `TeeTimeRequestExpirationPolicy` -- replaced by `TeeTimeOpeningExpirationPolicy`
+- `NotifyNextEligibleGolferHandler` -- replaced by handler using `WaitlistMatchingService`
+- All existing EF migrations -- fresh migration created at the end
 
 ## What's New
 
-- `TeeTime` aggregate with `TeeTimeBooking` children (TeeTime domain)
 - `CourseWaitlist` abstract base with `WalkUpWaitlist` and `OnlineWaitlist` subtypes
 - `GolferWaitlistEntry` hierarchy with `WalkUpGolferWaitlistEntry` and `OnlineGolferWaitlistEntry`
 - Time window on all entries (`WindowStart`, `WindowEnd`)
-- `TeeTimeOpening` aggregate in the waitlist domain
+- `TeeTimeOpening` aggregate with `Claim` method (source of truth for operator-owned openings)
+- `OperatorOwned` flag on openings (all true for now; future: false for cancellation-triggered)
 - `WaitlistMatchingService` domain service
-- `TeeTimeOpeningOfferPolicy` — concurrent offer management
-- `WaitlistOfferResponsePolicy` — per-offer buffer management
-- `TeeTimeOpeningExpirationPolicy` — auto-expire openings
-- Cross-domain event handlers (TeeTime events → Opening updates)
+- `TeeTimeOpeningOfferPolicy` -- concurrent offer management
+- `WaitlistOfferResponsePolicy` -- per-offer buffer management
+- `BookingConfirmationPolicy` -- coordinates offer acceptance with slot claiming
+- `TeeTimeOpeningExpirationPolicy` -- auto-expire openings
+- Pending state on Bookings with `BookingConfirmed` / `BookingRejected` events
+- `WakeUpOfferPolicy` command -- triggered when a golfer joins and an active opening exists
 
 ## Implementation Approach
 
@@ -432,4 +418,4 @@ TDD, domain-first, evolve outward:
 6. Update frontend (if needed)
 7. Delete old code, create fresh EF migration
 
-Stop incrementally at each aggregate to verify the model makes sense. The WaitlistOffer aggregate will be revisited when we reach the offer flow — it may change based on what we learn building the other aggregates.
+Stop incrementally at each aggregate to verify the model makes sense. The WaitlistOffer aggregate will be revisited when we reach the offer flow -- it may change based on what we learn building the other aggregates.
