@@ -1,0 +1,54 @@
+name: E2E Tests
+
+on:
+  workflow_dispatch:
+  # Uncomment when deploy workflow exists:
+  # workflow_run:
+  #   workflows: ["Deploy to Test"]
+  #   types: [completed]
+  #   branches: [main]
+
+env:
+  E2E_BASE_URL: https://test.shadowbrook.golf
+
+jobs:
+  e2e:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    # Uncomment when using workflow_run:
+    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: src/web/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm --dir src/web install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm --dir src/web exec playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: pnpm --dir src/web e2e
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: src/web/e2e/playwright-report/
+          retention-days: 14
+
+      - name: Upload trace artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: src/web/e2e/test-results/
+          retention-days: 14
