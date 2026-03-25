@@ -146,7 +146,7 @@ builder.Services.AddWolverineHttp();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+if (!app.Environment.IsProduction())
 {
     app.MapOpenApi();
 }
@@ -184,7 +184,7 @@ app.UseMiddleware<TenantClaimMiddleware>();
 
 app.MapHealthChecks("/health");
 
-if (app.Environment.IsDevelopment())
+if (!app.Environment.IsProduction())
 {
     app.MapDevSmsEndpoints();
 }

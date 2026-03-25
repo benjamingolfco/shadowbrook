@@ -81,7 +81,7 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
           env: [
             {
               name: 'ASPNETCORE_ENVIRONMENT'
-              value: environment == 'prod' ? 'Production' : (environment == 'staging' ? 'Staging' : 'Development')
+              value: environment == 'prod' ? 'Production' : (environment == 'staging' ? 'Staging' : 'Test')
             }
             {
               name: 'ConnectionStrings__DefaultConnection'
