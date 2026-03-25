@@ -229,7 +229,7 @@ jobs:
       needs.lint-web.result == 'success'
     uses: ./.github/workflows/deploy-web.yml
     with:
-      environment: dev
+      environment: test
       action: upload
     secrets: inherit
 
@@ -240,6 +240,6 @@ jobs:
     if: github.event.action == 'closed'
     uses: ./.github/workflows/deploy-web.yml
     with:
-      environment: dev
+      environment: test
       action: close
     secrets: inherit
