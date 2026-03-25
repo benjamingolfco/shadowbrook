@@ -127,6 +127,7 @@ builder.Host.UseWolverine(opts =>
 builder.Services.AddSingleton<InMemoryTextMessageService>();
 builder.Services.AddScoped<DatabaseTextMessageService>();
 builder.Services.AddScoped<ITextMessageService>(sp => sp.GetRequiredService<DatabaseTextMessageService>());
+builder.Services.AddSingleton<IFeatureService, FeatureService>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<ITenantRepository, TenantRepository>();
 builder.Services.AddScoped<IGolferRepository, GolferRepository>();
