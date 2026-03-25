@@ -1,5 +1,7 @@
 using Shadowbrook.Domain.CourseWaitlistAggregate.Events;
 using Shadowbrook.Domain.CourseWaitlistAggregate.Exceptions;
+using Shadowbrook.Domain.GolferAggregate;
+using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 
 namespace Shadowbrook.Domain.CourseWaitlistAggregate;
 
@@ -38,6 +40,35 @@ public class WalkUpWaitlist : CourseWaitlist
         waitlist.AddDomainEvent(new WalkUpWaitlistOpened { CourseWaitlistId = waitlist.Id });
 
         return waitlist;
+    }
+
+    public override async Task<GolferWaitlistEntry> Join(
+        Golfer golfer, IGolferWaitlistEntryRepository entryRepository, int groupSize = 1)
+    {
+        if (Status != WaitlistStatus.Open)
+        {
+            throw new WaitlistNotOpenException();
+        }
+
+        var existing = await entryRepository.GetActiveByWaitlistAndGolferAsync(Id, golfer.Id);
+        if (existing is not null)
+        {
+            throw new GolferAlreadyOnWaitlistException(golfer.Phone);
+        }
+
+        var windowStart = TimeOnly.FromDateTime(DateTime.UtcNow);
+        var windowEnd = windowStart.Add(TimeSpan.FromMinutes(30));
+
+        var entry = new WalkUpGolferWaitlistEntry(Id, golfer.Id, groupSize, windowStart, windowEnd);
+
+        AddDomainEvent(new GolferJoinedWaitlist
+        {
+            GolferWaitlistEntryId = entry.Id,
+            CourseWaitlistId = Id,
+            GolferId = golfer.Id
+        });
+
+        return entry;
     }
 
     public void Close()
