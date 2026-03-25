@@ -129,8 +129,7 @@ A GitHub Actions workflow triggered by deployment to the test environment via `w
 1. Waits for the deploy workflow to complete
 2. Installs Playwright browsers
 3. Runs the e2e suite against the test environment URL
-4. Uploads trace artifacts on failure
-5. Posts results as a check/comment
+4. Uploads test report and trace artifacts on failure
 
 This runs post-deploy to the test environment, not on every PR.
 
