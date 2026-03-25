@@ -145,7 +145,9 @@ builder.Services.AddWolverineHttp();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+var isDevOrTest = app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Test";
+
+if (isDevOrTest)
 {
     app.MapOpenApi();
 }
@@ -188,7 +190,7 @@ app.UseMiddleware<TenantClaimMiddleware>();
 
 app.MapHealthChecks("/health");
 
-if (app.Environment.IsDevelopment())
+if (isDevOrTest)
 {
     app.MapDevSmsEndpoints();
 }

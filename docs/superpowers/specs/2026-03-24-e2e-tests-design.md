@@ -29,11 +29,12 @@ src/web/
   e2e/
     fixtures/          # Custom test fixtures (auth, page objects)
       auth.ts          # Auth abstraction (dev switcher now, real auth later)
-      walkup-page.ts   # Page object for walkup flow
-      test-data.ts     # Known test data constants
+      operator-waitlist-page.ts  # Page object for operator waitlist
+      walkup-page.ts   # Page object for golfer walkup flow
+      test-data.ts     # Known test data constants (seeded tenant/course names)
     tests/
       walkup/          # Walkup waitlist flow tests
-        walkup-join.spec.ts
+        walkup-flow.spec.ts      # Serial: operator opens → golfer joins
     playwright.config.ts
 ```
 
@@ -63,21 +64,34 @@ When real auth is implemented, only the fixture internals change (e.g., API-base
 
 ### Test Data Strategy
 
-Seeded test data in the test environment:
+**Seeded baseline data:** An idempotent startup seed runs in non-production environments (`Program.cs`, after migration). It ensures a test tenant with 3 courses exists. The seed checks by name before creating, so it's safe to run on every startup.
 
-- A known test course with a fixed slug/ID
-- Pre-created walkup codes with long/no expiry
-- Known test golfer records as needed
+- 1 tenant: "E2E Test Golf Group" with contact details
+- 3 courses: each with a name, timezone, and basic settings
 
-Constants live in `e2e/fixtures/test-data.ts` and reference this seeded data. The seed runs as part of the test environment's deployment/migration process (EF Core data seed or SQL script).
+**Transient test data (walkup sessions, entries):** Created by the e2e tests themselves through the UI. Tests run in serial order — earlier tests produce the data later tests consume. No walkup codes or golfer records are pre-seeded.
 
-This approach is simple and fast (no per-run API setup). If test isolation becomes an issue as the suite grows, individual tests can be migrated to create their own data via API calls in `beforeAll`.
+This means the e2e suite exercises both the operator path (create walkup session) and the golfer path (join via code), and each test validates a real user flow while producing data for the next.
+
+Constants for the seeded tenant/course names live in `e2e/fixtures/test-data.ts` so tests can navigate to the right course.
 
 ## Test Scope — Walkup Waitlist Flow
 
-### E2E: Happy Path Only
+Tests use `test.describe.serial()` to run in order. Each test validates a user flow and produces data the next test needs.
 
-One test: enter a valid walkup code, fill out the join form, see confirmation. This verifies the full deployed stack works end to end — browser, frontend, API, database.
+### Test 1: Operator opens a walkup waitlist
+1. Log in as operator, navigate to `/operator/waitlist`
+2. Click "Open Waitlist", confirm in dialog
+3. Capture the short code displayed on the page
+4. Verify the waitlist shows as "Open"
+
+### Test 2: Golfer joins via that code
+1. Navigate to `/join`
+2. Enter the code captured from Test 1
+3. Fill out the join form
+4. See confirmation with position
+
+If Test 1 fails, Test 2 is skipped — which is correct (if operators can't create waitlists, there's nothing for golfers to join).
 
 ### Testing Philosophy
 
@@ -88,15 +102,23 @@ E2E tests verify that the deployed system works as a whole. They are not the pla
 
 This keeps the e2e suite fast, stable, and focused on deployment confidence rather than duplicating coverage that already exists closer to the code.
 
-### Page Object
+### Page Objects
 
-A lightweight page object keeps tests readable:
+Lightweight page objects keep tests readable:
 
 ```typescript
+class OperatorWaitlistPage {
+  goto()
+  openWaitlist()
+  getShortCode()
+}
+
 class WalkupPage {
+  goto()
   enterCode(code: string)
-  fillJoinForm({ name, phone, ... })
-  getConfirmation()
+  fillJoinForm({ firstName, lastName, phone })
+  getConfirmationHeading()
+  getPositionText()
 }
 ```
 
@@ -137,5 +159,4 @@ This runs post-deploy to the test environment, not on every PR.
 
 - Add flows as features are built (tee time booking, operator tee sheet, etc.)
 - Add Firefox/WebKit browsers if cross-browser issues emerge
-- Migrate to API-created test data if shared state becomes problematic
 - Swap auth fixture internals when real auth is implemented
