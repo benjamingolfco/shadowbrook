@@ -158,7 +158,7 @@ if (app.Environment.EnvironmentName != "Testing")
     db.Database.Migrate();
 }
 
-if (!app.Environment.IsProduction())
+if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testing")
 {
     await E2ESeedData.EnsureAsync(app.Services);
 }
