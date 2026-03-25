@@ -97,7 +97,6 @@ class WalkupPage {
   enterCode(code: string)
   fillJoinForm({ name, phone, ... })
   getConfirmation()
-  getErrorMessage()
 }
 ```
 
