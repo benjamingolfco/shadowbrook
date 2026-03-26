@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
@@ -8,15 +7,10 @@ public static class WaitlistOfferAcceptedRemoveFromWaitlistHandler
 {
     public static async Task Handle(
         WaitlistOfferAccepted evt,
-        IGolferWaitlistEntryRepository entryRepository,
-        ILogger logger)
+        IGolferWaitlistEntryRepository entryRepository)
     {
-        var entry = await entryRepository.GetByIdAsync(evt.GolferWaitlistEntryId);
-        if (entry is null)
-        {
-            logger.LogWarning("GolferWaitlistEntry {EntryId} not found, skipping waitlist removal for offer {OfferId}", evt.GolferWaitlistEntryId, evt.WaitlistOfferId);
-            return;
-        }
+        var entry = await entryRepository.GetByIdAsync(evt.GolferWaitlistEntryId)
+            ?? throw new InvalidOperationException($"GolferWaitlistEntry {evt.GolferWaitlistEntryId} not found for event {nameof(WaitlistOfferAccepted)}.");
 
         entry.Remove();
     }

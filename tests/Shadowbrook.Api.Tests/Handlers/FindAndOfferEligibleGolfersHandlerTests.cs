@@ -48,16 +48,18 @@ public class FindAndOfferEligibleGolfersHandlerTests
     }
 
     [Fact]
-    public async Task Handle_NoOpening_DoesNothing()
+    public async Task Handle_NoOpening_Throws()
     {
-        this.openingRepo.GetByIdAsync(Arg.Any<Guid>()).Returns((TeeTimeOpening?)null);
+        var openingId = Guid.NewGuid();
+        this.openingRepo.GetByIdAsync(openingId).Returns((TeeTimeOpening?)null);
 
-        await FindAndOfferEligibleGolfersHandler.Handle(
-            new FindAndOfferEligibleGolfers(Guid.NewGuid(), 3),
-            this.openingRepo, this.matchingService, this.offerRepo, this.golferRepo,
-            this.courseRepo, this.sms, this.timeProvider, this.config, NullLogger.Instance, CancellationToken.None);
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => FindAndOfferEligibleGolfersHandler.Handle(
+                new FindAndOfferEligibleGolfers(openingId, 3),
+                this.openingRepo, this.matchingService, this.offerRepo, this.golferRepo,
+                this.courseRepo, this.sms, this.timeProvider, this.config, NullLogger.Instance, CancellationToken.None));
 
-        this.offerRepo.DidNotReceive().Add(Arg.Any<WaitlistOffer>());
+        Assert.Contains(openingId.ToString(), ex.Message);
     }
 
     [Fact]

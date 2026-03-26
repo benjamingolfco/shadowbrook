@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseWaitlistAggregate.Events;
@@ -16,34 +15,20 @@ public static class GolferJoinedWaitlistSmsHandler
         IGolferRepository golferRepository,
         IGolferWaitlistEntryRepository entryRepository,
         ApplicationDbContext db,
-        ILogger logger,
         CancellationToken ct)
     {
-        var entry = await entryRepository.GetByIdAsync(domainEvent.GolferWaitlistEntryId);
-        if (entry is null)
-        {
-            logger.LogWarning("GolferWaitlistEntry {EntryId} not found, skipping join SMS", domainEvent.GolferWaitlistEntryId);
-            return;
-        }
+        var entry = await entryRepository.GetByIdAsync(domainEvent.GolferWaitlistEntryId)
+            ?? throw new InvalidOperationException($"GolferWaitlistEntry {domainEvent.GolferWaitlistEntryId} not found for event {nameof(GolferJoinedWaitlist)}.");
 
-        var golfer = await golferRepository.GetByIdAsync(entry.GolferId);
-        if (golfer is null)
-        {
-            logger.LogWarning("Golfer {GolferId} not found for waitlist entry {EntryId}, skipping join SMS", entry.GolferId, entry.Id);
-            return;
-        }
+        var golfer = await golferRepository.GetByIdAsync(entry.GolferId)
+            ?? throw new InvalidOperationException($"Golfer {entry.GolferId} not found for waitlist entry {entry.Id}.");
 
         var courseName = await db.CourseWaitlists
             .IgnoreQueryFilters()
             .Where(w => w.Id == domainEvent.CourseWaitlistId)
             .Join(db.Courses.IgnoreQueryFilters(), w => w.CourseId, c => c.Id, (w, c) => c.Name)
-            .FirstOrDefaultAsync(ct);
-
-        if (courseName is null)
-        {
-            logger.LogWarning("CourseWaitlist {CourseWaitlistId} or its course not found, skipping join SMS for golfer {GolferId}", domainEvent.CourseWaitlistId, entry.GolferId);
-            return;
-        }
+            .FirstOrDefaultAsync(ct)
+            ?? throw new InvalidOperationException($"CourseWaitlist {domainEvent.CourseWaitlistId} or its course not found for event {nameof(GolferJoinedWaitlist)}.");
 
         // Calculate position: count active entries that joined at or before this entry.
         var joinedAtValues = await db.GolferWaitlistEntries

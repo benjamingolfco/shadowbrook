@@ -12,12 +12,8 @@ public static class RejectStaleOfferHandler
         IWaitlistOfferRepository offerRepository,
         ILogger logger)
     {
-        var offer = await offerRepository.GetByIdAsync(command.WaitlistOfferId);
-        if (offer is null)
-        {
-            logger.LogWarning("WaitlistOffer {OfferId} not found, skipping stale rejection", command.WaitlistOfferId);
-            return null;
-        }
+        var offer = await offerRepository.GetByIdAsync(command.WaitlistOfferId)
+            ?? throw new InvalidOperationException($"WaitlistOffer {command.WaitlistOfferId} not found for command {nameof(RejectStaleOffer)}.");
 
         if (offer.Status != OfferStatus.Pending)
         {

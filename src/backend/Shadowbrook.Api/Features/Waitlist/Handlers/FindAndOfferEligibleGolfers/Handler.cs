@@ -26,10 +26,12 @@ public static class FindAndOfferEligibleGolfersHandler
         ILogger logger,
         CancellationToken ct)
     {
-        var opening = await openingRepository.GetByIdAsync(command.OpeningId);
-        if (opening is null || opening.Status != TeeTimeOpeningStatus.Open)
+        var opening = await openingRepository.GetByIdAsync(command.OpeningId)
+            ?? throw new InvalidOperationException($"TeeTimeOpening {command.OpeningId} not found for command {nameof(FindAndOfferEligibleGolfers)}.");
+
+        if (opening.Status != TeeTimeOpeningStatus.Open)
         {
-            logger.LogWarning("TeeTimeOpening {OpeningId} not found or not open, skipping offer dispatch", command.OpeningId);
+            logger.LogWarning("TeeTimeOpening {OpeningId} is {Status}, not open — skipping offer dispatch", command.OpeningId, opening.Status);
             return;
         }
 
@@ -60,12 +62,8 @@ public static class FindAndOfferEligibleGolfersHandler
                 opening.Id, entry.Id, entry.GolferId, entry.GroupSize, entry.IsWalkUp, timeProvider);
             offerRepository.Add(offer);
 
-            var golfer = await golferRepository.GetByIdAsync(entry.GolferId);
-            if (golfer is null)
-            {
-                logger.LogWarning("Golfer {GolferId} not found for waitlist entry {EntryId}, skipping SMS for offer {OfferId}", entry.GolferId, entry.Id, offer.Id);
-                continue;
-            }
+            var golfer = await golferRepository.GetByIdAsync(entry.GolferId)
+                ?? throw new InvalidOperationException($"Golfer {entry.GolferId} not found for waitlist entry {entry.Id}.");
 
             var message =
                 $"{courseName}: {opening.TeeTime:h:mm tt} tee time available! Claim your spot: {baseUrl}/book/walkup/{offer.Token}";
