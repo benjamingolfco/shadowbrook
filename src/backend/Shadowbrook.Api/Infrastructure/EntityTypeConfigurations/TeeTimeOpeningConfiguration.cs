@@ -21,6 +21,17 @@ public class TeeTimeOpeningConfiguration : IEntityTypeConfiguration<TeeTimeOpeni
 
         builder.Property(o => o.Status).HasConversion<string>().HasMaxLength(10);
 
+        builder.OwnsMany(o => o.ClaimedSlots, cs =>
+        {
+            cs.ToTable("TeeTimeOpeningClaimedSlots");
+            cs.WithOwner().HasForeignKey("TeeTimeOpeningId");
+            cs.HasKey("TeeTimeOpeningId", nameof(ClaimedSlot.BookingId));
+            cs.Property(x => x.BookingId);
+            cs.Property(x => x.GolferId);
+            cs.Property(x => x.GroupSize);
+            cs.Property(x => x.ClaimedAt);
+        });
+
         builder.HasOne<Course>()
             .WithMany()
             .HasForeignKey(o => o.CourseId)
