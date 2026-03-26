@@ -107,6 +107,7 @@ public static class WalkUpWaitlistEndpoints
         var openings = (await db.TeeTimeOpenings
                 .Where(o => o.CourseId == courseId && o.TeeTime.Date == today)
                 .Select(o => new { o.Id, TeeTimeTime = o.TeeTime.Time, o.SlotsAvailable, o.SlotsRemaining, o.Status })
+                .OrderBy(o => o.TeeTimeTime)
                 .ToListAsync())
                 .Select(o => new WalkUpWaitlistOpeningResponse(o.Id, o.TeeTimeTime.ToString("HH:mm"), o.SlotsAvailable, o.SlotsRemaining, o.Status.ToString()))
                 .ToList();
