@@ -192,9 +192,9 @@ public class TeeTimeOpeningTests
     }
 
     [Fact]
-    public void Create_WhenSlotsAvailableZero_ThrowsArgumentException()
+    public void Create_WhenSlotsAvailableZero_ThrowsInvalidSlotsAvailableException()
     {
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<InvalidSlotsAvailableException>(() =>
             TeeTimeOpening.Create(
                 courseId: Guid.NewGuid(),
                 date: new DateOnly(2026, 6, 1),
@@ -205,12 +205,12 @@ public class TeeTimeOpeningTests
     }
 
     [Fact]
-    public void Claim_WhenGroupSizeZero_ThrowsArgumentException()
+    public void Claim_WhenGroupSizeZero_ThrowsInvalidGroupSizeException()
     {
         var opening = CreateOpening();
         opening.ClearDomainEvents();
 
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<InvalidGroupSizeException>(() =>
             opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 0, this.timeProvider));
     }
 }

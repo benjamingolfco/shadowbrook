@@ -146,6 +146,6 @@ public class WaitlistOfferTests
         var offer = CreateOffer();
         offer.MarkNotified();
 
-        Assert.Throws<InvalidOperationException>(() => offer.MarkNotified());
+        Assert.Throws<OfferAlreadyNotifiedException>(() => offer.MarkNotified());
     }
 }

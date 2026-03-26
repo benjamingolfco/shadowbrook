@@ -1,3 +1,5 @@
+using Shadowbrook.Domain.GolferWaitlistEntryAggregate.Exceptions;
+
 namespace Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 
 public class WalkUpGolferWaitlistEntry : GolferWaitlistEntry
@@ -19,7 +21,7 @@ public class WalkUpGolferWaitlistEntry : GolferWaitlistEntry
     {
         if (RemovedAt is not null)
         {
-            throw new InvalidOperationException("Cannot extend window on a removed entry.");
+            throw new CannotExtendRemovedEntryException();
         }
 
         WindowEnd = newEnd;

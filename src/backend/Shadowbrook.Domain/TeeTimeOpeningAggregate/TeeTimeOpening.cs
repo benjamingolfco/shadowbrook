@@ -29,7 +29,7 @@ public class TeeTimeOpening : Entity
     {
         if (slotsAvailable <= 0)
         {
-            throw new ArgumentException("Slots available must be at least 1.", nameof(slotsAvailable));
+            throw new InvalidSlotsAvailableException();
         }
 
         var opening = new TeeTimeOpening
@@ -66,7 +66,7 @@ public class TeeTimeOpening : Entity
 
         if (groupSize <= 0)
         {
-            throw new ArgumentException("Group size must be at least 1.", nameof(groupSize));
+            throw new InvalidGroupSizeException();
         }
 
         if (SlotsRemaining < groupSize)

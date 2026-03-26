@@ -202,7 +202,7 @@ For operations spanning multiple aggregates, use sequential event chains instead
 ### Domain Exceptions
 
 - `DomainException` subclasses break control flow for true invariant violations
-- **Always use `DomainException` subclasses** — never throw `InvalidOperationException` from domain code. Every domain invariant violation gets its own exception class in `{Aggregate}/Exceptions/`.
+- **Always use `DomainException` subclasses** — never throw `InvalidOperationException`, `ArgumentException`, or any other .NET framework exception from domain code. Every domain invariant violation gets its own exception class in `{Aggregate}/Exceptions/`. This includes factory method guards (e.g., invalid slots → `InvalidSlotsAvailableException`), state guards (e.g., already notified → `OfferAlreadyNotifiedException`), and cross-aggregate lookups (e.g., not found → `EntityNotFoundException`).
 - The global exception handler in `Program.cs` maps them to HTTP status codes — new exception types must be added there
 - Do NOT catch `DomainException` in endpoints — let them propagate
 

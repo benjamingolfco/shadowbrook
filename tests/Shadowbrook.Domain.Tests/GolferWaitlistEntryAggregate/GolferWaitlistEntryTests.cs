@@ -4,6 +4,7 @@ using Shadowbrook.Domain.CourseWaitlistAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate.Events;
+using Shadowbrook.Domain.GolferWaitlistEntryAggregate.Exceptions;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
@@ -111,7 +112,7 @@ public class GolferWaitlistEntryTests
         walkUpEntry.Remove();
         var newEnd = walkUpEntry.WindowEnd.Add(TimeSpan.FromMinutes(15));
 
-        Assert.Throws<InvalidOperationException>(() => walkUpEntry.ExtendWindow(newEnd));
+        Assert.Throws<CannotExtendRemovedEntryException>(() => walkUpEntry.ExtendWindow(newEnd));
     }
 
     [Fact]

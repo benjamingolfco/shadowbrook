@@ -58,7 +58,7 @@ public class WaitlistOffer : Entity
     {
         if (NotifiedAt is not null)
         {
-            throw new InvalidOperationException("Offer has already been marked as notified.");
+            throw new OfferAlreadyNotifiedException();
         }
 
         NotifiedAt = DateTimeOffset.UtcNow;
