@@ -8,7 +8,7 @@ set -euo pipefail
 # Usage: ./teardown.sh [--shared]
 
 # Configuration
-RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-shadowbrook-dev-rg}"
+RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-shadowbrook-test-rg}"
 SHARED_RESOURCE_GROUP="shadowbrook-shared-rg"
 DELETE_SHARED=false
 

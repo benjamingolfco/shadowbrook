@@ -51,6 +51,12 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
         targetPort: 8080
         transport: 'auto'
         allowInsecure: false
+        corsPolicy: {
+          allowedOrigins: ['*']
+          allowedMethods: ['*']
+          allowedHeaders: ['*']
+          maxAge: 3600
+        }
       }
       registries: [
         {
@@ -81,7 +87,7 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
           env: [
             {
               name: 'ASPNETCORE_ENVIRONMENT'
-              value: environment == 'prod' ? 'Production' : (environment == 'staging' ? 'Staging' : (environment == 'test' ? 'Test' : 'Development'))
+              value: environment == 'prod' ? 'Production' : (environment == 'staging' ? 'Staging' : 'Test')
             }
             {
               name: 'ConnectionStrings__DefaultConnection'

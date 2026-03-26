@@ -2,7 +2,7 @@
 #
 # Runs build/test/lint, then creates SWA preview for frontend changes.
 # Each job only runs when its relevant files changed.
-# API deploys to dev via deploy-dev.yml on sprint branch merge.
+# API deploys to test via deploy-test.yml on main branch merge.
 # Tears down SWA preview on PR close.
 #
 # Required GitHub Secrets:
