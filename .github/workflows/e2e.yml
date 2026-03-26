@@ -57,7 +57,7 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
-          path: src/web/e2e/playwright-report/
+          path: src/web/playwright-report/
           retention-days: 14
 
       - name: Upload trace artifacts
@@ -65,5 +65,5 @@ jobs:
         if: failure()
         with:
           name: playwright-traces
-          path: src/web/e2e/test-results/
+          path: src/web/test-results/
           retention-days: 14
