@@ -8,9 +8,11 @@ namespace Shadowbrook.Domain.WaitlistOfferAggregate;
 public class WaitlistOffer : Entity
 {
     public Guid Token { get; private set; }
-    public Guid BookingId { get; private set; }
-    public Guid TeeTimeRequestId { get; private set; }
+    public Guid OpeningId { get; private set; }
     public Guid GolferWaitlistEntryId { get; private set; }
+    public Guid GolferId { get; private set; }
+    public int GroupSize { get; private set; }
+    public bool IsWalkUp { get; private set; }
     public OfferStatus Status { get; private set; }
     public string? RejectionReason { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
@@ -19,31 +21,60 @@ public class WaitlistOffer : Entity
     private WaitlistOffer() { } // EF
 
     public static WaitlistOffer Create(
-        Guid teeTimeRequestId,
-        Guid golferWaitlistEntryId)
+        Guid openingId,
+        Guid golferWaitlistEntryId,
+        Guid golferId,
+        int groupSize,
+        bool isWalkUp,
+        ITimeProvider timeProvider)
     {
         var offer = new WaitlistOffer
         {
             Id = Guid.CreateVersion7(),
             Token = Guid.CreateVersion7(),
-            BookingId = Guid.CreateVersion7(),
-            TeeTimeRequestId = teeTimeRequestId,
+            OpeningId = openingId,
             GolferWaitlistEntryId = golferWaitlistEntryId,
+            GolferId = golferId,
+            GroupSize = groupSize,
+            IsWalkUp = isWalkUp,
             Status = OfferStatus.Pending,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = timeProvider.GetCurrentTimestamp()
         };
 
         offer.AddDomainEvent(new WaitlistOfferCreated
         {
             WaitlistOfferId = offer.Id,
-            TeeTimeRequestId = teeTimeRequestId,
-            GolferWaitlistEntryId = golferWaitlistEntryId
+            OpeningId = openingId,
+            GolferWaitlistEntryId = golferWaitlistEntryId,
+            GolferId = golferId,
+            GroupSize = groupSize,
+            IsWalkUp = isWalkUp
         });
 
         return offer;
     }
 
-    public void Accept(Golfer golfer)
+    public void MarkNotified()
+    {
+        if (NotifiedAt is not null)
+        {
+            throw new InvalidOperationException("Offer has already been marked as notified.");
+        }
+
+        NotifiedAt = DateTimeOffset.UtcNow;
+
+        AddDomainEvent(new WaitlistOfferSent
+        {
+            WaitlistOfferId = Id,
+            OpeningId = OpeningId,
+            GolferWaitlistEntryId = GolferWaitlistEntryId,
+            GolferId = GolferId,
+            GroupSize = GroupSize,
+            IsWalkUp = IsWalkUp
+        });
+    }
+
+    public void Accept()
     {
         if (Status != OfferStatus.Pending)
         {
@@ -55,10 +86,10 @@ public class WaitlistOffer : Entity
         AddDomainEvent(new WaitlistOfferAccepted
         {
             WaitlistOfferId = Id,
-            BookingId = BookingId,
-            TeeTimeRequestId = TeeTimeRequestId,
+            OpeningId = OpeningId,
             GolferWaitlistEntryId = GolferWaitlistEntryId,
-            GolferId = golfer.Id
+            GolferId = GolferId,
+            GroupSize = GroupSize
         });
     }
 
@@ -75,25 +106,9 @@ public class WaitlistOffer : Entity
         AddDomainEvent(new WaitlistOfferRejected
         {
             WaitlistOfferId = Id,
-            TeeTimeRequestId = TeeTimeRequestId,
+            OpeningId = OpeningId,
             GolferWaitlistEntryId = GolferWaitlistEntryId,
             Reason = reason
-        });
-    }
-
-    public void MarkNotified()
-    {
-        if (NotifiedAt is not null)
-        {
-            throw new InvalidOperationException("Offer has already been marked as notified.");
-        }
-
-        NotifiedAt = DateTimeOffset.UtcNow;
-
-        AddDomainEvent(new GolferNotifiedOfOffer
-        {
-            WaitlistOfferId = Id,
-            TeeTimeRequestId = TeeTimeRequestId
         });
     }
 }

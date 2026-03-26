@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
+using Shadowbrook.Domain.WaitlistOfferAggregate;
 
 namespace Shadowbrook.Api.Infrastructure.Repositories;
 
@@ -28,7 +29,18 @@ public class GolferWaitlistEntryRepository(ApplicationDbContext db) : IGolferWai
     public void Add(GolferWaitlistEntry entry) =>
         db.GolferWaitlistEntries.Add(entry);
 
-    public Task<List<GolferWaitlistEntry>> FindEligibleEntriesAsync(
-        Guid courseId, DateOnly date, TimeOnly teeTime, int maxGroupSize, CancellationToken ct = default) =>
-        throw new NotImplementedException();
+    public async Task<List<GolferWaitlistEntry>> FindEligibleEntriesAsync(
+        Guid courseId, DateOnly date, TimeOnly teeTime, int maxGroupSize, CancellationToken ct = default)
+    {
+        return await db.GolferWaitlistEntries
+            .Where(e => e.RemovedAt == null)
+            .Where(e => e.WindowStart <= teeTime && e.WindowEnd >= teeTime)
+            .Where(e => e.GroupSize <= maxGroupSize)
+            .Where(e => db.CourseWaitlists
+                .Any(w => w.Id == e.CourseWaitlistId && w.CourseId == courseId && w.Date == date))
+            .Where(e => !db.WaitlistOffers
+                .Any(o => o.GolferWaitlistEntryId == e.Id && o.Status == OfferStatus.Pending))
+            .OrderBy(e => e.JoinedAt)
+            .ToListAsync(ct);
+    }
 }

@@ -2,9 +2,10 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Services;
+using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.CourseWaitlistAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 using Wolverine.Http;
 
 namespace Shadowbrook.Api.Features.WalkUpWaitlist;
@@ -14,7 +15,8 @@ public static class WalkUpJoinEndpoints
     [WolverinePost("/walkup/verify")]
     public static async Task<IResult> VerifyShortCode(VerifyCodeRequest request, ApplicationDbContext db, TimeProvider timeProvider)
     {
-        var waitlist = await db.WalkUpWaitlists
+        var waitlist = await db.CourseWaitlists
+            .OfType<Domain.CourseWaitlistAggregate.WalkUpWaitlist>()
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(w => w.ShortCode == request.Code);
 
@@ -53,14 +55,16 @@ public static class WalkUpJoinEndpoints
     [WolverinePost("/walkup/join")]
     public static async Task<IResult> JoinWaitlist(
         JoinWaitlistRequest request,
-        IWalkUpWaitlistRepository waitlistRepo,
+        ICourseWaitlistRepository waitlistRepo,
         IGolferWaitlistEntryRepository entryRepo,
         IGolferRepository golferRepo,
+        ITimeProvider timeProvider,
         ApplicationDbContext db)
     {
         var normalizedPhone = PhoneNormalizer.Normalize(request.Phone);
 
-        var waitlist = await waitlistRepo.GetByIdAsync(request.CourseWaitlistId);
+        var waitlist = await waitlistRepo.GetByIdAsync(request.CourseWaitlistId)
+            as Domain.CourseWaitlistAggregate.WalkUpWaitlist;
 
         if (waitlist is null || waitlist.Status != WaitlistStatus.Open)
         {
@@ -99,7 +103,7 @@ public static class WalkUpJoinEndpoints
             }
         }
 
-        var entry = await waitlist.Join(golfer, entryRepo);
+        var entry = await waitlist.Join(golfer, entryRepo, timeProvider);
         entryRepo.Add(entry);
 
         // Intentional mid-flow save: position query reads from DB,

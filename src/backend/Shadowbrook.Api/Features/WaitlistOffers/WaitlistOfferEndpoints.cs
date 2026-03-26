@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.GolferAggregate;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 using Wolverine.Http;
 
@@ -12,46 +10,44 @@ public static class WaitlistOfferEndpoints
     [WolverineGet("/waitlist/offers/{token}")]
     public static async Task<IResult> GetOffer(Guid token, ApplicationDbContext db)
     {
-        var raw = await db.WaitlistOffers
+        var offer = await db.WaitlistOffers
             .IgnoreQueryFilters()
             .Where(o => o.Token == token)
-            .Join(db.TeeTimeRequests, o => o.TeeTimeRequestId, r => r.Id, (o, r) => new { Offer = o, Request = r })
-            .Join(db.GolferWaitlistEntries, or => or.Offer.GolferWaitlistEntryId, e => e.Id, (or, e) => new { or.Offer, or.Request, Entry = e })
-            .Join(db.Golfers.IgnoreQueryFilters(), ore => ore.Entry.GolferId, g => g.Id, (ore, g) => new { ore.Offer, ore.Request, ore.Entry, Golfer = g })
-            .Join(db.Courses.IgnoreQueryFilters(), oreg => oreg.Request.CourseId, c => c.Id, (oreg, c) => new
+            .Join(db.TeeTimeOpenings, o => o.OpeningId, op => op.Id, (o, op) => new { Offer = o, Opening = op })
+            .Join(db.GolferWaitlistEntries, oo => oo.Offer.GolferWaitlistEntryId, e => e.Id, (oo, e) => new { oo.Offer, oo.Opening, Entry = e })
+            .Join(db.Golfers.IgnoreQueryFilters(), ooe => ooe.Entry.GolferId, g => g.Id, (ooe, g) => new { ooe.Offer, ooe.Opening, ooe.Entry, Golfer = g })
+            .Join(db.Courses.IgnoreQueryFilters(), ooeg => ooeg.Opening.CourseId, c => c.Id, (ooeg, c) => new
             {
-                oreg.Offer.Token,
+                ooeg.Offer.Token,
                 CourseName = c.Name,
-                oreg.Request.Date,
-                oreg.Request.TeeTime,
-                oreg.Request.GolfersNeeded,
-                oreg.Golfer.FirstName,
-                oreg.Golfer.LastName,
-                oreg.Offer.Status
+                ooeg.Opening.Date,
+                ooeg.Opening.TeeTime,
+                ooeg.Opening.SlotsAvailable,
+                ooeg.Golfer.FirstName,
+                ooeg.Golfer.LastName,
+                ooeg.Offer.Status
             })
             .FirstOrDefaultAsync();
 
-        if (raw is null)
+        if (offer is null)
         {
             return Results.NotFound(new { error = "Offer not found." });
         }
 
         return Results.Ok(new WaitlistOfferResponse(
-            raw.Token,
-            raw.CourseName,
-            raw.Date.ToString("yyyy-MM-dd"),
-            raw.TeeTime.ToString("HH:mm"),
-            raw.GolfersNeeded,
-            $"{raw.FirstName} {raw.LastName}",
-            raw.Status.ToString()));
+            offer.Token,
+            offer.CourseName,
+            offer.Date.ToString("yyyy-MM-dd"),
+            offer.TeeTime.ToString("HH:mm"),
+            offer.SlotsAvailable,
+            $"{offer.FirstName} {offer.LastName}",
+            offer.Status.ToString()));
     }
 
     [WolverinePost("/waitlist/offers/{token}/accept")]
     public static async Task<IResult> AcceptOffer(
         Guid token,
-        IWaitlistOfferRepository offerRepository,
-        IGolferWaitlistEntryRepository entryRepository,
-        IGolferRepository golferRepository)
+        IWaitlistOfferRepository offerRepository)
     {
         var offer = await offerRepository.GetByTokenAsync(token);
 
@@ -60,21 +56,7 @@ public static class WaitlistOfferEndpoints
             return Results.NotFound(new { error = "Offer not found." });
         }
 
-        var entry = await entryRepository.GetByIdAsync(offer.GolferWaitlistEntryId);
-
-        if (entry is null)
-        {
-            return Results.NotFound(new { error = "Waitlist entry not found." });
-        }
-
-        var golfer = await golferRepository.GetByIdAsync(entry.GolferId);
-
-        if (golfer is null)
-        {
-            return Results.NotFound(new { error = "Golfer not found." });
-        }
-
-        offer.Accept(golfer);
+        offer.Accept();
 
         return Results.Ok(new WaitlistOfferAcceptResponse(
             "Processing",
@@ -87,7 +69,7 @@ public record WaitlistOfferResponse(
     string CourseName,
     string Date,
     string TeeTime,
-    int GolfersNeeded,
+    int SlotsAvailable,
     string GolferName,
     string Status);
 

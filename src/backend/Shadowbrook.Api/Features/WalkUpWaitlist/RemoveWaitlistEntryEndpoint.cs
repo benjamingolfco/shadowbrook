@@ -22,7 +22,7 @@ public static class RemoveWaitlistEntryEndpoint
         }
 
         // Verify entry belongs to a waitlist for this course (tenant isolation)
-        var belongsToCourse = await db.WalkUpWaitlists
+        var belongsToCourse = await db.CourseWaitlists
             .AnyAsync(w => w.Id == entry.CourseWaitlistId && w.CourseId == courseId);
 
         if (!belongsToCourse)

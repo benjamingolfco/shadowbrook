@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.CourseWaitlistAggregate.Events;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.WalkUpWaitlistAggregate.Events;
 
 namespace Shadowbrook.Api.Features.WalkUpWaitlist;
 
@@ -29,7 +29,7 @@ public static class GolferJoinedWaitlistSmsHandler
             return;
         }
 
-        var courseName = await db.WalkUpWaitlists
+        var courseName = await db.CourseWaitlists
             .IgnoreQueryFilters()
             .Where(w => w.Id == domainEvent.CourseWaitlistId)
             .Join(db.Courses.IgnoreQueryFilters(), w => w.CourseId, c => c.Id, (w, c) => c.Name)
@@ -41,7 +41,6 @@ public static class GolferJoinedWaitlistSmsHandler
         }
 
         // Calculate position: count active entries that joined at or before this entry.
-        // Fetching JoinedAt values to a list first avoids SQLite DateTimeOffset comparison issues in tests.
         var joinedAtValues = await db.GolferWaitlistEntries
             .IgnoreQueryFilters()
             .Where(e => e.CourseWaitlistId == domainEvent.CourseWaitlistId && e.RemovedAt == null)

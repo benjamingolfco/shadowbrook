@@ -13,6 +13,7 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
         builder.Property(b => b.Id).ValueGeneratedNever();
 
         builder.Property(b => b.GolferName).IsRequired().HasMaxLength(200);
+        builder.Property(b => b.Status).HasConversion<string>().HasMaxLength(20);
 
         builder.HasShadowRowVersion();
         builder.HasShadowAuditProperties();

@@ -1,23 +1,15 @@
-using Shadowbrook.Domain.BookingAggregate.Events;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
 namespace Shadowbrook.Api.Features.WalkUpWaitlist;
 
-public static class BookingCreatedRemoveFromWaitlistHandler
+public static class WaitlistOfferAcceptedRemoveFromWaitlistHandler
 {
     public static async Task Handle(
-        BookingCreated domainEvent,
-        IWaitlistOfferRepository offerRepository,
+        WaitlistOfferAccepted evt,
         IGolferWaitlistEntryRepository entryRepository)
     {
-        var offer = await offerRepository.GetByBookingIdAsync(domainEvent.BookingId);
-        if (offer is null)
-        {
-            return;
-        }
-
-        var entry = await entryRepository.GetByIdAsync(offer.GolferWaitlistEntryId);
+        var entry = await entryRepository.GetByIdAsync(evt.GolferWaitlistEntryId);
         if (entry is null)
         {
             return;

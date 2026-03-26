@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Services;
-using Shadowbrook.Domain.WalkUpWaitlistAggregate;
+using Shadowbrook.Domain.CourseWaitlistAggregate;
 using Wolverine.Http;
 
 namespace Shadowbrook.Api.Features.WalkUpWaitlist;
@@ -14,7 +14,8 @@ public static class WalkUpQrEndpoints
         ApplicationDbContext db,
         TimeProvider timeProvider)
     {
-        var waitlist = await db.WalkUpWaitlists
+        var waitlist = await db.CourseWaitlists
+            .OfType<Domain.CourseWaitlistAggregate.WalkUpWaitlist>()
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(w => w.ShortCode == shortCode);
 

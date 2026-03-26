@@ -2,29 +2,17 @@ using Shadowbrook.Api.Features.WalkUpWaitlist;
 
 namespace Shadowbrook.Api.Tests.Validators;
 
-public class CreateWalkUpWaitlistRequestRequestValidatorTests
+public class CreateOpeningRequestValidatorTests
 {
-    private readonly CreateWalkUpWaitlistRequestRequestValidator validator = new();
+    private readonly CreateOpeningRequestValidator validator = new();
 
     [Fact]
     public void ValidRequest_Passes() =>
-        Assert.True(this.validator.Validate(new CreateWalkUpWaitlistRequestRequest("2026-06-15", "09:00", 2)).IsValid);
+        Assert.True(this.validator.Validate(new CreateOpeningRequest("09:00", 2)).IsValid);
 
     [Fact]
     public void ValidRequest_WithSeconds_Passes() =>
-        Assert.True(this.validator.Validate(new CreateWalkUpWaitlistRequestRequest("2026-06-15", "09:00:00", 2)).IsValid);
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("06/15/2026")]
-    [InlineData("2026-13-01")]
-    [InlineData("not-a-date")]
-    public void InvalidDate_Fails(string date)
-    {
-        var result = this.validator.Validate(new CreateWalkUpWaitlistRequestRequest(date, "09:00", 2));
-        Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.PropertyName == "Date");
-    }
+        Assert.True(this.validator.Validate(new CreateOpeningRequest("09:00:00", 2)).IsValid);
 
     [Theory]
     [InlineData("")]
@@ -32,7 +20,7 @@ public class CreateWalkUpWaitlistRequestRequestValidatorTests
     [InlineData("25:00")]
     public void InvalidTeeTime_Fails(string teeTime)
     {
-        var result = this.validator.Validate(new CreateWalkUpWaitlistRequestRequest("2026-06-15", teeTime, 2));
+        var result = this.validator.Validate(new CreateOpeningRequest(teeTime, 2));
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, e => e.PropertyName == "TeeTime");
     }
@@ -41,10 +29,10 @@ public class CreateWalkUpWaitlistRequestRequestValidatorTests
     [InlineData(0)]
     [InlineData(5)]
     [InlineData(-1)]
-    public void InvalidGolfersNeeded_Fails(int golfersNeeded)
+    public void InvalidSlotsAvailable_Fails(int slots)
     {
-        var result = this.validator.Validate(new CreateWalkUpWaitlistRequestRequest("2026-06-15", "09:00", golfersNeeded));
+        var result = this.validator.Validate(new CreateOpeningRequest("09:00", slots));
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.PropertyName == "GolfersNeeded");
+        Assert.Contains(result.Errors, e => e.PropertyName == "SlotsAvailable");
     }
 }

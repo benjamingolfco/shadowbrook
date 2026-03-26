@@ -3,12 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.CourseWaitlistAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.TeeTimeRequestAggregate;
-using Shadowbrook.Domain.WalkUpWaitlistAggregate;
+using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Wolverine.Http;
-using WalkUpWaitlistAggregate = Shadowbrook.Domain.WalkUpWaitlistAggregate.WalkUpWaitlist;
 
 namespace Shadowbrook.Api.Features.WalkUpWaitlist;
 
@@ -18,14 +17,16 @@ public static class WalkUpWaitlistEndpoints
     public static async Task<IResult> OpenWaitlist(
         Guid courseId,
         [NotBody] ApplicationDbContext db,
-        IWalkUpWaitlistRepository repo,
+        ICourseWaitlistRepository repo,
         IShortCodeGenerator shortCodeGenerator,
-        TimeProvider timeProvider)
+        ITimeProvider timeProvider,
+        TimeProvider systemTimeProvider)
     {
         var timeZoneId = await db.Courses.Where(c => c.Id == courseId).Select(c => c.TimeZoneId).FirstAsync();
-        var today = CourseTime.Today(timeProvider, timeZoneId);
+        var today = CourseTime.Today(systemTimeProvider, timeZoneId);
 
-        var waitlist = await WalkUpWaitlistAggregate.OpenAsync(courseId, today, shortCodeGenerator, repo);
+        var waitlist = await Domain.CourseWaitlistAggregate.WalkUpWaitlist.OpenAsync(
+            courseId, today, shortCodeGenerator, repo, timeProvider);
 
         repo.Add(waitlist);
 
@@ -37,11 +38,12 @@ public static class WalkUpWaitlistEndpoints
     public static async Task<IResult> CloseWaitlist(
         Guid courseId,
         [NotBody] ApplicationDbContext db,
-        IWalkUpWaitlistRepository repo,
-        TimeProvider timeProvider)
+        ICourseWaitlistRepository repo,
+        ITimeProvider timeProvider,
+        TimeProvider systemTimeProvider)
     {
         var timeZoneId = await db.Courses.Where(c => c.Id == courseId).Select(c => c.TimeZoneId).FirstAsync();
-        var today = CourseTime.Today(timeProvider, timeZoneId);
+        var today = CourseTime.Today(systemTimeProvider, timeZoneId);
 
         var waitlist = await repo.GetOpenByCourseDateAsync(courseId, today);
 
@@ -50,7 +52,7 @@ public static class WalkUpWaitlistEndpoints
             return Results.NotFound(new { error = "No open walk-up waitlist found for today." });
         }
 
-        waitlist.Close();
+        waitlist.Close(timeProvider);
 
         return Results.Ok(ToResponse(waitlist));
     }
@@ -59,11 +61,11 @@ public static class WalkUpWaitlistEndpoints
     public static async Task<IResult> ReopenWaitlist(
         Guid courseId,
         [NotBody] ApplicationDbContext db,
-        IWalkUpWaitlistRepository repo,
-        TimeProvider timeProvider)
+        ICourseWaitlistRepository repo,
+        TimeProvider systemTimeProvider)
     {
         var timeZoneId = await db.Courses.Where(c => c.Id == courseId).Select(c => c.TimeZoneId).FirstAsync();
-        var today = CourseTime.Today(timeProvider, timeZoneId);
+        var today = CourseTime.Today(systemTimeProvider, timeZoneId);
 
         var waitlist = await repo.GetByCourseDateAsync(courseId, today);
 
@@ -81,11 +83,11 @@ public static class WalkUpWaitlistEndpoints
     public static async Task<IResult> GetToday(
         Guid courseId,
         ApplicationDbContext db,
-        IWalkUpWaitlistRepository repo,
-        TimeProvider timeProvider)
+        ICourseWaitlistRepository repo,
+        TimeProvider systemTimeProvider)
     {
         var timeZoneId = await db.Courses.Where(c => c.Id == courseId).Select(c => c.TimeZoneId).FirstAsync();
-        var today = CourseTime.Today(timeProvider, timeZoneId);
+        var today = CourseTime.Today(systemTimeProvider, timeZoneId);
 
         var waitlist = await repo.GetByCourseDateAsync(courseId, today);
 
@@ -102,39 +104,35 @@ public static class WalkUpWaitlistEndpoints
                 .ToList()
             : new List<WalkUpWaitlistEntryResponse>();
 
-        var requests = (await db.TeeTimeRequests
-                .Where(r => r.CourseId == courseId && r.Date == today)
-                .Select(r => new { r.Id, r.TeeTime, r.GolfersNeeded, r.Status })
+        var openings = (await db.TeeTimeOpenings
+                .Where(o => o.CourseId == courseId && o.Date == today)
+                .Select(o => new { o.Id, o.TeeTime, o.SlotsAvailable, o.SlotsRemaining, o.Status })
                 .ToListAsync())
-                .Select(r => new WalkUpWaitlistRequestResponse(r.Id, r.TeeTime.ToString("HH:mm"), r.GolfersNeeded, r.Status.ToString()))
+                .Select(o => new WalkUpWaitlistOpeningResponse(o.Id, o.TeeTime.ToString("HH:mm"), o.SlotsAvailable, o.SlotsRemaining, o.Status.ToString()))
                 .ToList();
 
-        return Results.Ok(new WalkUpWaitlistTodayResponse(waitlistResponse, entries, requests));
+        return Results.Ok(new WalkUpWaitlistTodayResponse(waitlistResponse, entries, openings));
     }
 
-    [WolverinePost("/courses/{courseId}/walkup-waitlist/requests")]
-    public static async Task<IResult> CreateWaitlistRequest(
+    [WolverinePost("/courses/{courseId}/walkup-waitlist/openings")]
+    public static async Task<IResult> CreateOpening(
         Guid courseId,
-        CreateWalkUpWaitlistRequestRequest request,
+        CreateOpeningRequest request,
         ApplicationDbContext db,
-        TeeTimeRequestService teeTimeRequestService,
-        ITeeTimeRequestRepository teeTimeRequestRepo)
+        ITeeTimeOpeningRepository openingRepo,
+        ITimeProvider timeProvider,
+        TimeProvider systemTimeProvider)
     {
-        var parsedDate = DateOnly.ParseExact(request.Date, "yyyy-MM-dd");
+        var timeZoneId = await db.Courses.Where(c => c.Id == courseId).Select(c => c.TimeZoneId).FirstAsync();
+        var today = CourseTime.Today(systemTimeProvider, timeZoneId);
         var parsedTeeTime = TimeOnly.ParseExact(request.TeeTime, ["HH:mm", "HH:mm:ss"]);
 
-        var teeTimeRequest = await teeTimeRequestService.CreateAsync(
-            courseId, parsedDate, parsedTeeTime, request.GolfersNeeded);
+        var opening = TeeTimeOpening.Create(courseId, today, parsedTeeTime, request.SlotsAvailable, operatorOwned: true, timeProvider);
+        openingRepo.Add(opening);
 
-        teeTimeRequestRepo.Add(teeTimeRequest);
-
-        var response = new WalkUpWaitlistRequestResponse(
-            teeTimeRequest.Id,
-            teeTimeRequest.TeeTime.ToString("HH:mm"),
-            teeTimeRequest.GolfersNeeded,
-            teeTimeRequest.Status.ToString());
-
-        return Results.Created($"/courses/{courseId}/walkup-waitlist/requests/{teeTimeRequest.Id}", response);
+        return Results.Created(
+            $"/courses/{courseId}/walkup-waitlist/openings/{opening.Id}",
+            new WalkUpWaitlistOpeningResponse(opening.Id, opening.TeeTime.ToString("HH:mm"), opening.SlotsAvailable, opening.SlotsRemaining, opening.Status.ToString()));
     }
 
     [WolverinePost("/courses/{courseId}/walkup-waitlist/entries")]
@@ -142,13 +140,14 @@ public static class WalkUpWaitlistEndpoints
         Guid courseId,
         AddGolferToWaitlistRequest request,
         ApplicationDbContext db,
-        IWalkUpWaitlistRepository repo,
+        ICourseWaitlistRepository repo,
         IGolferWaitlistEntryRepository entryRepo,
         IGolferRepository golferRepo,
-        TimeProvider timeProvider)
+        ITimeProvider timeProvider,
+        TimeProvider systemTimeProvider)
     {
         var timeZoneId = await db.Courses.Where(c => c.Id == courseId).Select(c => c.TimeZoneId).FirstAsync();
-        var today = CourseTime.Today(timeProvider, timeZoneId);
+        var today = CourseTime.Today(systemTimeProvider, timeZoneId);
         var normalizedPhone = PhoneNormalizer.Normalize(request.Phone);
 
         var waitlist = await repo.GetOpenByCourseDateAsync(courseId, today);
@@ -188,7 +187,7 @@ public static class WalkUpWaitlistEndpoints
             }
         }
 
-        var entry = await waitlist.Join(golfer, entryRepo, request.GroupSize ?? 1);
+        var entry = await waitlist.Join(golfer, entryRepo, timeProvider, request.GroupSize ?? 1);
         entryRepo.Add(entry);
 
         // Intentional mid-flow save: position query reads from DB,
@@ -216,7 +215,7 @@ public static class WalkUpWaitlistEndpoints
                 courseName));
     }
 
-    private static WalkUpWaitlistResponse ToResponse(WalkUpWaitlistAggregate w) =>
+    private static WalkUpWaitlistResponse ToResponse(Domain.CourseWaitlistAggregate.WalkUpWaitlist w) =>
         new(w.Id, w.CourseId, w.ShortCode, w.Date.ToString("yyyy-MM-dd"), w.Status.ToString(), w.OpenedAt, w.ClosedAt);
 }
 
@@ -249,32 +248,28 @@ public record AddGolferToWaitlistResponse(
     int Position,
     string CourseName);
 
-public record CreateWalkUpWaitlistRequestRequest(string Date, string TeeTime, int GolfersNeeded);
+public record CreateOpeningRequest(string TeeTime, int SlotsAvailable);
 
-public class CreateWalkUpWaitlistRequestRequestValidator : AbstractValidator<CreateWalkUpWaitlistRequestRequest>
+public class CreateOpeningRequestValidator : AbstractValidator<CreateOpeningRequest>
 {
-    public CreateWalkUpWaitlistRequestRequestValidator()
+    public CreateOpeningRequestValidator()
     {
-        RuleFor(x => x.Date)
-            .NotEmpty().WithMessage("Date is required.")
-            .Must(d => DateOnly.TryParseExact(d, "yyyy-MM-dd", out _))
-            .WithMessage("A valid date in yyyy-MM-dd format is required.");
-
         RuleFor(x => x.TeeTime)
             .NotEmpty().WithMessage("Tee time is required.")
             .Must(t => TimeOnly.TryParseExact(t, ["HH:mm", "HH:mm:ss"], out _))
             .WithMessage("A valid tee time in HH:mm format is required.");
 
-        RuleFor(x => x.GolfersNeeded)
+        RuleFor(x => x.SlotsAvailable)
             .InclusiveBetween(1, 4)
-            .WithMessage("Golfers needed must be between 1 and 4.");
+            .WithMessage("Slots available must be between 1 and 4.");
     }
 }
 
-public record WalkUpWaitlistRequestResponse(
+public record WalkUpWaitlistOpeningResponse(
     Guid Id,
     string TeeTime,
-    int GolfersNeeded,
+    int SlotsAvailable,
+    int SlotsRemaining,
     string Status);
 
 public record WalkUpWaitlistResponse(
@@ -289,7 +284,7 @@ public record WalkUpWaitlistResponse(
 public record WalkUpWaitlistTodayResponse(
     WalkUpWaitlistResponse? Waitlist,
     List<WalkUpWaitlistEntryResponse> Entries,
-    List<WalkUpWaitlistRequestResponse> Requests);
+    List<WalkUpWaitlistOpeningResponse> Openings);
 
 public record WalkUpWaitlistEntryResponse(
     Guid Id,

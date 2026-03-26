@@ -2,7 +2,7 @@ using Shadowbrook.Domain.Common;
 
 namespace Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
-public record WaitlistOfferAccepted : IDomainEvent
+public record WaitlistOfferSent : IDomainEvent
 {
     public Guid EventId { get; init; } = Guid.NewGuid();
     public DateTimeOffset OccurredAt { get; init; } = DateTimeOffset.UtcNow;
@@ -11,4 +11,5 @@ public record WaitlistOfferAccepted : IDomainEvent
     public required Guid GolferWaitlistEntryId { get; init; }
     public required Guid GolferId { get; init; }
     public required int GroupSize { get; init; }
+    public required bool IsWalkUp { get; init; }
 }
