@@ -40,6 +40,9 @@ public class TeeTimeOpeningExpirationPolicy : Saga
 
     public void Handle(
         [SagaIdentityFrom("OpeningId")] TeeTimeOpeningExpired evt) => MarkCompleted();
+
+    public void Handle(
+        [SagaIdentityFrom("OpeningId")] TeeTimeOpeningCancelled evt) => MarkCompleted();
 }
 
 public record TeeTimeOpeningExpirationTimeout(TimeSpan Delay) : TimeoutMessage(Delay);
