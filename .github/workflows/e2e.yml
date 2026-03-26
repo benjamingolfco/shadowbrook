@@ -2,11 +2,9 @@ name: E2E Tests
 
 on:
   workflow_dispatch:
-  # Uncomment when deploy workflow exists:
-  # workflow_run:
-  #   workflows: ["Deploy to Test"]
-  #   types: [completed]
-  #   branches: [main]
+  workflow_run:
+    workflows: ["Deploy Test"]
+    types: [completed]
 
 env:
   E2E_BASE_URL: https://test.shadowbrook.golf
@@ -16,8 +14,7 @@ jobs:
   e2e:
     name: Playwright E2E
     runs-on: ubuntu-latest
-    # Uncomment when using workflow_run:
-    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v6
 
