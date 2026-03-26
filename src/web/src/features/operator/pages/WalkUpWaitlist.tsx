@@ -143,7 +143,9 @@ function formatTeeTime(teeTime: string): string {
 }
 
 function OpeningsTable({ openings }: { openings: WaitlistOpeningEntry[] }) {
-  if (openings.length === 0) {
+  const sortedOpenings = [...openings].sort((a, b) => a.teeTime.localeCompare(b.teeTime));
+
+  if (sortedOpenings.length === 0) {
     return (
       <p className="text-muted-foreground text-sm py-4">
         No tee time openings for today.
@@ -154,7 +156,7 @@ function OpeningsTable({ openings }: { openings: WaitlistOpeningEntry[] }) {
   return (
     <div>
       <p className="text-sm text-muted-foreground mb-2">
-        {openings.length} opening{openings.length !== 1 ? 's' : ''}
+        {sortedOpenings.length} opening{sortedOpenings.length !== 1 ? 's' : ''}
       </p>
       {/* Desktop table */}
       <div className="hidden md:block">
@@ -168,7 +170,7 @@ function OpeningsTable({ openings }: { openings: WaitlistOpeningEntry[] }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {openings.map((opening) => (
+            {sortedOpenings.map((opening) => (
               <TableRow key={opening.id}>
                 <TableCell>{formatTeeTime(opening.teeTime)}</TableCell>
                 <TableCell>{opening.slotsAvailable}</TableCell>
@@ -181,7 +183,7 @@ function OpeningsTable({ openings }: { openings: WaitlistOpeningEntry[] }) {
       </div>
       {/* Mobile stacked cards */}
       <div className="md:hidden space-y-2">
-        {openings.map((opening) => (
+        {sortedOpenings.map((opening) => (
           <div
             key={opening.id}
             className="flex items-center justify-between rounded-md border p-3 text-sm"

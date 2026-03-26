@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@/test/test-utils';
+import userEvent from '@testing-library/user-event';
 import WalkUpWaitlist from '../pages/WalkUpWaitlist';
 import { useCourseContext } from '../context/CourseContext';
 import {
@@ -503,5 +504,51 @@ describe('WalkUpWaitlist', () => {
     render(<WalkUpWaitlist />);
 
     expect(screen.queryByTestId('qr-canvas')).not.toBeInTheDocument();
+  });
+
+  it('sorts tee time openings in ascending order by tee time', async () => {
+    const user = userEvent.setup();
+    const unsortedOpenings = [
+      { id: 'o-1', teeTime: '14:30', slotsAvailable: 4, slotsRemaining: 2, status: 'Available' },
+      { id: 'o-2', teeTime: '08:00', slotsAvailable: 4, slotsRemaining: 4, status: 'Available' },
+      { id: 'o-3', teeTime: '11:15', slotsAvailable: 4, slotsRemaining: 1, status: 'Available' },
+    ];
+
+    mockUseWalkUpWaitlistToday.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: { waitlist: openWaitlist, entries: [], openings: unsortedOpenings },
+      error: null,
+    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+    const { container } = render(<WalkUpWaitlist />);
+
+    // Switch to "Tee Time Openings" tab
+    const openingsTab = screen.getByRole('tab', { name: /tee time openings/i });
+    await user.click(openingsTab);
+
+    // Wait for the openings tab content to become active
+    await waitFor(() => {
+      const activePanel = container.querySelector('[data-slot="tabs-content"][data-state="active"]');
+      const panelText = activePanel?.textContent || '';
+      expect(panelText).toContain('8:00 AM');
+    });
+
+    // Get the active tab panel content
+    const tabPanel = container.querySelector('[data-slot="tabs-content"][data-state="active"]');
+    const panelText = tabPanel?.textContent || '';
+
+    // All three times should be present
+    expect(panelText).toContain('8:00 AM');
+    expect(panelText).toContain('11:15 AM');
+    expect(panelText).toContain('2:30 PM');
+
+    // Verify they appear in sorted order
+    const index8 = panelText.indexOf('8:00 AM');
+    const index11 = panelText.indexOf('11:15 AM');
+    const index14 = panelText.indexOf('2:30 PM');
+
+    expect(index8).toBeLessThan(index11);
+    expect(index11).toBeLessThan(index14);
   });
 });
