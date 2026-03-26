@@ -12,17 +12,13 @@ export class OperatorWaitlistPage {
   }
 
   async selectTenant(tenantName: string) {
-    // Fresh browser context — need to select tenant first
     await this.page.getByRole('cell', { name: tenantName }).click();
   }
 
   async selectCourse(courseName: string) {
-    // Course switcher is visible when multiple courses exist
-    const switcher = this.page.getByRole('combobox', { name: 'Switch course' });
-    if (await switcher.isVisible()) {
-      await switcher.click();
-      await this.page.getByRole('option', { name: courseName }).click();
-    }
+    await this.page
+      .getByRole('button', { name: new RegExp(`Manage ${courseName}`) })
+      .click();
     await this.page.getByRole('heading', { name: 'Walk-Up Waitlist' }).waitFor();
   }
 
@@ -30,14 +26,31 @@ export class OperatorWaitlistPage {
     await this.openWaitlistButton.click();
     const dialog = this.page.getByRole('alertdialog');
     await dialog.getByRole('button', { name: 'Open Waitlist' }).click();
-    // Wait for the short code to appear — confirms waitlist is open
     await this.page.locator('span.font-mono.font-bold.tracking-widest').waitFor();
   }
 
   async getShortCode(): Promise<string> {
     const codeElement = this.page.locator('span.font-mono.font-bold.tracking-widest');
     const spacedCode = await codeElement.textContent();
-    // Code is displayed with spaces between digits (e.g., "4 8 2 7")
     return spacedCode?.replace(/\s/g, '') ?? '';
+  }
+
+  async addTeeTimeOpening(time: string, slots: number) {
+    await this.page.getByRole('button', { name: 'Add Tee Time Opening' }).click();
+
+    const dialog = this.page.getByRole('dialog');
+    await dialog.getByLabel('Tee Time').fill(time);
+
+    if (slots !== 1) {
+      await dialog.getByRole('combobox').click();
+      await this.page.getByRole('option', { name: String(slots) }).click();
+    }
+
+    await dialog.getByRole('button', { name: 'Add Opening' }).click();
+    await dialog.waitFor({ state: 'hidden' });
+  }
+
+  async getOpeningsTab() {
+    await this.page.getByRole('tab', { name: 'Tee Time Openings' }).click();
   }
 }
