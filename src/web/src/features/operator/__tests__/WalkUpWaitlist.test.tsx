@@ -170,7 +170,7 @@ describe('WalkUpWaitlist', () => {
     expect(screen.getByRole('button', { name: 'Open Waitlist' })).toBeInTheDocument();
   });
 
-  it('does not show Add Tee Time Request button in inactive state', () => {
+  it('does not show Add Tee Time Opening button in inactive state', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
