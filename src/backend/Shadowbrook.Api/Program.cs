@@ -148,7 +148,7 @@ if (!app.Environment.IsProduction())
     app.MapOpenApi();
 }
 
-if (app.Environment.EnvironmentName != "Testing")
+if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testing")
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

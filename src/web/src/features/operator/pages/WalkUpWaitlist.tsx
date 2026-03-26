@@ -29,7 +29,7 @@ import { QrCodePanel } from '../components/QrCodePanel';
 import { ReopenWaitlistDialog } from '../components/ReopenWaitlistDialog';
 import { RemoveGolferDialog } from '../components/RemoveGolferDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { WalkUpWaitlistEntry, WaitlistRequestEntry } from '@/types/waitlist';
+import type { WalkUpWaitlistEntry, WaitlistOpeningEntry } from '@/types/waitlist';
 
 function QueueTable({
   entries,
@@ -142,11 +142,11 @@ function formatTeeTime(teeTime: string): string {
   return `${hour12}:${minute} ${period}`;
 }
 
-function RequestsTable({ requests }: { requests: WaitlistRequestEntry[] }) {
-  if (requests.length === 0) {
+function OpeningsTable({ openings }: { openings: WaitlistOpeningEntry[] }) {
+  if (openings.length === 0) {
     return (
       <p className="text-muted-foreground text-sm py-4">
-        No tee time requests for today.
+        No tee time openings for today.
       </p>
     );
   }
@@ -154,7 +154,7 @@ function RequestsTable({ requests }: { requests: WaitlistRequestEntry[] }) {
   return (
     <div>
       <p className="text-sm text-muted-foreground mb-2">
-        {requests.length} request{requests.length !== 1 ? 's' : ''}
+        {openings.length} opening{openings.length !== 1 ? 's' : ''}
       </p>
       {/* Desktop table */}
       <div className="hidden md:block">
@@ -162,16 +162,18 @@ function RequestsTable({ requests }: { requests: WaitlistRequestEntry[] }) {
           <TableHeader>
             <TableRow>
               <TableHead>Tee Time</TableHead>
-              <TableHead>Golfers Needed</TableHead>
+              <TableHead>Slots Available</TableHead>
+              <TableHead>Slots Remaining</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {requests.map((request) => (
-              <TableRow key={request.id}>
-                <TableCell>{formatTeeTime(request.teeTime)}</TableCell>
-                <TableCell>{request.golfersNeeded}</TableCell>
-                <TableCell>{request.status}</TableCell>
+            {openings.map((opening) => (
+              <TableRow key={opening.id}>
+                <TableCell>{formatTeeTime(opening.teeTime)}</TableCell>
+                <TableCell>{opening.slotsAvailable}</TableCell>
+                <TableCell>{opening.slotsRemaining}</TableCell>
+                <TableCell>{opening.status}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -179,18 +181,18 @@ function RequestsTable({ requests }: { requests: WaitlistRequestEntry[] }) {
       </div>
       {/* Mobile stacked cards */}
       <div className="md:hidden space-y-2">
-        {requests.map((request) => (
+        {openings.map((opening) => (
           <div
-            key={request.id}
+            key={opening.id}
             className="flex items-center justify-between rounded-md border p-3 text-sm"
           >
             <div className="flex flex-col gap-1">
-              <span className="font-medium">{formatTeeTime(request.teeTime)}</span>
+              <span className="font-medium">{formatTeeTime(opening.teeTime)}</span>
               <span className="text-muted-foreground text-xs">
-                {request.golfersNeeded} golfer{request.golfersNeeded !== 1 ? 's' : ''} needed
+                {opening.slotsRemaining} of {opening.slotsAvailable} slot{opening.slotsAvailable !== 1 ? 's' : ''} remaining
               </span>
             </div>
-            <span className="text-muted-foreground">{request.status}</span>
+            <span className="text-muted-foreground">{opening.status}</span>
           </div>
         ))}
       </div>
@@ -294,7 +296,7 @@ export default function WalkUpWaitlist() {
     );
   }
 
-  const { waitlist, entries, requests = [] } = todayQuery.data ?? { waitlist: null, entries: [], requests: [] };
+  const { waitlist, entries, openings = [] } = todayQuery.data ?? { waitlist: null, entries: [], openings: [] };
 
   // Inactive state — no waitlist opened today
   if (!waitlist) {
@@ -377,7 +379,7 @@ export default function WalkUpWaitlist() {
         <Tabs defaultValue="queue" className="mb-6">
           <TabsList>
             <TabsTrigger value="queue">Golfer Queue</TabsTrigger>
-            <TabsTrigger value="requests">Tee Time Requests</TabsTrigger>
+            <TabsTrigger value="openings">Tee Time Openings</TabsTrigger>
           </TabsList>
           <TabsContent value="queue">
             <QueueTable
@@ -388,8 +390,8 @@ export default function WalkUpWaitlist() {
               isWaitlistOpen={false}
             />
           </TabsContent>
-          <TabsContent value="requests">
-            <RequestsTable requests={requests} />
+          <TabsContent value="openings">
+            <OpeningsTable openings={openings} />
           </TabsContent>
         </Tabs>
       </div>
@@ -406,8 +408,8 @@ export default function WalkUpWaitlist() {
     },
     {
       id: 'add-request',
-      label: 'Add Tee Time Request',
-      description: 'Add a tee time request to the waitlist',
+      label: 'Add Tee Time Opening',
+      description: 'Add a tee time opening to the waitlist',
       variant: 'outline',
       onClick: () => setAddRequestDialogOpen(true),
     },
@@ -488,7 +490,7 @@ export default function WalkUpWaitlist() {
       <Tabs defaultValue="queue" className="mb-6">
         <TabsList>
           <TabsTrigger value="queue">Golfer Queue</TabsTrigger>
-          <TabsTrigger value="requests">Tee Time Requests</TabsTrigger>
+          <TabsTrigger value="openings">Tee Time Openings</TabsTrigger>
         </TabsList>
         <TabsContent value="queue">
           <QueueTable
@@ -499,8 +501,8 @@ export default function WalkUpWaitlist() {
             isWaitlistOpen={true}
           />
         </TabsContent>
-        <TabsContent value="requests">
-          <RequestsTable requests={requests} />
+        <TabsContent value="openings">
+          <OpeningsTable openings={openings} />
         </TabsContent>
       </Tabs>
     </div>

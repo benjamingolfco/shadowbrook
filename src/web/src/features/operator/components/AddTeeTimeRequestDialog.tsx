@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
-import { getCourseToday, getCourseNow } from '@/lib/course-time';
+import { getCourseNow } from '@/lib/course-time';
 import { useCourseContext } from '../context/CourseContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,7 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useCreateWaitlistRequest } from '../hooks/useWaitlist';
+import { useCreateWaitlistOpening } from '../hooks/useWaitlist';
 
 interface AddTeeTimeRequestDialogProps {
   open: boolean;
@@ -38,10 +38,9 @@ interface AddTeeTimeRequestDialogProps {
 }
 
 export function AddTeeTimeRequestDialog({ open, onOpenChange, courseId }: AddTeeTimeRequestDialogProps) {
-  const createMutation = useCreateWaitlistRequest();
+  const createMutation = useCreateWaitlistOpening();
   const { course } = useCourseContext();
   const timeZoneId = course?.timeZoneId ?? 'UTC';
-  const todayDate = getCourseToday(timeZoneId);
 
   const addTeeTimeRequestSchema = useMemo(
     () =>
@@ -70,34 +69,33 @@ export function AddTeeTimeRequestDialog({ open, onOpenChange, courseId }: AddTee
             },
             { message: 'Tee time must be in the future' }
           ),
-        golfersNeeded: z.number().min(1, 'At least 1 golfer needed').max(4, 'Maximum 4 golfers'),
+        slotsAvailable: z.number().min(1, 'At least 1 slot required').max(4, 'Maximum 4 slots'),
       }),
     [timeZoneId],
   );
 
-  type AddTeeTimeRequestFormData = z.infer<typeof addTeeTimeRequestSchema>;
+  type AddTeeTimeOpeningFormData = z.infer<typeof addTeeTimeRequestSchema>;
 
-  const form = useForm<AddTeeTimeRequestFormData>({
+  const form = useForm<AddTeeTimeOpeningFormData>({
     resolver: zodResolver(addTeeTimeRequestSchema),
     defaultValues: {
       teeTime: '',
-      golfersNeeded: 1,
+      slotsAvailable: 1,
     },
   });
 
-  function onSubmit(data: AddTeeTimeRequestFormData) {
+  function onSubmit(data: AddTeeTimeOpeningFormData) {
     createMutation.mutate(
       {
         courseId,
         data: {
-          date: todayDate,
           teeTime: data.teeTime,
-          golfersNeeded: data.golfersNeeded,
+          slotsAvailable: data.slotsAvailable,
         },
       },
       {
         onSuccess: () => {
-          form.reset({ teeTime: '', golfersNeeded: 1 });
+          form.reset({ teeTime: '', slotsAvailable: 1 });
           onOpenChange(false);
         },
       },
@@ -107,7 +105,7 @@ export function AddTeeTimeRequestDialog({ open, onOpenChange, courseId }: AddTee
   function handleOpenChange(nextOpen: boolean) {
     onOpenChange(nextOpen);
     if (!nextOpen) {
-      form.reset({ teeTime: '', golfersNeeded: 1 });
+      form.reset({ teeTime: '', slotsAvailable: 1 });
       createMutation.reset();
     }
   }
@@ -116,9 +114,9 @@ export function AddTeeTimeRequestDialog({ open, onOpenChange, courseId }: AddTee
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Tee Time Request</DialogTitle>
+          <DialogTitle>Add Tee Time Opening</DialogTitle>
           <DialogDescription>
-            Add a tee time request to the waitlist for today.
+            Add a tee time opening to the waitlist for today.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -139,10 +137,10 @@ export function AddTeeTimeRequestDialog({ open, onOpenChange, courseId }: AddTee
 
             <FormField
               control={form.control}
-              name="golfersNeeded"
+              name="slotsAvailable"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Golfers Needed</FormLabel>
+                  <FormLabel>Slots Available</FormLabel>
                   <Select
                     value={String(field.value)}
                     onValueChange={(v) => field.onChange(Number(v))}
@@ -174,7 +172,7 @@ export function AddTeeTimeRequestDialog({ open, onOpenChange, courseId }: AddTee
 
             <DialogFooter>
               <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? 'Adding...' : 'Add Request'}
+                {createMutation.isPending ? 'Adding...' : 'Add Opening'}
               </Button>
             </DialogFooter>
           </form>
