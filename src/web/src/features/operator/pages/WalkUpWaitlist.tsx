@@ -23,7 +23,7 @@ import { useRemoveGolferFromWaitlist } from '../hooks/useWaitlist';
 import { useCourseContext } from '../context/CourseContext';
 import { OpenWaitlistDialog } from '../components/OpenWaitlistDialog';
 import { AddGolferDialog } from '../components/AddGolferDialog';
-import { AddTeeTimeRequestDialog } from '../components/AddTeeTimeRequestDialog';
+import { AddTeeTimeOpeningDialog } from '../components/AddTeeTimeOpeningDialog';
 import { CloseWaitlistDialog } from '../components/CloseWaitlistDialog';
 import { QrCodePanel } from '../components/QrCodePanel';
 import { ReopenWaitlistDialog } from '../components/ReopenWaitlistDialog';
@@ -448,7 +448,7 @@ export default function WalkUpWaitlist() {
         courseId={courseId}
       />
 
-      <AddTeeTimeRequestDialog
+      <AddTeeTimeOpeningDialog
         open={addRequestDialogOpen}
         onOpenChange={setAddRequestDialogOpen}
         courseId={courseId}

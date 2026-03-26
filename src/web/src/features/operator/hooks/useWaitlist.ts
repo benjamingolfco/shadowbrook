@@ -4,7 +4,7 @@ import { queryKeys } from '@/lib/query-keys';
 import type {
   AddGolferToWaitlistRequest,
   AddGolferToWaitlistResponse,
-  CreateWaitlistOpening,
+  CreateTeeTimeOpeningRequest,
   WaitlistOpeningEntry,
 } from '@/types/waitlist';
 
@@ -26,7 +26,7 @@ export function useAddGolferToWaitlist() {
   });
 }
 
-export function useCreateWaitlistOpening() {
+export function useCreateTeeTimeOpening() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -34,8 +34,8 @@ export function useCreateWaitlistOpening() {
       data,
     }: {
       courseId: string;
-      data: CreateWaitlistOpening;
-    }) => api.post<WaitlistOpeningEntry>(`/courses/${courseId}/walkup-waitlist/openings`, data),
+      data: CreateTeeTimeOpeningRequest;
+    }) => api.post<WaitlistOpeningEntry>(`/courses/${courseId}/tee-time-openings`, data),
     onSuccess: (_, { courseId }) => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.walkUpWaitlist.today(courseId),

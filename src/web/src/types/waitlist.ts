@@ -47,7 +47,7 @@ export interface WaitlistOpeningEntry {
   status: string;
 }
 
-export interface CreateWaitlistOpening {
+export interface CreateTeeTimeOpeningRequest {
   teeTime: string;
   slotsAvailable: number;
 }

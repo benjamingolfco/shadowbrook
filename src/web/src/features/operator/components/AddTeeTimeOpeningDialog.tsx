@@ -29,16 +29,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useCreateWaitlistOpening } from '../hooks/useWaitlist';
+import { useCreateTeeTimeOpening } from '../hooks/useWaitlist';
 
-interface AddTeeTimeRequestDialogProps {
+interface AddTeeTimeOpeningDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   courseId: string;
 }
 
-export function AddTeeTimeRequestDialog({ open, onOpenChange, courseId }: AddTeeTimeRequestDialogProps) {
-  const createMutation = useCreateWaitlistOpening();
+export function AddTeeTimeOpeningDialog({ open, onOpenChange, courseId }: AddTeeTimeOpeningDialogProps) {
+  const createMutation = useCreateTeeTimeOpening();
   const { course } = useCourseContext();
   const timeZoneId = course?.timeZoneId ?? 'UTC';
 

@@ -1,15 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@/test/test-utils';
-import { AddTeeTimeRequestDialog } from '../components/AddTeeTimeRequestDialog';
+import { AddTeeTimeOpeningDialog } from '../components/AddTeeTimeOpeningDialog';
 import { useCourseContext } from '../context/CourseContext';
-import { useCreateWaitlistOpening } from '../hooks/useWaitlist';
+import { useCreateTeeTimeOpening } from '../hooks/useWaitlist';
 import * as courseTime from '@/lib/course-time';
 
 vi.mock('../context/CourseContext');
 vi.mock('../hooks/useWaitlist');
 
 const mockUseCourseContext = vi.mocked(useCourseContext);
-const mockUseCreateWaitlistOpening = vi.mocked(useCreateWaitlistOpening);
+const mockUseCreateTeeTimeOpening = vi.mocked(useCreateTeeTimeOpening);
 
 const mockCourse = { id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' };
 
@@ -26,30 +26,30 @@ function defaultCourseContext() {
   });
 }
 
-function defaultCreateWaitlistOpening() {
-  mockUseCreateWaitlistOpening.mockReturnValue({
+function defaultCreateTeeTimeOpening() {
+  mockUseCreateTeeTimeOpening.mockReturnValue({
     mutate: mockCreateMutate,
     isPending: false,
     isSuccess: false,
     isError: false,
     error: null,
     reset: vi.fn(),
-  } as unknown as ReturnType<typeof useCreateWaitlistOpening>);
+  } as unknown as ReturnType<typeof useCreateTeeTimeOpening>);
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
   defaultCourseContext();
-  defaultCreateWaitlistOpening();
+  defaultCreateTeeTimeOpening();
 });
 
-describe('AddTeeTimeRequestDialog', () => {
+describe('AddTeeTimeOpeningDialog', () => {
   it('shows validation error when tee time is in the past', async () => {
     // Mock getCourseNow to return 14:00 (2:00 PM)
     vi.spyOn(courseTime, 'getCourseNow').mockReturnValue('14:00');
 
     render(
-      <AddTeeTimeRequestDialog
+      <AddTeeTimeOpeningDialog
         open={true}
         onOpenChange={vi.fn()}
         courseId="course-1"
@@ -75,7 +75,7 @@ describe('AddTeeTimeRequestDialog', () => {
     vi.spyOn(courseTime, 'getCourseNow').mockReturnValue('14:00');
 
     render(
-      <AddTeeTimeRequestDialog
+      <AddTeeTimeOpeningDialog
         open={true}
         onOpenChange={vi.fn()}
         courseId="course-1"
@@ -101,7 +101,7 @@ describe('AddTeeTimeRequestDialog', () => {
     vi.spyOn(courseTime, 'getCourseNow').mockReturnValue('14:00');
 
     render(
-      <AddTeeTimeRequestDialog
+      <AddTeeTimeOpeningDialog
         open={true}
         onOpenChange={vi.fn()}
         courseId="course-1"
@@ -127,7 +127,7 @@ describe('AddTeeTimeRequestDialog', () => {
     vi.spyOn(courseTime, 'getCourseNow').mockReturnValue('14:00');
 
     render(
-      <AddTeeTimeRequestDialog
+      <AddTeeTimeOpeningDialog
         open={true}
         onOpenChange={vi.fn()}
         courseId="course-1"
@@ -153,7 +153,7 @@ describe('AddTeeTimeRequestDialog', () => {
     vi.spyOn(courseTime, 'getCourseNow').mockReturnValue('14:00');
 
     render(
-      <AddTeeTimeRequestDialog
+      <AddTeeTimeOpeningDialog
         open={true}
         onOpenChange={vi.fn()}
         courseId="course-1"
@@ -186,7 +186,7 @@ describe('AddTeeTimeRequestDialog', () => {
     vi.spyOn(courseTime, 'getCourseNow').mockReturnValue('14:00');
 
     render(
-      <AddTeeTimeRequestDialog
+      <AddTeeTimeOpeningDialog
         open={true}
         onOpenChange={vi.fn()}
         courseId="course-1"
