@@ -50,7 +50,7 @@ export class OperatorWaitlistPage {
     await dialog.waitFor({ state: 'hidden' });
   }
 
-  async getOpeningsTab() {
+  async selectOpeningsTab() {
     await this.page.getByRole('tab', { name: 'Tee Time Openings' }).click();
   }
 }
