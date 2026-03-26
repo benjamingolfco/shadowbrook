@@ -34,6 +34,21 @@ jobs:
       - name: Install Playwright Chromium
         run: pnpm --dir src/web exec playwright install --with-deps chromium
 
+      - name: Warm up API
+        run: |
+          echo "Warming up API at $E2E_API_URL..."
+          for i in 1 2 3 4 5; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "$E2E_API_URL/health" || true)
+            if [ "$status" = "200" ]; then
+              echo "API is warm (attempt $i)"
+              # Fire a POST to warm up Wolverine HTTP pipeline
+              curl -s -o /dev/null -X POST "$E2E_API_URL/tenants" -H "Content-Type: application/json" -d '{}' || true
+              break
+            fi
+            echo "Waiting for API... (attempt $i, status: $status)"
+            sleep 5
+          done
+
       - name: Run E2E tests
         run: pnpm --dir src/web e2e
 

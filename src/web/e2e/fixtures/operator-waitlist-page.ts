@@ -26,7 +26,21 @@ export class OperatorWaitlistPage {
     await this.openWaitlistButton.click();
     const dialog = this.page.getByRole('alertdialog');
     await dialog.getByRole('button', { name: 'Open Waitlist' }).click();
-    await this.page.locator('span.font-mono.font-bold.tracking-widest').waitFor();
+
+    // Wait for either the short code (success) or an error message (API failure).
+    // Racing these avoids a silent 30s timeout when the API returns an error.
+    const shortCode = this.page.locator('span.font-mono.font-bold.tracking-widest');
+    const error = this.page.locator('text=/Error/i');
+
+    const result = await Promise.race([
+      shortCode.waitFor().then(() => 'success' as const),
+      error.waitFor().then(() => 'error' as const),
+    ]);
+
+    if (result === 'error') {
+      const msg = await error.textContent();
+      throw new Error(`Open waitlist failed: ${msg}`);
+    }
   }
 
   async getShortCode(): Promise<string> {
