@@ -17,8 +17,7 @@ public static class BookingCreatedConfirmationSmsHandler
         ITextMessageService textMessageService,
         CancellationToken ct)
     {
-        var golfer = await golferRepository.GetByIdAsync(domainEvent.GolferId)
-            ?? throw new InvalidOperationException($"Golfer {domainEvent.GolferId} not found for event {nameof(BookingCreated)}.");
+        var golfer = await golferRepository.GetRequiredByIdAsync(domainEvent.GolferId);
 
         var courseName = await db.Courses
             .IgnoreQueryFilters()
@@ -27,8 +26,7 @@ public static class BookingCreatedConfirmationSmsHandler
             .FirstOrDefaultAsync(ct)
             ?? throw new InvalidOperationException($"Course {domainEvent.CourseId} not found for event {nameof(BookingCreated)}.");
 
-        var booking = await bookingRepository.GetByIdAsync(domainEvent.BookingId)
-            ?? throw new InvalidOperationException($"Booking {domainEvent.BookingId} not found for event {nameof(BookingCreated)}.");
+        var booking = await bookingRepository.GetRequiredByIdAsync(domainEvent.BookingId);
 
         var message = $"You're booked! {courseName} at {booking.Time:h:mm tt} on {booking.Date:MMMM d, yyyy}. See you on the course!";
         await textMessageService.SendAsync(golfer.Phone, message, ct);

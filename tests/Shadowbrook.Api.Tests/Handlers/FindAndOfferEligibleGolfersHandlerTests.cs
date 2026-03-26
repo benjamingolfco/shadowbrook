@@ -44,7 +44,7 @@ public class FindAndOfferEligibleGolfersHandlerTests
         var openingId = Guid.NewGuid();
         this.openingRepo.GetByIdAsync(openingId).Returns((TeeTimeOpening?)null);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(
+        await Assert.ThrowsAsync<EntityNotFoundException>(
             () => FindAndOfferEligibleGolfersHandler.Handle(
                 new FindAndOfferEligibleGolfers(openingId, 3),
                 this.openingRepo, this.matchingService, this.offerRepo,

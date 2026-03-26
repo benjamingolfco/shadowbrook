@@ -16,8 +16,7 @@ public static class BookingCreatedClaimHandler
             return; // Not a waitlist booking — no opening to claim
         }
 
-        var opening = await openingRepository.GetByIdAsync(evt.OpeningId.Value)
-            ?? throw new InvalidOperationException($"TeeTimeOpening {evt.OpeningId.Value} not found for event {nameof(BookingCreated)}.");
+        var opening = await openingRepository.GetRequiredByIdAsync(evt.OpeningId.Value);
 
         opening.Claim(evt.BookingId, evt.GolferId, evt.GroupSize, timeProvider);
     }

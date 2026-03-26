@@ -19,17 +19,9 @@ public static class WaitlistOfferCreatedSendSmsHandler
         IConfiguration configuration,
         CancellationToken ct)
     {
-        var offer = await offerRepository.GetByIdAsync(evt.WaitlistOfferId)
-            ?? throw new InvalidOperationException(
-                $"WaitlistOffer {evt.WaitlistOfferId} not found for event {nameof(WaitlistOfferCreated)}.");
-
-        var opening = await openingRepository.GetByIdAsync(evt.OpeningId)
-            ?? throw new InvalidOperationException(
-                $"TeeTimeOpening {evt.OpeningId} not found for event {nameof(WaitlistOfferCreated)}.");
-
-        var golfer = await golferRepository.GetByIdAsync(evt.GolferId)
-            ?? throw new InvalidOperationException(
-                $"Golfer {evt.GolferId} not found for event {nameof(WaitlistOfferCreated)}.");
+        var offer = await offerRepository.GetRequiredByIdAsync(evt.WaitlistOfferId);
+        var opening = await openingRepository.GetRequiredByIdAsync(evt.OpeningId);
+        var golfer = await golferRepository.GetRequiredByIdAsync(evt.GolferId);
 
         var course = await courseRepository.GetByIdAsync(opening.CourseId);
         var courseName = course?.Name ?? "Course";

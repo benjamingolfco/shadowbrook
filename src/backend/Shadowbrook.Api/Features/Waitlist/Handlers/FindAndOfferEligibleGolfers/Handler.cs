@@ -20,9 +20,7 @@ public static class FindAndOfferEligibleGolfersHandler
         ILogger logger,
         CancellationToken ct)
     {
-        var opening = await openingRepository.GetByIdAsync(command.OpeningId)
-            ?? throw new InvalidOperationException(
-                $"TeeTimeOpening {command.OpeningId} not found for command {nameof(FindAndOfferEligibleGolfers)}.");
+        var opening = await openingRepository.GetRequiredByIdAsync(command.OpeningId);
 
         var eligibleEntries = await matchingService.FindEligibleEntriesAsync(opening, ct);
 

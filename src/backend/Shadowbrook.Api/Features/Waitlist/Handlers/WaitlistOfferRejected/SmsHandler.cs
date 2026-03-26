@@ -16,8 +16,7 @@ public static class WaitlistOfferRejectedSmsHandler
         ITextMessageService textMessageService,
         CancellationToken ct)
     {
-        var offer = await offerRepository.GetByIdAsync(domainEvent.WaitlistOfferId)
-            ?? throw new InvalidOperationException($"WaitlistOffer {domainEvent.WaitlistOfferId} not found for event {nameof(WaitlistOfferRejected)}.");
+        var offer = await offerRepository.GetRequiredByIdAsync(domainEvent.WaitlistOfferId);
 
         if (offer.NotifiedAt is null)
         {
@@ -25,8 +24,7 @@ public static class WaitlistOfferRejectedSmsHandler
             return;
         }
 
-        var entry = await entryRepository.GetByIdAsync(domainEvent.GolferWaitlistEntryId)
-            ?? throw new InvalidOperationException($"GolferWaitlistEntry {domainEvent.GolferWaitlistEntryId} not found for event {nameof(WaitlistOfferRejected)}.");
+        var entry = await entryRepository.GetRequiredByIdAsync(domainEvent.GolferWaitlistEntryId);
 
         // Skip if golfer was already removed from the waitlist
         if (entry.RemovedAt is not null)
@@ -34,8 +32,7 @@ public static class WaitlistOfferRejectedSmsHandler
             return;
         }
 
-        var golfer = await golferRepository.GetByIdAsync(entry.GolferId)
-            ?? throw new InvalidOperationException($"Golfer {entry.GolferId} not found for waitlist entry {entry.Id}.");
+        var golfer = await golferRepository.GetRequiredByIdAsync(entry.GolferId);
 
         var message = "Sorry, that tee time is no longer available.";
         await textMessageService.SendAsync(golfer.Phone, message, ct);

@@ -1,3 +1,4 @@
+using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
@@ -9,8 +10,7 @@ public static class WaitlistOfferAcceptedRemoveFromWaitlistHandler
         WaitlistOfferAccepted evt,
         IGolferWaitlistEntryRepository entryRepository)
     {
-        var entry = await entryRepository.GetByIdAsync(evt.GolferWaitlistEntryId)
-            ?? throw new InvalidOperationException($"GolferWaitlistEntry {evt.GolferWaitlistEntryId} not found for event {nameof(WaitlistOfferAccepted)}.");
+        var entry = await entryRepository.GetRequiredByIdAsync(evt.GolferWaitlistEntryId);
 
         entry.Remove();
     }

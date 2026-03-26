@@ -22,6 +22,7 @@ public static class DomainExceptionHandler
                     WaitlistNotClosedException => StatusCodes.Status409Conflict,
                     OfferNotPendingException => StatusCodes.Status409Conflict,
                     BookingNotPendingException => StatusCodes.Status409Conflict,
+                    EntityNotFoundException => StatusCodes.Status404NotFound,
                     _ => StatusCodes.Status400BadRequest
                 };
                 await context.Response.WriteAsJsonAsync(new { error = domainEx.Message });

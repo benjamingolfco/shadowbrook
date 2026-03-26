@@ -17,11 +17,8 @@ public static class GolferJoinedWaitlistSmsHandler
         ApplicationDbContext db,
         CancellationToken ct)
     {
-        var entry = await entryRepository.GetByIdAsync(domainEvent.GolferWaitlistEntryId)
-            ?? throw new InvalidOperationException($"GolferWaitlistEntry {domainEvent.GolferWaitlistEntryId} not found for event {nameof(GolferJoinedWaitlist)}.");
-
-        var golfer = await golferRepository.GetByIdAsync(entry.GolferId)
-            ?? throw new InvalidOperationException($"Golfer {entry.GolferId} not found for waitlist entry {entry.Id}.");
+        var entry = await entryRepository.GetRequiredByIdAsync(domainEvent.GolferWaitlistEntryId);
+        var golfer = await golferRepository.GetRequiredByIdAsync(entry.GolferId);
 
         var courseName = await db.CourseWaitlists
             .IgnoreQueryFilters()

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Shadowbrook.Api.Features.Waitlist.Policies;
+using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
@@ -12,8 +13,7 @@ public static class RejectStaleOfferHandler
         IWaitlistOfferRepository offerRepository,
         ILogger logger)
     {
-        var offer = await offerRepository.GetByIdAsync(command.WaitlistOfferId)
-            ?? throw new InvalidOperationException($"WaitlistOffer {command.WaitlistOfferId} not found for command {nameof(RejectStaleOffer)}.");
+        var offer = await offerRepository.GetRequiredByIdAsync(command.WaitlistOfferId);
 
         if (offer.Status != OfferStatus.Pending)
         {

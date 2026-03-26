@@ -153,7 +153,7 @@ The project uses [WolverineFx](https://wolverinefx.net) for message handling. Se
 
 **No silent returns — hard rule:**
 - Every early return in a handler MUST either throw or log a warning before returning. Silent failures in event handlers are invisible in production.
-- **ID lookups throw:** When looking up an entity by an ID from an event/command (e.g., `evt.OpeningId`, `evt.GolferId`), the entity MUST exist — the event guarantees validity at publish time. Use `?? throw new InvalidOperationException(...)` on these lookups. A null result means the system is in an inconsistent state.
+- **ID lookups throw:** When looking up an entity by an ID from an event/command, use `GetRequiredByIdAsync(id)` — it throws `EntityNotFoundException` if not found. Extension methods for all repositories are in `Shadowbrook.Domain.Common.RepositoryExtensions`. Never write `GetByIdAsync(...) ?? throw` inline — always use `GetRequiredByIdAsync`.
 - **Query-based lookups log + return:** When searching by criteria (e.g., "find active opening for this course/date"), null means "no match" — a valid business case. Log a warning and return.
 - Use `ILogger logger` as a parameter (Wolverine injects it). Use `LogWarning` with `{PropertyName}` placeholders.
 - Domain aggregates that are intentionally idempotent (e.g., `Expire()`, `Remove()`, `Reject()`) may use silent returns — but domain methods that should never be called in an invalid state must throw `DomainException` subclasses.

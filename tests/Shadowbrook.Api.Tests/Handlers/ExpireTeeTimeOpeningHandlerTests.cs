@@ -37,7 +37,7 @@ public class ExpireTeeTimeOpeningHandlerTests
         var openingId = Guid.NewGuid();
         this.repository.GetByIdAsync(openingId).Returns((TeeTimeOpening?)null);
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+        var ex = await Assert.ThrowsAsync<EntityNotFoundException>(
             () => ExpireTeeTimeOpeningHandler.Handle(new ExpireTeeTimeOpening(openingId), this.repository));
 
         Assert.Contains(openingId.ToString(), ex.Message);
