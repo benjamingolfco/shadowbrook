@@ -4,5 +4,6 @@ public enum TeeTimeOpeningStatus
 {
     Open,
     Filled,
-    Expired
+    Expired,
+    Cancelled
 }

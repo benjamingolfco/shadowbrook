@@ -15,6 +15,7 @@ public class TeeTimeOpening : Entity
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? FilledAt { get; private set; }
     public DateTimeOffset? ExpiredAt { get; private set; }
+    public DateTimeOffset? CancelledAt { get; private set; }
 
     private TeeTimeOpening() { } // EF
 
@@ -100,6 +101,22 @@ public class TeeTimeOpening : Entity
                 OpeningId = Id,
             });
         }
+    }
+
+    public void Cancel(ITimeProvider timeProvider)
+    {
+        if (Status != TeeTimeOpeningStatus.Open)
+        {
+            throw new OpeningNotAvailableException(Id);
+        }
+
+        Status = TeeTimeOpeningStatus.Cancelled;
+        CancelledAt = timeProvider.GetCurrentTimestamp();
+
+        AddDomainEvent(new TeeTimeOpeningCancelled
+        {
+            OpeningId = Id,
+        });
     }
 
     public void Expire(ITimeProvider timeProvider)
