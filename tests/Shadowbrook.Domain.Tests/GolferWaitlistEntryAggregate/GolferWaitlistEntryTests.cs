@@ -1,4 +1,5 @@
 using NSubstitute;
+using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseWaitlistAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
@@ -11,12 +12,16 @@ public class GolferWaitlistEntryTests
     private readonly IShortCodeGenerator shortCodeGenerator = Substitute.For<IShortCodeGenerator>();
     private readonly ICourseWaitlistRepository waitlistRepository = Substitute.For<ICourseWaitlistRepository>();
     private readonly IGolferWaitlistEntryRepository entryRepository = Substitute.For<IGolferWaitlistEntryRepository>();
+    private readonly ITimeProvider timeProvider = Substitute.For<ITimeProvider>();
 
     public GolferWaitlistEntryTests()
     {
         this.shortCodeGenerator.GenerateAsync(Arg.Any<DateOnly>()).Returns("ABC123");
         this.entryRepository.GetActiveByWaitlistAndGolferAsync(Arg.Any<Guid>(), Arg.Any<Guid>())
             .Returns((GolferWaitlistEntry?)null);
+        this.timeProvider.GetCurrentTimestamp().Returns(new DateTimeOffset(2026, 3, 25, 10, 0, 0, TimeSpan.Zero));
+        this.timeProvider.GetCurrentTime().Returns(new TimeOnly(10, 0));
+        this.timeProvider.GetCurrentDate().Returns(new DateOnly(2026, 3, 25));
     }
 
     private async Task<(WalkUpWaitlist Waitlist, GolferWaitlistEntry Entry)> JoinAsync(
@@ -24,10 +29,10 @@ public class GolferWaitlistEntryTests
     {
         var waitlist = await WalkUpWaitlist.OpenAsync(
             Guid.NewGuid(), DateOnly.FromDateTime(DateTime.Today),
-            this.shortCodeGenerator, this.waitlistRepository);
+            this.shortCodeGenerator, this.waitlistRepository, this.timeProvider);
 
         golfer ??= Golfer.Create("+15559990000", "Test", "Golfer");
-        var entry = await waitlist.Join(golfer, this.entryRepository, groupSize);
+        var entry = await waitlist.Join(golfer, this.entryRepository, this.timeProvider, groupSize);
         return (waitlist, entry);
     }
 

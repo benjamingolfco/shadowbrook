@@ -1,3 +1,5 @@
+using NSubstitute;
+using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Exceptions;
@@ -6,13 +8,23 @@ namespace Shadowbrook.Domain.Tests.TeeTimeOpeningAggregate;
 
 public class TeeTimeOpeningTests
 {
-    private static TeeTimeOpening CreateOpening(int slotsAvailable = 3) =>
+    private readonly ITimeProvider timeProvider = Substitute.For<ITimeProvider>();
+
+    public TeeTimeOpeningTests()
+    {
+        this.timeProvider.GetCurrentTimestamp().Returns(new DateTimeOffset(2026, 3, 25, 10, 0, 0, TimeSpan.Zero));
+        this.timeProvider.GetCurrentTime().Returns(new TimeOnly(10, 0));
+        this.timeProvider.GetCurrentDate().Returns(new DateOnly(2026, 3, 25));
+    }
+
+    private TeeTimeOpening CreateOpening(int slotsAvailable = 3) =>
         TeeTimeOpening.Create(
             courseId: Guid.NewGuid(),
             date: new DateOnly(2026, 6, 1),
             teeTime: new TimeOnly(9, 0),
             slotsAvailable: slotsAvailable,
-            operatorOwned: true);
+            operatorOwned: true,
+            timeProvider: this.timeProvider);
 
     [Fact]
     public void Create_SetsPropertiesAndRaisesCreatedEvent()
@@ -21,7 +33,7 @@ public class TeeTimeOpeningTests
         var date = new DateOnly(2026, 6, 1);
         var teeTime = new TimeOnly(9, 0);
 
-        var opening = TeeTimeOpening.Create(courseId, date, teeTime, slotsAvailable: 4, operatorOwned: true);
+        var opening = TeeTimeOpening.Create(courseId, date, teeTime, slotsAvailable: 4, operatorOwned: true, timeProvider: this.timeProvider);
 
         Assert.NotEqual(Guid.Empty, opening.Id);
         Assert.Equal(courseId, opening.CourseId);
@@ -49,7 +61,7 @@ public class TeeTimeOpeningTests
         var opening = CreateOpening(slotsAvailable: 3);
         opening.ClearDomainEvents();
 
-        opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1);
+        opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
 
         Assert.Equal(2, opening.SlotsRemaining);
     }
@@ -62,7 +74,7 @@ public class TeeTimeOpeningTests
         var bookingId = Guid.NewGuid();
         var golferId = Guid.NewGuid();
 
-        opening.Claim(bookingId, golferId, groupSize: 1);
+        opening.Claim(bookingId, golferId, groupSize: 1, this.timeProvider);
 
         var domainEvent = Assert.Single(opening.DomainEvents);
         var claimed = Assert.IsType<TeeTimeOpeningClaimed>(domainEvent);
@@ -80,7 +92,7 @@ public class TeeTimeOpeningTests
         var opening = CreateOpening(slotsAvailable: 1);
         opening.ClearDomainEvents();
 
-        opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1);
+        opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
 
         Assert.Equal(2, opening.DomainEvents.Count);
         Assert.Contains(opening.DomainEvents, e => e is TeeTimeOpeningClaimed);
@@ -97,7 +109,7 @@ public class TeeTimeOpeningTests
         var bookingId = Guid.NewGuid();
         var golferId = Guid.NewGuid();
 
-        opening.Claim(bookingId, golferId, groupSize: 2);
+        opening.Claim(bookingId, golferId, groupSize: 2, this.timeProvider);
 
         var domainEvent = Assert.Single(opening.DomainEvents);
         var rejected = Assert.IsType<TeeTimeOpeningClaimRejected>(domainEvent);
@@ -112,10 +124,10 @@ public class TeeTimeOpeningTests
     public void Claim_WhenAlreadyFilled_ThrowsOpeningNotAvailableException()
     {
         var opening = CreateOpening(slotsAvailable: 1);
-        opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1);
+        opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
 
         Assert.Throws<OpeningNotAvailableException>(() =>
-            opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1));
+            opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider));
     }
 
     [Fact]
@@ -125,7 +137,7 @@ public class TeeTimeOpeningTests
         opening.Expire();
 
         Assert.Throws<OpeningNotAvailableException>(() =>
-            opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1));
+            opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider));
     }
 
     [Fact]
@@ -156,7 +168,7 @@ public class TeeTimeOpeningTests
     public void Expire_WhenAlreadyFilled_IsIdempotent()
     {
         var opening = CreateOpening(slotsAvailable: 1);
-        opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1);
+        opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
         opening.ClearDomainEvents();
 
         opening.Expire();
@@ -188,7 +200,8 @@ public class TeeTimeOpeningTests
                 date: new DateOnly(2026, 6, 1),
                 teeTime: new TimeOnly(9, 0),
                 slotsAvailable: 0,
-                operatorOwned: true));
+                operatorOwned: true,
+                timeProvider: this.timeProvider));
     }
 
     [Fact]
@@ -198,6 +211,6 @@ public class TeeTimeOpeningTests
         opening.ClearDomainEvents();
 
         Assert.Throws<ArgumentException>(() =>
-            opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 0));
+            opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 0, this.timeProvider));
     }
 }

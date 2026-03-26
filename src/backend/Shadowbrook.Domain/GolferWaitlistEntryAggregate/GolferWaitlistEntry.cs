@@ -23,9 +23,9 @@ public abstract class GolferWaitlistEntry : Entity
         int groupSize,
         bool isWalkUp,
         TimeOnly windowStart,
-        TimeOnly windowEnd)
+        TimeOnly windowEnd,
+        DateTimeOffset now)
     {
-        var now = DateTimeOffset.UtcNow;
         Id = Guid.CreateVersion7();
         CourseWaitlistId = courseWaitlistId;
         GolferId = golferId;

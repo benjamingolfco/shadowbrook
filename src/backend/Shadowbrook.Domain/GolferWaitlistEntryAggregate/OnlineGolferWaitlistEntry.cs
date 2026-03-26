@@ -9,8 +9,9 @@ public class OnlineGolferWaitlistEntry : GolferWaitlistEntry
         Guid golferId,
         int groupSize,
         TimeOnly windowStart,
-        TimeOnly windowEnd)
-        : base(courseWaitlistId, golferId, groupSize, isWalkUp: false, windowStart, windowEnd)
+        TimeOnly windowEnd,
+        DateTimeOffset now)
+        : base(courseWaitlistId, golferId, groupSize, isWalkUp: false, windowStart, windowEnd, now)
     {
     }
 }

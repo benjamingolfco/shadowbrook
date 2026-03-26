@@ -1,3 +1,4 @@
+using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseWaitlistAggregate.Events;
 using Shadowbrook.Domain.CourseWaitlistAggregate.Exceptions;
 using Shadowbrook.Domain.GolferAggregate;
@@ -9,9 +10,9 @@ public class OnlineWaitlist : CourseWaitlist
 {
     private OnlineWaitlist() { } // EF
 
-    public static OnlineWaitlist Create(Guid courseId, DateOnly date)
+    public static OnlineWaitlist Create(Guid courseId, DateOnly date, ITimeProvider timeProvider)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = timeProvider.GetCurrentTimestamp();
         return new OnlineWaitlist
         {
             Id = Guid.CreateVersion7(),
@@ -24,6 +25,7 @@ public class OnlineWaitlist : CourseWaitlist
     public async Task<OnlineGolferWaitlistEntry> Join(
         Golfer golfer,
         IGolferWaitlistEntryRepository entryRepository,
+        ITimeProvider timeProvider,
         int groupSize,
         TimeOnly windowStart,
         TimeOnly windowEnd)
@@ -34,7 +36,8 @@ public class OnlineWaitlist : CourseWaitlist
             throw new GolferAlreadyOnWaitlistException(golfer.Phone);
         }
 
-        var entry = new OnlineGolferWaitlistEntry(Id, golfer.Id, groupSize, windowStart, windowEnd);
+        var now = timeProvider.GetCurrentTimestamp();
+        var entry = new OnlineGolferWaitlistEntry(Id, golfer.Id, groupSize, windowStart, windowEnd, now);
 
         AddDomainEvent(new GolferJoinedWaitlist
         {

@@ -1,3 +1,4 @@
+using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseWaitlistAggregate.Events;
 using Shadowbrook.Domain.CourseWaitlistAggregate.Exceptions;
 using Shadowbrook.Domain.GolferAggregate;
@@ -16,7 +17,7 @@ public class WalkUpWaitlist : CourseWaitlist
 
     public static async Task<WalkUpWaitlist> OpenAsync(
         Guid courseId, DateOnly date, IShortCodeGenerator shortCodeGenerator,
-        ICourseWaitlistRepository repository)
+        ICourseWaitlistRepository repository, ITimeProvider timeProvider)
     {
         var existing = await repository.GetByCourseDateAsync(courseId, date);
         if (existing is not null)
@@ -25,7 +26,7 @@ public class WalkUpWaitlist : CourseWaitlist
         }
 
         var shortCode = await shortCodeGenerator.GenerateAsync(date);
-        var now = DateTimeOffset.UtcNow;
+        var now = timeProvider.GetCurrentTimestamp();
         var waitlist = new WalkUpWaitlist
         {
             Id = Guid.CreateVersion7(),
@@ -43,7 +44,7 @@ public class WalkUpWaitlist : CourseWaitlist
     }
 
     public async Task<WalkUpGolferWaitlistEntry> Join(
-        Golfer golfer, IGolferWaitlistEntryRepository entryRepository, int groupSize = 1)
+        Golfer golfer, IGolferWaitlistEntryRepository entryRepository, ITimeProvider timeProvider, int groupSize = 1)
     {
         if (Status != WaitlistStatus.Open)
         {
@@ -59,10 +60,11 @@ public class WalkUpWaitlist : CourseWaitlist
         // Note: TimeOnly wraps at midnight. If a golfer joins near midnight UTC,
         // WindowEnd could be earlier than WindowStart (e.g., 23:45 -> 00:15).
         // The repository query must handle this wrap-around case.
-        var windowStart = TimeOnly.FromDateTime(DateTimeOffset.UtcNow.DateTime);
+        var windowStart = timeProvider.GetCurrentTime();
         var windowEnd = windowStart.Add(TimeSpan.FromMinutes(30));
+        var now = timeProvider.GetCurrentTimestamp();
 
-        var entry = new WalkUpGolferWaitlistEntry(Id, golfer.Id, groupSize, windowStart, windowEnd);
+        var entry = new WalkUpGolferWaitlistEntry(Id, golfer.Id, groupSize, windowStart, windowEnd, now);
 
         AddDomainEvent(new GolferJoinedWaitlist
         {
@@ -74,7 +76,7 @@ public class WalkUpWaitlist : CourseWaitlist
         return entry;
     }
 
-    public void Close()
+    public void Close(ITimeProvider timeProvider)
     {
         if (Status != WaitlistStatus.Open)
         {
@@ -82,7 +84,7 @@ public class WalkUpWaitlist : CourseWaitlist
         }
 
         Status = WaitlistStatus.Closed;
-        ClosedAt = DateTimeOffset.UtcNow;
+        ClosedAt = timeProvider.GetCurrentTimestamp();
 
         AddDomainEvent(new WalkUpWaitlistClosed { CourseWaitlistId = Id });
     }

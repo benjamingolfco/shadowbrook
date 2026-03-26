@@ -9,8 +9,9 @@ public class WalkUpGolferWaitlistEntry : GolferWaitlistEntry
         Guid golferId,
         int groupSize,
         TimeOnly windowStart,
-        TimeOnly windowEnd)
-        : base(courseWaitlistId, golferId, groupSize, isWalkUp: true, windowStart, windowEnd)
+        TimeOnly windowEnd,
+        DateTimeOffset now)
+        : base(courseWaitlistId, golferId, groupSize, isWalkUp: true, windowStart, windowEnd, now)
     {
     }
 

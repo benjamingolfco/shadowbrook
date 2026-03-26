@@ -84,7 +84,7 @@ public class WalkUpWaitlist : Entity
             throw new GolferAlreadyOnWaitlistException(golfer.Phone);
         }
 
-        var entry = new WalkUpGolferWaitlistEntry(Id, golfer.Id, groupSize, TimeOnly.MinValue, TimeOnly.MinValue);
+        var entry = new WalkUpGolferWaitlistEntry(Id, golfer.Id, groupSize, TimeOnly.MinValue, TimeOnly.MinValue, DateTimeOffset.UtcNow);
 
         AddDomainEvent(new GolferJoinedWaitlist
         {

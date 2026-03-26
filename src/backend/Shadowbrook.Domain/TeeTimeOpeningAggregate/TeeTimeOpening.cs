@@ -24,7 +24,8 @@ public class TeeTimeOpening : Entity
         DateOnly date,
         TimeOnly teeTime,
         int slotsAvailable,
-        bool operatorOwned)
+        bool operatorOwned,
+        ITimeProvider timeProvider)
     {
         if (slotsAvailable <= 0)
         {
@@ -41,7 +42,7 @@ public class TeeTimeOpening : Entity
             SlotsRemaining = slotsAvailable,
             OperatorOwned = operatorOwned,
             Status = TeeTimeOpeningStatus.Open,
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = timeProvider.GetCurrentTimestamp(),
         };
 
         opening.AddDomainEvent(new TeeTimeOpeningCreated
@@ -56,7 +57,7 @@ public class TeeTimeOpening : Entity
         return opening;
     }
 
-    public void Claim(Guid bookingId, Guid golferId, int groupSize)
+    public void Claim(Guid bookingId, Guid golferId, int groupSize, ITimeProvider timeProvider)
     {
         if (Status != TeeTimeOpeningStatus.Open)
         {
@@ -94,7 +95,7 @@ public class TeeTimeOpening : Entity
         if (SlotsRemaining == 0)
         {
             Status = TeeTimeOpeningStatus.Filled;
-            FilledAt = DateTimeOffset.UtcNow;
+            FilledAt = timeProvider.GetCurrentTimestamp();
 
             AddDomainEvent(new TeeTimeOpeningFilled
             {
