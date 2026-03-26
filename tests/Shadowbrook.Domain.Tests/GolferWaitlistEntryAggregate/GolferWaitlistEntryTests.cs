@@ -4,6 +4,9 @@ using Shadowbrook.Domain.CourseWaitlistAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate.Events;
+using Shadowbrook.Domain.TeeTimeOpeningAggregate;
+using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
 namespace Shadowbrook.Domain.Tests.GolferWaitlistEntryAggregate;
 
@@ -109,5 +112,29 @@ public class GolferWaitlistEntryTests
         var newEnd = walkUpEntry.WindowEnd.Add(TimeSpan.FromMinutes(15));
 
         Assert.Throws<InvalidOperationException>(() => walkUpEntry.ExtendWindow(newEnd));
+    }
+
+    [Fact]
+    public async Task SendOfferAsync_CreatesOfferSendsSmsAndMarksNotified()
+    {
+        var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
+        var (_, entry) = await JoinAsync(golfer);
+        entry.ClearDomainEvents();
+        var sms = Substitute.For<ITextMessageService>();
+        var opening = TeeTimeOpening.Create(
+            Guid.NewGuid(), new DateOnly(2026, 3, 25), new TimeOnly(14, 30), 3, true, this.timeProvider);
+
+        var offer = await entry.SendOfferAsync(
+            opening, golfer, sms, this.timeProvider, "Test Course", "https://example.com");
+
+        Assert.Equal(entry.Id, offer.GolferWaitlistEntryId);
+        Assert.Equal(golfer.Id, offer.GolferId);
+        Assert.Equal(entry.GroupSize, offer.GroupSize);
+        Assert.NotNull(offer.NotifiedAt);
+        await sms.Received(1).SendAsync(
+            "+15551234567",
+            Arg.Is<string>(m => m.Contains("2:30 PM") && m.Contains("Test Course")),
+            Arg.Any<CancellationToken>());
+        Assert.Contains(offer.DomainEvents, e => e is WaitlistOfferSent);
     }
 }

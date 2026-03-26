@@ -1,5 +1,8 @@
 using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate.Events;
+using Shadowbrook.Domain.TeeTimeOpeningAggregate;
+using Shadowbrook.Domain.WaitlistOfferAggregate;
 
 namespace Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 
@@ -35,6 +38,26 @@ public abstract class GolferWaitlistEntry : Entity
         WindowEnd = windowEnd;
         JoinedAt = now;
         CreatedAt = now;
+    }
+
+    public async Task<WaitlistOffer> SendOfferAsync(
+        TeeTimeOpening opening,
+        Golfer golfer,
+        ITextMessageService textMessageService,
+        ITimeProvider timeProvider,
+        string courseName,
+        string claimBaseUrl,
+        CancellationToken ct = default)
+    {
+        var offer = WaitlistOffer.Create(opening.Id, Id, GolferId, GroupSize, IsWalkUp, timeProvider);
+
+        var message =
+            $"{courseName}: {opening.TeeTime:h:mm tt} tee time available! Claim your spot: {claimBaseUrl}/book/walkup/{offer.Token}";
+        await textMessageService.SendAsync(golfer.Phone, message, ct);
+
+        offer.MarkNotified();
+
+        return offer;
     }
 
     public void Remove()
