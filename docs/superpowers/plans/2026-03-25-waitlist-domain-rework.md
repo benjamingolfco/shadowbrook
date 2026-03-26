@@ -707,72 +707,63 @@ git commit -m "feat: add EF Core configuration and repositories for new waitlist
 
 ---
 
-## Task 8+: Application Layer (Handlers, Policies, Endpoints)
+## Task 7: EF Core Configuration for New Aggregates
 
-**This task is intentionally left as a placeholder.** The exact handler/policy changes depend on:
-1. What we learn building the domain (Tasks 1-5)
-2. The WaitlistOffer aggregate design (deferred in spec)
-3. User feedback at the Task 6 checkpoint
-
-After the Task 6 checkpoint and user confirmation, create detailed sub-tasks for:
-- Rewiring existing handlers to use new aggregates
-- Creating new policies (TeeTimeOpeningOfferPolicy, WaitlistOfferResponsePolicy, BookingConfirmationPolicy, TeeTimeOpeningExpirationPolicy)
-- Updating API endpoints
-- Updating validators
-- Handler and policy unit tests
-- Deleting old code
-- Creating fresh EF migration
+**Status: Not started.** Wire up EF configs, repositories, and DbContext for all new aggregates before building handlers/policies. See original Task 7 description above for details. Include optimistic concurrency (RowVersion) on TeeTimeOpening — critical for Claim safety.
 
 ---
 
-## Task 9: Cleanup and Fresh Migration
+## Tasks 8-21: Application Layer (Handlers, Policies, Endpoints)
 
-**This task runs after all application layer work is complete.**
+Domain layer is complete (Tasks 1-6 done, architect review addressed). The application layer work proceeds incrementally, starting from the simplest policy and building forward through the offer flow.
 
-- [ ] **Step 1: Delete old domain aggregates**
+**Important context:**
+- Consumer rule: handlers live in the feature folder of the aggregate they modify
+- The BookingCreated → Claim handler lives in the TeeTimeOpening feature folder (it modifies opening state)
+- WaitlistOffer aggregate design was deferred — it needs to be revisited in Task 9
+- GroupSize validation (1-4) is deferred — operator may override the max
 
-Remove entire folders:
-- `src/backend/Shadowbrook.Domain/WalkUpWaitlistAggregate/`
-- `src/backend/Shadowbrook.Domain/TeeTimeRequestAggregate/`
+### Task 8: TeeTimeOpeningExpirationPolicy
+Simplest saga. Starts on `TeeTimeOpeningCreated`, schedules timeout until tee time passes, calls `opening.Expire()`. Completes on `TeeTimeOpeningFilled` or `TeeTimeOpeningExpired`. Replaces old `TeeTimeRequestExpirationPolicy`.
 
-- [ ] **Step 2: Delete old tests**
+### Task 9: WaitlistOffer Aggregate (revisit/rework)
+Revisit the offer entity now that the domain model is solid. Decide on structure, events, state transitions. The offer is referenced by all policies downstream.
 
-Remove:
-- `tests/Shadowbrook.Domain.Tests/WalkUpWaitlistAggregate/`
-- `tests/Shadowbrook.Domain.Tests/TeeTimeRequestAggregate/`
-- Old handler/policy tests that were replaced
+### Task 10: FindAndOfferEligibleGolfers Handler
+Command handler dispatched by the offer policy. Uses `WaitlistMatchingService` to find eligible entries, creates `WaitlistOffer`(s), sends SMS with claim links. Replaces old `NotifyNextEligibleGolferHandler`.
 
-- [ ] **Step 3: Delete old EF configurations**
+### Task 11: TeeTimeOpeningOfferPolicy
+Saga per opening. Manages concurrent offers — tracks PendingOfferCount and SlotsRemaining. Dispatches `FindAndOfferEligibleGolfers`. Reacts to offer acceptance/rejection/staleness. Replaces old `TeeTimeOfferPolicy`.
 
-Remove:
-- `WalkUpWaitlistConfiguration.cs`
-- `TeeTimeRequestConfiguration.cs`
-- `TeeTimeSlotFillConfiguration.cs`
-- `TeeTimeOfferPolicyConfiguration.cs`
-- `TeeTimeRequestExpirationPolicyConfiguration.cs`
+### Task 12: WaitlistOfferResponsePolicy
+New saga, per offer. Manages response buffer timeout — 60s for walk-up, longer for online. Raises `WaitlistOfferStale` when buffer expires.
 
-- [ ] **Step 4: Delete all existing migrations**
+### Task 13: WaitlistOfferAccepted → Create Booking Handler
+Lives in booking feature folder. Creates Booking in Pending state when a golfer accepts an offer. Booking aggregate needs a Pending status added.
 
-```bash
-rm -rf src/backend/Shadowbrook.Api/Migrations/
-```
+### Task 14: BookingCreated → Claim Handler
+Lives in TeeTimeOpening feature folder. Loads opening, calls `opening.Claim(bookingId, golferId, groupSize)`. Raises `TeeTimeOpeningClaimed` or `TeeTimeOpeningClaimRejected`.
 
-- [ ] **Step 5: Create fresh migration**
+### Task 15: BookingConfirmationPolicy
+Saga per booking. Reacts to `TeeTimeOpeningClaimed` → confirms booking. Reacts to `TeeTimeOpeningClaimRejected` → rejects booking.
 
-```bash
-export PATH="$PATH:/home/aaron/.dotnet/tools"
-dotnet ef migrations add InitialCreate --project src/backend/Shadowbrook.Api
-```
+### Task 16: TeeTimeOpeningFilled → Reject Remaining Offers Handler
+When opening is filled, reject all pending offers for that opening.
 
-- [ ] **Step 6: Verify full build and all tests pass**
+### Task 17: SMS Handlers
+Rewire existing SMS handlers to new event types. Offer sent, accepted, rejected, booking confirmed notifications.
 
-```bash
-dotnet build shadowbrook.slnx && dotnet test shadowbrook.slnx -v minimal
-```
+### Task 18: GolferJoinedWaitlist → WakeUpOfferPolicy Handler
+When a golfer joins the waitlist, check for active openings matching their window. If found, dispatch command to wake up the offer policy.
 
-- [ ] **Step 7: Commit**
+### Task 19: API Endpoints
+Rewire walk-up waitlist endpoints to use new CourseWaitlist aggregates. Update validators. Add TeeTimeOpening creation endpoint.
 
-```bash
-git add -A
-git commit -m "chore: remove old waitlist/teetime domain, create fresh migration"
-```
+### Task 20: BookingCreated → Remove From Waitlist Handler
+Rewire existing handler to work with new entry hierarchy.
+
+### Task 21: Cleanup and Fresh Migration
+Delete old domain aggregates, old tests, old EF configs, old migrations. Create fresh migration. Verify full build and all tests pass.
+
+---
+
