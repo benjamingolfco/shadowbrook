@@ -39,12 +39,19 @@ export interface WalkUpWaitlistTodayResponse {
 }
 
 // Walk-up waitlist tee time openings
+export interface FilledGolfer {
+  golferId: string;
+  golferName: string;
+  groupSize: number;
+}
+
 export interface WaitlistOpeningEntry {
   id: string;
   teeTime: string; // "HH:mm"
   slotsAvailable: number;
   slotsRemaining: number;
   status: string;
+  filledGolfers: FilledGolfer[];
 }
 
 export interface CreateTeeTimeOpeningRequest {
