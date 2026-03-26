@@ -213,4 +213,69 @@ public class TeeTimeOpeningTests
         Assert.Throws<InvalidGroupSizeException>(() =>
             opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 0, this.timeProvider));
     }
+
+    [Fact]
+    public void Cancel_WhenOpen_TransitionsToCancelled()
+    {
+        var opening = CreateOpening();
+
+        opening.Cancel(this.timeProvider);
+
+        Assert.Equal(TeeTimeOpeningStatus.Cancelled, opening.Status);
+        Assert.NotNull(opening.CancelledAt);
+    }
+
+    [Fact]
+    public void Cancel_WhenOpen_RaisesCancelledEvent()
+    {
+        var opening = CreateOpening();
+        opening.ClearDomainEvents();
+
+        opening.Cancel(this.timeProvider);
+
+        var domainEvent = Assert.Single(opening.DomainEvents);
+        var cancelled = Assert.IsType<TeeTimeOpeningCancelled>(domainEvent);
+        Assert.Equal(opening.Id, cancelled.OpeningId);
+    }
+
+    [Fact]
+    public void Cancel_WhenFilled_ThrowsOpeningNotAvailableException()
+    {
+        var opening = CreateOpening(slotsAvailable: 1);
+        opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
+
+        Assert.Throws<OpeningNotAvailableException>(() => opening.Cancel(this.timeProvider));
+    }
+
+    [Fact]
+    public void Cancel_WhenExpired_ThrowsOpeningNotAvailableException()
+    {
+        var opening = CreateOpening();
+        opening.Expire(this.timeProvider);
+
+        Assert.Throws<OpeningNotAvailableException>(() => opening.Cancel(this.timeProvider));
+    }
+
+    [Fact]
+    public void Cancel_WhenAlreadyCancelled_ThrowsOpeningNotAvailableException()
+    {
+        var opening = CreateOpening();
+        opening.Cancel(this.timeProvider);
+
+        Assert.Throws<OpeningNotAvailableException>(() => opening.Cancel(this.timeProvider));
+    }
+
+    [Fact]
+    public void Expire_WhenCancelled_IsIdempotent()
+    {
+        var opening = CreateOpening();
+        opening.Cancel(this.timeProvider);
+        opening.ClearDomainEvents();
+
+        opening.Expire(this.timeProvider);
+
+        Assert.Equal(TeeTimeOpeningStatus.Cancelled, opening.Status);
+        Assert.Null(opening.ExpiredAt);
+        Assert.Empty(opening.DomainEvents);
+    }
 }
