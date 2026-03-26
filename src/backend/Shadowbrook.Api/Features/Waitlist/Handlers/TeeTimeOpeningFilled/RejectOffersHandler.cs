@@ -1,7 +1,7 @@
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 
-namespace Shadowbrook.Api.Features.Waitlist;
+namespace Shadowbrook.Api.Features.Waitlist.Handlers;
 
 public static class TeeTimeOpeningFilledRejectOffersHandler
 {

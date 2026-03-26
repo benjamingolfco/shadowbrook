@@ -5,7 +5,7 @@ using Shadowbrook.Domain.CourseWaitlistAggregate.Events;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 
-namespace Shadowbrook.Api.Features.Waitlist;
+namespace Shadowbrook.Api.Features.Waitlist.Handlers;
 
 public static class GolferJoinedWaitlistSmsHandler
 {

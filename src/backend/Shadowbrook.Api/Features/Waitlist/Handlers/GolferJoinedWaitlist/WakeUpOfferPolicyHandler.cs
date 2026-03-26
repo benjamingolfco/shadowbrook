@@ -4,7 +4,7 @@ using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.CourseWaitlistAggregate.Events;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 
-namespace Shadowbrook.Api.Features.Waitlist;
+namespace Shadowbrook.Api.Features.Waitlist.Handlers;
 
 public static class GolferJoinedWaitlistWakeUpHandler
 {

@@ -9,7 +9,7 @@ using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Wolverine.Http;
 
-namespace Shadowbrook.Api.Features.Waitlist;
+namespace Shadowbrook.Api.Features.Waitlist.Endpoints;
 
 public static class WalkUpWaitlistEndpoints
 {

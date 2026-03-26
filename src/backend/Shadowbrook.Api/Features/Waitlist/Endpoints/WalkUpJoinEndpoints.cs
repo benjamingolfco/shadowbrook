@@ -8,7 +8,7 @@ using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Wolverine.Http;
 
-namespace Shadowbrook.Api.Features.Waitlist;
+namespace Shadowbrook.Api.Features.Waitlist.Endpoints;
 
 public static class WalkUpJoinEndpoints
 {

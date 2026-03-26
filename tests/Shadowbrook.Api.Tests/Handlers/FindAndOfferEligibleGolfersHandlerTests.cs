@@ -1,6 +1,7 @@
+using Shadowbrook.Api.Features.Waitlist.Handlers;
 using Microsoft.Extensions.Configuration;
 using NSubstitute;
-using Shadowbrook.Api.Features.Waitlist;
+using Shadowbrook.Api.Features.Waitlist.Handlers;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseAggregate;
 using Shadowbrook.Domain.CourseWaitlistAggregate;

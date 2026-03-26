@@ -2,7 +2,7 @@ using Shadowbrook.Domain.BookingAggregate.Events;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 
-namespace Shadowbrook.Api.Features.Waitlist;
+namespace Shadowbrook.Api.Features.Waitlist.Handlers;
 
 public static class BookingCreatedClaimHandler
 {

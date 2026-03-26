@@ -4,7 +4,7 @@ using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
-namespace Shadowbrook.Api.Features.Bookings;
+namespace Shadowbrook.Api.Features.Bookings.Handlers;
 
 public static class WaitlistOfferAcceptedCreateBookingHandler
 {

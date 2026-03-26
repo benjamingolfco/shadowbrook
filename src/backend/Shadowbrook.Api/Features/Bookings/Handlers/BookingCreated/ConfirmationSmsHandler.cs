@@ -5,7 +5,7 @@ using Shadowbrook.Domain.BookingAggregate.Events;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.GolferAggregate;
 
-namespace Shadowbrook.Api.Features.Bookings;
+namespace Shadowbrook.Api.Features.Bookings.Handlers;
 
 public static class BookingCreatedConfirmationSmsHandler
 {

@@ -1,4 +1,4 @@
-using Shadowbrook.Api.Features.Waitlist;
+using Shadowbrook.Api.Features.Waitlist.Endpoints;
 
 namespace Shadowbrook.Api.Tests.Validators;
 

@@ -1,3 +1,4 @@
+using Shadowbrook.Api.Features.Waitlist.Handlers;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 using Wolverine;

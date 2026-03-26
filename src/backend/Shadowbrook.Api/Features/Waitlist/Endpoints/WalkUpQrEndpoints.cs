@@ -4,7 +4,7 @@ using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.CourseWaitlistAggregate;
 using Wolverine.Http;
 
-namespace Shadowbrook.Api.Features.Waitlist;
+namespace Shadowbrook.Api.Features.Waitlist.Endpoints;
 
 public static class WalkUpQrEndpoints
 {
