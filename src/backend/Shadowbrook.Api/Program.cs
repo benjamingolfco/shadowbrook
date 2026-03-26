@@ -158,7 +158,14 @@ if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testi
 
 if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testing")
 {
-    await E2ESeedData.EnsureAsync(app.Services);
+    try
+    {
+        await E2ESeedData.EnsureAsync(app.Services);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "E2E seed data failed, continuing startup");
+    }
 }
 
 app.UseDomainExceptionHandler();

@@ -10,6 +10,7 @@ on:
 
 env:
   E2E_BASE_URL: https://test.shadowbrook.golf
+  E2E_API_URL: https://test-api.shadowbrook.golf
 
 jobs:
   e2e:
