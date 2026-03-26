@@ -23,7 +23,7 @@ public static class BookingCreatedClaimHandler
 
         // Waitlist booking — claim the slot. The TeeTimeOpeningClaimed/Rejected
         // event will be picked up by BookingConfirmationPolicy.
-        opening.Claim(evt.BookingId, evt.GolferId, evt.GroupSize, timeProvider);
+        opening.TryClaim(evt.BookingId, evt.GolferId, evt.GroupSize, timeProvider);
         return null;
     }
 }
