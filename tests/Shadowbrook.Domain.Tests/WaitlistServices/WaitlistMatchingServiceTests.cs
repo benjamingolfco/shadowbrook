@@ -23,6 +23,7 @@ public class WaitlistMatchingServiceTests
     {
         this.timeProvider.GetCurrentTimestamp().Returns(new DateTimeOffset(2026, 3, 25, 10, 0, 0, TimeSpan.Zero));
         this.timeProvider.GetCurrentTime().Returns(new TimeOnly(10, 0));
+        this.timeProvider.GetCurrentTimeByTimeZone(Arg.Any<string>()).Returns(new TimeOnly(10, 0));
         this.timeProvider.GetCurrentDate().Returns(new DateOnly(2026, 3, 25));
         this.shortCodeGenerator.GenerateAsync(Arg.Any<DateOnly>()).Returns("ABC123");
         this.entryRepository.GetActiveByWaitlistAndGolferAsync(Arg.Any<Guid>(), Arg.Any<Guid>())
@@ -36,7 +37,7 @@ public class WaitlistMatchingServiceTests
             Guid.NewGuid(), DateOnly.FromDateTime(DateTime.Today),
             this.shortCodeGenerator, this.waitlistRepository, this.timeProvider);
         var golfer = Golfer.Create("+15559990000", "Test", "Golfer");
-        return await waitlist.Join(golfer, this.entryRepository, this.timeProvider);
+        return await waitlist.Join(golfer, this.entryRepository, this.timeProvider, "UTC");
     }
 
     [Fact]

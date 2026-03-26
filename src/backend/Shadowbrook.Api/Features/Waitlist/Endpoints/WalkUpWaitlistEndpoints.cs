@@ -187,7 +187,7 @@ public static class WalkUpWaitlistEndpoints
             }
         }
 
-        var entry = await waitlist.Join(golfer, entryRepo, timeProvider, request.GroupSize ?? 1);
+        var entry = await waitlist.Join(golfer, entryRepo, timeProvider, timeZoneId, request.GroupSize ?? 1);
         entryRepo.Add(entry);
 
         // Intentional mid-flow save: position query reads from DB,

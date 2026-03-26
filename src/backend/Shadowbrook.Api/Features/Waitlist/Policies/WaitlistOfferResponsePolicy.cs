@@ -30,7 +30,7 @@ public class WaitlistOfferResponsePolicy : Saga
     public RejectStaleOffer Handle(OfferResponseBufferTimeout timeout)
     {
         MarkCompleted();
-        return new RejectStaleOffer(this.Id, this.OpeningId);
+        return new RejectStaleOffer(Id, OpeningId);
     }
 
     public void Handle(

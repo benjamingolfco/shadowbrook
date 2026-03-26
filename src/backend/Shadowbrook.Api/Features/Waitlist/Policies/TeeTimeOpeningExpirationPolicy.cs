@@ -32,7 +32,7 @@ public class TeeTimeOpeningExpirationPolicy : Saga
     public ExpireTeeTimeOpening Handle(TeeTimeOpeningExpirationTimeout timeout)
     {
         MarkCompleted();
-        return new ExpireTeeTimeOpening(this.Id);
+        return new ExpireTeeTimeOpening(Id);
     }
 
     public void Handle(
