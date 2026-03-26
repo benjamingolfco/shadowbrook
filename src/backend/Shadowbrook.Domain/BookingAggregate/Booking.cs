@@ -8,9 +8,7 @@ public class Booking : Entity
 {
     public Guid CourseId { get; private set; }
     public Guid GolferId { get; private set; }
-    public Guid? OpeningId { get; private set; }
-    public DateOnly Date { get; private set; }
-    public TimeOnly Time { get; private set; }
+    public TeeTime TeeTime { get; private set; } = null!;
     public string GolferName { get; private set; } = string.Empty;
     public int PlayerCount { get; private set; }
     public BookingStatus Status { get; private set; }
@@ -23,24 +21,20 @@ public class Booking : Entity
         Guid courseId,
         Guid golferId,
         DateOnly date,
-        TimeOnly time,
+        TimeOnly teeTime,
         string golferName,
-        int playerCount,
-        Guid? openingId = null)
+        int playerCount)
     {
-        var status = openingId.HasValue ? BookingStatus.Pending : BookingStatus.Confirmed;
         var now = DateTimeOffset.UtcNow;
         var booking = new Booking
         {
             Id = bookingId,
             CourseId = courseId,
             GolferId = golferId,
-            OpeningId = openingId,
-            Date = date,
-            Time = time,
+            TeeTime = new TeeTime(date, teeTime),
             GolferName = golferName,
             PlayerCount = playerCount,
-            Status = status,
+            Status = BookingStatus.Pending,
             CreatedAt = now
         };
 
@@ -49,7 +43,8 @@ public class Booking : Entity
             BookingId = bookingId,
             GolferId = golferId,
             CourseId = courseId,
-            OpeningId = openingId,
+            Date = date,
+            TeeTime = teeTime,
             GroupSize = playerCount
         });
 

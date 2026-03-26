@@ -15,9 +15,15 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
         builder.Property(b => b.GolferName).IsRequired().HasMaxLength(200);
         builder.Property(b => b.Status).HasConversion<string>().HasMaxLength(20);
 
+        builder.ComplexProperty(b => b.TeeTime, t =>
+        {
+            t.Property(x => x.Date).HasColumnName("Date");
+            t.Property(x => x.Time).HasColumnName("TeeTime").HasColumnType("time");
+        });
+
         builder.HasShadowRowVersion();
         builder.HasShadowAuditProperties();
 
-        builder.HasIndex(b => new { b.CourseId, b.Date, b.Time });
+        builder.HasIndex(o => o.CourseId);
     }
 }

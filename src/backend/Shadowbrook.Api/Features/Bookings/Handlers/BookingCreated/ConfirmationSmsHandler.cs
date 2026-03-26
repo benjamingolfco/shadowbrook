@@ -28,7 +28,7 @@ public static class BookingCreatedConfirmationSmsHandler
 
         var booking = await bookingRepository.GetRequiredByIdAsync(domainEvent.BookingId);
 
-        var message = $"You're booked! {courseName} at {booking.Time:h:mm tt} on {booking.Date:MMMM d, yyyy}. See you on the course!";
+        var message = $"You're booked! {courseName} at {booking.TeeTime.Time:h:mm tt} on {booking.TeeTime.Date:MMMM d, yyyy}. See you on the course!";
         await textMessageService.SendAsync(golfer.Phone, message, ct);
     }
 }

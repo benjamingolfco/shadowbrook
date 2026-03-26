@@ -1,5 +1,7 @@
 using NSubstitute;
 using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.CourseWaitlistAggregate;
+using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Exceptions;
@@ -12,6 +14,8 @@ public class WaitlistMatchingServiceTests
     private readonly IGolferWaitlistEntryRepository entryRepository =
         Substitute.For<IGolferWaitlistEntryRepository>();
 
+    private readonly IShortCodeGenerator shortCodeGenerator = Substitute.For<IShortCodeGenerator>();
+    private readonly ICourseWaitlistRepository waitlistRepository = Substitute.For<ICourseWaitlistRepository>();
     private readonly ITimeProvider timeProvider = Substitute.For<ITimeProvider>();
     private readonly WaitlistMatchingService sut;
 
@@ -20,7 +24,19 @@ public class WaitlistMatchingServiceTests
         this.timeProvider.GetCurrentTimestamp().Returns(new DateTimeOffset(2026, 3, 25, 10, 0, 0, TimeSpan.Zero));
         this.timeProvider.GetCurrentTime().Returns(new TimeOnly(10, 0));
         this.timeProvider.GetCurrentDate().Returns(new DateOnly(2026, 3, 25));
+        this.shortCodeGenerator.GenerateAsync(Arg.Any<DateOnly>()).Returns("ABC123");
+        this.entryRepository.GetActiveByWaitlistAndGolferAsync(Arg.Any<Guid>(), Arg.Any<Guid>())
+            .Returns((GolferWaitlistEntry?)null);
         this.sut = new WaitlistMatchingService(this.entryRepository);
+    }
+
+    private async Task<GolferWaitlistEntry> CreateRealEntryAsync()
+    {
+        var waitlist = await WalkUpWaitlist.OpenAsync(
+            Guid.NewGuid(), DateOnly.FromDateTime(DateTime.Today),
+            this.shortCodeGenerator, this.waitlistRepository, this.timeProvider);
+        var golfer = Golfer.Create("+15559990000", "Test", "Golfer");
+        return await waitlist.Join(golfer, this.entryRepository, this.timeProvider);
     }
 
     [Fact]
@@ -56,7 +72,7 @@ public class WaitlistMatchingServiceTests
             operatorOwned: false,
             timeProvider: this.timeProvider);
 
-        var entry = Substitute.For<GolferWaitlistEntry>();
+        var entry = await CreateRealEntryAsync();
         var expected = new List<GolferWaitlistEntry> { entry };
 
         this.entryRepository
@@ -74,7 +90,7 @@ public class WaitlistMatchingServiceTests
         var opening = TeeTimeOpening.Create(
             Guid.NewGuid(), new DateOnly(2026, 6, 15), new TimeOnly(8, 0),
             slotsAvailable: 2, operatorOwned: true, timeProvider: this.timeProvider);
-        opening.Expire();
+        opening.Expire(this.timeProvider);
 
         await Assert.ThrowsAsync<OpeningNotAvailableException>(
             () => this.sut.FindEligibleEntriesAsync(opening));

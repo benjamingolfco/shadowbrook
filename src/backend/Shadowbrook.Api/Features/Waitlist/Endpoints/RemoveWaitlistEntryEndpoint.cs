@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
+using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Wolverine.Http;
 
@@ -12,7 +13,8 @@ public static class RemoveWaitlistEntryEndpoint
         Guid courseId,
         Guid entryId,
         [NotBody] ApplicationDbContext db,
-        IGolferWaitlistEntryRepository entryRepo)
+        IGolferWaitlistEntryRepository entryRepo,
+        ITimeProvider timeProvider)
     {
         // Look up entry
         var entry = await entryRepo.GetByIdAsync(entryId);
@@ -30,7 +32,7 @@ public static class RemoveWaitlistEntryEndpoint
             return Results.NotFound(new { error = "Waitlist entry not found." });
         }
 
-        entry.Remove();
+        entry.Remove(timeProvider);
         return Results.NoContent();
     }
 }

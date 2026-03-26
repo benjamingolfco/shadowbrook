@@ -21,7 +21,7 @@ public static class GolferJoinedWaitlistWakeUpHandler
         // Find any active opening for this course/date
         var activeOpening = await db.TeeTimeOpenings
             .FirstOrDefaultAsync(o => o.CourseId == waitlist.CourseId
-                && o.Date == waitlist.Date
+                && o.TeeTime.Date == waitlist.Date
                 && o.Status == TeeTimeOpeningStatus.Open);
 
         if (activeOpening is null)

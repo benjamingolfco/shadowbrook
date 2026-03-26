@@ -1,5 +1,6 @@
 using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.BookingAggregate.Events;
+using Shadowbrook.Domain.BookingAggregate.Exceptions;
 
 namespace Shadowbrook.Domain.Tests.BookingAggregate;
 
@@ -21,11 +22,26 @@ public class BookingTests
         Assert.Equal(bookingId, booking.Id);
         Assert.Equal(courseId, booking.CourseId);
         Assert.Equal(golferId, booking.GolferId);
-        Assert.Equal(date, booking.Date);
-        Assert.Equal(time, booking.Time);
+        Assert.Equal(date, booking.TeeTime.Date);
+        Assert.Equal(time, booking.TeeTime.Time);
         Assert.Equal(golferName, booking.GolferName);
         Assert.Equal(playerCount, booking.PlayerCount);
         Assert.NotEqual(default, booking.CreatedAt);
+    }
+
+    [Fact]
+    public void Create_AlwaysStartsAsPending()
+    {
+        var booking = Booking.Create(
+            Guid.CreateVersion7(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 15),
+            new TimeOnly(9, 0),
+            "Jane Smith",
+            2);
+
+        Assert.Equal(BookingStatus.Pending, booking.Status);
     }
 
     [Fact]
@@ -69,7 +85,50 @@ public class BookingTests
     }
 
     [Fact]
-    public void Create_EventCarriesIdentifiersOnly()
+    public void Create_EventCarriesDateTeeTimeAndGroupSize()
+    {
+        var date = new DateOnly(2026, 6, 15);
+        var time = new TimeOnly(9, 0);
+        var playerCount = 3;
+
+        var booking = Booking.Create(
+            Guid.CreateVersion7(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            date,
+            time,
+            "Jane Smith",
+            playerCount);
+
+        var domainEvent = Assert.Single(booking.DomainEvents);
+        var createdEvent = Assert.IsType<BookingCreated>(domainEvent);
+        Assert.Equal(date, createdEvent.Date);
+        Assert.Equal(time, createdEvent.TeeTime);
+        Assert.Equal(playerCount, createdEvent.GroupSize);
+    }
+
+    [Fact]
+    public void Confirm_FromPending_TransitionsToConfirmedAndRaisesEvent()
+    {
+        var bookingId = Guid.CreateVersion7();
+        var booking = Booking.Create(
+            bookingId,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 15),
+            new TimeOnly(9, 0),
+            "Jane Smith",
+            1);
+
+        booking.Confirm();
+
+        Assert.Equal(BookingStatus.Confirmed, booking.Status);
+        var confirmedEvent = Assert.IsType<BookingConfirmed>(booking.DomainEvents.Last());
+        Assert.Equal(bookingId, confirmedEvent.BookingId);
+    }
+
+    [Fact]
+    public void Confirm_WhenAlreadyConfirmed_ThrowsBookingNotPendingException()
     {
         var booking = Booking.Create(
             Guid.CreateVersion7(),
@@ -80,14 +139,45 @@ public class BookingTests
             "Jane Smith",
             1);
 
-        var domainEvent = Assert.Single(booking.DomainEvents);
-        var createdEvent = Assert.IsType<BookingCreated>(domainEvent);
+        booking.Confirm(); // move to Confirmed
 
-        // BookingCreated carries only identifiers (BookingId, GolferId, CourseId) plus IDomainEvent metadata
-        Assert.NotEqual(Guid.Empty, createdEvent.BookingId);
-        Assert.NotEqual(Guid.Empty, createdEvent.GolferId);
-        Assert.NotEqual(Guid.Empty, createdEvent.CourseId);
-        Assert.NotEqual(Guid.Empty, createdEvent.EventId);
-        Assert.NotEqual(default, createdEvent.OccurredAt);
+        Assert.Throws<BookingNotPendingException>(() => booking.Confirm());
+    }
+
+    [Fact]
+    public void RejectBooking_FromPending_TransitionsToRejectedAndRaisesEvent()
+    {
+        var bookingId = Guid.CreateVersion7();
+        var booking = Booking.Create(
+            bookingId,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 15),
+            new TimeOnly(9, 0),
+            "Jane Smith",
+            1);
+
+        booking.RejectBooking();
+
+        Assert.Equal(BookingStatus.Rejected, booking.Status);
+        var rejectedEvent = Assert.IsType<BookingRejected>(booking.DomainEvents.Last());
+        Assert.Equal(bookingId, rejectedEvent.BookingId);
+    }
+
+    [Fact]
+    public void RejectBooking_WhenAlreadyRejected_ThrowsBookingNotPendingException()
+    {
+        var booking = Booking.Create(
+            Guid.CreateVersion7(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 15),
+            new TimeOnly(9, 0),
+            "Jane Smith",
+            1);
+
+        booking.RejectBooking(); // move to Rejected
+
+        Assert.Throws<BookingNotPendingException>(() => booking.RejectBooking());
     }
 }

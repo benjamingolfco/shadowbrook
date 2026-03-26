@@ -105,10 +105,10 @@ public static class WalkUpWaitlistEndpoints
             : new List<WalkUpWaitlistEntryResponse>();
 
         var openings = (await db.TeeTimeOpenings
-                .Where(o => o.CourseId == courseId && o.Date == today)
-                .Select(o => new { o.Id, o.TeeTime, o.SlotsAvailable, o.SlotsRemaining, o.Status })
+                .Where(o => o.CourseId == courseId && o.TeeTime.Date == today)
+                .Select(o => new { o.Id, TeeTimeTime = o.TeeTime.Time, o.SlotsAvailable, o.SlotsRemaining, o.Status })
                 .ToListAsync())
-                .Select(o => new WalkUpWaitlistOpeningResponse(o.Id, o.TeeTime.ToString("HH:mm"), o.SlotsAvailable, o.SlotsRemaining, o.Status.ToString()))
+                .Select(o => new WalkUpWaitlistOpeningResponse(o.Id, o.TeeTimeTime.ToString("HH:mm"), o.SlotsAvailable, o.SlotsRemaining, o.Status.ToString()))
                 .ToList();
 
         return Results.Ok(new WalkUpWaitlistTodayResponse(waitlistResponse, entries, openings));
@@ -132,7 +132,7 @@ public static class WalkUpWaitlistEndpoints
 
         return Results.Created(
             $"/courses/{courseId}/walkup-waitlist/openings/{opening.Id}",
-            new WalkUpWaitlistOpeningResponse(opening.Id, opening.TeeTime.ToString("HH:mm"), opening.SlotsAvailable, opening.SlotsRemaining, opening.Status.ToString()));
+            new WalkUpWaitlistOpeningResponse(opening.Id, opening.TeeTime.Time.ToString("HH:mm"), opening.SlotsAvailable, opening.SlotsRemaining, opening.Status.ToString()));
     }
 
     [WolverinePost("/courses/{courseId}/walkup-waitlist/entries")]

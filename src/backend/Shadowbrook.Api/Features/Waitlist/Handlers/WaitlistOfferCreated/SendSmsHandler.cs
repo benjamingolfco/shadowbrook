@@ -17,6 +17,7 @@ public static class WaitlistOfferCreatedSendSmsHandler
         ICourseRepository courseRepository,
         ITextMessageService textMessageService,
         IConfiguration configuration,
+        ITimeProvider timeProvider,
         CancellationToken ct)
     {
         var offer = await offerRepository.GetRequiredByIdAsync(evt.WaitlistOfferId);
@@ -34,9 +35,9 @@ public static class WaitlistOfferCreatedSendSmsHandler
         }
 
         var message =
-            $"{courseName}: {opening.TeeTime:h:mm tt} tee time available! Claim your spot: {baseUrl}/book/walkup/{offer.Token}";
+            $"{courseName}: {opening.TeeTime.Time:h:mm tt} tee time available! Claim your spot: {baseUrl}/book/walkup/{offer.Token}";
         await textMessageService.SendAsync(golfer.Phone, message, ct);
 
-        offer.MarkNotified();
+        offer.MarkNotified(timeProvider);
     }
 }

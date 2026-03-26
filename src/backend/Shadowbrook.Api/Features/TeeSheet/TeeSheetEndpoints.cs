@@ -40,7 +40,7 @@ public static class TeeSheetEndpoints
 
         // Fetch all bookings for the course and date
         var bookings = await db.Bookings
-            .Where(b => b.CourseId == courseId.Value && b.Date == dateOnly)
+            .Where(b => b.CourseId == courseId.Value && b.TeeTime.Date == dateOnly)
             .ToListAsync();
 
         // Generate all time slots
@@ -50,7 +50,7 @@ public static class TeeSheetEndpoints
 
         while (currentTime < course.LastTeeTime.Value)
         {
-            var booking = bookings.FirstOrDefault(b => b.Time == currentTime);
+            var booking = bookings.FirstOrDefault(b => b.TeeTime.Time == currentTime);
 
             slots.Add(new TeeSheetSlot(
                 currentTime.ToString("HH:mm"),

@@ -54,14 +54,14 @@ public class WaitlistOffer : Entity
         return offer;
     }
 
-    public void MarkNotified()
+    public void MarkNotified(ITimeProvider timeProvider)
     {
         if (NotifiedAt is not null)
         {
             throw new OfferAlreadyNotifiedException();
         }
 
-        NotifiedAt = DateTimeOffset.UtcNow;
+        NotifiedAt = timeProvider.GetCurrentTimestamp();
 
         AddDomainEvent(new WaitlistOfferSent
         {

@@ -1,4 +1,3 @@
-using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.BookingAggregate.Events;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
 using Wolverine;
@@ -10,14 +9,10 @@ public class BookingConfirmationPolicy : Saga
 {
     public Guid Id { get; set; }
 
-    public static BookingConfirmationPolicy? Start(BookingCreated evt)
+    public static (BookingConfirmationPolicy, object?) Start(BookingCreated evt)
     {
-        if (evt.OpeningId is null)
-        {
-            return null; // Not a waitlist booking — no confirmation needed
-        }
-
-        return new BookingConfirmationPolicy { Id = evt.BookingId };
+        var policy = new BookingConfirmationPolicy { Id = evt.BookingId };
+        return (policy, null);
     }
 
     public ConfirmBookingCommand Handle(

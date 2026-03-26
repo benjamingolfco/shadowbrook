@@ -13,7 +13,12 @@ public class TeeTimeOpeningConfiguration : IEntityTypeConfiguration<TeeTimeOpeni
         builder.HasKey(o => o.Id);
         builder.Property(o => o.Id).ValueGeneratedNever();
 
-        builder.Property(o => o.TeeTime).HasColumnType("time");
+        builder.ComplexProperty(o => o.TeeTime, t =>
+        {
+            t.Property(x => x.Date).HasColumnName("Date");
+            t.Property(x => x.Time).HasColumnName("TeeTime").HasColumnType("time");
+        });
+
         builder.Property(o => o.Status).HasConversion<string>().HasMaxLength(10);
 
         builder.HasOne<Course>()
@@ -24,7 +29,6 @@ public class TeeTimeOpeningConfiguration : IEntityTypeConfiguration<TeeTimeOpeni
         builder.HasShadowRowVersion();
         builder.HasShadowAuditProperties();
 
-        builder.HasIndex(o => new { o.CourseId, o.Date, o.TeeTime });
-        builder.HasIndex(o => new { o.CourseId, o.Date, o.Status });
+        builder.HasIndex(o => new { o.CourseId, o.Status });
     }
 }

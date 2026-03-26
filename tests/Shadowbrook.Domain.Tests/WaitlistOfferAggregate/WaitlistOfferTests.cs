@@ -131,7 +131,7 @@ public class WaitlistOfferTests
         var offer = CreateOffer(openingId);
         offer.ClearDomainEvents();
 
-        offer.MarkNotified();
+        offer.MarkNotified(this.timeProvider);
 
         Assert.NotNull(offer.NotifiedAt);
         var domainEvent = Assert.Single(offer.DomainEvents);
@@ -144,8 +144,8 @@ public class WaitlistOfferTests
     public void MarkNotified_AlreadyNotified_Throws()
     {
         var offer = CreateOffer();
-        offer.MarkNotified();
+        offer.MarkNotified(this.timeProvider);
 
-        Assert.Throws<OfferAlreadyNotifiedException>(() => offer.MarkNotified());
+        Assert.Throws<OfferAlreadyNotifiedException>(() => offer.MarkNotified(this.timeProvider));
     }
 }

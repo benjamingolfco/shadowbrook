@@ -41,14 +41,14 @@ public abstract class GolferWaitlistEntry : Entity
 
     public WaitlistOffer CreateOffer(TeeTimeOpening opening, ITimeProvider timeProvider) => WaitlistOffer.Create(opening.Id, Id, GolferId, GroupSize, IsWalkUp, timeProvider);
 
-    public void Remove()
+    public void Remove(ITimeProvider timeProvider)
     {
         if (RemovedAt is not null)
         {
             return;
         }
 
-        RemovedAt = DateTimeOffset.UtcNow;
+        RemovedAt = timeProvider.GetCurrentTimestamp();
 
         AddDomainEvent(new GolferRemovedFromWaitlist
         {

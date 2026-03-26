@@ -192,6 +192,35 @@ For operations spanning multiple aggregates, use sequential event chains instead
 - Pre-allocate IDs (e.g., `BookingId` on `WaitlistOffer`) when downstream steps need correlation
 - Wolverine's `MultipleHandlerBehavior.Separated` ensures that if one handler for an event fails, the others still run independently
 
+### Value Objects
+
+- Value objects are defined by their attributes, not by identity — no `Id`, no inheritance from `Entity`
+- Immutable: all properties are `get`-only, set through the constructor
+- Implement `IEquatable<T>` with `Equals`, `GetHashCode`, and a private parameterless constructor for EF
+- Value objects live in `Shadowbrook.Domain/Common/` (shared) or in an aggregate folder if aggregate-specific
+- Map in EF Core using `ComplexProperty` (not `OwnsOne`) — this is the modern EF Core 10 approach
+- Use `HasColumnName` inside `ComplexProperty` to control column names (default is `{Nav}_{Prop}`)
+- Events carry flat fields, not value objects — events are data contracts across boundaries
+
+```csharp
+// Domain: Value object
+public class TeeTime : IEquatable<TeeTime>
+{
+    public DateOnly Date { get; }
+    public TimeOnly Time { get; }
+    public TeeTime(DateOnly date, TimeOnly time) { Date = date; Time = time; }
+    private TeeTime() { } // EF
+    // ... Equals, GetHashCode, ToString
+}
+
+// EF Config: ComplexProperty mapping
+builder.ComplexProperty(o => o.TeeTime, t =>
+{
+    t.Property(x => x.Date).HasColumnName("Date");
+    t.Property(x => x.Time).HasColumnName("TeeTime").HasColumnType("time");
+});
+```
+
 ### Result Objects
 
 - For `internal` cross-aggregate methods, prefer returning result objects over throwing exceptions

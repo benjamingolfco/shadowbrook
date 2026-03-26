@@ -20,8 +20,8 @@ public static class WaitlistOfferEndpoints
             {
                 ooeg.Offer.Token,
                 CourseName = c.Name,
-                ooeg.Opening.Date,
-                ooeg.Opening.TeeTime,
+                Date = ooeg.Opening.TeeTime.Date,
+                TeeTime = ooeg.Opening.TeeTime.Time,
                 ooeg.Opening.SlotsAvailable,
                 ooeg.Golfer.FirstName,
                 ooeg.Golfer.LastName,

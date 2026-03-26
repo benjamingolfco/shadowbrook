@@ -52,7 +52,7 @@ public class TeeTimeOpeningOfferPolicyTests
         var openingId = Guid.NewGuid();
         var policy = new TeeTimeOpeningOfferPolicy { Id = openingId, SlotsRemaining = 3, PendingOfferCount = 2 };
 
-        policy.Handle(new WaitlistOfferAccepted
+        var result = policy.Handle(new WaitlistOfferAccepted
         {
             WaitlistOfferId = Guid.NewGuid(),
             OpeningId = openingId,
@@ -62,6 +62,7 @@ public class TeeTimeOpeningOfferPolicyTests
         });
 
         Assert.Equal(1, policy.PendingOfferCount);
+        Assert.Null(result); // Slot update deferred to TeeTimeOpeningClaimed — no follow-on dispatch here
     }
 
     [Fact]

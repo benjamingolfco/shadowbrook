@@ -25,7 +25,7 @@ public class ExpireTeeTimeOpeningHandlerTests
         opening.ClearDomainEvents();
         this.repository.GetByIdAsync(opening.Id).Returns(opening);
 
-        await ExpireTeeTimeOpeningHandler.Handle(new ExpireTeeTimeOpening(opening.Id), this.repository);
+        await ExpireTeeTimeOpeningHandler.Handle(new ExpireTeeTimeOpening(opening.Id), this.repository, this.timeProvider);
 
         Assert.Equal(TeeTimeOpeningStatus.Expired, opening.Status);
         Assert.Contains(opening.DomainEvents, e => e is TeeTimeOpeningExpired);
@@ -38,7 +38,7 @@ public class ExpireTeeTimeOpeningHandlerTests
         this.repository.GetByIdAsync(openingId).Returns((TeeTimeOpening?)null);
 
         var ex = await Assert.ThrowsAsync<EntityNotFoundException>(
-            () => ExpireTeeTimeOpeningHandler.Handle(new ExpireTeeTimeOpening(openingId), this.repository));
+            () => ExpireTeeTimeOpeningHandler.Handle(new ExpireTeeTimeOpening(openingId), this.repository, this.timeProvider));
 
         Assert.Contains(openingId.ToString(), ex.Message);
     }

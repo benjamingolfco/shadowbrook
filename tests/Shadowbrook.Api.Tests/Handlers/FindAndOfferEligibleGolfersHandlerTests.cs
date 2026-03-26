@@ -89,4 +89,31 @@ public class FindAndOfferEligibleGolfersHandlerTests
 
         this.offerRepo.Received(1).Add(Arg.Any<WaitlistOffer>());
     }
+
+    [Fact]
+    public async Task Handle_MaxOffersLowerThanEligibleCount_CapsOffersCreated()
+    {
+        var opening = TeeTimeOpening.Create(
+            Guid.NewGuid(), new DateOnly(2026, 3, 25), new TimeOnly(14, 30), 3, true, this.timeProvider);
+        this.openingRepo.GetByIdAsync(opening.Id).Returns(opening);
+
+        var golfer1 = Golfer.Create("+15551111111", "Alice", "Smith");
+        var golfer2 = Golfer.Create("+15552222222", "Bob", "Jones");
+        var golfer3 = Golfer.Create("+15553333333", "Carol", "White");
+
+        var entry1 = await CreateEntryAsync(golfer1);
+        var entry2 = await CreateEntryAsync(golfer2);
+        var entry3 = await CreateEntryAsync(golfer3);
+
+        this.entryRepo.FindEligibleEntriesAsync(
+            Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<TimeOnly>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(new List<GolferWaitlistEntry> { entry1, entry2, entry3 });
+
+        await FindAndOfferEligibleGolfersHandler.Handle(
+            new FindAndOfferEligibleGolfers(opening.Id, 1),
+            this.openingRepo, this.matchingService, this.offerRepo,
+            this.timeProvider, NullLogger.Instance, CancellationToken.None);
+
+        this.offerRepo.Received(1).Add(Arg.Any<WaitlistOffer>());
+    }
 }

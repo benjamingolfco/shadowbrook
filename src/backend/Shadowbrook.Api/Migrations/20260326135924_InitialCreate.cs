@@ -26,16 +26,15 @@ public partial class InitialCreate : Migration
                 Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                 CourseId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                 GolferId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                OpeningId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                Date = table.Column<DateOnly>(type: "date", nullable: false),
-                Time = table.Column<TimeOnly>(type: "time", nullable: false),
                 GolferName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                 PlayerCount = table.Column<int>(type: "int", nullable: false),
                 Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                 CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                 RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true),
                 UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                UpdatedBy = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true)
+                UpdatedBy = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                Date = table.Column<DateOnly>(type: "date", nullable: false),
+                TeeTime = table.Column<TimeOnly>(type: "time", nullable: false)
             },
             constraints: table => table.PrimaryKey("PK_Bookings", x => x.Id));
 
@@ -179,8 +178,6 @@ public partial class InitialCreate : Migration
             {
                 Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                 CourseId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                Date = table.Column<DateOnly>(type: "date", nullable: false),
-                TeeTime = table.Column<TimeOnly>(type: "time", nullable: false),
                 SlotsAvailable = table.Column<int>(type: "int", nullable: false),
                 SlotsRemaining = table.Column<int>(type: "int", nullable: false),
                 OperatorOwned = table.Column<bool>(type: "bit", nullable: false),
@@ -190,7 +187,9 @@ public partial class InitialCreate : Migration
                 ExpiredAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
                 RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true),
                 UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                UpdatedBy = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true)
+                UpdatedBy = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                Date = table.Column<DateOnly>(type: "date", nullable: false),
+                TeeTime = table.Column<TimeOnly>(type: "time", nullable: false)
             },
             constraints: table =>
             {
@@ -269,9 +268,9 @@ public partial class InitialCreate : Migration
             });
 
         migrationBuilder.CreateIndex(
-            name: "IX_Bookings_CourseId_Date_Time",
+            name: "IX_Bookings_CourseId",
             table: "Bookings",
-            columns: new[] { "CourseId", "Date", "Time" });
+            column: "CourseId");
 
         migrationBuilder.CreateIndex(
             name: "IX_Courses_TenantId",
@@ -319,14 +318,9 @@ public partial class InitialCreate : Migration
             column: "GolferId");
 
         migrationBuilder.CreateIndex(
-            name: "IX_TeeTimeOpenings_CourseId_Date_Status",
+            name: "IX_TeeTimeOpenings_CourseId_Status",
             table: "TeeTimeOpenings",
-            columns: new[] { "CourseId", "Date", "Status" });
-
-        migrationBuilder.CreateIndex(
-            name: "IX_TeeTimeOpenings_CourseId_Date_TeeTime",
-            table: "TeeTimeOpenings",
-            columns: new[] { "CourseId", "Date", "TeeTime" });
+            columns: new[] { "CourseId", "Status" });
 
         migrationBuilder.CreateIndex(
             name: "IX_Tenants_OrganizationName",

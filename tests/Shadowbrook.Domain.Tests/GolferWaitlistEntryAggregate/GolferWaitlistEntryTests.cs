@@ -45,7 +45,7 @@ public class GolferWaitlistEntryTests
     {
         var (_, entry) = await JoinAsync();
 
-        entry.Remove();
+        entry.Remove(this.timeProvider);
 
         Assert.NotNull(entry.RemovedAt);
     }
@@ -56,7 +56,7 @@ public class GolferWaitlistEntryTests
         var golfer = Golfer.Create("+15559990000", "Test", "Golfer");
         var (_, entry) = await JoinAsync(golfer);
 
-        entry.Remove();
+        entry.Remove(this.timeProvider);
 
         var domainEvent = Assert.Single(entry.DomainEvents);
         var removed = Assert.IsType<GolferRemovedFromWaitlist>(domainEvent);
@@ -96,9 +96,9 @@ public class GolferWaitlistEntryTests
     {
         var (_, entry) = await JoinAsync();
 
-        entry.Remove();
+        entry.Remove(this.timeProvider);
         var firstRemovedAt = entry.RemovedAt;
-        entry.Remove();
+        entry.Remove(this.timeProvider);
 
         Assert.Equal(firstRemovedAt, entry.RemovedAt);
         Assert.Single(entry.DomainEvents);
@@ -109,7 +109,7 @@ public class GolferWaitlistEntryTests
     {
         var (_, entry) = await JoinAsync();
         var walkUpEntry = Assert.IsType<WalkUpGolferWaitlistEntry>(entry);
-        walkUpEntry.Remove();
+        walkUpEntry.Remove(this.timeProvider);
         var newEnd = walkUpEntry.WindowEnd.Add(TimeSpan.FromMinutes(15));
 
         Assert.Throws<CannotExtendRemovedEntryException>(() => walkUpEntry.ExtendWindow(newEnd));

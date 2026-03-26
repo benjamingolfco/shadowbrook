@@ -37,8 +37,8 @@ public class TeeTimeOpeningTests
 
         Assert.NotEqual(Guid.Empty, opening.Id);
         Assert.Equal(courseId, opening.CourseId);
-        Assert.Equal(date, opening.Date);
-        Assert.Equal(teeTime, opening.TeeTime);
+        Assert.Equal(date, opening.TeeTime.Date);
+        Assert.Equal(teeTime, opening.TeeTime.Time);
         Assert.Equal(4, opening.SlotsAvailable);
         Assert.Equal(4, opening.SlotsRemaining);
         Assert.True(opening.OperatorOwned);
@@ -82,8 +82,8 @@ public class TeeTimeOpeningTests
         Assert.Equal(bookingId, claimed.BookingId);
         Assert.Equal(golferId, claimed.GolferId);
         Assert.Equal(opening.CourseId, claimed.CourseId);
-        Assert.Equal(opening.Date, claimed.Date);
-        Assert.Equal(opening.TeeTime, claimed.TeeTime);
+        Assert.Equal(opening.TeeTime.Date, claimed.Date);
+        Assert.Equal(opening.TeeTime.Time, claimed.TeeTime);
     }
 
     [Fact]
@@ -134,7 +134,7 @@ public class TeeTimeOpeningTests
     public void Claim_WhenExpired_ThrowsOpeningNotAvailableException()
     {
         var opening = CreateOpening();
-        opening.Expire();
+        opening.Expire(this.timeProvider);
 
         Assert.Throws<OpeningNotAvailableException>(() =>
             opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider));
@@ -145,7 +145,7 @@ public class TeeTimeOpeningTests
     {
         var opening = CreateOpening();
 
-        opening.Expire();
+        opening.Expire(this.timeProvider);
 
         Assert.Equal(TeeTimeOpeningStatus.Expired, opening.Status);
         Assert.NotNull(opening.ExpiredAt);
@@ -157,7 +157,7 @@ public class TeeTimeOpeningTests
         var opening = CreateOpening();
         opening.ClearDomainEvents();
 
-        opening.Expire();
+        opening.Expire(this.timeProvider);
 
         var domainEvent = Assert.Single(opening.DomainEvents);
         var expired = Assert.IsType<TeeTimeOpeningExpired>(domainEvent);
@@ -171,7 +171,7 @@ public class TeeTimeOpeningTests
         opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
         opening.ClearDomainEvents();
 
-        opening.Expire();
+        opening.Expire(this.timeProvider);
 
         Assert.Equal(TeeTimeOpeningStatus.Filled, opening.Status);
         Assert.Null(opening.ExpiredAt);
@@ -182,10 +182,10 @@ public class TeeTimeOpeningTests
     public void Expire_WhenAlreadyExpired_IsIdempotent()
     {
         var opening = CreateOpening();
-        opening.Expire();
+        opening.Expire(this.timeProvider);
         opening.ClearDomainEvents();
 
-        opening.Expire();
+        opening.Expire(this.timeProvider);
 
         Assert.Equal(TeeTimeOpeningStatus.Expired, opening.Status);
         Assert.Empty(opening.DomainEvents);

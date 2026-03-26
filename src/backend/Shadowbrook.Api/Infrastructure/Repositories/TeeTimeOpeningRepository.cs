@@ -12,8 +12,8 @@ public class TeeTimeOpeningRepository(ApplicationDbContext db) : ITeeTimeOpening
     public async Task<TeeTimeOpening?> GetActiveByCourseDateTimeAsync(Guid courseId, DateOnly date, TimeOnly teeTime)
     {
         return await db.TeeTimeOpenings
-            .FirstOrDefaultAsync(o => o.CourseId == courseId && o.Date == date
-                && o.TeeTime == teeTime && o.Status == TeeTimeOpeningStatus.Open);
+            .FirstOrDefaultAsync(o => o.CourseId == courseId && o.TeeTime.Date == date
+                && o.TeeTime.Time == teeTime && o.Status == TeeTimeOpeningStatus.Open);
     }
 
     public void Add(TeeTimeOpening opening) =>

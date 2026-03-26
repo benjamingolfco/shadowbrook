@@ -6,10 +6,10 @@ namespace Shadowbrook.Api.Features.Waitlist.Handlers;
 
 public static class ExpireTeeTimeOpeningHandler
 {
-    public static async Task Handle(ExpireTeeTimeOpening command, ITeeTimeOpeningRepository repository)
+    public static async Task Handle(ExpireTeeTimeOpening command, ITeeTimeOpeningRepository repository, ITimeProvider timeProvider)
     {
         var opening = await repository.GetRequiredByIdAsync(command.OpeningId);
 
-        opening.Expire();
+        opening.Expire(timeProvider);
     }
 }

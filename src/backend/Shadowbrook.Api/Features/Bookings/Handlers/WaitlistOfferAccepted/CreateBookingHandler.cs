@@ -1,7 +1,6 @@
 using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.GolferAggregate;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
@@ -13,7 +12,6 @@ public static class WaitlistOfferAcceptedCreateBookingHandler
         WaitlistOfferAccepted evt,
         ITeeTimeOpeningRepository openingRepository,
         IGolferRepository golferRepository,
-        IGolferWaitlistEntryRepository entryRepository,
         IBookingRepository bookingRepository)
     {
         var opening = await openingRepository.GetRequiredByIdAsync(evt.OpeningId);
@@ -23,11 +21,10 @@ public static class WaitlistOfferAcceptedCreateBookingHandler
             bookingId: Guid.CreateVersion7(),
             courseId: opening.CourseId,
             golferId: evt.GolferId,
-            date: opening.Date,
-            time: opening.TeeTime,
+            date: opening.TeeTime.Date,
+            teeTime: opening.TeeTime.Time,
             golferName: golfer.FullName,
-            playerCount: evt.GroupSize,
-            openingId: opening.Id);
+            playerCount: evt.GroupSize);
 
         bookingRepository.Add(booking);
     }

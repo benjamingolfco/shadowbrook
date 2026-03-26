@@ -16,8 +16,8 @@ public class WaitlistMatchingService(IGolferWaitlistEntryRepository entryReposit
 
         return await entryRepository.FindEligibleEntriesAsync(
             opening.CourseId,
-            opening.Date,
-            opening.TeeTime,
+            opening.TeeTime.Date,
+            opening.TeeTime.Time,
             opening.SlotsRemaining,
             ct);
     }

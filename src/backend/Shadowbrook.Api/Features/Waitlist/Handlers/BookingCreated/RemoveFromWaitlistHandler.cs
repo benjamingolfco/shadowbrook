@@ -8,10 +8,11 @@ public static class WaitlistOfferAcceptedRemoveFromWaitlistHandler
 {
     public static async Task Handle(
         WaitlistOfferAccepted evt,
-        IGolferWaitlistEntryRepository entryRepository)
+        IGolferWaitlistEntryRepository entryRepository,
+        ITimeProvider timeProvider)
     {
         var entry = await entryRepository.GetRequiredByIdAsync(evt.GolferWaitlistEntryId);
 
-        entry.Remove();
+        entry.Remove(timeProvider);
     }
 }

@@ -7,8 +7,7 @@ namespace Shadowbrook.Domain.TeeTimeOpeningAggregate;
 public class TeeTimeOpening : Entity
 {
     public Guid CourseId { get; private set; }
-    public DateOnly Date { get; private set; }
-    public TimeOnly TeeTime { get; private set; }
+    public TeeTime TeeTime { get; private set; } = null!;
     public int SlotsAvailable { get; private set; }
     public int SlotsRemaining { get; private set; }
     public bool OperatorOwned { get; private set; }
@@ -36,8 +35,7 @@ public class TeeTimeOpening : Entity
         {
             Id = Guid.CreateVersion7(),
             CourseId = courseId,
-            Date = date,
-            TeeTime = teeTime,
+            TeeTime = new TeeTime(date, teeTime),
             SlotsAvailable = slotsAvailable,
             SlotsRemaining = slotsAvailable,
             OperatorOwned = operatorOwned,
@@ -49,8 +47,8 @@ public class TeeTimeOpening : Entity
         {
             OpeningId = opening.Id,
             CourseId = opening.CourseId,
-            Date = opening.Date,
-            TeeTime = opening.TeeTime,
+            Date = opening.TeeTime.Date,
+            TeeTime = opening.TeeTime.Time,
             SlotsAvailable = opening.SlotsAvailable,
         });
 
@@ -88,8 +86,8 @@ public class TeeTimeOpening : Entity
             BookingId = bookingId,
             GolferId = golferId,
             CourseId = CourseId,
-            Date = Date,
-            TeeTime = TeeTime,
+            Date = TeeTime.Date,
+            TeeTime = TeeTime.Time,
         });
 
         if (SlotsRemaining == 0)
@@ -104,7 +102,7 @@ public class TeeTimeOpening : Entity
         }
     }
 
-    public void Expire()
+    public void Expire(ITimeProvider timeProvider)
     {
         if (Status != TeeTimeOpeningStatus.Open)
         {
@@ -112,7 +110,7 @@ public class TeeTimeOpening : Entity
         }
 
         Status = TeeTimeOpeningStatus.Expired;
-        ExpiredAt = DateTimeOffset.UtcNow;
+        ExpiredAt = timeProvider.GetCurrentTimestamp();
 
         AddDomainEvent(new TeeTimeOpeningExpired
         {
