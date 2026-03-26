@@ -39,7 +39,8 @@ public abstract class GolferWaitlistEntry : Entity
         CreatedAt = now;
     }
 
-    public WaitlistOffer CreateOffer(TeeTimeOpening opening, ITimeProvider timeProvider) => WaitlistOffer.Create(opening.Id, Id, GolferId, GroupSize, IsWalkUp, timeProvider);
+    public WaitlistOffer CreateOffer(TeeTimeOpening opening, ITimeProvider timeProvider) =>
+        WaitlistOffer.Create(opening.Id, Id, GolferId, GroupSize, IsWalkUp, opening.CourseId, opening.TeeTime.Date, opening.TeeTime.Time, timeProvider);
 
     public void Remove(ITimeProvider timeProvider)
     {

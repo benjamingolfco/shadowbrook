@@ -34,8 +34,8 @@ public class TeeTimeOpeningFilledRejectOffersHandlerTests
     public async Task Handle_PendingOffers_RejectsEach()
     {
         var openingId = Guid.NewGuid();
-        var offer1 = WaitlistOffer.Create(openingId, Guid.NewGuid(), Guid.NewGuid(), 1, true, this.timeProvider);
-        var offer2 = WaitlistOffer.Create(openingId, Guid.NewGuid(), Guid.NewGuid(), 2, true, this.timeProvider);
+        var offer1 = WaitlistOffer.Create(openingId, Guid.NewGuid(), Guid.NewGuid(), 1, true, Guid.NewGuid(), new DateOnly(2026, 3, 25), new TimeOnly(10, 0), this.timeProvider);
+        var offer2 = WaitlistOffer.Create(openingId, Guid.NewGuid(), Guid.NewGuid(), 2, true, Guid.NewGuid(), new DateOnly(2026, 3, 25), new TimeOnly(10, 0), this.timeProvider);
         offer1.ClearDomainEvents();
         offer2.ClearDomainEvents();
 

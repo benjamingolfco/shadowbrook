@@ -17,7 +17,15 @@ public class WaitlistOfferTests
 
     private WaitlistOffer CreateOffer(Guid? openingId = null) =>
         WaitlistOffer.Create(
-            openingId ?? Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 2, true, this.timeProvider);
+            openingId ?? Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            2,
+            true,
+            Guid.NewGuid(),
+            new DateOnly(2026, 3, 25),
+            new TimeOnly(10, 0),
+            this.timeProvider);
 
     [Fact]
     public void Create_SetsPropertiesAndGeneratesIds()
@@ -25,8 +33,11 @@ public class WaitlistOfferTests
         var openingId = Guid.NewGuid();
         var entryId = Guid.NewGuid();
         var golferId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        var date = new DateOnly(2026, 3, 25);
+        var teeTime = new TimeOnly(10, 0);
 
-        var offer = WaitlistOffer.Create(openingId, entryId, golferId, 2, true, this.timeProvider);
+        var offer = WaitlistOffer.Create(openingId, entryId, golferId, 2, true, courseId, date, teeTime, this.timeProvider);
 
         Assert.NotEqual(Guid.Empty, offer.Id);
         Assert.NotEqual(Guid.Empty, offer.Token);
@@ -37,6 +48,9 @@ public class WaitlistOfferTests
         Assert.True(offer.IsWalkUp);
         Assert.Equal(OfferStatus.Pending, offer.Status);
         Assert.Null(offer.RejectionReason);
+        Assert.Equal(courseId, offer.CourseId);
+        Assert.Equal(date, offer.Date);
+        Assert.Equal(teeTime, offer.TeeTime);
     }
 
     [Fact]
@@ -45,8 +59,11 @@ public class WaitlistOfferTests
         var openingId = Guid.NewGuid();
         var entryId = Guid.NewGuid();
         var golferId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        var date = new DateOnly(2026, 3, 25);
+        var teeTime = new TimeOnly(10, 0);
 
-        var offer = WaitlistOffer.Create(openingId, entryId, golferId, 2, true, this.timeProvider);
+        var offer = WaitlistOffer.Create(openingId, entryId, golferId, 2, true, courseId, date, teeTime, this.timeProvider);
 
         var domainEvent = Assert.Single(offer.DomainEvents);
         var created = Assert.IsType<WaitlistOfferCreated>(domainEvent);
@@ -56,6 +73,9 @@ public class WaitlistOfferTests
         Assert.Equal(golferId, created.GolferId);
         Assert.Equal(2, created.GroupSize);
         Assert.True(created.IsWalkUp);
+        Assert.Equal(courseId, created.CourseId);
+        Assert.Equal(date, created.Date);
+        Assert.Equal(teeTime, created.TeeTime);
     }
 
     [Fact]
@@ -74,6 +94,9 @@ public class WaitlistOfferTests
         Assert.Equal(offer.GolferWaitlistEntryId, accepted.GolferWaitlistEntryId);
         Assert.Equal(offer.GolferId, accepted.GolferId);
         Assert.Equal(offer.GroupSize, accepted.GroupSize);
+        Assert.Equal(offer.CourseId, accepted.CourseId);
+        Assert.Equal(offer.Date, accepted.Date);
+        Assert.Equal(offer.TeeTime, accepted.TeeTime);
     }
 
     [Fact]
