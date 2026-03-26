@@ -3,7 +3,7 @@ using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
-namespace Shadowbrook.Api.Features.WaitlistOffers;
+namespace Shadowbrook.Api.Features.Waitlist;
 
 public static class WaitlistOfferAcceptedSmsHandler
 {

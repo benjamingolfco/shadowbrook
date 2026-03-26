@@ -5,7 +5,7 @@ using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 using Shadowbrook.Domain.WaitlistServices;
 
-namespace Shadowbrook.Api.Features.TeeTimeOpenings;
+namespace Shadowbrook.Api.Features.Waitlist;
 
 public record FindAndOfferEligibleGolfers(Guid OpeningId, int MaxOffers);
 

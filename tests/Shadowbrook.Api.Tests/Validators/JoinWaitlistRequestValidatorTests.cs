@@ -1,4 +1,4 @@
-using Shadowbrook.Api.Features.WalkUpWaitlist;
+using Shadowbrook.Api.Features.Waitlist;
 
 namespace Shadowbrook.Api.Tests.Validators;
 

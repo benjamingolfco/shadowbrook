@@ -1,4 +1,4 @@
-using Shadowbrook.Api.Features.TeeTimeOpenings;
+using Shadowbrook.Api.Features.Waitlist;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
 namespace Shadowbrook.Api.Tests.Policies;

@@ -3,7 +3,7 @@ using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 using Wolverine.Http;
 
-namespace Shadowbrook.Api.Features.WaitlistOffers;
+namespace Shadowbrook.Api.Features.Waitlist;
 
 public static class WaitlistOfferEndpoints
 {

@@ -3,7 +3,7 @@ using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Wolverine.Http;
 
-namespace Shadowbrook.Api.Features.WalkUpWaitlist;
+namespace Shadowbrook.Api.Features.Waitlist;
 
 public static class RemoveWaitlistEntryEndpoint
 {

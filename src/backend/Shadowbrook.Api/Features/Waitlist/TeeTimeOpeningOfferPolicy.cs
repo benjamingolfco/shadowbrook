@@ -3,7 +3,7 @@ using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 using Wolverine;
 using Wolverine.Persistence.Sagas;
 
-namespace Shadowbrook.Api.Features.TeeTimeOpenings;
+namespace Shadowbrook.Api.Features.Waitlist;
 
 public class TeeTimeOpeningOfferPolicy : Saga
 {

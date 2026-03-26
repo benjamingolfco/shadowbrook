@@ -1,7 +1,7 @@
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
-namespace Shadowbrook.Api.Features.WalkUpWaitlist;
+namespace Shadowbrook.Api.Features.Waitlist;
 
 public static class WaitlistOfferAcceptedRemoveFromWaitlistHandler
 {

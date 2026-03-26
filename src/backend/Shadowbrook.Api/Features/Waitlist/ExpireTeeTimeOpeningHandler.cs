@@ -1,6 +1,6 @@
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 
-namespace Shadowbrook.Api.Features.TeeTimeOpenings;
+namespace Shadowbrook.Api.Features.Waitlist;
 
 public static class ExpireTeeTimeOpeningHandler
 {

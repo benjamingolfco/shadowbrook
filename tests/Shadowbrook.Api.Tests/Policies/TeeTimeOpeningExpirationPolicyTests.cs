@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
-using Shadowbrook.Api.Features.TeeTimeOpenings;
+using Shadowbrook.Api.Features.Waitlist;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
 

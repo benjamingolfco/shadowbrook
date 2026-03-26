@@ -1,7 +1,7 @@
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
-namespace Shadowbrook.Api.Features.TeeTimeOpenings;
+namespace Shadowbrook.Api.Features.Waitlist;
 
 public static class RejectStaleOfferHandler
 {
