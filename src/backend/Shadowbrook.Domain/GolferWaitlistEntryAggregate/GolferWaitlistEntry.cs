@@ -39,6 +39,11 @@ public abstract class GolferWaitlistEntry : Entity
 
     public void Remove()
     {
+        if (RemovedAt is not null)
+        {
+            return;
+        }
+
         RemovedAt = DateTimeOffset.UtcNow;
 
         AddDomainEvent(new GolferRemovedFromWaitlist

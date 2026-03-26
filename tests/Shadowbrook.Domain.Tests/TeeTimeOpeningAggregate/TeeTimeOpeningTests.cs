@@ -165,4 +165,39 @@ public class TeeTimeOpeningTests
         Assert.Null(opening.ExpiredAt);
         Assert.Empty(opening.DomainEvents);
     }
+
+    [Fact]
+    public void Expire_WhenAlreadyExpired_IsIdempotent()
+    {
+        var opening = CreateOpening();
+        opening.Expire();
+        opening.ClearDomainEvents();
+
+        opening.Expire();
+
+        Assert.Equal(TeeTimeOpeningStatus.Expired, opening.Status);
+        Assert.Empty(opening.DomainEvents);
+    }
+
+    [Fact]
+    public void Create_WhenSlotsAvailableZero_ThrowsArgumentException()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            TeeTimeOpening.Create(
+                courseId: Guid.NewGuid(),
+                date: new DateOnly(2026, 6, 1),
+                teeTime: new TimeOnly(9, 0),
+                slotsAvailable: 0,
+                operatorOwned: true));
+    }
+
+    [Fact]
+    public void Claim_WhenGroupSizeZero_ThrowsArgumentException()
+    {
+        var opening = CreateOpening();
+        opening.ClearDomainEvents();
+
+        Assert.Throws<ArgumentException>(() =>
+            opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 0));
+    }
 }

@@ -56,7 +56,10 @@ public class WalkUpWaitlist : CourseWaitlist
             throw new GolferAlreadyOnWaitlistException(golfer.Phone);
         }
 
-        var windowStart = TimeOnly.FromDateTime(DateTime.UtcNow);
+        // Note: TimeOnly wraps at midnight. If a golfer joins near midnight UTC,
+        // WindowEnd could be earlier than WindowStart (e.g., 23:45 -> 00:15).
+        // The repository query must handle this wrap-around case.
+        var windowStart = TimeOnly.FromDateTime(DateTimeOffset.UtcNow.DateTime);
         var windowEnd = windowStart.Add(TimeSpan.FromMinutes(30));
 
         var entry = new WalkUpGolferWaitlistEntry(Id, golfer.Id, groupSize, windowStart, windowEnd);

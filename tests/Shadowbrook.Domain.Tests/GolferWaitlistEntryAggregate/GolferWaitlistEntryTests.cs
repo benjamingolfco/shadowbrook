@@ -81,4 +81,28 @@ public class GolferWaitlistEntryTests
         Assert.Equal(walkUpEntry.Id, evt.GolferWaitlistEntryId);
         Assert.Equal(newEnd, evt.NewEnd);
     }
+
+    [Fact]
+    public async Task Remove_WhenAlreadyRemoved_IsIdempotent()
+    {
+        var (_, entry) = await JoinAsync();
+
+        entry.Remove();
+        var firstRemovedAt = entry.RemovedAt;
+        entry.Remove();
+
+        Assert.Equal(firstRemovedAt, entry.RemovedAt);
+        Assert.Single(entry.DomainEvents);
+    }
+
+    [Fact]
+    public async Task ExtendWindow_WhenRemoved_Throws()
+    {
+        var (_, entry) = await JoinAsync();
+        var walkUpEntry = Assert.IsType<WalkUpGolferWaitlistEntry>(entry);
+        walkUpEntry.Remove();
+        var newEnd = walkUpEntry.WindowEnd.Add(TimeSpan.FromMinutes(15));
+
+        Assert.Throws<InvalidOperationException>(() => walkUpEntry.ExtendWindow(newEnd));
+    }
 }

@@ -16,6 +16,11 @@ public class WalkUpGolferWaitlistEntry : GolferWaitlistEntry
 
     public void ExtendWindow(TimeOnly newEnd)
     {
+        if (RemovedAt is not null)
+        {
+            throw new InvalidOperationException("Cannot extend window on a removed entry.");
+        }
+
         WindowEnd = newEnd;
         AddDomainEvent(new Events.WalkUpEntryWindowExtended
         {

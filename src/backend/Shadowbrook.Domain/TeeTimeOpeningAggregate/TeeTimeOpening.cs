@@ -26,6 +26,11 @@ public class TeeTimeOpening : Entity
         int slotsAvailable,
         bool operatorOwned)
     {
+        if (slotsAvailable <= 0)
+        {
+            throw new ArgumentException("Slots available must be at least 1.", nameof(slotsAvailable));
+        }
+
         var opening = new TeeTimeOpening
         {
             Id = Guid.CreateVersion7(),
@@ -53,59 +58,64 @@ public class TeeTimeOpening : Entity
 
     public void Claim(Guid bookingId, Guid golferId, int groupSize)
     {
-        if (this.Status != TeeTimeOpeningStatus.Open)
+        if (Status != TeeTimeOpeningStatus.Open)
         {
-            throw new OpeningNotAvailableException(this.Id);
+            throw new OpeningNotAvailableException(Id);
         }
 
-        if (this.SlotsRemaining < groupSize)
+        if (groupSize <= 0)
         {
-            this.AddDomainEvent(new TeeTimeOpeningClaimRejected
+            throw new ArgumentException("Group size must be at least 1.", nameof(groupSize));
+        }
+
+        if (SlotsRemaining < groupSize)
+        {
+            AddDomainEvent(new TeeTimeOpeningClaimRejected
             {
-                OpeningId = this.Id,
+                OpeningId = Id,
                 BookingId = bookingId,
                 GolferId = golferId,
             });
             return;
         }
 
-        this.SlotsRemaining -= groupSize;
+        SlotsRemaining -= groupSize;
 
-        this.AddDomainEvent(new TeeTimeOpeningClaimed
+        AddDomainEvent(new TeeTimeOpeningClaimed
         {
-            OpeningId = this.Id,
+            OpeningId = Id,
             BookingId = bookingId,
             GolferId = golferId,
-            CourseId = this.CourseId,
-            Date = this.Date,
-            TeeTime = this.TeeTime,
+            CourseId = CourseId,
+            Date = Date,
+            TeeTime = TeeTime,
         });
 
-        if (this.SlotsRemaining == 0)
+        if (SlotsRemaining == 0)
         {
-            this.Status = TeeTimeOpeningStatus.Filled;
-            this.FilledAt = DateTimeOffset.UtcNow;
+            Status = TeeTimeOpeningStatus.Filled;
+            FilledAt = DateTimeOffset.UtcNow;
 
-            this.AddDomainEvent(new TeeTimeOpeningFilled
+            AddDomainEvent(new TeeTimeOpeningFilled
             {
-                OpeningId = this.Id,
+                OpeningId = Id,
             });
         }
     }
 
     public void Expire()
     {
-        if (this.Status != TeeTimeOpeningStatus.Open)
+        if (Status != TeeTimeOpeningStatus.Open)
         {
             return;
         }
 
-        this.Status = TeeTimeOpeningStatus.Expired;
-        this.ExpiredAt = DateTimeOffset.UtcNow;
+        Status = TeeTimeOpeningStatus.Expired;
+        ExpiredAt = DateTimeOffset.UtcNow;
 
-        this.AddDomainEvent(new TeeTimeOpeningExpired
+        AddDomainEvent(new TeeTimeOpeningExpired
         {
-            OpeningId = this.Id,
+            OpeningId = Id,
         });
     }
 }
