@@ -1,8 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Shadowbrook.Api.Features.Waitlist.Policies;
 using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseAggregate;
-using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 using Shadowbrook.Domain.WaitlistServices;
@@ -18,11 +16,7 @@ public static class FindAndOfferEligibleGolfersHandler
         ITeeTimeOpeningRepository openingRepository,
         WaitlistMatchingService matchingService,
         IWaitlistOfferRepository offerRepository,
-        IGolferRepository golferRepository,
-        ICourseRepository courseRepository,
-        ITextMessageService textMessageService,
         ITimeProvider timeProvider,
-        IConfiguration configuration,
         ILogger logger,
         CancellationToken ct)
     {
@@ -49,26 +43,10 @@ public static class FindAndOfferEligibleGolfersHandler
             return;
         }
 
-        var baseUrl = configuration["App:FrontendUrl"];
-        if (string.IsNullOrEmpty(baseUrl))
-        {
-            throw new InvalidOperationException(
-                "App:FrontendUrl is not configured. SMS offer links require a valid frontend URL.");
-        }
-
-        var course = await courseRepository.GetByIdAsync(opening.CourseId);
-        var courseName = course?.Name ?? "Course";
-
         for (var i = 0; i < offersToCreate; i++)
         {
             var entry = eligibleEntries[i];
-
-            var golfer = await golferRepository.GetByIdAsync(entry.GolferId)
-                ?? throw new InvalidOperationException(
-                    $"Golfer {entry.GolferId} not found for waitlist entry {entry.Id}.");
-
-            var offer = await entry.SendOfferAsync(
-                opening, golfer, textMessageService, timeProvider, courseName, baseUrl, ct);
+            var offer = entry.CreateOffer(opening, timeProvider);
             offerRepository.Add(offer);
         }
     }
