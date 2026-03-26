@@ -1,3 +1,4 @@
+using Shadowbrook.Api.Features.Waitlist.Policies;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.CourseWaitlistAggregate.Events;

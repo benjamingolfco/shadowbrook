@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Shadowbrook.Api.Features.TeeTimeOpenings;
+using Shadowbrook.Api.Features.Waitlist.Policies;
 
 namespace Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
 

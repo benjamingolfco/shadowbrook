@@ -1,3 +1,4 @@
+using Shadowbrook.Api.Features.Waitlist.Policies;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 

@@ -1,3 +1,4 @@
+using Shadowbrook.Api.Features.Waitlist.Policies;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 
 namespace Shadowbrook.Api.Features.Waitlist;

@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Features.Bookings;
-using Shadowbrook.Api.Features.TeeTimeOpenings;
+using Shadowbrook.Api.Features.Bookings.Policies;
+using Shadowbrook.Api.Features.Waitlist;
+using Shadowbrook.Api.Features.Waitlist.Policies;
 using Shadowbrook.Api.Infrastructure.Dev;
 using Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
 using Shadowbrook.Domain.BookingAggregate;

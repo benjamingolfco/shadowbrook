@@ -4,7 +4,7 @@ using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
 using Wolverine;
 using Wolverine.Persistence.Sagas;
 
-namespace Shadowbrook.Api.Features.Waitlist;
+namespace Shadowbrook.Api.Features.Waitlist.Policies;
 
 public class TeeTimeOpeningExpirationPolicy : Saga
 {

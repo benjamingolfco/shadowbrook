@@ -1,4 +1,4 @@
-using Shadowbrook.Api.Features.Waitlist;
+using Shadowbrook.Api.Features.Waitlist.Policies;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 

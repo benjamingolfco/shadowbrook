@@ -4,7 +4,7 @@ using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
 using Wolverine;
 using Wolverine.Persistence.Sagas;
 
-namespace Shadowbrook.Api.Features.Bookings;
+namespace Shadowbrook.Api.Features.Bookings.Policies;
 
 public class BookingConfirmationPolicy : Saga
 {

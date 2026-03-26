@@ -1,3 +1,4 @@
+using Shadowbrook.Api.Features.Bookings.Policies;
 using Shadowbrook.Domain.BookingAggregate;
 
 namespace Shadowbrook.Api.Features.Bookings;

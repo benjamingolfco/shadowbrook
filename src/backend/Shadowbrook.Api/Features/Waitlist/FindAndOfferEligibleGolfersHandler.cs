@@ -1,3 +1,4 @@
+using Shadowbrook.Api.Features.Waitlist.Policies;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseAggregate;
 using Shadowbrook.Domain.GolferAggregate;

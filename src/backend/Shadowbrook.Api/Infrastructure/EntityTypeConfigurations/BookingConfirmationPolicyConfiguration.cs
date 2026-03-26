@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Shadowbrook.Api.Features.Bookings;
+using Shadowbrook.Api.Features.Bookings.Policies;
 
 namespace Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
 
