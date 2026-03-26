@@ -14,8 +14,8 @@ Tee time booking platform for golf courses.
 
 ## Test Environment
 
-- **URL:** https://purple-glacier-073a0390f.2.azurestaticapps.net
-- **API (direct):** https://shadowbrook-app-test.blackisland-89946fd2.eastus2.azurecontainerapps.io
+- **Frontend:** https://white-stone-00610060f.1.azurestaticapps.net
+- **API:** https://shadowbrook-app-test.happypond-1a892999.eastus2.azurecontainerapps.io
 
 ## Tech Stack
 
