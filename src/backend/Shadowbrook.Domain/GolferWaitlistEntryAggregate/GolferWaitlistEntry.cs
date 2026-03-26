@@ -1,38 +1,54 @@
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate.Events;
+using Shadowbrook.Domain.TeeTimeOpeningAggregate;
+using Shadowbrook.Domain.WaitlistOfferAggregate;
 
 namespace Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 
-public class GolferWaitlistEntry : Entity
+public abstract class GolferWaitlistEntry : Entity
 {
     public Guid CourseWaitlistId { get; private set; }
     public Guid GolferId { get; private set; }
-    public bool IsWalkUp { get; private set; }
-    public bool IsReady { get; private set; }
+    public bool IsWalkUp { get; protected set; }
     public int GroupSize { get; private set; }
+    public TimeOnly WindowStart { get; protected set; }
+    public TimeOnly WindowEnd { get; protected set; }
     public DateTimeOffset JoinedAt { get; private set; }
     public DateTimeOffset? RemovedAt { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
 
-    private GolferWaitlistEntry() { } // EF
+    protected GolferWaitlistEntry() { } // EF
 
-    internal GolferWaitlistEntry(Guid courseWaitlistId, Guid golferId, int groupSize = 1)
+    protected internal GolferWaitlistEntry(
+        Guid courseWaitlistId,
+        Guid golferId,
+        int groupSize,
+        bool isWalkUp,
+        TimeOnly windowStart,
+        TimeOnly windowEnd,
+        DateTimeOffset now)
     {
-        var now = DateTimeOffset.UtcNow;
         Id = Guid.CreateVersion7();
         CourseWaitlistId = courseWaitlistId;
         GolferId = golferId;
-        IsWalkUp = true;
-        IsReady = true;
+        IsWalkUp = isWalkUp;
         GroupSize = groupSize;
+        WindowStart = windowStart;
+        WindowEnd = windowEnd;
         JoinedAt = now;
         CreatedAt = now;
     }
 
+    public WaitlistOffer CreateOffer(TeeTimeOpening opening, ITimeProvider timeProvider) => WaitlistOffer.Create(opening.Id, Id, GolferId, GroupSize, IsWalkUp, timeProvider);
+
     public void Remove()
     {
-        var now = DateTimeOffset.UtcNow;
-        RemovedAt = now;
+        if (RemovedAt is not null)
+        {
+            return;
+        }
+
+        RemovedAt = DateTimeOffset.UtcNow;
 
         AddDomainEvent(new GolferRemovedFromWaitlist
         {

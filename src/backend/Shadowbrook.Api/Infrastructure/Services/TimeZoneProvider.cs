@@ -22,6 +22,8 @@ public class TimeZoneProvider(TimeProvider timeProvider) : ITimeProvider
         return TimeOnly.FromDateTime(courseLocal.DateTime);
     }
 
+    public DateTimeOffset GetCurrentTimestamp() => timeProvider.GetUtcNow();
+
     private static TimeZoneInfo ResolveTimeZone(string timeZoneId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(timeZoneId);

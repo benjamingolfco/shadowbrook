@@ -35,21 +35,21 @@ export interface AddGolferToWaitlistResponse {
 export interface WalkUpWaitlistTodayResponse {
   waitlist: WalkUpWaitlist | null;
   entries: WalkUpWaitlistEntry[];
-  requests: WaitlistRequestEntry[];
+  openings: WaitlistOpeningEntry[];
 }
 
-// Walk-up waitlist tee time requests
-export interface WaitlistRequestEntry {
+// Walk-up waitlist tee time openings
+export interface WaitlistOpeningEntry {
   id: string;
   teeTime: string; // "HH:mm"
-  golfersNeeded: number;
+  slotsAvailable: number;
+  slotsRemaining: number;
   status: string;
 }
 
-export interface CreateWaitlistRequest {
-  date: string;
+export interface CreateWaitlistOpening {
   teeTime: string;
-  golfersNeeded: number;
+  slotsAvailable: number;
 }
 
 // Walkup join (public/golfer-facing)

@@ -9,4 +9,6 @@ public record BookingCreated : IDomainEvent
     public required Guid BookingId { get; init; }
     public required Guid GolferId { get; init; }
     public required Guid CourseId { get; init; }
+    public Guid? OpeningId { get; init; }
+    public int GroupSize { get; init; }
 }

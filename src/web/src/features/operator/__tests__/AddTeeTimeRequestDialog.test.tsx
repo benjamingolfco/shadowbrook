@@ -2,14 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@/test/test-utils';
 import { AddTeeTimeRequestDialog } from '../components/AddTeeTimeRequestDialog';
 import { useCourseContext } from '../context/CourseContext';
-import { useCreateWaitlistRequest } from '../hooks/useWaitlist';
+import { useCreateWaitlistOpening } from '../hooks/useWaitlist';
 import * as courseTime from '@/lib/course-time';
 
 vi.mock('../context/CourseContext');
 vi.mock('../hooks/useWaitlist');
 
 const mockUseCourseContext = vi.mocked(useCourseContext);
-const mockUseCreateWaitlistRequest = vi.mocked(useCreateWaitlistRequest);
+const mockUseCreateWaitlistOpening = vi.mocked(useCreateWaitlistOpening);
 
 const mockCourse = { id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' };
 
@@ -26,28 +26,27 @@ function defaultCourseContext() {
   });
 }
 
-function defaultCreateWaitlistRequest() {
-  mockUseCreateWaitlistRequest.mockReturnValue({
+function defaultCreateWaitlistOpening() {
+  mockUseCreateWaitlistOpening.mockReturnValue({
     mutate: mockCreateMutate,
     isPending: false,
     isSuccess: false,
     isError: false,
     error: null,
     reset: vi.fn(),
-  } as unknown as ReturnType<typeof useCreateWaitlistRequest>);
+  } as unknown as ReturnType<typeof useCreateWaitlistOpening>);
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
   defaultCourseContext();
-  defaultCreateWaitlistRequest();
+  defaultCreateWaitlistOpening();
 });
 
 describe('AddTeeTimeRequestDialog', () => {
   it('shows validation error when tee time is in the past', async () => {
     // Mock getCourseNow to return 14:00 (2:00 PM)
     vi.spyOn(courseTime, 'getCourseNow').mockReturnValue('14:00');
-    vi.spyOn(courseTime, 'getCourseToday').mockReturnValue('2026-03-23');
 
     render(
       <AddTeeTimeRequestDialog
@@ -62,7 +61,7 @@ describe('AddTeeTimeRequestDialog', () => {
     fireEvent.change(teeTimeInput, { target: { value: '13:00' } });
 
     // Submit the form to trigger validation
-    const submitButton = screen.getByRole('button', { name: 'Add Request' });
+    const submitButton = screen.getByRole('button', { name: 'Add Opening' });
     fireEvent.click(submitButton);
 
     // Wait for validation error to appear
@@ -74,7 +73,6 @@ describe('AddTeeTimeRequestDialog', () => {
   it('does not show validation error when tee time is in the future', async () => {
     // Mock getCourseNow to return 14:00 (2:00 PM)
     vi.spyOn(courseTime, 'getCourseNow').mockReturnValue('14:00');
-    vi.spyOn(courseTime, 'getCourseToday').mockReturnValue('2026-03-23');
 
     render(
       <AddTeeTimeRequestDialog
@@ -89,7 +87,7 @@ describe('AddTeeTimeRequestDialog', () => {
     fireEvent.change(teeTimeInput, { target: { value: '15:00' } });
 
     // Submit the form to trigger validation
-    const submitButton = screen.getByRole('button', { name: 'Add Request' });
+    const submitButton = screen.getByRole('button', { name: 'Add Opening' });
     fireEvent.click(submitButton);
 
     // Wait a moment to ensure validation runs
@@ -101,7 +99,6 @@ describe('AddTeeTimeRequestDialog', () => {
   it('allows tee time within 5-minute grace period', async () => {
     // Mock getCourseNow to return 14:00 (2:00 PM)
     vi.spyOn(courseTime, 'getCourseNow').mockReturnValue('14:00');
-    vi.spyOn(courseTime, 'getCourseToday').mockReturnValue('2026-03-23');
 
     render(
       <AddTeeTimeRequestDialog
@@ -116,7 +113,7 @@ describe('AddTeeTimeRequestDialog', () => {
     fireEvent.change(teeTimeInput, { target: { value: '13:57' } });
 
     // Submit the form to trigger validation
-    const submitButton = screen.getByRole('button', { name: 'Add Request' });
+    const submitButton = screen.getByRole('button', { name: 'Add Opening' });
     fireEvent.click(submitButton);
 
     // Wait a moment to ensure validation runs
@@ -128,7 +125,6 @@ describe('AddTeeTimeRequestDialog', () => {
   it('shows validation error for tee time just outside grace period', async () => {
     // Mock getCourseNow to return 14:00 (2:00 PM)
     vi.spyOn(courseTime, 'getCourseNow').mockReturnValue('14:00');
-    vi.spyOn(courseTime, 'getCourseToday').mockReturnValue('2026-03-23');
 
     render(
       <AddTeeTimeRequestDialog
@@ -143,7 +139,7 @@ describe('AddTeeTimeRequestDialog', () => {
     fireEvent.change(teeTimeInput, { target: { value: '13:54' } });
 
     // Submit the form to trigger validation
-    const submitButton = screen.getByRole('button', { name: 'Add Request' });
+    const submitButton = screen.getByRole('button', { name: 'Add Opening' });
     fireEvent.click(submitButton);
 
     // Wait for validation error to appear
@@ -155,7 +151,6 @@ describe('AddTeeTimeRequestDialog', () => {
   it('clears error when user changes to a valid time', async () => {
     // Mock getCourseNow to return 14:00 (2:00 PM)
     vi.spyOn(courseTime, 'getCourseNow').mockReturnValue('14:00');
-    vi.spyOn(courseTime, 'getCourseToday').mockReturnValue('2026-03-23');
 
     render(
       <AddTeeTimeRequestDialog
@@ -166,7 +161,7 @@ describe('AddTeeTimeRequestDialog', () => {
     );
 
     const teeTimeInput = screen.getByLabelText('Tee Time');
-    const submitButton = screen.getByRole('button', { name: 'Add Request' });
+    const submitButton = screen.getByRole('button', { name: 'Add Opening' });
 
     // Enter a past tee time and submit
     fireEvent.change(teeTimeInput, { target: { value: '13:00' } });
@@ -189,7 +184,6 @@ describe('AddTeeTimeRequestDialog', () => {
 
   it('shows required error when tee time is empty', async () => {
     vi.spyOn(courseTime, 'getCourseNow').mockReturnValue('14:00');
-    vi.spyOn(courseTime, 'getCourseToday').mockReturnValue('2026-03-23');
 
     render(
       <AddTeeTimeRequestDialog
@@ -200,7 +194,7 @@ describe('AddTeeTimeRequestDialog', () => {
     );
 
     // Try to submit without entering tee time
-    const submitButton = screen.getByRole('button', { name: 'Add Request' });
+    const submitButton = screen.getByRole('button', { name: 'Add Opening' });
     fireEvent.click(submitButton);
 
     // Wait for required error to appear

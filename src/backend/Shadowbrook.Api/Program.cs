@@ -14,15 +14,12 @@ using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseAggregate;
+using Shadowbrook.Domain.CourseWaitlistAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.TeeTimeRequestAggregate;
-using Shadowbrook.Domain.TeeTimeRequestAggregate.Exceptions;
+using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.TenantAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate.Exceptions;
-using Shadowbrook.Domain.WalkUpWaitlistAggregate;
-using Shadowbrook.Domain.WalkUpWaitlistAggregate.Exceptions;
 using Wolverine;
 using Wolverine.EntityFrameworkCore;
 using Wolverine.ErrorHandling;
@@ -131,9 +128,9 @@ builder.Services.AddScoped<ITextMessageService>(sp => sp.GetRequiredService<Data
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<ITenantRepository, TenantRepository>();
 builder.Services.AddScoped<IGolferRepository, GolferRepository>();
-builder.Services.AddScoped<ITeeTimeRequestRepository, TeeTimeRequestRepository>();
-builder.Services.AddScoped<TeeTimeRequestService>();
-builder.Services.AddScoped<IWalkUpWaitlistRepository, WalkUpWaitlistRepository>();
+builder.Services.AddScoped<ICourseWaitlistRepository, CourseWaitlistRepository>();
+builder.Services.AddScoped<ITeeTimeOpeningRepository, TeeTimeOpeningRepository>();
+builder.Services.AddScoped<Shadowbrook.Domain.WaitlistServices.WaitlistMatchingService>();
 builder.Services.AddScoped<IWaitlistOfferRepository, WaitlistOfferRepository>();
 builder.Services.AddScoped<IGolferWaitlistEntryRepository, GolferWaitlistEntryRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
@@ -151,7 +148,7 @@ if (!app.Environment.IsProduction())
     app.MapOpenApi();
 }
 
-if (app.Environment.EnvironmentName != "Testing")
+if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testing")
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -159,25 +156,7 @@ if (app.Environment.EnvironmentName != "Testing")
     db.Database.Migrate();
 }
 
-app.UseExceptionHandler(error => error.Run(async context =>
-{
-    var ex = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
-    if (ex is DomainException domainEx)
-    {
-        context.Response.StatusCode = domainEx switch
-        {
-            DuplicateTeeTimeRequestException => StatusCodes.Status409Conflict,
-            GolferAlreadyOnWaitlistException => StatusCodes.Status409Conflict,
-            WaitlistAlreadyExistsException => StatusCodes.Status409Conflict,
-            WaitlistNotClosedException => StatusCodes.Status409Conflict,
-            OfferNotPendingException => StatusCodes.Status409Conflict,
-            TeeTimePastException => StatusCodes.Status422UnprocessableEntity,
-            _ => StatusCodes.Status400BadRequest
-        };
-        await context.Response.WriteAsJsonAsync(new { error = domainEx.Message });
-    }
-
-}));
+app.UseDomainExceptionHandler();
 
 app.UseCors();
 app.UseMiddleware<TenantClaimMiddleware>();

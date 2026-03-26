@@ -1,18 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
-using Shadowbrook.Api.Features.WaitlistOffers;
-using Shadowbrook.Api.Features.WalkUpWaitlist;
+using Shadowbrook.Api.Features.Bookings;
+using Shadowbrook.Api.Features.Bookings.Policies;
+using Shadowbrook.Api.Features.Waitlist;
+using Shadowbrook.Api.Features.Waitlist.Policies;
 using Shadowbrook.Api.Infrastructure.Dev;
 using Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
 using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseAggregate;
+using Shadowbrook.Domain.CourseWaitlistAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.TeeTimeRequestAggregate;
+using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.TenantAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
-using Shadowbrook.Domain.WalkUpWaitlistAggregate;
 
 namespace Shadowbrook.Api.Infrastructure.Data;
 
@@ -28,14 +30,15 @@ public class ApplicationDbContext(
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<Booking> Bookings => Set<Booking>();
-    public DbSet<WalkUpWaitlist> WalkUpWaitlists => Set<WalkUpWaitlist>();
-    public DbSet<TeeTimeRequest> TeeTimeRequests => Set<TeeTimeRequest>();
-    public DbSet<TeeTimeSlotFill> TeeTimeSlotFills => Set<TeeTimeSlotFill>();
+    public DbSet<CourseWaitlist> CourseWaitlists => Set<CourseWaitlist>();
+    public DbSet<TeeTimeOpening> TeeTimeOpenings => Set<TeeTimeOpening>();
     public DbSet<Golfer> Golfers => Set<Golfer>();
     public DbSet<GolferWaitlistEntry> GolferWaitlistEntries => Set<GolferWaitlistEntry>();
     public DbSet<WaitlistOffer> WaitlistOffers => Set<WaitlistOffer>();
-    public DbSet<TeeTimeOfferPolicy> TeeTimeOfferPolicies => Set<TeeTimeOfferPolicy>();
-    public DbSet<TeeTimeRequestExpirationPolicy> TeeTimeRequestExpirationPolicies => Set<TeeTimeRequestExpirationPolicy>();
+    public DbSet<TeeTimeOpeningExpirationPolicy> TeeTimeOpeningExpirationPolicies => Set<TeeTimeOpeningExpirationPolicy>();
+    public DbSet<TeeTimeOpeningOfferPolicy> TeeTimeOpeningOfferPolicies => Set<TeeTimeOpeningOfferPolicy>();
+    public DbSet<WaitlistOfferResponsePolicy> WaitlistOfferResponsePolicies => Set<WaitlistOfferResponsePolicy>();
+    public DbSet<BookingConfirmationPolicy> BookingConfirmationPolicies => Set<BookingConfirmationPolicy>();
     public DbSet<DevSmsMessage> DevSmsMessages => Set<DevSmsMessage>();
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -78,13 +81,16 @@ public class ApplicationDbContext(
         modelBuilder.ApplyConfiguration(new CourseConfiguration());
         modelBuilder.ApplyConfiguration(new TenantConfiguration());
         modelBuilder.ApplyConfiguration(new BookingConfiguration());
+        modelBuilder.ApplyConfiguration(new CourseWaitlistConfiguration());
         modelBuilder.ApplyConfiguration(new WalkUpWaitlistConfiguration());
-        modelBuilder.ApplyConfiguration(new TeeTimeRequestConfiguration());
+        modelBuilder.ApplyConfiguration(new OnlineWaitlistConfiguration());
+        modelBuilder.ApplyConfiguration(new TeeTimeOpeningConfiguration());
         modelBuilder.ApplyConfiguration(new GolferConfiguration());
         modelBuilder.ApplyConfiguration(new GolferWaitlistEntryConfiguration());
         modelBuilder.ApplyConfiguration(new WaitlistOfferConfiguration());
-        modelBuilder.ApplyConfiguration(new TeeTimeSlotFillConfiguration());
-        modelBuilder.ApplyConfiguration(new TeeTimeOfferPolicyConfiguration());
-        modelBuilder.ApplyConfiguration(new TeeTimeRequestExpirationPolicyConfiguration());
+        modelBuilder.ApplyConfiguration(new TeeTimeOpeningExpirationPolicyConfiguration());
+        modelBuilder.ApplyConfiguration(new TeeTimeOpeningOfferPolicyConfiguration());
+        modelBuilder.ApplyConfiguration(new WaitlistOfferResponsePolicyConfiguration());
+        modelBuilder.ApplyConfiguration(new BookingConfirmationPolicyConfiguration());
     }
 }
