@@ -24,14 +24,6 @@ public static class FindAndOfferEligibleGolfersHandler
             ?? throw new InvalidOperationException(
                 $"TeeTimeOpening {command.OpeningId} not found for command {nameof(FindAndOfferEligibleGolfers)}.");
 
-        if (opening.Status != TeeTimeOpeningStatus.Open)
-        {
-            logger.LogWarning(
-                "TeeTimeOpening {OpeningId} is {Status}, not open — skipping offer dispatch",
-                command.OpeningId, opening.Status);
-            return;
-        }
-
         var eligibleEntries = await matchingService.FindEligibleEntriesAsync(opening, ct);
 
         var offersToCreate = Math.Min(eligibleEntries.Count, command.MaxOffers);
