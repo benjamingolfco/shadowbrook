@@ -19,6 +19,7 @@ public class WaitlistOfferAcceptedRemoveFromWaitlistHandlerTests
     public WaitlistOfferAcceptedRemoveFromWaitlistHandlerTests()
     {
         this.timeProvider.GetCurrentTimestamp().Returns(DateTimeOffset.UtcNow);
+        this.timeProvider.GetCurrentTimeByTimeZone(Arg.Any<string>()).Returns(new TimeOnly(10, 0));
         this.shortCodeGen.GenerateAsync(Arg.Any<DateOnly>()).Returns("1234");
     }
 
@@ -28,7 +29,7 @@ public class WaitlistOfferAcceptedRemoveFromWaitlistHandlerTests
             Guid.NewGuid(), new DateOnly(2026, 3, 25), this.shortCodeGen, this.waitlistRepo, this.timeProvider);
         this.entryRepo.GetActiveByWaitlistAndGolferAsync(Arg.Any<Guid>(), Arg.Any<Guid>())
             .Returns((GolferWaitlistEntry?)null);
-        return await waitlist.Join(golfer, this.entryRepo, this.timeProvider, groupSize);
+        return await waitlist.Join(golfer, this.entryRepo, this.timeProvider, "UTC", groupSize);
     }
 
     [Fact]

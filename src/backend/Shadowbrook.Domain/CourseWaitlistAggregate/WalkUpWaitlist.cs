@@ -44,7 +44,7 @@ public class WalkUpWaitlist : CourseWaitlist
     }
 
     public async Task<WalkUpGolferWaitlistEntry> Join(
-        Golfer golfer, IGolferWaitlistEntryRepository entryRepository, ITimeProvider timeProvider, int groupSize = 1)
+        Golfer golfer, IGolferWaitlistEntryRepository entryRepository, ITimeProvider timeProvider, string courseTimeZoneId, int groupSize = 1)
     {
         if (Status != WaitlistStatus.Open)
         {
@@ -57,10 +57,10 @@ public class WalkUpWaitlist : CourseWaitlist
             throw new GolferAlreadyOnWaitlistException(golfer.Phone);
         }
 
-        // Note: TimeOnly wraps at midnight. If a golfer joins near midnight UTC,
+        // Note: TimeOnly wraps at midnight. If a golfer joins near midnight in the course's timezone,
         // WindowEnd could be earlier than WindowStart (e.g., 23:45 -> 00:15).
         // The repository query must handle this wrap-around case.
-        var windowStart = timeProvider.GetCurrentTime();
+        var windowStart = timeProvider.GetCurrentTimeByTimeZone(courseTimeZoneId);
         var windowEnd = windowStart.Add(TimeSpan.FromMinutes(30));
         var now = timeProvider.GetCurrentTimestamp();
 

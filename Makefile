@@ -1,4 +1,4 @@
-.PHONY: help dev db api web build test lint clean down logs
+.PHONY: help dev db api web build test lint e2e clean down logs
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -28,6 +28,9 @@ test: ## Run all backend tests
 
 lint: ## Lint the frontend
 	pnpm --dir src/web lint
+
+e2e: ## Run Playwright e2e tests
+	pnpm --dir src/web e2e
 
 clean: ## Clean build artifacts
 	dotnet clean shadowbrook.slnx

@@ -25,6 +25,7 @@ public class FindAndOfferEligibleGolfersHandlerTests
     {
         this.timeProvider.GetCurrentTimestamp().Returns(DateTimeOffset.UtcNow);
         this.timeProvider.GetCurrentTime().Returns(new TimeOnly(14, 15));
+        this.timeProvider.GetCurrentTimeByTimeZone(Arg.Any<string>()).Returns(new TimeOnly(14, 15));
         this.shortCodeGen.GenerateAsync(Arg.Any<DateOnly>()).Returns("1234");
         this.matchingService = new WaitlistMatchingService(this.entryRepo);
     }
@@ -35,7 +36,7 @@ public class FindAndOfferEligibleGolfersHandlerTests
             Guid.NewGuid(), new DateOnly(2026, 3, 25), this.shortCodeGen, this.waitlistRepo, this.timeProvider);
         this.entryRepo.GetActiveByWaitlistAndGolferAsync(Arg.Any<Guid>(), Arg.Any<Guid>())
             .Returns((GolferWaitlistEntry?)null);
-        return await waitlist.Join(golfer, this.entryRepo, this.timeProvider, groupSize);
+        return await waitlist.Join(golfer, this.entryRepo, this.timeProvider, "UTC", groupSize);
     }
 
     [Fact]

@@ -22,6 +22,7 @@ public class WalkUpWaitlistTests
             .Returns((GolferWaitlistEntry?)null);
         this.timeProvider.GetCurrentTimestamp().Returns(new DateTimeOffset(2026, 3, 25, 10, 0, 0, TimeSpan.Zero));
         this.timeProvider.GetCurrentTime().Returns(new TimeOnly(10, 0));
+        this.timeProvider.GetCurrentTimeByTimeZone(Arg.Any<string>()).Returns(new TimeOnly(10, 0));
         this.timeProvider.GetCurrentDate().Returns(new DateOnly(2026, 3, 25));
     }
 
@@ -126,7 +127,7 @@ public class WalkUpWaitlistTests
         var waitlist = await CreateOpenWaitlistAsync();
         var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
 
-        var entry = await waitlist.Join(golfer, this.entryRepository, this.timeProvider, groupSize: 2);
+        var entry = await waitlist.Join(golfer, this.entryRepository, this.timeProvider, "UTC", groupSize: 2);
 
         var walkUpEntry = Assert.IsType<WalkUpGolferWaitlistEntry>(entry);
         Assert.NotEqual(Guid.Empty, walkUpEntry.Id);
@@ -139,12 +140,28 @@ public class WalkUpWaitlistTests
     }
 
     [Fact]
+    public async Task Join_UsesCourseTzForWindow()
+    {
+        // UTC is 10:00, but America/Chicago is 04:00 (UTC-6 in March)
+        this.timeProvider.GetCurrentTimeByTimeZone("America/Chicago").Returns(new TimeOnly(4, 0));
+
+        var waitlist = await CreateOpenWaitlistAsync();
+        var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
+
+        var entry = await waitlist.Join(golfer, this.entryRepository, this.timeProvider, "America/Chicago");
+
+        var walkUpEntry = Assert.IsType<WalkUpGolferWaitlistEntry>(entry);
+        Assert.Equal(new TimeOnly(4, 0), walkUpEntry.WindowStart);
+        Assert.Equal(new TimeOnly(4, 30), walkUpEntry.WindowEnd);
+    }
+
+    [Fact]
     public async Task Join_WhenOpen_RaisesGolferJoinedWaitlist()
     {
         var waitlist = await CreateOpenWaitlistAsync();
         var golfer = Golfer.Create("+15559990000", "Test", "Golfer");
 
-        var entry = await waitlist.Join(golfer, this.entryRepository, this.timeProvider);
+        var entry = await waitlist.Join(golfer, this.entryRepository, this.timeProvider, "UTC");
 
         var evt = Assert.Single(
             waitlist.DomainEvents.OfType<GolferJoinedWaitlist>(),
@@ -161,7 +178,7 @@ public class WalkUpWaitlistTests
         var golfer = Golfer.Create("+15551111111", "Joe", "Bloggs");
 
         await Assert.ThrowsAsync<WaitlistNotOpenException>(
-            () => waitlist.Join(golfer, this.entryRepository, this.timeProvider));
+            () => waitlist.Join(golfer, this.entryRepository, this.timeProvider, "UTC"));
     }
 
     [Fact]
@@ -171,12 +188,12 @@ public class WalkUpWaitlistTests
         var golfer = Golfer.Create("+15552222222", "Dup", "Golfer");
 
         // First call succeeds; stub returns an existing entry on subsequent lookups
-        var firstEntry = await waitlist.Join(golfer, this.entryRepository, this.timeProvider);
+        var firstEntry = await waitlist.Join(golfer, this.entryRepository, this.timeProvider, "UTC");
         this.entryRepository.GetActiveByWaitlistAndGolferAsync(waitlist.Id, golfer.Id)
             .Returns(firstEntry);
 
         await Assert.ThrowsAsync<GolferAlreadyOnWaitlistException>(
-            () => waitlist.Join(golfer, this.entryRepository, this.timeProvider));
+            () => waitlist.Join(golfer, this.entryRepository, this.timeProvider, "UTC"));
     }
 
     private async Task<WalkUpWaitlist> CreateOpenWaitlistAsync()

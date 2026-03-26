@@ -103,7 +103,13 @@ public static class WalkUpJoinEndpoints
             }
         }
 
-        var entry = await waitlist.Join(golfer, entryRepo, timeProvider);
+        var courseTimeZoneId = await db.Courses
+            .IgnoreQueryFilters()
+            .Where(c => c.Id == waitlist.CourseId)
+            .Select(c => c.TimeZoneId)
+            .FirstAsync();
+
+        var entry = await waitlist.Join(golfer, entryRepo, timeProvider, courseTimeZoneId);
         entryRepo.Add(entry);
 
         // Intentional mid-flow save: position query reads from DB,

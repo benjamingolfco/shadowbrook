@@ -156,6 +156,18 @@ if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testi
     db.Database.Migrate();
 }
 
+if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testing")
+{
+    try
+    {
+        await E2ESeedData.EnsureAsync(app.Services);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "E2E seed data failed, continuing startup");
+    }
+}
+
 app.UseDomainExceptionHandler();
 
 app.UseCors();
