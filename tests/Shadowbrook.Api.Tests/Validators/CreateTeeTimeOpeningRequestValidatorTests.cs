@@ -2,17 +2,17 @@ using Shadowbrook.Api.Features.Waitlist.Endpoints;
 
 namespace Shadowbrook.Api.Tests.Validators;
 
-public class CreateOpeningRequestValidatorTests
+public class CreateTeeTimeOpeningRequestValidatorTests
 {
-    private readonly CreateOpeningRequestValidator validator = new();
+    private readonly CreateTeeTimeOpeningRequestValidator validator = new();
 
     [Fact]
     public void ValidRequest_Passes() =>
-        Assert.True(this.validator.Validate(new CreateOpeningRequest("09:00", 2)).IsValid);
+        Assert.True(this.validator.Validate(new CreateTeeTimeOpeningRequest("09:00", 2)).IsValid);
 
     [Fact]
     public void ValidRequest_WithSeconds_Passes() =>
-        Assert.True(this.validator.Validate(new CreateOpeningRequest("09:00:00", 2)).IsValid);
+        Assert.True(this.validator.Validate(new CreateTeeTimeOpeningRequest("09:00:00", 2)).IsValid);
 
     [Theory]
     [InlineData("")]
@@ -20,7 +20,7 @@ public class CreateOpeningRequestValidatorTests
     [InlineData("25:00")]
     public void InvalidTeeTime_Fails(string teeTime)
     {
-        var result = this.validator.Validate(new CreateOpeningRequest(teeTime, 2));
+        var result = this.validator.Validate(new CreateTeeTimeOpeningRequest(teeTime, 2));
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, e => e.PropertyName == "TeeTime");
     }
@@ -31,7 +31,7 @@ public class CreateOpeningRequestValidatorTests
     [InlineData(-1)]
     public void InvalidSlotsAvailable_Fails(int slots)
     {
-        var result = this.validator.Validate(new CreateOpeningRequest("09:00", slots));
+        var result = this.validator.Validate(new CreateTeeTimeOpeningRequest("09:00", slots));
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, e => e.PropertyName == "SlotsAvailable");
     }

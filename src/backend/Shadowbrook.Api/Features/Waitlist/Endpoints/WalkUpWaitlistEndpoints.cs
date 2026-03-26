@@ -114,10 +114,10 @@ public static class WalkUpWaitlistEndpoints
         return Results.Ok(new WalkUpWaitlistTodayResponse(waitlistResponse, entries, openings));
     }
 
-    [WolverinePost("/courses/{courseId}/walkup-waitlist/openings")]
+    [WolverinePost("/courses/{courseId}/tee-time-openings")]
     public static async Task<IResult> CreateOpening(
         Guid courseId,
-        CreateOpeningRequest request,
+        CreateTeeTimeOpeningRequest request,
         ApplicationDbContext db,
         ITeeTimeOpeningRepository openingRepo,
         ITimeProvider timeProvider,
@@ -131,7 +131,7 @@ public static class WalkUpWaitlistEndpoints
         openingRepo.Add(opening);
 
         return Results.Created(
-            $"/courses/{courseId}/walkup-waitlist/openings/{opening.Id}",
+            $"/courses/{courseId}/tee-time-openings/{opening.Id}",
             new WalkUpWaitlistOpeningResponse(opening.Id, opening.TeeTime.Time.ToString("HH:mm"), opening.SlotsAvailable, opening.SlotsRemaining, opening.Status.ToString()));
     }
 
@@ -248,11 +248,11 @@ public record AddGolferToWaitlistResponse(
     int Position,
     string CourseName);
 
-public record CreateOpeningRequest(string TeeTime, int SlotsAvailable);
+public record CreateTeeTimeOpeningRequest(string TeeTime, int SlotsAvailable);
 
-public class CreateOpeningRequestValidator : AbstractValidator<CreateOpeningRequest>
+public class CreateTeeTimeOpeningRequestValidator : AbstractValidator<CreateTeeTimeOpeningRequest>
 {
-    public CreateOpeningRequestValidator()
+    public CreateTeeTimeOpeningRequestValidator()
     {
         RuleFor(x => x.TeeTime)
             .NotEmpty().WithMessage("Tee time is required.")
