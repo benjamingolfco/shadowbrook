@@ -1,1 +1,0 @@
-- [Opening Cancel Pattern](project_opening-cancel-pattern.md) -- #262 uses throw-on-invalid for operator actions vs silent no-op for system processes
