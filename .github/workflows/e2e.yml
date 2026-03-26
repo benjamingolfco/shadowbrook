@@ -7,8 +7,8 @@ on:
     types: [completed]
 
 env:
-  E2E_BASE_URL: https://test.shadowbrook.golf
-  E2E_API_URL: https://test-api.shadowbrook.golf
+  E2E_BASE_URL: https://purple-glacier-073a0390f.2.azurestaticapps.net
+  E2E_API_URL: https://purple-glacier-073a0390f.2.azurestaticapps.net
 
 jobs:
   e2e:

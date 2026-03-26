@@ -12,10 +12,10 @@ Tee time booking platform for golf courses.
 4. **Multi-Tenant from Day One** — shared infrastructure, isolated course data and configuration
 5. **Configuration Without Opinions** — sensible defaults, full operator control
 
-## Live Environment (Dev)
+## Test Environment
 
-- **Frontend:** https://purple-glacier-073a0390f.2.azurestaticapps.net
-- **Backend API:** https://shadowbrook-app-dev.blackisland-89946fd2.eastus2.azurecontainerapps.io
+- **URL:** https://purple-glacier-073a0390f.2.azurestaticapps.net
+- **API (direct):** https://shadowbrook-app-test.blackisland-89946fd2.eastus2.azurecontainerapps.io
 
 ## Tech Stack
 
