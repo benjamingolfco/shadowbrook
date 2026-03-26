@@ -81,8 +81,8 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
           name: 'shadowbrook-api'
           image: '${containerRegistryLoginServer}/shadowbrook:${imageTag}'
           resources: {
-            cpu: json('0.25')
-            memory: '0.5Gi'
+            cpu: json('0.5')
+            memory: '1Gi'
           }
           env: [
             {
@@ -108,6 +108,17 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
             {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
               secretRef: 'app-insights-connection-string'
+            }
+            // GC tuning: keep heap within budget and return memory to OS aggressively.
+            // GCHeapHardLimit is set to 640MiB (~60% of the 1Gi container limit),
+            // leaving headroom for native memory, thread stacks, and Wolverine codegen.
+            {
+              name: 'DOTNET_GCConserveMemory'
+              value: '7'
+            }
+            {
+              name: 'DOTNET_GCHeapHardLimit'
+              value: '671088640'
             }
           ]
           probes: [
@@ -150,7 +161,7 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
         }
       ]
       scale: {
-        minReplicas: 0
+        minReplicas: 1
         maxReplicas: 1
         rules: [
           {
