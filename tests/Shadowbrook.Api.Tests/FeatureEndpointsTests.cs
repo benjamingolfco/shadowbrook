@@ -5,6 +5,8 @@ using Shadowbrook.Api.Infrastructure.Services;
 
 namespace Shadowbrook.Api.Tests;
 
+[Collection("Integration")]
+[IntegrationTest]
 public class FeatureEndpointsTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>, IAsyncLifetime
 {
     public Task InitializeAsync() => factory.ResetDatabaseAsync();
