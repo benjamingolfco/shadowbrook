@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Shadowbrook.Api.Features.Waitlist.Handlers;
 using Shadowbrook.Api.Features.Waitlist.Policies;
@@ -25,7 +26,7 @@ public class ExpireTeeTimeOpeningHandlerTests
         opening.ClearDomainEvents();
         this.repository.GetByIdAsync(opening.Id).Returns(opening);
 
-        await ExpireTeeTimeOpeningHandler.Handle(new ExpireTeeTimeOpening(opening.Id), this.repository);
+        await ExpireTeeTimeOpeningHandler.Handle(new ExpireTeeTimeOpening(opening.Id), this.repository, NullLogger.Instance);
 
         Assert.Equal(TeeTimeOpeningStatus.Expired, opening.Status);
         Assert.Contains(opening.DomainEvents, e => e is TeeTimeOpeningExpired);
@@ -36,6 +37,6 @@ public class ExpireTeeTimeOpeningHandlerTests
     {
         this.repository.GetByIdAsync(Arg.Any<Guid>()).Returns((TeeTimeOpening?)null);
 
-        await ExpireTeeTimeOpeningHandler.Handle(new ExpireTeeTimeOpening(Guid.NewGuid()), this.repository);
+        await ExpireTeeTimeOpeningHandler.Handle(new ExpireTeeTimeOpening(Guid.NewGuid()), this.repository, NullLogger.Instance);
     }
 }

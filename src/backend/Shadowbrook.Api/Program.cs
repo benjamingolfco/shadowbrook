@@ -15,13 +15,11 @@ using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseAggregate;
 using Shadowbrook.Domain.CourseWaitlistAggregate;
-using Shadowbrook.Domain.CourseWaitlistAggregate.Exceptions;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.TenantAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate.Exceptions;
 using Wolverine;
 using Wolverine.EntityFrameworkCore;
 using Wolverine.ErrorHandling;
@@ -158,23 +156,7 @@ if (app.Environment.EnvironmentName != "Testing")
     db.Database.Migrate();
 }
 
-app.UseExceptionHandler(error => error.Run(async context =>
-{
-    var ex = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
-    if (ex is DomainException domainEx)
-    {
-        context.Response.StatusCode = domainEx switch
-        {
-            GolferAlreadyOnWaitlistException => StatusCodes.Status409Conflict,
-            WaitlistAlreadyExistsException => StatusCodes.Status409Conflict,
-            WaitlistNotClosedException => StatusCodes.Status409Conflict,
-            OfferNotPendingException => StatusCodes.Status409Conflict,
-            _ => StatusCodes.Status400BadRequest
-        };
-        await context.Response.WriteAsJsonAsync(new { error = domainEx.Message });
-    }
-
-}));
+app.UseDomainExceptionHandler();
 
 app.UseCors();
 app.UseMiddleware<TenantClaimMiddleware>();

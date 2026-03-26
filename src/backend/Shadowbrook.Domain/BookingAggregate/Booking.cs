@@ -1,4 +1,5 @@
 using Shadowbrook.Domain.BookingAggregate.Events;
+using Shadowbrook.Domain.BookingAggregate.Exceptions;
 using Shadowbrook.Domain.Common;
 
 namespace Shadowbrook.Domain.BookingAggregate;
@@ -59,7 +60,7 @@ public class Booking : Entity
     {
         if (Status != BookingStatus.Pending)
         {
-            return;
+            throw new BookingNotPendingException(Id, Status);
         }
 
         Status = BookingStatus.Confirmed;
@@ -70,7 +71,7 @@ public class Booking : Entity
     {
         if (Status != BookingStatus.Pending)
         {
-            return;
+            throw new BookingNotPendingException(Id, Status);
         }
 
         Status = BookingStatus.Rejected;

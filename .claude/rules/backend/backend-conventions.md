@@ -27,28 +27,42 @@ The API project uses **feature folders** — endpoints, event handlers, validato
 Shadowbrook.Api/
   Features/
     Tenants/                              ← feature folder
-      TenantEndpoints.cs                  ← endpoints + inline DTOs
+      Endpoints/
+        TenantEndpoints.cs
     Courses/
-      CourseEndpoints.cs
-    WalkUpWaitlist/
-      WalkUpWaitlistEndpoints.cs          ← endpoints
-      WalkUpJoinEndpoints.cs
-      GolferJoinedWaitlistSmsHandler.cs   ← event handler co-located with consumer
-      BookingCreatedRemoveFromWaitlistHandler.cs  ← reacts to BookingCreated, modifies waitlist
-    WaitlistOffers/
-      WaitlistOfferEndpoints.cs
-      WaitlistOfferAcceptedSmsHandler.cs
-      WaitlistOfferRejectedNextOfferHandler.cs
-      WaitlistOfferRejectedSmsHandler.cs
-      TeeTimeSlotFillFailedHandler.cs     ← reacts to TeeTimeSlotFillFailed, modifies offers
-      TeeTimeRequestFulfilledHandler.cs   ← reacts to TeeTimeRequestFulfilled, rejects offers
-      TeeTimeRequestAddedNotifyHandler.cs ← reacts to TeeTimeRequestAdded, creates offers
-    TeeSheet/
-      TeeSheetEndpoints.cs
-      WaitlistOfferAcceptedFillHandler.cs ← reacts to WaitlistOfferAccepted, fills tee time
+      Endpoints/
+        CourseEndpoints.cs
+    Waitlist/                             ← all waitlist concerns in one feature
+      Endpoints/
+        WalkUpWaitlistEndpoints.cs
+        WalkUpJoinEndpoints.cs
+        WalkUpQrEndpoints.cs
+        WaitlistOfferEndpoints.cs
+      Handlers/                           ← grouped by triggering event/command
+        BookingCreated/
+          ClaimHandler.cs                 ← calls opening.Claim()
+          RemoveFromWaitlistHandler.cs
+        GolferJoinedWaitlist/
+          SmsHandler.cs
+          WakeUpOfferPolicyHandler.cs
+        TeeTimeOpeningFilled/
+          RejectOffersHandler.cs
+        WaitlistOfferAccepted/
+          SmsHandler.cs
+        WaitlistOfferRejected/
+          SmsHandler.cs
+      Policies/                           ← Wolverine sagas
+        TeeTimeOpeningExpirationPolicy.cs
+        TeeTimeOpeningOfferPolicy.cs
+        WaitlistOfferResponsePolicy.cs
     Bookings/
-      TeeTimeSlotFilledBookingHandler.cs
-      BookingCreatedConfirmationSmsHandler.cs
+      Handlers/
+        WaitlistOfferAccepted/
+          CreateBookingHandler.cs
+        ConfirmBooking/
+          Handler.cs
+      Policies/
+        BookingConfirmationPolicy.cs
   Infrastructure/                         ← shared horizontal concerns
     Data/ApplicationDbContext.cs
     Middleware/                            ← shared Wolverine Before middleware
@@ -60,8 +74,9 @@ Shadowbrook.Api/
 ```
 
 **Rules:**
-- New endpoints and handlers go in `Features/{FeatureName}/`
-- Place a handler in the feature that **consumes** the event — the feature whose state or concern the handler modifies (e.g., `BookingCreatedRemoveFromWaitlistHandler` lives in `WalkUpWaitlist/` because it modifies waitlist state, even though it reacts to `BookingCreated`)
+- Each feature folder has three subfolders: `Endpoints/`, `Handlers/`, `Policies/`
+- Handlers are grouped by the event/command they handle (subfolder per event)
+- Place a handler in the feature that **consumes** the event — the feature whose state or concern the handler modifies (e.g., `BookingCreated/ClaimHandler` lives in `Waitlist/` because it modifies opening state, even though it reacts to `BookingCreated`)
 - Shared infrastructure (DbContext, repositories, EF configs, services) stays in `Infrastructure/`
 - Domain model stays in `Shadowbrook.Domain/` — feature folders are API-layer only
 
@@ -136,6 +151,24 @@ The project uses [WolverineFx](https://wolverinefx.net) for message handling. Se
 - Handlers that need to publish follow-on events inject `IMessageBus` and call `bus.PublishAsync()`
 - `MultipleHandlerBehavior.Separated` — multiple handlers for the same event type run independently
 
+**No silent returns — hard rule:**
+- Every early return in a handler MUST log a warning with structured logging before returning. Silent failures in event handlers are invisible in production and extremely hard to debug.
+- Use `ILogger logger` as a parameter (Wolverine injects it). Use `LogWarning` with `{PropertyName}` placeholders.
+- Domain aggregates that are intentionally idempotent (e.g., `Expire()`, `Remove()`, `Reject()`) may use silent returns — but domain methods that should never be called in an invalid state must throw exceptions.
+
+```csharp
+// GOOD — handler logs before early return
+var opening = await repo.GetByIdAsync(evt.OpeningId);
+if (opening is null)
+{
+    logger.LogWarning("Opening {OpeningId} not found, skipping", evt.OpeningId);
+    return;
+}
+
+// BAD — silent swallow
+if (opening is null) { return; }
+```
+
 ### Policies (Wolverine Sagas)
 
 Use Wolverine's `Saga` base class for stateful, long-running processes — but call them **policies**, not sagas. "Policy" communicates business intent (e.g., `TeeTimeOfferPolicy` governs how offers are sequenced). Name classes `*Policy` and place them in feature folders using the consumer rule.
@@ -167,7 +200,8 @@ For operations spanning multiple aggregates, use sequential event chains instead
 ### Domain Exceptions
 
 - `DomainException` subclasses break control flow for true invariant violations
-- The global exception handler in `Program.cs` maps them to HTTP status codes
+- **Always use `DomainException` subclasses** — never throw `InvalidOperationException` from domain code. Every domain invariant violation gets its own exception class in `{Aggregate}/Exceptions/`.
+- The global exception handler in `Program.cs` maps them to HTTP status codes — new exception types must be added there
 - Do NOT catch `DomainException` in endpoints — let them propagate
 
 ### Repositories

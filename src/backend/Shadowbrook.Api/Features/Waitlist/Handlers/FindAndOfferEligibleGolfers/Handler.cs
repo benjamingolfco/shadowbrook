@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Shadowbrook.Api.Features.Waitlist.Policies;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseAggregate;
@@ -22,11 +23,13 @@ public static class FindAndOfferEligibleGolfersHandler
         ITextMessageService textMessageService,
         ITimeProvider timeProvider,
         IConfiguration configuration,
+        ILogger logger,
         CancellationToken ct)
     {
         var opening = await openingRepository.GetByIdAsync(command.OpeningId);
         if (opening is null || opening.Status != TeeTimeOpeningStatus.Open)
         {
+            logger.LogWarning("TeeTimeOpening {OpeningId} not found or not open, skipping offer dispatch", command.OpeningId);
             return;
         }
 
@@ -35,6 +38,7 @@ public static class FindAndOfferEligibleGolfersHandler
         var offersToCreate = Math.Min(eligibleEntries.Count, command.MaxOffers);
         if (offersToCreate == 0)
         {
+            logger.LogWarning("No eligible golfers found for opening {OpeningId}, skipping offer dispatch", command.OpeningId);
             return;
         }
 
@@ -59,6 +63,7 @@ public static class FindAndOfferEligibleGolfersHandler
             var golfer = await golferRepository.GetByIdAsync(entry.GolferId);
             if (golfer is null)
             {
+                logger.LogWarning("Golfer {GolferId} not found for waitlist entry {EntryId}, skipping SMS for offer {OfferId}", entry.GolferId, entry.Id, offer.Id);
                 continue;
             }
 

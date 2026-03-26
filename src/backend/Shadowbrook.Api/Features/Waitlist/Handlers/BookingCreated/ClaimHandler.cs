@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Shadowbrook.Domain.BookingAggregate.Events;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
@@ -9,7 +10,8 @@ public static class BookingCreatedClaimHandler
     public static async Task Handle(
         BookingCreated evt,
         ITeeTimeOpeningRepository openingRepository,
-        ITimeProvider timeProvider)
+        ITimeProvider timeProvider,
+        ILogger logger)
     {
         if (evt.OpeningId is null)
         {
@@ -19,6 +21,7 @@ public static class BookingCreatedClaimHandler
         var opening = await openingRepository.GetByIdAsync(evt.OpeningId.Value);
         if (opening is null)
         {
+            logger.LogWarning("TeeTimeOpening {OpeningId} not found, skipping claim for booking {BookingId}", evt.OpeningId.Value, evt.BookingId);
             return;
         }
 

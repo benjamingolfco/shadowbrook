@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.BookingAggregate.Events;
@@ -15,11 +16,13 @@ public static class BookingCreatedConfirmationSmsHandler
         IBookingRepository bookingRepository,
         ApplicationDbContext db,
         ITextMessageService textMessageService,
+        ILogger logger,
         CancellationToken ct)
     {
         var golfer = await golferRepository.GetByIdAsync(domainEvent.GolferId);
         if (golfer is null)
         {
+            logger.LogWarning("Golfer {GolferId} not found, skipping booking confirmation SMS for booking {BookingId}", domainEvent.GolferId, domainEvent.BookingId);
             return;
         }
 
@@ -31,12 +34,14 @@ public static class BookingCreatedConfirmationSmsHandler
 
         if (courseName is null)
         {
+            logger.LogWarning("Course {CourseId} not found, skipping booking confirmation SMS for booking {BookingId}", domainEvent.CourseId, domainEvent.BookingId);
             return;
         }
 
         var booking = await bookingRepository.GetByIdAsync(domainEvent.BookingId);
         if (booking is null)
         {
+            logger.LogWarning("Booking {BookingId} not found, skipping confirmation SMS", domainEvent.BookingId);
             return;
         }
 

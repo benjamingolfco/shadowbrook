@@ -1,5 +1,5 @@
-using Shadowbrook.Api.Features.Waitlist.Handlers;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Shadowbrook.Api.Features.Waitlist.Handlers;
 using Shadowbrook.Domain.Common;
@@ -55,7 +55,7 @@ public class FindAndOfferEligibleGolfersHandlerTests
         await FindAndOfferEligibleGolfersHandler.Handle(
             new FindAndOfferEligibleGolfers(Guid.NewGuid(), 3),
             this.openingRepo, this.matchingService, this.offerRepo, this.golferRepo,
-            this.courseRepo, this.sms, this.timeProvider, this.config, CancellationToken.None);
+            this.courseRepo, this.sms, this.timeProvider, this.config, NullLogger.Instance, CancellationToken.None);
 
         this.offerRepo.DidNotReceive().Add(Arg.Any<WaitlistOffer>());
     }
@@ -73,7 +73,7 @@ public class FindAndOfferEligibleGolfersHandlerTests
         await FindAndOfferEligibleGolfersHandler.Handle(
             new FindAndOfferEligibleGolfers(opening.Id, 3),
             this.openingRepo, this.matchingService, this.offerRepo, this.golferRepo,
-            this.courseRepo, this.sms, this.timeProvider, this.config, CancellationToken.None);
+            this.courseRepo, this.sms, this.timeProvider, this.config, NullLogger.Instance, CancellationToken.None);
 
         this.offerRepo.DidNotReceive().Add(Arg.Any<WaitlistOffer>());
     }
@@ -100,7 +100,7 @@ public class FindAndOfferEligibleGolfersHandlerTests
         await FindAndOfferEligibleGolfersHandler.Handle(
             new FindAndOfferEligibleGolfers(opening.Id, 3),
             this.openingRepo, this.matchingService, this.offerRepo, this.golferRepo,
-            this.courseRepo, this.sms, this.timeProvider, this.config, CancellationToken.None);
+            this.courseRepo, this.sms, this.timeProvider, this.config, NullLogger.Instance, CancellationToken.None);
 
         this.offerRepo.Received(1).Add(Arg.Any<WaitlistOffer>());
         await this.sms.Received(1).SendAsync(

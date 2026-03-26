@@ -1,5 +1,6 @@
-using Shadowbrook.Api.Features.Waitlist.Policies;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Shadowbrook.Api.Features.Waitlist.Policies;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.CourseWaitlistAggregate.Events;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
@@ -10,7 +11,8 @@ public static class GolferJoinedWaitlistWakeUpHandler
 {
     public static async Task<WakeUpOfferPolicy?> Handle(
         GolferJoinedWaitlist evt,
-        ApplicationDbContext db)
+        ApplicationDbContext db,
+        ILogger logger)
     {
         // Find the waitlist to get courseId and date
         var waitlist = await db.CourseWaitlists
@@ -19,6 +21,7 @@ public static class GolferJoinedWaitlistWakeUpHandler
 
         if (waitlist is null)
         {
+            logger.LogWarning("CourseWaitlist {CourseWaitlistId} not found, skipping offer policy wake-up", evt.CourseWaitlistId);
             return null;
         }
 

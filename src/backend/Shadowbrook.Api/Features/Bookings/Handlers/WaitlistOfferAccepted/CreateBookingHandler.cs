@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
@@ -13,17 +14,20 @@ public static class WaitlistOfferAcceptedCreateBookingHandler
         ITeeTimeOpeningRepository openingRepository,
         IGolferRepository golferRepository,
         IGolferWaitlistEntryRepository entryRepository,
-        IBookingRepository bookingRepository)
+        IBookingRepository bookingRepository,
+        ILogger logger)
     {
         var opening = await openingRepository.GetByIdAsync(evt.OpeningId);
         if (opening is null)
         {
+            logger.LogWarning("TeeTimeOpening {OpeningId} not found, skipping booking creation for offer {OfferId}", evt.OpeningId, evt.WaitlistOfferId);
             return;
         }
 
         var golfer = await golferRepository.GetByIdAsync(evt.GolferId);
         if (golfer is null)
         {
+            logger.LogWarning("Golfer {GolferId} not found, skipping booking creation for offer {OfferId}", evt.GolferId, evt.WaitlistOfferId);
             return;
         }
 

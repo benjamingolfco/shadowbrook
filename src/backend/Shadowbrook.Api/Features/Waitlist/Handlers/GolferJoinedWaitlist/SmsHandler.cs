@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseWaitlistAggregate.Events;
@@ -15,17 +16,20 @@ public static class GolferJoinedWaitlistSmsHandler
         IGolferRepository golferRepository,
         IGolferWaitlistEntryRepository entryRepository,
         ApplicationDbContext db,
+        ILogger logger,
         CancellationToken ct)
     {
         var entry = await entryRepository.GetByIdAsync(domainEvent.GolferWaitlistEntryId);
         if (entry is null)
         {
+            logger.LogWarning("GolferWaitlistEntry {EntryId} not found, skipping join SMS", domainEvent.GolferWaitlistEntryId);
             return;
         }
 
         var golfer = await golferRepository.GetByIdAsync(entry.GolferId);
         if (golfer is null)
         {
+            logger.LogWarning("Golfer {GolferId} not found for waitlist entry {EntryId}, skipping join SMS", entry.GolferId, entry.Id);
             return;
         }
 
@@ -37,6 +41,7 @@ public static class GolferJoinedWaitlistSmsHandler
 
         if (courseName is null)
         {
+            logger.LogWarning("CourseWaitlist {CourseWaitlistId} or its course not found, skipping join SMS for golfer {GolferId}", domainEvent.CourseWaitlistId, entry.GolferId);
             return;
         }
 
