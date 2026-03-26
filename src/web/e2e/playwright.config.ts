@@ -1,5 +1,7 @@
 import { defineConfig } from '@playwright/test';
 
+export const API_BASE_URL = process.env.E2E_API_URL ?? 'https://test-api.shadowbrook.golf';
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
