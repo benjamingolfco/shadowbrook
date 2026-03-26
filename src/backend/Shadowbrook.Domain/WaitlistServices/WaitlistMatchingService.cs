@@ -19,6 +19,7 @@ public class WaitlistMatchingService(IGolferWaitlistEntryRepository entryReposit
             opening.TeeTime.Date,
             opening.TeeTime.Time,
             opening.SlotsRemaining,
+            opening.Id,
             ct);
     }
 }

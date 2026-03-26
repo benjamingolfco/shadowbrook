@@ -49,7 +49,7 @@ public class WaitlistMatchingServiceTests
         var opening = TeeTimeOpening.Create(courseId, date, teeTime, slotsAvailable: 3, operatorOwned: false, timeProvider: this.timeProvider);
 
         this.entryRepository
-            .FindEligibleEntriesAsync(Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<TimeOnly>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .FindEligibleEntriesAsync(Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<TimeOnly>(), Arg.Any<int>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         await this.sut.FindEligibleEntriesAsync(opening);
@@ -59,6 +59,7 @@ public class WaitlistMatchingServiceTests
             Arg.Is(date),
             Arg.Is(teeTime),
             Arg.Is(3),
+            Arg.Is(opening.Id),
             Arg.Any<CancellationToken>());
     }
 
@@ -77,7 +78,7 @@ public class WaitlistMatchingServiceTests
         var expected = new List<GolferWaitlistEntry> { entry };
 
         this.entryRepository
-            .FindEligibleEntriesAsync(Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<TimeOnly>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .FindEligibleEntriesAsync(Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<TimeOnly>(), Arg.Any<int>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var result = await this.sut.FindEligibleEntriesAsync(opening);

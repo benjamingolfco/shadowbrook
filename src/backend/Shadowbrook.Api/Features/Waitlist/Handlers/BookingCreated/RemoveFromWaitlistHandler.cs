@@ -1,18 +1,12 @@
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
 namespace Shadowbrook.Api.Features.Waitlist.Handlers;
 
+// DEPRECATED: Waitlist removal now happens on BookingConfirmed, not WaitlistOfferAccepted
+// This ensures that golfers whose bookings are rejected (claim failed) remain on the waitlist
 public static class WaitlistOfferAcceptedRemoveFromWaitlistHandler
 {
-    public static async Task Handle(
-        WaitlistOfferAccepted evt,
-        IGolferWaitlistEntryRepository entryRepository,
-        ITimeProvider timeProvider)
-    {
-        var entry = await entryRepository.GetRequiredByIdAsync(evt.GolferWaitlistEntryId);
-
-        entry.Remove(timeProvider);
-    }
+    public static Task Handle(WaitlistOfferAccepted evt) =>
+        // No-op: removal moved to BookingConfirmed handler
+        Task.CompletedTask;
 }

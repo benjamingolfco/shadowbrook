@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Shadowbrook.Api.Features.Sms.Handlers;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Services;
+using Wolverine;
 
 namespace Shadowbrook.Api.Features.Dev;
 
@@ -28,9 +30,13 @@ public static class DevSmsEndpoints
             return Results.Ok(messages);
         }).WithSummary("Get conversation thread for a phone number");
 
-        group.MapPost("/inbound", async (InboundSmsRequest request, DatabaseTextMessageService smsService) =>
+        group.MapPost("/inbound", async (
+            InboundSmsRequest request,
+            DatabaseTextMessageService smsService,
+            IMessageBus bus) =>
         {
             await smsService.AddInboundAsync(request.FromPhoneNumber, request.Message);
+            await bus.PublishAsync(new ProcessInboundSms(request.FromPhoneNumber, request.Message));
             return Results.Ok();
         }).WithSummary("Simulate an inbound SMS from a golfer");
 

@@ -7,5 +7,5 @@ public interface IGolferWaitlistEntryRepository
     Task<List<GolferWaitlistEntry>> GetActiveByWaitlistAsync(Guid courseWaitlistId);
     void Add(GolferWaitlistEntry entry);
     Task<List<GolferWaitlistEntry>> FindEligibleEntriesAsync(
-        Guid courseId, DateOnly date, TimeOnly teeTime, int maxGroupSize, CancellationToken ct = default);
+        Guid courseId, DateOnly date, TimeOnly teeTime, int maxGroupSize, Guid openingId, CancellationToken ct = default);
 }

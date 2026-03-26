@@ -23,6 +23,17 @@ public class WaitlistOfferRepository(ApplicationDbContext db) : IWaitlistOfferRe
             .ToListAsync();
     }
 
+    public async Task<WaitlistOffer?> GetMostRecentPendingWalkUpByGolferAsync(Guid golferId)
+    {
+        return await db.WaitlistOffers
+            .IgnoreQueryFilters()
+            .Where(o => o.GolferId == golferId
+                && o.IsWalkUp
+                && o.Status == OfferStatus.Pending)
+            .OrderByDescending(o => o.CreatedAt)
+            .FirstOrDefaultAsync();
+    }
+
     public void Add(WaitlistOffer offer) =>
         db.WaitlistOffers.Add(offer);
 

@@ -24,7 +24,9 @@ public static class FindAndOfferEligibleGolfersHandler
 
         var eligibleEntries = await matchingService.FindEligibleEntriesAsync(opening, ct);
 
-        var offersToCreate = Math.Min(eligibleEntries.Count, command.MaxOffers);
+        var offersToCreate = opening.OperatorOwned
+            ? eligibleEntries.Count  // Broadcast: all eligible golfers for walk-up
+            : Math.Min(eligibleEntries.Count, command.MaxOffers);  // Sequential: limited for online
         if (offersToCreate == 0)
         {
             logger.LogWarning(

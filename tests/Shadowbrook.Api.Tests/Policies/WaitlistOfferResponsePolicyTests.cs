@@ -6,7 +6,7 @@ namespace Shadowbrook.Api.Tests.Policies;
 public class WaitlistOfferResponsePolicyTests
 {
     [Fact]
-    public void Start_WalkUp_SchedulesSixtySecondBuffer()
+    public void Start_WalkUp_ImmediatelyCompletesWithNullTimeout()
     {
         var evt = new WaitlistOfferSent
         {
@@ -22,7 +22,8 @@ public class WaitlistOfferResponsePolicyTests
 
         Assert.Equal(evt.WaitlistOfferId, policy.Id);
         Assert.Equal(evt.OpeningId, policy.OpeningId);
-        Assert.Equal(TimeSpan.FromSeconds(60), timeout.Buffer);
+        Assert.Null(timeout);
+        Assert.True(policy.IsCompleted());
     }
 
     [Fact]
@@ -40,7 +41,8 @@ public class WaitlistOfferResponsePolicyTests
 
         var (_, timeout) = WaitlistOfferResponsePolicy.Start(evt);
 
-        Assert.Equal(TimeSpan.FromMinutes(10), timeout.Buffer);
+        Assert.NotNull(timeout);
+        Assert.Equal(TimeSpan.FromMinutes(10), timeout!.Buffer);
     }
 
     [Fact]

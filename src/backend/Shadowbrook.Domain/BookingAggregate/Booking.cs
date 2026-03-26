@@ -59,7 +59,7 @@ public class Booking : Entity
         }
 
         Status = BookingStatus.Confirmed;
-        AddDomainEvent(new BookingConfirmed { BookingId = Id });
+        AddDomainEvent(new BookingConfirmed { BookingId = Id, GolferId = GolferId });
     }
 
     public void RejectBooking()
@@ -70,6 +70,6 @@ public class Booking : Entity
         }
 
         Status = BookingStatus.Rejected;
-        AddDomainEvent(new BookingRejected { BookingId = Id });
+        AddDomainEvent(new BookingRejected { BookingId = Id, GolferId = GolferId });
     }
 }

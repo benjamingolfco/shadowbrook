@@ -30,7 +30,7 @@ public class GolferWaitlistEntryRepository(ApplicationDbContext db) : IGolferWai
         db.GolferWaitlistEntries.Add(entry);
 
     public async Task<List<GolferWaitlistEntry>> FindEligibleEntriesAsync(
-        Guid courseId, DateOnly date, TimeOnly teeTime, int maxGroupSize, CancellationToken ct = default)
+        Guid courseId, DateOnly date, TimeOnly teeTime, int maxGroupSize, Guid openingId, CancellationToken ct = default)
     {
         return await db.GolferWaitlistEntries
             .Where(e => e.RemovedAt == null)
@@ -39,7 +39,9 @@ public class GolferWaitlistEntryRepository(ApplicationDbContext db) : IGolferWai
             .Where(e => db.CourseWaitlists
                 .Any(w => w.Id == e.CourseWaitlistId && w.CourseId == courseId && w.Date == date))
             .Where(e => !db.WaitlistOffers
-                .Any(o => o.GolferWaitlistEntryId == e.Id && o.Status == OfferStatus.Pending))
+                .Any(o => o.GolferWaitlistEntryId == e.Id
+                    && o.OpeningId == openingId
+                    && (o.Status == OfferStatus.Pending || o.Status == OfferStatus.Accepted)))
             .OrderBy(e => e.JoinedAt)
             .ToListAsync(ct);
     }

@@ -13,7 +13,7 @@ public class WaitlistOfferResponsePolicy : Saga
     public Guid Id { get; set; }
     public Guid OpeningId { get; set; }
 
-    public static (WaitlistOfferResponsePolicy, OfferResponseBufferTimeout) Start(WaitlistOfferSent evt)
+    public static (WaitlistOfferResponsePolicy, OfferResponseBufferTimeout?) Start(WaitlistOfferSent evt)
     {
         var policy = new WaitlistOfferResponsePolicy
         {
@@ -21,7 +21,13 @@ public class WaitlistOfferResponsePolicy : Saga
             OpeningId = evt.OpeningId
         };
 
-        var buffer = evt.IsWalkUp ? WalkUpBuffer : OnlineBuffer;
+        if (evt.IsWalkUp)
+        {
+            policy.MarkCompleted();
+            return (policy, null);
+        }
+
+        var buffer = OnlineBuffer;
         var timeout = new OfferResponseBufferTimeout(buffer);
 
         return (policy, timeout);

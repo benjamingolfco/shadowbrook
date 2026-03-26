@@ -59,7 +59,7 @@ public class FindAndOfferEligibleGolfersHandlerTests
             Guid.NewGuid(), new DateOnly(2026, 3, 25), new TimeOnly(14, 30), 3, true, this.timeProvider);
         this.openingRepo.GetByIdAsync(opening.Id).Returns(opening);
         this.entryRepo.FindEligibleEntriesAsync(
-            Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<TimeOnly>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<TimeOnly>(), Arg.Any<int>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(new List<GolferWaitlistEntry>());
 
         await FindAndOfferEligibleGolfersHandler.Handle(
@@ -80,7 +80,7 @@ public class FindAndOfferEligibleGolfersHandlerTests
         var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
         var entry = await CreateEntryAsync(golfer);
         this.entryRepo.FindEligibleEntriesAsync(
-            Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<TimeOnly>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<TimeOnly>(), Arg.Any<int>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(new List<GolferWaitlistEntry> { entry });
 
         await FindAndOfferEligibleGolfersHandler.Handle(
@@ -94,6 +94,35 @@ public class FindAndOfferEligibleGolfersHandlerTests
     [Fact]
     public async Task Handle_MaxOffersLowerThanEligibleCount_CapsOffersCreated()
     {
+        // Use an ONLINE opening (OperatorOwned = false) to test the cap
+        var opening = TeeTimeOpening.Create(
+            Guid.NewGuid(), new DateOnly(2026, 3, 25), new TimeOnly(14, 30), 3, false, this.timeProvider);
+        this.openingRepo.GetByIdAsync(opening.Id).Returns(opening);
+
+        var golfer1 = Golfer.Create("+15551111111", "Alice", "Smith");
+        var golfer2 = Golfer.Create("+15552222222", "Bob", "Jones");
+        var golfer3 = Golfer.Create("+15553333333", "Carol", "White");
+
+        var entry1 = await CreateEntryAsync(golfer1);
+        var entry2 = await CreateEntryAsync(golfer2);
+        var entry3 = await CreateEntryAsync(golfer3);
+
+        this.entryRepo.FindEligibleEntriesAsync(
+            Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<TimeOnly>(), Arg.Any<int>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(new List<GolferWaitlistEntry> { entry1, entry2, entry3 });
+
+        await FindAndOfferEligibleGolfersHandler.Handle(
+            new FindAndOfferEligibleGolfers(opening.Id, 1),
+            this.openingRepo, this.matchingService, this.offerRepo,
+            this.timeProvider, NullLogger.Instance, CancellationToken.None);
+
+        this.offerRepo.Received(1).Add(Arg.Any<WaitlistOffer>());
+    }
+
+    [Fact]
+    public async Task Handle_WalkUpOpening_CreatesAllOffersIgnoringMaxOffers()
+    {
+        // Create a walk-up opening (OperatorOwned = true)
         var opening = TeeTimeOpening.Create(
             Guid.NewGuid(), new DateOnly(2026, 3, 25), new TimeOnly(14, 30), 3, true, this.timeProvider);
         this.openingRepo.GetByIdAsync(opening.Id).Returns(opening);
@@ -107,9 +136,39 @@ public class FindAndOfferEligibleGolfersHandlerTests
         var entry3 = await CreateEntryAsync(golfer3);
 
         this.entryRepo.FindEligibleEntriesAsync(
-            Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<TimeOnly>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<TimeOnly>(), Arg.Any<int>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(new List<GolferWaitlistEntry> { entry1, entry2, entry3 });
 
+        // MaxOffers is 1, but all 3 should be created for walk-up (broadcast)
+        await FindAndOfferEligibleGolfersHandler.Handle(
+            new FindAndOfferEligibleGolfers(opening.Id, 1),
+            this.openingRepo, this.matchingService, this.offerRepo,
+            this.timeProvider, NullLogger.Instance, CancellationToken.None);
+
+        this.offerRepo.Received(3).Add(Arg.Any<WaitlistOffer>());
+    }
+
+    [Fact]
+    public async Task Handle_OnlineOpening_RespectsMaxOffers()
+    {
+        // Create an online opening (OperatorOwned = false)
+        var opening = TeeTimeOpening.Create(
+            Guid.NewGuid(), new DateOnly(2026, 3, 25), new TimeOnly(14, 30), 3, false, this.timeProvider);
+        this.openingRepo.GetByIdAsync(opening.Id).Returns(opening);
+
+        var golfer1 = Golfer.Create("+15551111111", "Alice", "Smith");
+        var golfer2 = Golfer.Create("+15552222222", "Bob", "Jones");
+        var golfer3 = Golfer.Create("+15553333333", "Carol", "White");
+
+        var entry1 = await CreateEntryAsync(golfer1);
+        var entry2 = await CreateEntryAsync(golfer2);
+        var entry3 = await CreateEntryAsync(golfer3);
+
+        this.entryRepo.FindEligibleEntriesAsync(
+            Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<TimeOnly>(), Arg.Any<int>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(new List<GolferWaitlistEntry> { entry1, entry2, entry3 });
+
+        // MaxOffers is 1, should cap at 1 for online
         await FindAndOfferEligibleGolfersHandler.Handle(
             new FindAndOfferEligibleGolfers(opening.Id, 1),
             this.openingRepo, this.matchingService, this.offerRepo,
