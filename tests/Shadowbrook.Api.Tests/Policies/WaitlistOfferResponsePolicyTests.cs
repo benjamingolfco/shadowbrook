@@ -50,7 +50,7 @@ public class WaitlistOfferResponsePolicyTests
         var openingId = Guid.NewGuid();
         var policy = new WaitlistOfferResponsePolicy { Id = offerId, OpeningId = openingId };
 
-        var command = policy.Handle(new OfferResponseBufferTimeout(offerId, openingId, TimeSpan.FromSeconds(60)));
+        var command = policy.Handle(new OfferResponseBufferTimeout(TimeSpan.FromSeconds(60)));
 
         Assert.IsType<RejectStaleOffer>(command);
         Assert.Equal(offerId, command.WaitlistOfferId);

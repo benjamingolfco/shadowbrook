@@ -25,15 +25,14 @@ public class TeeTimeOpeningExpirationPolicy : Saga
             delay = TimeSpan.Zero;
         }
 
-        var timeout = new TeeTimeOpeningExpirationTimeout(evt.OpeningId, delay);
+        var timeout = new TeeTimeOpeningExpirationTimeout(delay);
         return (policy, timeout);
     }
 
-    public ExpireTeeTimeOpening Handle(
-        [SagaIdentityFrom("OpeningId")] TeeTimeOpeningExpirationTimeout timeout)
+    public ExpireTeeTimeOpening Handle(TeeTimeOpeningExpirationTimeout timeout)
     {
         MarkCompleted();
-        return new ExpireTeeTimeOpening(timeout.OpeningId);
+        return new ExpireTeeTimeOpening(this.Id);
     }
 
     public void Handle(
@@ -43,6 +42,6 @@ public class TeeTimeOpeningExpirationPolicy : Saga
         [SagaIdentityFrom("OpeningId")] TeeTimeOpeningExpired evt) => MarkCompleted();
 }
 
-public record TeeTimeOpeningExpirationTimeout(Guid OpeningId, TimeSpan Delay) : TimeoutMessage(Delay);
+public record TeeTimeOpeningExpirationTimeout(TimeSpan Delay) : TimeoutMessage(Delay);
 
 public record ExpireTeeTimeOpening(Guid OpeningId);

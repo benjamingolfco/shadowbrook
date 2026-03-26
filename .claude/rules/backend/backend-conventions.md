@@ -177,6 +177,8 @@ Use Wolverine's `Saga` base class for stateful, long-running processes — but c
 
 **Correlation:** Domain events carry `TeeTimeRequestId`, not `{SagaTypeName}Id`. Use `[SagaIdentityFrom("TeeTimeRequestId")]` from `Wolverine.Persistence.Sagas` on each `Handle` method parameter. `Start` methods set the `Id` directly — no attribute needed.
 
+**Timeout messages don't need correlation:** When a `TimeoutMessage` is returned as a cascading message from a saga's `Start` or `Handle` method, Wolverine automatically stamps the saga identity onto the message envelope. Do NOT add saga-specific IDs to timeout messages or use `[SagaIdentityFrom]` on timeout handlers — use `this.Id` in the handler body instead. `[SagaIdentityFrom]` is only needed for **external** messages (domain events) where Wolverine has no envelope context linking them to the saga.
+
 **Persistence:** Map policy types in `ApplicationDbContext` with `IEntityTypeConfiguration`. Ignore the `Version` property from the `Saga` base class. Wolverine handles load/save/delete automatically.
 
 **Cascading messages:** Return commands and timeout messages from `Handle` methods. Wolverine persists them to the outbox as part of the same transaction.

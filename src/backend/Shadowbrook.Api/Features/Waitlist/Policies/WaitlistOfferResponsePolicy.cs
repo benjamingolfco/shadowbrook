@@ -22,16 +22,15 @@ public class WaitlistOfferResponsePolicy : Saga
         };
 
         var buffer = evt.IsWalkUp ? WalkUpBuffer : OnlineBuffer;
-        var timeout = new OfferResponseBufferTimeout(evt.WaitlistOfferId, evt.OpeningId, buffer);
+        var timeout = new OfferResponseBufferTimeout(buffer);
 
         return (policy, timeout);
     }
 
-    public RejectStaleOffer Handle(
-        [SagaIdentityFrom("WaitlistOfferId")] OfferResponseBufferTimeout timeout)
+    public RejectStaleOffer Handle(OfferResponseBufferTimeout timeout)
     {
         MarkCompleted();
-        return new RejectStaleOffer(timeout.WaitlistOfferId, timeout.OpeningId);
+        return new RejectStaleOffer(this.Id, this.OpeningId);
     }
 
     public void Handle(
@@ -41,7 +40,6 @@ public class WaitlistOfferResponsePolicy : Saga
         [SagaIdentityFrom("WaitlistOfferId")] WaitlistOfferRejected evt) => MarkCompleted();
 }
 
-public record OfferResponseBufferTimeout(Guid WaitlistOfferId, Guid OpeningId, TimeSpan Buffer)
-    : TimeoutMessage(Buffer);
+public record OfferResponseBufferTimeout(TimeSpan Buffer) : TimeoutMessage(Buffer);
 
 public record RejectStaleOffer(Guid WaitlistOfferId, Guid OpeningId);

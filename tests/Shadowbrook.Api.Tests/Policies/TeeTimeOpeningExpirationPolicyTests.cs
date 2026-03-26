@@ -32,7 +32,6 @@ public class TeeTimeOpeningExpirationPolicyTests
         var (policy, timeout) = await TeeTimeOpeningExpirationPolicy.Start(evt, this.courseTimeZoneProvider, fakeTime);
 
         Assert.Equal(evt.OpeningId, policy.Id);
-        Assert.Equal(evt.OpeningId, timeout.OpeningId);
         Assert.Equal(TimeSpan.FromHours(2.5), timeout.Delay);
     }
 
@@ -60,7 +59,7 @@ public class TeeTimeOpeningExpirationPolicyTests
     {
         var openingId = Guid.NewGuid();
         var policy = new TeeTimeOpeningExpirationPolicy { Id = openingId };
-        var timeout = new TeeTimeOpeningExpirationTimeout(openingId, TimeSpan.Zero);
+        var timeout = new TeeTimeOpeningExpirationTimeout(TimeSpan.Zero);
 
         var command = policy.Handle(timeout);
 
