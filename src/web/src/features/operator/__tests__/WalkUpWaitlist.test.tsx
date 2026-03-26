@@ -8,7 +8,7 @@ import {
   useCloseWalkUpWaitlist,
   useReopenWalkUpWaitlist,
 } from '../hooks/useWalkUpWaitlist';
-import { useAddGolferToWaitlist, useCreateWaitlistRequest, useRemoveGolferFromWaitlist } from '../hooks/useWaitlist';
+import { useAddGolferToWaitlist, useCreateTeeTimeOpening, useRemoveGolferFromWaitlist } from '../hooks/useWaitlist';
 
 vi.mock('../context/CourseContext');
 vi.mock('../hooks/useWalkUpWaitlist');
@@ -25,7 +25,7 @@ const mockUseOpenWalkUpWaitlist = vi.mocked(useOpenWalkUpWaitlist);
 const mockUseCloseWalkUpWaitlist = vi.mocked(useCloseWalkUpWaitlist);
 const mockUseReopenWalkUpWaitlist = vi.mocked(useReopenWalkUpWaitlist);
 const mockUseAddGolferToWaitlist = vi.mocked(useAddGolferToWaitlist);
-const mockUseCreateWaitlistRequest = vi.mocked(useCreateWaitlistRequest);
+const mockUseCreateTeeTimeOpening = vi.mocked(useCreateTeeTimeOpening);
 const mockUseRemoveGolferFromWaitlist = vi.mocked(useRemoveGolferFromWaitlist);
 
 const mockCourse = { id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' };
@@ -110,15 +110,15 @@ function defaultAddGolferToWaitlist() {
   } as unknown as ReturnType<typeof useAddGolferToWaitlist>);
 }
 
-function defaultCreateWaitlistRequest() {
-  mockUseCreateWaitlistRequest.mockReturnValue({
+function defaultCreateTeeTimeOpening() {
+  mockUseCreateTeeTimeOpening.mockReturnValue({
     mutate: vi.fn(),
     isPending: false,
     isSuccess: false,
     isError: false,
     error: null,
     reset: vi.fn(),
-  } as unknown as ReturnType<typeof useCreateWaitlistRequest>);
+  } as unknown as ReturnType<typeof useCreateTeeTimeOpening>);
 }
 
 function defaultRemoveGolferFromWaitlist() {
@@ -139,7 +139,7 @@ beforeEach(() => {
   defaultCloseMutation();
   defaultReopenMutation();
   defaultAddGolferToWaitlist();
-  defaultCreateWaitlistRequest();
+  defaultCreateTeeTimeOpening();
   defaultRemoveGolferFromWaitlist();
 });
 
@@ -161,7 +161,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: null, entries: [], requests: [] },
+      data: { waitlist: null, entries: [], openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -170,24 +170,24 @@ describe('WalkUpWaitlist', () => {
     expect(screen.getByRole('button', { name: 'Open Waitlist' })).toBeInTheDocument();
   });
 
-  it('does not show Add Tee Time Request button in inactive state', () => {
+  it('does not show Add Tee Time Opening button in inactive state', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: null, entries: [], requests: [] },
+      data: { waitlist: null, entries: [], openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
     render(<WalkUpWaitlist />);
 
-    expect(screen.queryByText('Add Tee Time Request')).not.toBeInTheDocument();
+    expect(screen.queryByText('Add Tee Time Opening')).not.toBeInTheDocument();
   });
 
   it('renders open state with short code displayed', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: openWaitlist, entries: [], requests: [] },
+      data: { waitlist: openWaitlist, entries: [], openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -201,7 +201,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: closedWaitlist, entries: [], requests: [] },
+      data: { waitlist: closedWaitlist, entries: [], openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -215,7 +215,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: null, entries: [], requests: [] },
+      data: { waitlist: null, entries: [], openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -241,7 +241,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: openWaitlist, entries: [], requests: [] },
+      data: { waitlist: openWaitlist, entries: [], openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -263,7 +263,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: openWaitlist, entries: [], requests: [] },
+      data: { waitlist: openWaitlist, entries: [], openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -288,7 +288,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: openWaitlist, entries: [], requests: [] },
+      data: { waitlist: openWaitlist, entries: [], openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -303,7 +303,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: openWaitlist, entries: mockEntries, requests: [] },
+      data: { waitlist: openWaitlist, entries: mockEntries, openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -340,7 +340,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: null, entries: [], requests: [] },
+      data: { waitlist: null, entries: [], openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -357,37 +357,37 @@ describe('WalkUpWaitlist', () => {
     expect(screen.getByText('Waitlist is already open for today.')).toBeInTheDocument();
   });
 
-  it('shows Add Tee Time Request button when waitlist is open', () => {
+  it('shows Add Tee Time Opening button when waitlist is open', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: openWaitlist, entries: [], requests: [] },
+      data: { waitlist: openWaitlist, entries: [], openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
     render(<WalkUpWaitlist />);
 
-    expect(screen.getByRole('button', { name: 'Add Tee Time Request' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add Tee Time Opening' })).toBeInTheDocument();
   });
 
-  it('does not show Add Tee Time Request button when waitlist is closed', () => {
+  it('does not show Add Tee Time Opening button when waitlist is closed', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: closedWaitlist, entries: [], requests: [] },
+      data: { waitlist: closedWaitlist, entries: [], openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
     render(<WalkUpWaitlist />);
 
-    expect(screen.queryByRole('button', { name: 'Add Tee Time Request' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Tee Time Opening' })).not.toBeInTheDocument();
   });
 
   it('renders Remove buttons with correct aria-labels when waitlist is open', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: openWaitlist, entries: mockEntries, requests: [] },
+      data: { waitlist: openWaitlist, entries: mockEntries, openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -402,7 +402,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: closedWaitlist, entries: mockEntries, requests: [] },
+      data: { waitlist: closedWaitlist, entries: mockEntries, openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -416,7 +416,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: openWaitlist, entries: mockEntries, requests: [] },
+      data: { waitlist: openWaitlist, entries: mockEntries, openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -449,7 +449,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: openWaitlist, entries: mockEntries, requests: [] },
+      data: { waitlist: openWaitlist, entries: mockEntries, openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -480,7 +480,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: openWaitlist, entries: [], requests: [] },
+      data: { waitlist: openWaitlist, entries: [], openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
@@ -496,7 +496,7 @@ describe('WalkUpWaitlist', () => {
     mockUseWalkUpWaitlistToday.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: { waitlist: closedWaitlist, entries: [], requests: [] },
+      data: { waitlist: closedWaitlist, entries: [], openings: [] },
       error: null,
     } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 

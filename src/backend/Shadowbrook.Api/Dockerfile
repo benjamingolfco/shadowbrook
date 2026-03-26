@@ -32,30 +32,21 @@ RUN dotnet publish Shadowbrook.Api/Shadowbrook.Api.csproj \
     --self-contained false
 
 # Stage 2: Final runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+# noble-chiseled-extra: Ubuntu minimal image with ICU globalization libraries.
+# SQL Server's EF Core provider requires ICU — plain noble-chiseled crashes with
+# "Globalization Invariant Mode is not supported" on connection open.
+# No shell, no package manager — runs as non-root (UID 1654) by default.
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra AS runtime
 WORKDIR /app
-
-# Install curl for health checks
-RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
 # Copy published API
 COPY --from=build /app/publish .
-
-# Create non-root user
-RUN useradd -r -s /bin/false appuser && \
-    chown -R appuser:appuser /app
-
-USER appuser
 
 # Expose port
 EXPOSE 8080
 
 # Set environment variables
 ENV ASPNETCORE_URLS=http://+:8080
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
 
 # Start the application
 ENTRYPOINT ["dotnet", "Shadowbrook.Api.dll"]

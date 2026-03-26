@@ -18,8 +18,8 @@
 
 targetScope = 'subscription'
 
-@description('Environment name (dev, staging, prod)')
-param environment string = 'dev'
+@description('Environment name (test, staging, prod)')
+param environment string = 'test'
 
 @description('Azure region for resources')
 param location string = 'eastus2'

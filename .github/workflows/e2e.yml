@@ -1,0 +1,69 @@
+name: E2E Tests
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Deploy Test"]
+    types: [completed]
+
+env:
+  E2E_BASE_URL: https://white-stone-00610060f.1.azurestaticapps.net
+  E2E_API_URL: https://shadowbrook-app-test.happypond-1a892999.eastus2.azurecontainerapps.io
+
+jobs:
+  e2e:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: src/web/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm --dir src/web install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm --dir src/web exec playwright install --with-deps chromium
+
+      - name: Warm up API
+        run: |
+          echo "Warming up API at $E2E_API_URL..."
+          for i in 1 2 3 4 5; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "$E2E_API_URL/health" || true)
+            if [ "$status" = "200" ]; then
+              echo "API is warm (attempt $i)"
+              # Fire a POST to warm up Wolverine HTTP pipeline
+              curl -s -o /dev/null -X POST "$E2E_API_URL/tenants" -H "Content-Type: application/json" -d '{}' || true
+              break
+            fi
+            echo "Waiting for API... (attempt $i, status: $status)"
+            sleep 5
+          done
+
+      - name: Run E2E tests
+        run: pnpm --dir src/web e2e
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v6
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: src/web/playwright-report/
+          retention-days: 14
+
+      - name: Upload trace artifacts
+        uses: actions/upload-artifact@v6
+        if: failure()
+        with:
+          name: playwright-traces
+          path: src/web/test-results/
+          retention-days: 14

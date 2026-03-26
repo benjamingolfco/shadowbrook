@@ -27,7 +27,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: response.statusText }));
-    const errorMessage = error.error ?? error.title ?? response.statusText ?? 'Request failed';
+    const errorMessage = error.error || error.title || response.statusText || `Request failed (${response.status})`;
 
     // Include status code and full body for better error handling downstream
     const errorWithStatus = new Error(errorMessage) as Error & { status?: number; data?: unknown };

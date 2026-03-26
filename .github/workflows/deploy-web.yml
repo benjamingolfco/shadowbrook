@@ -5,7 +5,7 @@
 # For PR previews, the SWA action reads the caller's github context
 # to detect the PR number and create/destroy staging environments.
 #
-# Called by deploy-dev.yml (production) and pr-preview.yml (preview + cleanup).
+# Called by deploy-test.yml (production) and pr.yml (preview + cleanup).
 
 name: Deploy Web
 
@@ -13,7 +13,7 @@ on:
   workflow_call:
     inputs:
       environment:
-        description: 'Target environment (dev, staging, prod)'
+        description: 'Target environment (test, staging, prod)'
         required: true
         type: string
       action:

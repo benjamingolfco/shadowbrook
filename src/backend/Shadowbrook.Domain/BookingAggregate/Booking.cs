@@ -1,4 +1,5 @@
 using Shadowbrook.Domain.BookingAggregate.Events;
+using Shadowbrook.Domain.BookingAggregate.Exceptions;
 using Shadowbrook.Domain.Common;
 
 namespace Shadowbrook.Domain.BookingAggregate;
@@ -7,10 +8,10 @@ public class Booking : Entity
 {
     public Guid CourseId { get; private set; }
     public Guid GolferId { get; private set; }
-    public DateOnly Date { get; private set; }
-    public TimeOnly Time { get; private set; }
+    public TeeTime TeeTime { get; private set; } = null!;
     public string GolferName { get; private set; } = string.Empty;
     public int PlayerCount { get; private set; }
+    public BookingStatus Status { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
 
     private Booking() { } // EF
@@ -20,7 +21,7 @@ public class Booking : Entity
         Guid courseId,
         Guid golferId,
         DateOnly date,
-        TimeOnly time,
+        TimeOnly teeTime,
         string golferName,
         int playerCount)
     {
@@ -30,10 +31,10 @@ public class Booking : Entity
             Id = bookingId,
             CourseId = courseId,
             GolferId = golferId,
-            Date = date,
-            Time = time,
+            TeeTime = new TeeTime(date, teeTime),
             GolferName = golferName,
             PlayerCount = playerCount,
+            Status = BookingStatus.Pending,
             CreatedAt = now
         };
 
@@ -41,9 +42,34 @@ public class Booking : Entity
         {
             BookingId = bookingId,
             GolferId = golferId,
-            CourseId = courseId
+            CourseId = courseId,
+            Date = date,
+            TeeTime = teeTime,
+            GroupSize = playerCount
         });
 
         return booking;
+    }
+
+    public void Confirm()
+    {
+        if (Status != BookingStatus.Pending)
+        {
+            throw new BookingNotPendingException(Id, Status);
+        }
+
+        Status = BookingStatus.Confirmed;
+        AddDomainEvent(new BookingConfirmed { BookingId = Id });
+    }
+
+    public void RejectBooking()
+    {
+        if (Status != BookingStatus.Pending)
+        {
+            throw new BookingNotPendingException(Id, Status);
+        }
+
+        Status = BookingStatus.Rejected;
+        AddDomainEvent(new BookingRejected { BookingId = Id });
     }
 }

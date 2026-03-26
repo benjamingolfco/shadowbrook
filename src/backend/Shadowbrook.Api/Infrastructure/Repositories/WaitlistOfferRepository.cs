@@ -16,17 +16,10 @@ public class WaitlistOfferRepository(ApplicationDbContext db) : IWaitlistOfferRe
             .FirstOrDefaultAsync(o => o.Token == token);
     }
 
-    public async Task<WaitlistOffer?> GetByBookingIdAsync(Guid bookingId)
+    public async Task<List<WaitlistOffer>> GetPendingByOpeningAsync(Guid openingId)
     {
         return await db.WaitlistOffers
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(o => o.BookingId == bookingId);
-    }
-
-    public async Task<List<WaitlistOffer>> GetPendingByRequestAsync(Guid teeTimeRequestId)
-    {
-        return await db.WaitlistOffers
-            .Where(o => o.TeeTimeRequestId == teeTimeRequestId && o.Status == OfferStatus.Pending)
+            .Where(o => o.OpeningId == openingId && o.Status == OfferStatus.Pending)
             .ToListAsync();
     }
 

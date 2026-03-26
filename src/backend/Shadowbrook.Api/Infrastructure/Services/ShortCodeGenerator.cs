@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.WalkUpWaitlistAggregate;
+using Shadowbrook.Domain.CourseWaitlistAggregate;
 
 namespace Shadowbrook.Api.Infrastructure.Services;
 
@@ -11,7 +11,8 @@ public class ShortCodeGenerator(ApplicationDbContext db) : IShortCodeGenerator
         for (var attempt = 0; attempt < 10; attempt++)
         {
             var candidate = Random.Shared.Next(0, 10000).ToString("D4");
-            var taken = await db.WalkUpWaitlists
+            var taken = await db.CourseWaitlists
+                .OfType<WalkUpWaitlist>()
                 .AnyAsync(w => w.ShortCode == candidate && w.Date == date);
             if (!taken)
             {

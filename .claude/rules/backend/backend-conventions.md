@@ -27,28 +27,42 @@ The API project uses **feature folders** — endpoints, event handlers, validato
 Shadowbrook.Api/
   Features/
     Tenants/                              ← feature folder
-      TenantEndpoints.cs                  ← endpoints + inline DTOs
+      Endpoints/
+        TenantEndpoints.cs
     Courses/
-      CourseEndpoints.cs
-    WalkUpWaitlist/
-      WalkUpWaitlistEndpoints.cs          ← endpoints
-      WalkUpJoinEndpoints.cs
-      GolferJoinedWaitlistSmsHandler.cs   ← event handler co-located with consumer
-      BookingCreatedRemoveFromWaitlistHandler.cs  ← reacts to BookingCreated, modifies waitlist
-    WaitlistOffers/
-      WaitlistOfferEndpoints.cs
-      WaitlistOfferAcceptedSmsHandler.cs
-      WaitlistOfferRejectedNextOfferHandler.cs
-      WaitlistOfferRejectedSmsHandler.cs
-      TeeTimeSlotFillFailedHandler.cs     ← reacts to TeeTimeSlotFillFailed, modifies offers
-      TeeTimeRequestFulfilledHandler.cs   ← reacts to TeeTimeRequestFulfilled, rejects offers
-      TeeTimeRequestAddedNotifyHandler.cs ← reacts to TeeTimeRequestAdded, creates offers
-    TeeSheet/
-      TeeSheetEndpoints.cs
-      WaitlistOfferAcceptedFillHandler.cs ← reacts to WaitlistOfferAccepted, fills tee time
+      Endpoints/
+        CourseEndpoints.cs
+    Waitlist/                             ← all waitlist concerns in one feature
+      Endpoints/
+        WalkUpWaitlistEndpoints.cs
+        WalkUpJoinEndpoints.cs
+        WalkUpQrEndpoints.cs
+        WaitlistOfferEndpoints.cs
+      Handlers/                           ← grouped by triggering event/command
+        BookingCreated/
+          ClaimHandler.cs                 ← calls opening.Claim()
+          RemoveFromWaitlistHandler.cs
+        GolferJoinedWaitlist/
+          SmsHandler.cs
+          WakeUpOfferPolicyHandler.cs
+        TeeTimeOpeningFilled/
+          RejectOffersHandler.cs
+        WaitlistOfferAccepted/
+          SmsHandler.cs
+        WaitlistOfferRejected/
+          SmsHandler.cs
+      Policies/                           ← Wolverine sagas
+        TeeTimeOpeningExpirationPolicy.cs
+        TeeTimeOpeningOfferPolicy.cs
+        WaitlistOfferResponsePolicy.cs
     Bookings/
-      TeeTimeSlotFilledBookingHandler.cs
-      BookingCreatedConfirmationSmsHandler.cs
+      Handlers/
+        WaitlistOfferAccepted/
+          CreateBookingHandler.cs
+        ConfirmBooking/
+          Handler.cs
+      Policies/
+        BookingConfirmationPolicy.cs
   Infrastructure/                         ← shared horizontal concerns
     Data/ApplicationDbContext.cs
     Middleware/                            ← shared Wolverine Before middleware
@@ -60,8 +74,9 @@ Shadowbrook.Api/
 ```
 
 **Rules:**
-- New endpoints and handlers go in `Features/{FeatureName}/`
-- Place a handler in the feature that **consumes** the event — the feature whose state or concern the handler modifies (e.g., `BookingCreatedRemoveFromWaitlistHandler` lives in `WalkUpWaitlist/` because it modifies waitlist state, even though it reacts to `BookingCreated`)
+- Each feature folder has three subfolders: `Endpoints/`, `Handlers/`, `Policies/`
+- Handlers are grouped by the event/command they handle (subfolder per event)
+- Place a handler in the feature that **consumes** the event — the feature whose state or concern the handler modifies (e.g., `BookingCreated/ClaimHandler` lives in `Waitlist/` because it modifies opening state, even though it reacts to `BookingCreated`)
 - Shared infrastructure (DbContext, repositories, EF configs, services) stays in `Infrastructure/`
 - Domain model stays in `Shadowbrook.Domain/` — feature folders are API-layer only
 
@@ -136,11 +151,33 @@ The project uses [WolverineFx](https://wolverinefx.net) for message handling. Se
 - Handlers that need to publish follow-on events inject `IMessageBus` and call `bus.PublishAsync()`
 - `MultipleHandlerBehavior.Separated` — multiple handlers for the same event type run independently
 
+**No silent returns — hard rule:**
+- Every early return in a handler MUST either throw or log a warning before returning. Silent failures in event handlers are invisible in production.
+- **ID lookups throw:** When looking up an entity by an ID from an event/command, use `GetRequiredByIdAsync(id)` — it throws `EntityNotFoundException` if not found. Extension methods for all repositories are in `Shadowbrook.Domain.Common.RepositoryExtensions`. Never write `GetByIdAsync(...) ?? throw` inline — always use `GetRequiredByIdAsync`.
+- **Query-based lookups log + return:** When searching by criteria (e.g., "find active opening for this course/date"), null means "no match" — a valid business case. Log a warning and return.
+- Use `ILogger logger` as a parameter (Wolverine injects it). Use `LogWarning` with `{PropertyName}` placeholders.
+- Domain aggregates that are intentionally idempotent (e.g., `Expire()`, `Remove()`, `Reject()`) may use silent returns — but domain methods that should never be called in an invalid state must throw `DomainException` subclasses.
+
+```csharp
+// GOOD — handler logs before early return
+var opening = await repo.GetByIdAsync(evt.OpeningId);
+if (opening is null)
+{
+    logger.LogWarning("Opening {OpeningId} not found, skipping", evt.OpeningId);
+    return;
+}
+
+// BAD — silent swallow
+if (opening is null) { return; }
+```
+
 ### Policies (Wolverine Sagas)
 
 Use Wolverine's `Saga` base class for stateful, long-running processes — but call them **policies**, not sagas. "Policy" communicates business intent (e.g., `TeeTimeOfferPolicy` governs how offers are sequenced). Name classes `*Policy` and place them in feature folders using the consumer rule.
 
 **Correlation:** Domain events carry `TeeTimeRequestId`, not `{SagaTypeName}Id`. Use `[SagaIdentityFrom("TeeTimeRequestId")]` from `Wolverine.Persistence.Sagas` on each `Handle` method parameter. `Start` methods set the `Id` directly — no attribute needed.
+
+**Timeout messages don't need correlation:** When a `TimeoutMessage` is returned as a cascading message from a saga's `Start` or `Handle` method, Wolverine automatically stamps the saga identity onto the message envelope. Do NOT add saga-specific IDs to timeout messages or use `[SagaIdentityFrom]` on timeout handlers — use `this.Id` in the handler body instead. `[SagaIdentityFrom]` is only needed for **external** messages (domain events) where Wolverine has no envelope context linking them to the saga.
 
 **Persistence:** Map policy types in `ApplicationDbContext` with `IEntityTypeConfiguration`. Ignore the `Version` property from the `Saga` base class. Wolverine handles load/save/delete automatically.
 
@@ -157,6 +194,35 @@ For operations spanning multiple aggregates, use sequential event chains instead
 - Pre-allocate IDs (e.g., `BookingId` on `WaitlistOffer`) when downstream steps need correlation
 - Wolverine's `MultipleHandlerBehavior.Separated` ensures that if one handler for an event fails, the others still run independently
 
+### Value Objects
+
+- Value objects are defined by their attributes, not by identity — no `Id`, no inheritance from `Entity`
+- Immutable: all properties are `get`-only, set through the constructor
+- Implement `IEquatable<T>` with `Equals`, `GetHashCode`, and a private parameterless constructor for EF
+- Value objects live in `Shadowbrook.Domain/Common/` (shared) or in an aggregate folder if aggregate-specific
+- Map in EF Core using `ComplexProperty` (not `OwnsOne`) — this is the modern EF Core 10 approach
+- Use `HasColumnName` inside `ComplexProperty` to control column names (default is `{Nav}_{Prop}`)
+- Events carry flat fields, not value objects — events are data contracts across boundaries
+
+```csharp
+// Domain: Value object
+public class TeeTime : IEquatable<TeeTime>
+{
+    public DateOnly Date { get; }
+    public TimeOnly Time { get; }
+    public TeeTime(DateOnly date, TimeOnly time) { Date = date; Time = time; }
+    private TeeTime() { } // EF
+    // ... Equals, GetHashCode, ToString
+}
+
+// EF Config: ComplexProperty mapping
+builder.ComplexProperty(o => o.TeeTime, t =>
+{
+    t.Property(x => x.Date).HasColumnName("Date");
+    t.Property(x => x.Time).HasColumnName("TeeTime").HasColumnType("time");
+});
+```
+
 ### Result Objects
 
 - For `internal` cross-aggregate methods, prefer returning result objects over throwing exceptions
@@ -167,7 +233,8 @@ For operations spanning multiple aggregates, use sequential event chains instead
 ### Domain Exceptions
 
 - `DomainException` subclasses break control flow for true invariant violations
-- The global exception handler in `Program.cs` maps them to HTTP status codes
+- **Always use `DomainException` subclasses** — never throw `InvalidOperationException`, `ArgumentException`, or any other .NET framework exception from domain code. Every domain invariant violation gets its own exception class in `{Aggregate}/Exceptions/`. This includes factory method guards (e.g., invalid slots → `InvalidSlotsAvailableException`), state guards (e.g., already notified → `OfferAlreadyNotifiedException`), and cross-aggregate lookups (e.g., not found → `EntityNotFoundException`).
+- The global exception handler in `Program.cs` maps them to HTTP status codes — new exception types must be added there
 - Do NOT catch `DomainException` in endpoints — let them propagate
 
 ### Repositories

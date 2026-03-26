@@ -6,4 +6,5 @@ public interface ITimeProvider
     TimeOnly GetCurrentTime();
     DateOnly GetCurrentDateByTimeZone(string timeZoneId);
     TimeOnly GetCurrentTimeByTimeZone(string timeZoneId);
+    DateTimeOffset GetCurrentTimestamp();
 }
