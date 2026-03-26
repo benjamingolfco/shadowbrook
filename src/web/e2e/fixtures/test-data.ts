@@ -7,6 +7,8 @@ export const TEST_GOLFER = {
   firstName: 'E2E',
   lastName: 'Tester',
   phone: '5551230000',
+  /** Phone in E.164 format as stored by the backend (for dev SMS API lookups) */
+  normalizedPhone: '+15551230000',
 };
 
 /**

@@ -58,8 +58,11 @@ test.describe.serial('Walkup Waitlist Flow', () => {
     await waitlist.selectTenant(TEST_TENANT_NAME);
     await waitlist.selectCourse(courseName);
 
-    // Use a fixed afternoon time that's always valid regardless of runner timezone
-    const timeStr = '16:00';
+    // Use a time 10 minutes from now — within the golfer's 30-minute walkup window
+    // and past the 5-minute grace period for future-time validation.
+    // The course was registered with the browser's timezone, so local time works.
+    const futureTime = new Date(Date.now() + 10 * 60 * 1000);
+    const timeStr = `${String(futureTime.getHours()).padStart(2, '0')}:${String(futureTime.getMinutes()).padStart(2, '0')}`;
     await waitlist.addTeeTimeOpening(timeStr, 1);
 
     // Verify it appears in the Tee Time Openings tab
@@ -70,7 +73,7 @@ test.describe.serial('Walkup Waitlist Flow', () => {
   test('golfer receives offer via SMS', async () => {
     // Poll the dev SMS API for the offer message
     const smsBody = await waitForSms(
-      TEST_GOLFER.phone,
+      TEST_GOLFER.normalizedPhone,
       (body) => body.includes('/book/walkup/') && body.includes(courseName),
       { timeoutMs: 20_000 },
     );
