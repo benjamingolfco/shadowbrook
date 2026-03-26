@@ -32,10 +32,11 @@ RUN dotnet publish Shadowbrook.Api/Shadowbrook.Api.csproj \
     --self-contained false
 
 # Stage 2: Final runtime image
-# noble-chiseled: Ubuntu-based minimal image (~100MB vs ~215MB for Debian full).
-# No shell, no package manager, no curl — runs as non-root (UID 1654) by default.
-# Health probes are defined in the Container Apps Bicep config, not here.
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled AS runtime
+# noble-chiseled-extra: Ubuntu minimal image with ICU globalization libraries.
+# SQL Server's EF Core provider requires ICU — plain noble-chiseled crashes with
+# "Globalization Invariant Mode is not supported" on connection open.
+# No shell, no package manager — runs as non-root (UID 1654) by default.
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra AS runtime
 WORKDIR /app
 
 # Copy published API
