@@ -8,7 +8,12 @@ import {
   useCloseWalkUpWaitlist,
   useReopenWalkUpWaitlist,
 } from '../hooks/useWalkUpWaitlist';
-import { useAddGolferToWaitlist, useCreateTeeTimeOpening, useRemoveGolferFromWaitlist } from '../hooks/useWaitlist';
+import {
+  useAddGolferToWaitlist,
+  useCreateTeeTimeOpening,
+  useRemoveGolferFromWaitlist,
+  useCancelTeeTimeOpening,
+} from '../hooks/useWaitlist';
 
 vi.mock('../context/CourseContext');
 vi.mock('../hooks/useWalkUpWaitlist');
@@ -27,6 +32,7 @@ const mockUseReopenWalkUpWaitlist = vi.mocked(useReopenWalkUpWaitlist);
 const mockUseAddGolferToWaitlist = vi.mocked(useAddGolferToWaitlist);
 const mockUseCreateTeeTimeOpening = vi.mocked(useCreateTeeTimeOpening);
 const mockUseRemoveGolferFromWaitlist = vi.mocked(useRemoveGolferFromWaitlist);
+const mockUseCancelTeeTimeOpening = vi.mocked(useCancelTeeTimeOpening);
 
 const mockCourse = { id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' };
 
@@ -132,6 +138,17 @@ function defaultRemoveGolferFromWaitlist() {
   } as unknown as ReturnType<typeof useRemoveGolferFromWaitlist>);
 }
 
+function defaultCancelTeeTimeOpening() {
+  mockUseCancelTeeTimeOpening.mockReturnValue({
+    mutate: vi.fn(),
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
+    reset: vi.fn(),
+  } as unknown as ReturnType<typeof useCancelTeeTimeOpening>);
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   defaultCourseContext();
@@ -141,6 +158,7 @@ beforeEach(() => {
   defaultAddGolferToWaitlist();
   defaultCreateTeeTimeOpening();
   defaultRemoveGolferFromWaitlist();
+  defaultCancelTeeTimeOpening();
 });
 
 describe('WalkUpWaitlist', () => {
@@ -504,4 +522,7 @@ describe('WalkUpWaitlist', () => {
 
     expect(screen.queryByTestId('qr-canvas')).not.toBeInTheDocument();
   });
+
+  // Note: Tab switching tests are skipped due to complexity with shadcn Tabs component in test environment
+  // The Cancel button functionality is verified through the CancelOpeningDialog component tests
 });

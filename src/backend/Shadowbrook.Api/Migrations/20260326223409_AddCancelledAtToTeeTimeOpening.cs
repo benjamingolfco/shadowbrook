@@ -1,29 +1,28 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Shadowbrook.Api.Migrations
+namespace Shadowbrook.Api.Migrations;
+
+/// <inheritdoc />
+public partial class AddCancelledAtToTeeTimeOpening : Migration
 {
     /// <inheritdoc />
-    public partial class AddCancelledAtToTeeTimeOpening : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.AddColumn<DateTimeOffset>(
-                name: "CancelledAt",
-                table: "TeeTimeOpenings",
-                type: "datetimeoffset",
-                nullable: true);
-        }
+        migrationBuilder.AddColumn<DateTimeOffset>(
+            name: "CancelledAt",
+            table: "TeeTimeOpenings",
+            type: "datetimeoffset",
+            nullable: true);
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "CancelledAt",
-                table: "TeeTimeOpenings");
-        }
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropColumn(
+            name: "CancelledAt",
+            table: "TeeTimeOpenings");
     }
 }
