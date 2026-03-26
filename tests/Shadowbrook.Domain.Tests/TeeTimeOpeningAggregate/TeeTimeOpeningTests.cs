@@ -141,6 +141,16 @@ public class TeeTimeOpeningTests
     }
 
     [Fact]
+    public void Claim_WhenCancelled_ThrowsOpeningNotAvailableException()
+    {
+        var opening = CreateOpening();
+        opening.Cancel(this.timeProvider);
+
+        Assert.Throws<OpeningNotAvailableException>(() =>
+            opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider));
+    }
+
+    [Fact]
     public void Expire_WhenOpen_TransitionsToExpired()
     {
         var opening = CreateOpening();
