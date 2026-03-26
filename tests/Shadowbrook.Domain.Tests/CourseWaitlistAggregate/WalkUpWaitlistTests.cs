@@ -140,6 +140,22 @@ public class WalkUpWaitlistTests
     }
 
     [Fact]
+    public async Task Join_UsesCourseTzForWindow()
+    {
+        // UTC is 10:00, but America/Chicago is 04:00 (UTC-6 in March)
+        this.timeProvider.GetCurrentTimeByTimeZone("America/Chicago").Returns(new TimeOnly(4, 0));
+
+        var waitlist = await CreateOpenWaitlistAsync();
+        var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
+
+        var entry = await waitlist.Join(golfer, this.entryRepository, this.timeProvider, "America/Chicago");
+
+        var walkUpEntry = Assert.IsType<WalkUpGolferWaitlistEntry>(entry);
+        Assert.Equal(new TimeOnly(4, 0), walkUpEntry.WindowStart);
+        Assert.Equal(new TimeOnly(4, 30), walkUpEntry.WindowEnd);
+    }
+
+    [Fact]
     public async Task Join_WhenOpen_RaisesGolferJoinedWaitlist()
     {
         var waitlist = await CreateOpenWaitlistAsync();
