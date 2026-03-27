@@ -12,20 +12,21 @@ public class TeeTimeOpeningRepository(ApplicationDbContext db) : ITeeTimeOpening
             .Include(o => o.ClaimedSlots)
             .FirstOrDefaultAsync(o => o.Id == id);
 
-    public async Task<TeeTimeOpening?> GetActiveByCourseDateTimeAsync(Guid courseId, DateOnly date, TimeOnly teeTime)
+    public async Task<TeeTimeOpening?> GetActiveByCourseTeeTimeAsync(Guid courseId, TeeTime teeTime)
     {
         return await db.TeeTimeOpenings
             .Include(o => o.ClaimedSlots)
-            .FirstOrDefaultAsync(o => o.CourseId == courseId && o.TeeTime.Date == date
-                && o.TeeTime.Time == teeTime && o.Status == TeeTimeOpeningStatus.Open);
+            .FirstOrDefaultAsync(o => o.CourseId == courseId
+                && o.TeeTime.Value == teeTime.Value
+                && o.Status == TeeTimeOpeningStatus.Open);
     }
 
     public async Task<TeeTimeOpening?> GetByCourseTeeTimeAsync(Guid courseId, TeeTime teeTime)
     {
         return await db.TeeTimeOpenings
             .Include(o => o.ClaimedSlots)
-            .FirstOrDefaultAsync(o => o.CourseId == courseId && o.TeeTime.Date == teeTime.Date
-                && o.TeeTime.Time == teeTime.Time);
+            .FirstOrDefaultAsync(o => o.CourseId == courseId
+                && o.TeeTime.Value == teeTime.Value);
     }
 
     public void Add(TeeTimeOpening opening) =>

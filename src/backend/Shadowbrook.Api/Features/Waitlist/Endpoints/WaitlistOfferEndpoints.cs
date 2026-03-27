@@ -20,8 +20,7 @@ public static class WaitlistOfferEndpoints
             {
                 ooeg.Offer.Token,
                 CourseName = c.Name,
-                Date = ooeg.Opening.TeeTime.Date,
-                TeeTime = ooeg.Opening.TeeTime.Time,
+                TeeTime = ooeg.Opening.TeeTime.Value,
                 ooeg.Opening.SlotsAvailable,
                 ooeg.Golfer.FirstName,
                 ooeg.Golfer.LastName,
@@ -37,8 +36,8 @@ public static class WaitlistOfferEndpoints
         return Results.Ok(new WaitlistOfferResponse(
             offer.Token,
             offer.CourseName,
-            offer.Date.ToString("yyyy-MM-dd"),
-            offer.TeeTime.ToString("HH:mm"),
+            DateOnly.FromDateTime(offer.TeeTime).ToString("yyyy-MM-dd"),
+            TimeOnly.FromDateTime(offer.TeeTime).ToString("HH:mm"),
             offer.SlotsAvailable,
             $"{offer.FirstName} {offer.LastName}",
             offer.Status.ToString()));

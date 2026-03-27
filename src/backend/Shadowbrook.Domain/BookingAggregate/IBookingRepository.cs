@@ -1,8 +1,10 @@
+using Shadowbrook.Domain.Common;
+
 namespace Shadowbrook.Domain.BookingAggregate;
 
 public interface IBookingRepository
 {
     Task<Booking?> GetByIdAsync(Guid id);
     void Add(Booking booking);
-    Task<List<Booking>> GetByCourseAndTeeTimeAsync(Guid courseId, DateOnly date, TimeOnly teeTime, CancellationToken ct = default);
+    Task<List<Booking>> GetByCourseAndTeeTimeAsync(Guid courseId, TeeTime teeTime, CancellationToken ct = default);
 }

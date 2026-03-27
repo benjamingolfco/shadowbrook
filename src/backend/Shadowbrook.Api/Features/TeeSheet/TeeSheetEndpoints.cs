@@ -39,8 +39,10 @@ public static class TeeSheetEndpoints
         }
 
         // Fetch all bookings for the course and date
+        var dayStart = dateOnly.ToDateTime(TimeOnly.MinValue);
+        var dayEnd = dateOnly.AddDays(1).ToDateTime(TimeOnly.MinValue);
         var bookings = await db.Bookings
-            .Where(b => b.CourseId == courseId.Value && b.TeeTime.Date == dateOnly)
+            .Where(b => b.CourseId == courseId.Value && b.TeeTime.Value >= dayStart && b.TeeTime.Value < dayEnd)
             .ToListAsync();
 
         // Generate all time slots

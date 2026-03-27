@@ -104,9 +104,11 @@ public static class WalkUpWaitlistEndpoints
                 .ToList()
             : new List<WalkUpWaitlistEntryResponse>();
 
+        var dayStart = today.ToDateTime(TimeOnly.MinValue);
+        var dayEnd = today.AddDays(1).ToDateTime(TimeOnly.MinValue);
         var openingEntities = await db.TeeTimeOpenings
             .Include(o => o.ClaimedSlots)
-            .Where(o => o.CourseId == courseId && o.TeeTime.Date == today)
+            .Where(o => o.CourseId == courseId && o.TeeTime.Value >= dayStart && o.TeeTime.Value < dayEnd)
             .ToListAsync();
 
         var golferIds = openingEntities

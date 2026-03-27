@@ -16,10 +16,7 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
         builder.Property(b => b.Status).HasConversion<string>().HasMaxLength(20);
 
         builder.ComplexProperty(b => b.TeeTime, t =>
-        {
-            t.Property(x => x.Date).HasColumnName("Date");
-            t.Property(x => x.Time).HasColumnName("TeeTime").HasColumnType("time");
-        });
+            t.Property(x => x.Value).HasColumnName("TeeTime").HasColumnType("datetime2"));
 
         builder.HasShadowRowVersion();
         builder.HasShadowAuditProperties();
