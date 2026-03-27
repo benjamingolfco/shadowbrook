@@ -17,12 +17,12 @@ import { formatWallClockDate, formatWallClockTime } from '@/lib/course-time';
 import { useWalkUpOffer, useAcceptOffer } from '../hooks/useWalkUpOffer';
 import OfferCard from '../components/OfferCard';
 import AcceptConfirmation from '../components/AcceptConfirmation';
-import type { WaitlistOfferAcceptResponse } from '@/types/waitlist';
+import type { WaitlistOfferAcceptResponse, WaitlistOfferResponse } from '@/types/waitlist';
 
 export default function WalkUpOfferPage() {
   const { token } = useParams<{ token: string }>();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [acceptResult, setAcceptResult] = useState<WaitlistOfferAcceptResponse | null>(null);
+  const [acceptResult, setAcceptResult] = useState<{ response: WaitlistOfferAcceptResponse; offer: WaitlistOfferResponse } | null>(null);
   const [acceptError, setAcceptError] = useState<string | null>(null);
 
   const { data: offer, isLoading, error, refetch } = useWalkUpOffer(token ?? '');
@@ -37,7 +37,7 @@ export default function WalkUpOfferPage() {
 
     acceptOffer.mutate(undefined, {
       onSuccess: (data) => {
-        setAcceptResult(data);
+        setAcceptResult({ response: data, offer: offer! });
         setAcceptError(null);
       },
       onError: (err) => {
@@ -53,7 +53,7 @@ export default function WalkUpOfferPage() {
       <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
         <div className="w-full max-w-sm">
           <h1 className="text-xl font-bold text-center mb-8">Shadowbrook</h1>
-          <AcceptConfirmation response={acceptResult} />
+          <AcceptConfirmation response={acceptResult.response} offer={acceptResult.offer} />
         </div>
       </div>
     );
@@ -120,6 +120,37 @@ export default function WalkUpOfferPage() {
               <Button onClick={() => refetch()}>Try Again</Button>
             </CardContent>
           </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Rejected offer
+  if (offer.status === 'Rejected') {
+    return (
+      <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
+        <div className="w-full max-w-sm">
+          <h1 className="text-xl font-bold text-center mb-8">Shadowbrook</h1>
+          <Card>
+            <CardContent className="pt-6 text-center space-y-4">
+              <h2 className="text-xl font-semibold">Offer No Longer Available</h2>
+              <p className="text-muted-foreground">
+                This tee time offer is no longer available. It may have expired or been filled.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Already accepted (e.g. page reload after claiming)
+  if (offer.status === 'Accepted') {
+    return (
+      <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
+        <div className="w-full max-w-sm">
+          <h1 className="text-xl font-bold text-center mb-8">Shadowbrook</h1>
+          <AcceptConfirmation offer={offer} />
         </div>
       </div>
     );

@@ -90,7 +90,7 @@ export interface WaitlistOfferResponse {
   teeTime: string;    // ISO 8601 DateTime
   slotsAvailable: number;
   golferName: string;
-  status: 'Pending' | 'Accepted';
+  status: 'Pending' | 'Accepted' | 'Rejected';
 }
 
 export interface WaitlistOfferAcceptResponse {

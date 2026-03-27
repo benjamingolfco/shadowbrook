@@ -1,19 +1,24 @@
-import type { WaitlistOfferAcceptResponse } from '@/types/waitlist';
+import { formatWallClockDate, formatWallClockTime } from '@/lib/course-time';
+import type { WaitlistOfferAcceptResponse, WaitlistOfferResponse } from '@/types/waitlist';
 
 interface AcceptConfirmationProps {
-  response: WaitlistOfferAcceptResponse;
+  response?: WaitlistOfferAcceptResponse;
+  offer: WaitlistOfferResponse;
 }
 
-export default function AcceptConfirmation({ response }: AcceptConfirmationProps) {
+export default function AcceptConfirmation({ response, offer }: AcceptConfirmationProps) {
+  const dateFormatted = formatWallClockDate(offer.teeTime);
+  const timeFormatted = formatWallClockTime(offer.teeTime);
+
   return (
     <div className="space-y-6 text-center">
       <div
-        className="mx-auto w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center"
+        className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center"
         aria-hidden="true"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="w-8 h-8 text-blue-600"
+          className="w-8 h-8 text-green-600"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -21,17 +26,18 @@ export default function AcceptConfirmation({ response }: AcceptConfirmationProps
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-          <path d="M12 8v4" />
-          <path d="M12 16h.01" />
+          <path d="M20 6 9 17l-5-5" />
         </svg>
       </div>
 
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold">Request Received</h2>
-        <p className="text-muted-foreground">
-          {response.message}
-        </p>
+        <h2 className="text-2xl font-bold">Tee Time Claimed</h2>
+        {response?.message && <p className="text-muted-foreground">{response.message}</p>}
+      </div>
+
+      <div className="space-y-1">
+        <p className="text-lg font-semibold">{offer.courseName}</p>
+        <p className="text-muted-foreground">{dateFormatted} at {timeFormatted}</p>
       </div>
     </div>
   );
