@@ -27,10 +27,10 @@ public class WaitlistOfferResponsePolicy : Saga
         return (policy, timeout);
     }
 
-    public RejectStaleOffer Handle(OfferResponseBufferTimeout timeout)
+    public MarkOfferStale Handle(OfferResponseBufferTimeout timeout)
     {
         MarkCompleted();
-        return new RejectStaleOffer(Id, OpeningId);
+        return new MarkOfferStale(Id, OpeningId);
     }
 
     public void Handle(
@@ -42,4 +42,4 @@ public class WaitlistOfferResponsePolicy : Saga
 
 public record OfferResponseBufferTimeout(TimeSpan Buffer) : TimeoutMessage(Buffer);
 
-public record RejectStaleOffer(Guid WaitlistOfferId, Guid OpeningId);
+public record MarkOfferStale(Guid WaitlistOfferId, Guid OpeningId);

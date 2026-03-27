@@ -150,4 +150,35 @@ public class WaitlistOfferClaimServiceTests
         Assert.Equal(OfferStatus.Rejected, offer.Status);
         Assert.Equal("Opening is not available", offer.RejectionReason);
     }
+
+    [Fact]
+    public void AcceptOffer_StaleOffer_WhenClaimSucceeds_ReturnsSuccessAndAccepts()
+    {
+        var opening = CreateOpening(slotsAvailable: 4);
+        var offer = CreateOffer(opening.Id, groupSize: 2);
+        offer.MarkStale();
+        opening.ClearDomainEvents();
+        offer.ClearDomainEvents();
+
+        var result = this.sut.AcceptOffer(offer, opening);
+
+        Assert.True(result.Success);
+        Assert.Equal(OfferStatus.Accepted, offer.Status);
+        Assert.Contains(offer.DomainEvents, e => e is WaitlistOfferAccepted);
+    }
+
+    [Fact]
+    public void AcceptOffer_StaleOffer_WhenClaimFails_ReturnsFailureAndRejects()
+    {
+        var opening = CreateOpening(slotsAvailable: 1);
+        var offer = CreateOffer(opening.Id, groupSize: 2);
+        offer.MarkStale();
+        opening.ClearDomainEvents();
+        offer.ClearDomainEvents();
+
+        var result = this.sut.AcceptOffer(offer, opening);
+
+        Assert.False(result.Success);
+        Assert.Equal(OfferStatus.Rejected, offer.Status);
+    }
 }
