@@ -253,7 +253,6 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         var body = await response.Content.ReadFromJsonAsync<AddGolferToWaitlistResponse>();
         Assert.NotNull(body);
         Assert.Equal("Bob B", body!.GolferName);
-        Assert.Equal(2, body.Position);
     }
 
     // -------------------------------------------------------------------------
@@ -368,7 +367,6 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         Assert.Equal("Jane Smith", body.GolferName);
         Assert.Equal("+15558675309", body.GolferPhone);
         Assert.Equal(2, body.GroupSize);
-        Assert.Equal(1, body.Position);
         Assert.False(string.IsNullOrEmpty(body.CourseName));
     }
 
@@ -455,29 +453,6 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         var body = await response.Content.ReadFromJsonAsync<AddGolferToWaitlistResponse>();
         Assert.NotNull(body);
         Assert.Equal(1, body!.GroupSize);
-    }
-
-    [Fact]
-    public async Task AddGolfer_MultipleGolfers_CorrectPositions()
-    {
-        var (_, courseId) = await CreateTestCourseAsync();
-        await PostOpenAsync(courseId);
-
-        var r1 = await PostAddGolferAsync(courseId, new { FirstName = "Alice", LastName = "A", Phone = "555-111-0001" });
-        var r2 = await PostAddGolferAsync(courseId, new { FirstName = "Bob", LastName = "B", Phone = "555-111-0002" });
-        var r3 = await PostAddGolferAsync(courseId, new { FirstName = "Carol", LastName = "C", Phone = "555-111-0003" });
-
-        var b1 = await r1.Content.ReadFromJsonAsync<AddGolferToWaitlistResponse>();
-        var b2 = await r2.Content.ReadFromJsonAsync<AddGolferToWaitlistResponse>();
-        var b3 = await r3.Content.ReadFromJsonAsync<AddGolferToWaitlistResponse>();
-
-        Assert.Equal(HttpStatusCode.Created, r1.StatusCode);
-        Assert.Equal(HttpStatusCode.Created, r2.StatusCode);
-        Assert.Equal(HttpStatusCode.Created, r3.StatusCode);
-
-        Assert.Equal(1, b1!.Position);
-        Assert.Equal(2, b2!.Position);
-        Assert.Equal(3, b3!.Position);
     }
 
     [Fact]
@@ -606,10 +581,8 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         string GolferName,
         string GolferPhone,
         int GroupSize,
-        int Position,
         string CourseName);
 
-    private record ConflictResponse(string Error, int Position);
     private record ErrorResponse(string Error);
     private record CourseIdResponse(Guid Id);
     private record TenantIdResponse(Guid Id);

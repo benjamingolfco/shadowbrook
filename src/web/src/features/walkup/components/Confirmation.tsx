@@ -30,7 +30,9 @@ export default function Confirmation({ result }: ConfirmationProps) {
       <div className="space-y-2">
         <h2 className="text-2xl font-bold">You're on the list, {firstName}!</h2>
         <p className="text-lg text-muted-foreground">
-          #{result.position} in line at {result.courseName}
+          {result.position > 0
+            ? `#${result.position} in line at ${result.courseName}`
+            : result.courseName}
         </p>
       </div>
 
