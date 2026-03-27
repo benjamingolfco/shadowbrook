@@ -98,7 +98,10 @@ export default function WalkUpLandingPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm">
-              The walk-up waitlist is open for {new Date(data.date).toLocaleDateString()}.
+              The walk-up waitlist is open for {(() => {
+                const [year, month, day] = data.date.split('-');
+                return `${parseInt(month ?? '')}/${parseInt(day ?? '')}/${year}`;
+              })()}.
             </p>
             <Button asChild className="w-full">
               <Link to={`/join/${shortCode}`}>Join Waitlist</Link>
@@ -144,7 +147,10 @@ export default function WalkUpLandingPage() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            This QR code is no longer valid. It was valid on {new Date(data.date).toLocaleDateString()}.
+            This QR code is no longer valid. It was valid on {(() => {
+              const [year, month, day] = data.date.split('-');
+              return `${parseInt(month ?? '')}/${parseInt(day ?? '')}/${year}`;
+            })()}.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
             Please ask for today's code at the pro shop.
