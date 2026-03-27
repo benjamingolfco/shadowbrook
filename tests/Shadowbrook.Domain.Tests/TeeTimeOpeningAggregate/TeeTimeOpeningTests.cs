@@ -162,13 +162,14 @@ public class TeeTimeOpeningTests
     }
 
     [Fact]
-    public void Claim_WhenCancelled_ThrowsOpeningNotAvailableException()
+    public void TryClaim_WhenCancelled_ReturnsRejected()
     {
         var opening = CreateOpening();
         opening.Cancel(this.timeProvider);
 
-        Assert.Throws<OpeningNotAvailableException>(() =>
-            opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider));
+        var result = opening.TryClaim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
+
+        Assert.False(result.Success);
     }
 
     [Fact]
@@ -321,7 +322,7 @@ public class TeeTimeOpeningTests
     public void Cancel_WhenFilled_ThrowsOpeningNotAvailableException()
     {
         var opening = CreateOpening(slotsAvailable: 1);
-        opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
+        opening.TryClaim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
 
         Assert.Throws<OpeningNotAvailableException>(() => opening.Cancel(this.timeProvider));
     }

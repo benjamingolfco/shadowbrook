@@ -186,7 +186,8 @@ public static class WalkUpWaitlistEndpoints
             opening.TeeTime.Time.ToString("HH:mm"),
             opening.SlotsAvailable,
             opening.SlotsRemaining,
-            opening.Status.ToString()));
+            opening.Status.ToString(),
+            []));
     }
 
     [WolverinePost("/courses/{courseId}/walkup-waitlist/entries")]
