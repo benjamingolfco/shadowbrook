@@ -99,6 +99,7 @@ public class TeeTimeOpening : Entity
             CourseId = CourseId,
             Date = TeeTime.Date,
             TeeTime = TeeTime.Time,
+            GroupSize = groupSize,
         });
 
         if (SlotsRemaining == 0)

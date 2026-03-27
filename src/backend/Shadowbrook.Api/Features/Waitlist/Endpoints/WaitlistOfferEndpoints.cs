@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
+using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Shadowbrook.Domain.WaitlistServices;
 using Wolverine.Http;
 
 namespace Shadowbrook.Api.Features.Waitlist.Endpoints;
@@ -47,7 +50,9 @@ public static class WaitlistOfferEndpoints
     [WolverinePost("/waitlist/offers/{token}/accept")]
     public static async Task<IResult> AcceptOffer(
         Guid token,
-        IWaitlistOfferRepository offerRepository)
+        IWaitlistOfferRepository offerRepository,
+        ITeeTimeOpeningRepository openingRepository,
+        WaitlistOfferClaimService claimService)
     {
         var offer = await offerRepository.GetByTokenAsync(token);
 
@@ -56,11 +61,15 @@ public static class WaitlistOfferEndpoints
             return Results.NotFound(new { error = "Offer not found." });
         }
 
-        // TODO: acceptance is being moved to a domain service that atomically accepts
-        // the offer and claims the slot. This endpoint will be updated in a follow-up task.
-        return Results.Problem(
-            detail: "Offer acceptance is not yet available.",
-            statusCode: StatusCodes.Status501NotImplemented);
+        var opening = await openingRepository.GetRequiredByIdAsync(offer.OpeningId);
+        var result = claimService.AcceptOffer(offer, opening);
+
+        if (!result.Success)
+        {
+            return Results.Conflict(new { reason = result.Reason });
+        }
+
+        return Results.Ok(new { status = "Confirmed" });
     }
 }
 

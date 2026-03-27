@@ -38,7 +38,8 @@ public class BookingConfirmationPolicyTests
             GolferId = Guid.NewGuid(),
             CourseId = Guid.NewGuid(),
             Date = new DateOnly(2026, 3, 25),
-            TeeTime = new TimeOnly(10, 0)
+            TeeTime = new TimeOnly(10, 0),
+            GroupSize = 1
         });
 
         Assert.Equal(bookingId, result.BookingId);

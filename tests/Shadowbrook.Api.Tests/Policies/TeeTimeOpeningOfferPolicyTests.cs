@@ -82,7 +82,8 @@ public class TeeTimeOpeningOfferPolicyTests
             GolferId = Guid.NewGuid(),
             CourseId = Guid.NewGuid(),
             Date = new DateOnly(2026, 3, 25),
-            TeeTime = new TimeOnly(14, 30)
+            TeeTime = new TimeOnly(14, 30),
+            GroupSize = 1
         });
 
         Assert.Equal(2, policy.SlotsRemaining);
