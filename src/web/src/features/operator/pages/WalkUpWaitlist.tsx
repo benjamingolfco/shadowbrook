@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatCourseTime } from '@/lib/course-time';
+import { formatCourseTime, formatWallClockTime } from '@/lib/course-time';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -134,15 +134,6 @@ function QueueTable({
   );
 }
 
-function formatTeeTime(isoDateTime: string): string {
-  const date = new Date(isoDateTime);
-  return date.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
-}
-
 function getStatusBadgeVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' | 'success' {
   switch (status) {
     case 'Open':
@@ -207,7 +198,7 @@ function OpeningsTable({
           <TableBody>
             {sortedOpenings.map((opening) => (
               <TableRow key={opening.id} className={cancellingOpeningId === opening.id ? 'opacity-50' : ''}>
-                <TableCell>{formatTeeTime(opening.teeTime)}</TableCell>
+                <TableCell>{formatWallClockTime(opening.teeTime)}</TableCell>
                 <TableCell>{opening.slotsAvailable}</TableCell>
                 <TableCell>{opening.slotsRemaining}</TableCell>
                 <TableCell>
@@ -223,7 +214,7 @@ function OpeningsTable({
                       size="sm"
                       onClick={() => onCancel(opening)}
                       disabled={cancellingOpeningId === opening.id}
-                      aria-label={`Cancel opening at ${formatTeeTime(opening.teeTime)}`}
+                      aria-label={`Cancel opening at ${formatWallClockTime(opening.teeTime)}`}
                     >
                       Cancel
                     </Button>
@@ -244,7 +235,7 @@ function OpeningsTable({
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="font-medium">{formatTeeTime(opening.teeTime)}</span>
+              <span className="font-medium">{formatWallClockTime(opening.teeTime)}</span>
               <Badge variant={getStatusBadgeVariant(opening.status)}>
                 {opening.status}
               </Badge>
@@ -267,7 +258,7 @@ function OpeningsTable({
                   size="sm"
                   onClick={() => onCancel(opening)}
                   disabled={cancellingOpeningId === opening.id}
-                  aria-label={`Cancel opening at ${formatTeeTime(opening.teeTime)}`}
+                  aria-label={`Cancel opening at ${formatWallClockTime(opening.teeTime)}`}
                 >
                   Cancel
                 </Button>

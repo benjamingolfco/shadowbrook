@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTeeSheet } from '@/features/operator/hooks/useTeeSheet';
 import { useCourseContext } from '../context/CourseContext';
-import { getCourseToday, getBrowserTimeZone } from '@/lib/course-time';
+import { getCourseToday, getBrowserTimeZone, formatWallClockDate, formatWallClockTime } from '@/lib/course-time';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -61,7 +61,7 @@ export default function TeeSheet() {
         <div className="mt-6">
           <h2 className="text-xl font-semibold">
             {teeSheetQuery.data.courseName} - {teeSheetQuery.data.slots.length > 0
-              ? formatDate(teeSheetQuery.data.slots[0]!.teeTime)
+              ? formatWallClockDate(teeSheetQuery.data.slots[0]!.teeTime)
               : selectedDate}
           </h2>
           <div className="mt-4">
@@ -78,7 +78,7 @@ export default function TeeSheet() {
                 {teeSheetQuery.data.slots.map((slot, index) => (
                   <TableRow key={index}>
                     <TableCell className="font-semibold">
-                      {formatTime(slot.teeTime)}
+                      {formatWallClockTime(slot.teeTime)}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -102,23 +102,4 @@ export default function TeeSheet() {
       )}
     </div>
   );
-}
-
-function formatDate(isoDateTime: string): string {
-  const date = new Date(isoDateTime);
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
-
-function formatTime(isoDateTime: string): string {
-  const date = new Date(isoDateTime);
-  return date.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
 }

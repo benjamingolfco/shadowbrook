@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { formatWallClockDate, formatWallClockTime } from '@/lib/course-time';
 import type { WaitlistOfferResponse } from '@/types/waitlist';
 
 interface OfferCardProps {
@@ -13,16 +14,8 @@ interface OfferCardProps {
 export default function OfferCard({ offer, onAccept, isAccepting, acceptError }: OfferCardProps) {
   const firstName = offer.golferName.split(' ')[0];
 
-  const teeTime = new Date(offer.teeTime);
-  const dateFormatted = teeTime.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
-  const timeFormatted = teeTime.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-  });
+  const dateFormatted = formatWallClockDate(offer.teeTime);
+  const timeFormatted = formatWallClockTime(offer.teeTime);
 
   return (
     <Card>
