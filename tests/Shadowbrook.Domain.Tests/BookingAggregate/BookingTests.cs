@@ -128,7 +128,7 @@ public class BookingTests
     }
 
     [Fact]
-    public void Confirm_WhenAlreadyConfirmed_ThrowsBookingNotPendingException()
+    public void Confirm_WhenAlreadyConfirmed_IsIdempotent()
     {
         var booking = Booking.Create(
             Guid.CreateVersion7(),
@@ -139,13 +139,34 @@ public class BookingTests
             "Jane Smith",
             1);
 
-        booking.Confirm(); // move to Confirmed
+        booking.Confirm();
+        var eventsAfterFirst = booking.DomainEvents.Count;
+
+        booking.Confirm(); // idempotent — no state change, no new event
+
+        Assert.Equal(BookingStatus.Confirmed, booking.Status);
+        Assert.Equal(eventsAfterFirst, booking.DomainEvents.Count);
+    }
+
+    [Fact]
+    public void Confirm_WhenRejected_ThrowsBookingNotPendingException()
+    {
+        var booking = Booking.Create(
+            Guid.CreateVersion7(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 15),
+            new TimeOnly(9, 0),
+            "Jane Smith",
+            1);
+
+        booking.Reject();
 
         Assert.Throws<BookingNotPendingException>(() => booking.Confirm());
     }
 
     [Fact]
-    public void RejectBooking_FromPending_TransitionsToRejectedAndRaisesEvent()
+    public void Reject_FromPending_TransitionsToRejectedAndRaisesEvent()
     {
         var bookingId = Guid.CreateVersion7();
         var booking = Booking.Create(
@@ -157,7 +178,7 @@ public class BookingTests
             "Jane Smith",
             1);
 
-        booking.RejectBooking();
+        booking.Reject();
 
         Assert.Equal(BookingStatus.Rejected, booking.Status);
         var rejectedEvent = Assert.IsType<BookingRejected>(booking.DomainEvents.Last());
@@ -165,7 +186,7 @@ public class BookingTests
     }
 
     [Fact]
-    public void RejectBooking_WhenAlreadyRejected_ThrowsBookingNotPendingException()
+    public void Reject_WhenAlreadyRejected_IsIdempotent()
     {
         var booking = Booking.Create(
             Guid.CreateVersion7(),
@@ -176,8 +197,29 @@ public class BookingTests
             "Jane Smith",
             1);
 
-        booking.RejectBooking(); // move to Rejected
+        booking.Reject();
+        var eventsAfterFirst = booking.DomainEvents.Count;
 
-        Assert.Throws<BookingNotPendingException>(() => booking.RejectBooking());
+        booking.Reject(); // idempotent — no state change, no new event
+
+        Assert.Equal(BookingStatus.Rejected, booking.Status);
+        Assert.Equal(eventsAfterFirst, booking.DomainEvents.Count);
+    }
+
+    [Fact]
+    public void Reject_WhenConfirmed_ThrowsBookingNotPendingException()
+    {
+        var booking = Booking.Create(
+            Guid.CreateVersion7(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 15),
+            new TimeOnly(9, 0),
+            "Jane Smith",
+            1);
+
+        booking.Confirm();
+
+        Assert.Throws<BookingNotPendingException>(() => booking.Reject());
     }
 }

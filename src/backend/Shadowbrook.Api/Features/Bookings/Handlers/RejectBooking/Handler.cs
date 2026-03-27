@@ -10,6 +10,6 @@ public static class RejectBookingHandler
     {
         var booking = await bookingRepository.GetRequiredByIdAsync(command.BookingId);
 
-        booking.RejectBooking();
+        booking.Reject();
     }
 }

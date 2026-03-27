@@ -3,7 +3,6 @@ using Shadowbrook.Api.Features.Bookings.Handlers;
 using Shadowbrook.Api.Features.Bookings.Policies;
 using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.BookingAggregate.Events;
-using Shadowbrook.Domain.BookingAggregate.Exceptions;
 using Shadowbrook.Domain.Common;
 
 namespace Shadowbrook.Api.Tests.Handlers;
@@ -52,15 +51,18 @@ public class ConfirmBookingHandlerTests
     }
 
     [Fact]
-    public async Task Handle_AlreadyConfirmedBooking_Throws()
+    public async Task Handle_AlreadyConfirmedBooking_IsIdempotent()
     {
         var booking = CreatePendingBooking();
         booking.Confirm(); // move to Confirmed
+        booking.ClearDomainEvents();
         this.bookingRepo.GetByIdAsync(booking.Id).Returns(booking);
 
         var command = new ConfirmBookingCommand(booking.Id);
 
-        await Assert.ThrowsAsync<BookingNotPendingException>(
-            () => ConfirmBookingHandler.Handle(command, this.bookingRepo));
+        await ConfirmBookingHandler.Handle(command, this.bookingRepo);
+
+        Assert.Equal(BookingStatus.Confirmed, booking.Status);
+        Assert.Empty(booking.DomainEvents);
     }
 }
