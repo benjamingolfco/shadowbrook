@@ -5,7 +5,7 @@ namespace Shadowbrook.Api.Features.Bookings.Handlers;
 
 public static class TeeTimeOpeningSlotsClaimedCreateConfirmedBookingHandler
 {
-    public static async Task Handle(
+    public static void Handle(
         TeeTimeOpeningSlotsClaimed evt,
         IBookingRepository bookingRepository)
     {
@@ -18,7 +18,5 @@ public static class TeeTimeOpeningSlotsClaimedCreateConfirmedBookingHandler
             playerCount: evt.GroupSize);
 
         bookingRepository.Add(booking);
-
-        await Task.CompletedTask;
     }
 }

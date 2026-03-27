@@ -31,7 +31,7 @@ public class TeeTimeOpeningSlotsClaimedCreateConfirmedBookingHandlerTests
     }
 
     [Fact]
-    public async Task Handle_CreatesConfirmedBookingWithCorrectProperties()
+    public void Handle_CreatesConfirmedBookingWithCorrectProperties()
     {
         var bookingId = Guid.CreateVersion7();
         var golferId = Guid.NewGuid();
@@ -41,7 +41,7 @@ public class TeeTimeOpeningSlotsClaimedCreateConfirmedBookingHandlerTests
 
         var evt = BuildEvent(bookingId, golferId, courseId, date, teeTime, groupSize: 2);
 
-        await TeeTimeOpeningSlotsClaimedCreateConfirmedBookingHandler.Handle(evt, this.bookingRepo);
+        TeeTimeOpeningSlotsClaimedCreateConfirmedBookingHandler.Handle(evt, this.bookingRepo);
 
         this.bookingRepo.Received(1).Add(Arg.Is<Booking>(b =>
             b.Id == bookingId &&
@@ -54,24 +54,24 @@ public class TeeTimeOpeningSlotsClaimedCreateConfirmedBookingHandlerTests
     }
 
     [Fact]
-    public async Task Handle_RaisesBookingConfirmedEvent()
+    public void Handle_RaisesBookingConfirmedEvent()
     {
         var bookingId = Guid.CreateVersion7();
         var evt = BuildEvent(bookingId: bookingId);
 
-        await TeeTimeOpeningSlotsClaimedCreateConfirmedBookingHandler.Handle(evt, this.bookingRepo);
+        TeeTimeOpeningSlotsClaimedCreateConfirmedBookingHandler.Handle(evt, this.bookingRepo);
 
         this.bookingRepo.Received(1).Add(Arg.Is<Booking>(b =>
             b.DomainEvents.OfType<BookingConfirmed>().Any(e => e.BookingId == bookingId)));
     }
 
     [Fact]
-    public async Task Handle_UsesPreAllocatedBookingId()
+    public void Handle_UsesPreAllocatedBookingId()
     {
         var bookingId = Guid.CreateVersion7();
         var evt = BuildEvent(bookingId: bookingId);
 
-        await TeeTimeOpeningSlotsClaimedCreateConfirmedBookingHandler.Handle(evt, this.bookingRepo);
+        TeeTimeOpeningSlotsClaimedCreateConfirmedBookingHandler.Handle(evt, this.bookingRepo);
 
         this.bookingRepo.Received(1).Add(Arg.Is<Booking>(b => b.Id == bookingId));
     }
