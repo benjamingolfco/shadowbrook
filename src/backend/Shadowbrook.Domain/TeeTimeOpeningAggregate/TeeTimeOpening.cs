@@ -57,6 +57,11 @@ public class TeeTimeOpening : Entity
 
     public ClaimResult TryClaim(Guid bookingId, Guid golferId, int groupSize, ITimeProvider timeProvider)
     {
+        if (groupSize <= 0)
+        {
+            throw new InvalidGroupSizeException();
+        }
+
         if (Status != TeeTimeOpeningStatus.Open)
         {
             AddDomainEvent(new TeeTimeOpeningClaimRejected
@@ -66,11 +71,6 @@ public class TeeTimeOpening : Entity
                 GolferId = golferId,
             });
             return ClaimResult.Rejected("Opening is not available");
-        }
-
-        if (groupSize <= 0)
-        {
-            throw new InvalidGroupSizeException();
         }
 
         if (SlotsRemaining < groupSize)

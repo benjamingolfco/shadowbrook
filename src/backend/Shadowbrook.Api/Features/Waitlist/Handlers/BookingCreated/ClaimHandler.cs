@@ -18,7 +18,7 @@ public static class BookingCreatedClaimHandler
 
         if (opening is null)
         {
-            logger.LogWarning(
+            logger.LogInformation(
                 "No tee time opening found for course {CourseId} on {Date} at {TeeTime}, skipping claim",
                 evt.CourseId, evt.Date, evt.TeeTime);
             return;
@@ -28,7 +28,7 @@ public static class BookingCreatedClaimHandler
 
         if (!result.Success)
         {
-            logger.LogWarning(
+            logger.LogInformation(
                 "Claim rejected for booking {BookingId} on opening {OpeningId}: {Reason}",
                 evt.BookingId, opening.Id, result.Reason);
         }
