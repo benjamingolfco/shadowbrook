@@ -16,6 +16,9 @@ public class TeeTimeOpening : Entity
     public DateTimeOffset? FilledAt { get; private set; }
     public DateTimeOffset? ExpiredAt { get; private set; }
 
+    private readonly List<ClaimedSlot> claimedSlots = [];
+    public IReadOnlyList<ClaimedSlot> ClaimedSlots => this.claimedSlots.AsReadOnly();
+
     private TeeTimeOpening() { } // EF
 
     public static TeeTimeOpening Create(
@@ -85,6 +88,7 @@ public class TeeTimeOpening : Entity
         }
 
         SlotsRemaining -= groupSize;
+        this.claimedSlots.Add(new ClaimedSlot(bookingId, golferId, groupSize, timeProvider.GetCurrentTimestamp()));
 
         AddDomainEvent(new TeeTimeOpeningClaimed
         {

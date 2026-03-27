@@ -234,4 +234,52 @@ public class TeeTimeOpeningTests
         Assert.Throws<InvalidGroupSizeException>(() =>
             opening.TryClaim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 0, this.timeProvider));
     }
+
+    [Fact]
+    public void TryClaim_WhenSlotsAvailable_AddsClaimedSlot()
+    {
+        var opening = CreateOpening(slotsAvailable: 3);
+        opening.ClearDomainEvents();
+        var bookingId = Guid.NewGuid();
+        var golferId = Guid.NewGuid();
+
+        var result = opening.TryClaim(bookingId, golferId, groupSize: 2, this.timeProvider);
+
+        Assert.True(result.Success);
+        var claimedSlot = Assert.Single(opening.ClaimedSlots);
+        Assert.Equal(bookingId, claimedSlot.BookingId);
+        Assert.Equal(golferId, claimedSlot.GolferId);
+        Assert.Equal(2, claimedSlot.GroupSize);
+        Assert.Equal(new DateTimeOffset(2026, 3, 25, 10, 0, 0, TimeSpan.Zero), claimedSlot.ClaimedAt);
+    }
+
+    [Fact]
+    public void TryClaim_WhenMultipleClaims_AccumulatesClaimedSlots()
+    {
+        var opening = CreateOpening(slotsAvailable: 4);
+        opening.ClearDomainEvents();
+        var bookingId1 = Guid.NewGuid();
+        var golferId1 = Guid.NewGuid();
+        var bookingId2 = Guid.NewGuid();
+        var golferId2 = Guid.NewGuid();
+
+        opening.TryClaim(bookingId1, golferId1, groupSize: 2, this.timeProvider);
+        opening.TryClaim(bookingId2, golferId2, groupSize: 1, this.timeProvider);
+
+        Assert.Equal(2, opening.ClaimedSlots.Count);
+        Assert.Contains(opening.ClaimedSlots, cs => cs.BookingId == bookingId1 && cs.GolferId == golferId1 && cs.GroupSize == 2);
+        Assert.Contains(opening.ClaimedSlots, cs => cs.BookingId == bookingId2 && cs.GolferId == golferId2 && cs.GroupSize == 1);
+    }
+
+    [Fact]
+    public void TryClaim_WhenRejected_DoesNotAddClaimedSlot()
+    {
+        var opening = CreateOpening(slotsAvailable: 1);
+        opening.ClearDomainEvents();
+
+        var result = opening.TryClaim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 2, this.timeProvider);
+
+        Assert.False(result.Success);
+        Assert.Empty(opening.ClaimedSlots);
+    }
 }
