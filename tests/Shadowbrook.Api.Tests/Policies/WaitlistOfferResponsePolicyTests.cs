@@ -70,7 +70,10 @@ public class WaitlistOfferResponsePolicyTests
             OpeningId = Guid.NewGuid(),
             GolferWaitlistEntryId = Guid.NewGuid(),
             GolferId = Guid.NewGuid(),
-            GroupSize = 1
+            GroupSize = 1,
+            CourseId = Guid.NewGuid(),
+            Date = new DateOnly(2026, 3, 25),
+            TeeTime = new TimeOnly(14, 30)
         });
 
         Assert.True(policy.IsCompleted());

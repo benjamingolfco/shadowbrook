@@ -17,6 +17,9 @@ public class WaitlistOffer : Entity
     public string? RejectionReason { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? NotifiedAt { get; private set; }
+    public Guid CourseId { get; private set; }
+    public DateOnly Date { get; private set; }
+    public TimeOnly TeeTime { get; private set; }
 
     private WaitlistOffer() { } // EF
 
@@ -26,6 +29,9 @@ public class WaitlistOffer : Entity
         Guid golferId,
         int groupSize,
         bool isWalkUp,
+        Guid courseId,
+        DateOnly date,
+        TimeOnly teeTime,
         ITimeProvider timeProvider)
     {
         var offer = new WaitlistOffer
@@ -37,6 +43,9 @@ public class WaitlistOffer : Entity
             GolferId = golferId,
             GroupSize = groupSize,
             IsWalkUp = isWalkUp,
+            CourseId = courseId,
+            Date = date,
+            TeeTime = teeTime,
             Status = OfferStatus.Pending,
             CreatedAt = timeProvider.GetCurrentTimestamp()
         };
@@ -48,7 +57,10 @@ public class WaitlistOffer : Entity
             GolferWaitlistEntryId = golferWaitlistEntryId,
             GolferId = golferId,
             GroupSize = groupSize,
-            IsWalkUp = isWalkUp
+            IsWalkUp = isWalkUp,
+            CourseId = courseId,
+            Date = date,
+            TeeTime = teeTime
         });
 
         return offer;
@@ -89,7 +101,10 @@ public class WaitlistOffer : Entity
             OpeningId = OpeningId,
             GolferWaitlistEntryId = GolferWaitlistEntryId,
             GolferId = GolferId,
-            GroupSize = GroupSize
+            GroupSize = GroupSize,
+            CourseId = CourseId,
+            Date = Date,
+            TeeTime = TeeTime
         });
     }
 

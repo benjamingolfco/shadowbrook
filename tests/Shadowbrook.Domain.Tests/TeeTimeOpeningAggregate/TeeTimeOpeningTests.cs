@@ -56,25 +56,26 @@ public class TeeTimeOpeningTests
     }
 
     [Fact]
-    public void Claim_WhenSlotsAvailable_DecrementsSlotsRemaining()
+    public void TryClaim_WhenSlotsAvailable_DecrementsSlotsRemaining()
     {
         var opening = CreateOpening(slotsAvailable: 3);
         opening.ClearDomainEvents();
 
-        opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
+        var result = opening.TryClaim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
 
+        Assert.True(result.Success);
         Assert.Equal(2, opening.SlotsRemaining);
     }
 
     [Fact]
-    public void Claim_WhenSlotsAvailable_RaisesClaimedEvent()
+    public void TryClaim_WhenSlotsAvailable_RaisesClaimedEvent()
     {
         var opening = CreateOpening(slotsAvailable: 3);
         opening.ClearDomainEvents();
         var bookingId = Guid.NewGuid();
         var golferId = Guid.NewGuid();
 
-        opening.Claim(bookingId, golferId, groupSize: 1, this.timeProvider);
+        opening.TryClaim(bookingId, golferId, groupSize: 1, this.timeProvider);
 
         var domainEvent = Assert.Single(opening.DomainEvents);
         var claimed = Assert.IsType<TeeTimeOpeningClaimed>(domainEvent);
@@ -87,12 +88,12 @@ public class TeeTimeOpeningTests
     }
 
     [Fact]
-    public void Claim_WhenLastSlot_RaisesFilledEvent()
+    public void TryClaim_WhenLastSlot_RaisesFilledEvent()
     {
         var opening = CreateOpening(slotsAvailable: 1);
         opening.ClearDomainEvents();
 
-        opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
+        opening.TryClaim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
 
         Assert.Equal(2, opening.DomainEvents.Count);
         Assert.Contains(opening.DomainEvents, e => e is TeeTimeOpeningClaimed);
@@ -102,15 +103,17 @@ public class TeeTimeOpeningTests
     }
 
     [Fact]
-    public void Claim_WhenGroupTooLarge_RaisesClaimRejectedEvent()
+    public void TryClaim_WhenGroupTooLarge_RaisesClaimRejectedEvent()
     {
         var opening = CreateOpening(slotsAvailable: 1);
         opening.ClearDomainEvents();
         var bookingId = Guid.NewGuid();
         var golferId = Guid.NewGuid();
 
-        opening.Claim(bookingId, golferId, groupSize: 2, this.timeProvider);
+        var result = opening.TryClaim(bookingId, golferId, groupSize: 2, this.timeProvider);
 
+        Assert.False(result.Success);
+        Assert.Equal("Insufficient slots remaining", result.Reason);
         var domainEvent = Assert.Single(opening.DomainEvents);
         var rejected = Assert.IsType<TeeTimeOpeningClaimRejected>(domainEvent);
         Assert.Equal(opening.Id, rejected.OpeningId);
@@ -121,23 +124,41 @@ public class TeeTimeOpeningTests
     }
 
     [Fact]
-    public void Claim_WhenAlreadyFilled_ThrowsOpeningNotAvailableException()
+    public void TryClaim_WhenAlreadyFilled_ReturnsRejectedAndRaisesEvent()
     {
         var opening = CreateOpening(slotsAvailable: 1);
-        opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
+        opening.TryClaim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
+        opening.ClearDomainEvents();
+        var bookingId = Guid.NewGuid();
+        var golferId = Guid.NewGuid();
 
-        Assert.Throws<OpeningNotAvailableException>(() =>
-            opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider));
+        var result = opening.TryClaim(bookingId, golferId, groupSize: 1, this.timeProvider);
+
+        Assert.False(result.Success);
+        Assert.Equal("Opening is not available", result.Reason);
+        var domainEvent = Assert.Single(opening.DomainEvents);
+        var rejected = Assert.IsType<TeeTimeOpeningClaimRejected>(domainEvent);
+        Assert.Equal(bookingId, rejected.BookingId);
+        Assert.Equal(golferId, rejected.GolferId);
     }
 
     [Fact]
-    public void Claim_WhenExpired_ThrowsOpeningNotAvailableException()
+    public void TryClaim_WhenExpired_ReturnsRejectedAndRaisesEvent()
     {
         var opening = CreateOpening();
         opening.Expire(this.timeProvider);
+        opening.ClearDomainEvents();
+        var bookingId = Guid.NewGuid();
+        var golferId = Guid.NewGuid();
 
-        Assert.Throws<OpeningNotAvailableException>(() =>
-            opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider));
+        var result = opening.TryClaim(bookingId, golferId, groupSize: 1, this.timeProvider);
+
+        Assert.False(result.Success);
+        Assert.Equal("Opening is not available", result.Reason);
+        var domainEvent = Assert.Single(opening.DomainEvents);
+        var rejected = Assert.IsType<TeeTimeOpeningClaimRejected>(domainEvent);
+        Assert.Equal(bookingId, rejected.BookingId);
+        Assert.Equal(golferId, rejected.GolferId);
     }
 
     [Fact]
@@ -168,7 +189,7 @@ public class TeeTimeOpeningTests
     public void Expire_WhenAlreadyFilled_IsIdempotent()
     {
         var opening = CreateOpening(slotsAvailable: 1);
-        opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
+        opening.TryClaim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
         opening.ClearDomainEvents();
 
         opening.Expire(this.timeProvider);
@@ -205,13 +226,13 @@ public class TeeTimeOpeningTests
     }
 
     [Fact]
-    public void Claim_WhenGroupSizeZero_ThrowsInvalidGroupSizeException()
+    public void TryClaim_WhenGroupSizeZero_ThrowsInvalidGroupSizeException()
     {
         var opening = CreateOpening();
         opening.ClearDomainEvents();
 
         Assert.Throws<InvalidGroupSizeException>(() =>
-            opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 0, this.timeProvider));
+            opening.TryClaim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 0, this.timeProvider));
     }
 
     [Fact]

@@ -132,5 +132,8 @@ public class GolferWaitlistEntryTests
         Assert.Equal(entry.GroupSize, offer.GroupSize);
         Assert.Equal(entry.IsWalkUp, offer.IsWalkUp);
         Assert.Equal(OfferStatus.Pending, offer.Status);
+        Assert.Equal(opening.CourseId, offer.CourseId);
+        Assert.Equal(opening.TeeTime.Date, offer.Date);
+        Assert.Equal(opening.TeeTime.Time, offer.TeeTime);
     }
 }

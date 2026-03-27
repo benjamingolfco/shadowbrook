@@ -12,4 +12,7 @@ public record WaitlistOfferCreated : IDomainEvent
     public required Guid GolferId { get; init; }
     public required int GroupSize { get; init; }
     public required bool IsWalkUp { get; init; }
+    public required Guid CourseId { get; init; }
+    public required DateOnly Date { get; init; }
+    public required TimeOnly TeeTime { get; init; }
 }

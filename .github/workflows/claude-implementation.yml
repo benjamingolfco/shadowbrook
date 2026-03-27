@@ -7,14 +7,8 @@ on:
         description: 'Issue number to dispatch for sprint execution (leave empty to run find-work)'
         required: false
         type: string
-  issue_comment:
-    types: [created]
-  pull_request:
-    types: [opened, closed, synchronize]
   pull_request_review:
     types: [submitted]
-  check_suite:
-    types: [completed]
   schedule:
     - cron: '0 2,6,14,18,22 * * *'  # Every ~4 hours UTC (8pm, midnight, 8am, noon, 4pm CST)
 
@@ -130,12 +124,9 @@ jobs:
   sprint:
     if: >-
       (github.event_name == 'workflow_dispatch' && inputs.issue_number != '')
-      || github.event_name == 'check_suite'
-      || (github.event_name == 'issue_comment' && github.event.issue.pull_request && !endsWith(github.event.comment.user.login, '[bot]') && contains(github.event.issue.labels.*.name, 'agentic'))
-      || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'agentic'))
       || (github.event_name == 'pull_request_review' && contains(github.event.pull_request.labels.*.name, 'agentic'))
     concurrency:
-      group: sprint-${{ inputs.issue_number || github.event.issue.number || github.event.pull_request.number || github.event.check_suite.id || 'event' }}
+      group: sprint-${{ github.event.pull_request.number || inputs.issue_number }}
       cancel-in-progress: false
     runs-on: ubuntu-latest
     permissions:
@@ -156,13 +147,6 @@ jobs:
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
-
-      - name: Acknowledge comment
-        if: github.event_name == 'issue_comment'
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          gh api repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions -X POST -f content="eyes"
 
       - name: Run Sprint Manager
         uses: anthropics/claude-code-action@v1
@@ -201,34 +185,11 @@ jobs:
             - For Ready issues: run the full sprint flow (Architect → implementation → PR)
             - For other statuses: resume from where the issue stalled
 
-            ### issue_comment (PR comment)
-            A human commented on a PR with the `agentic` label.
-            - The PR number is `${{ github.event.issue.number }}`
-            - Read the comment and the PR context
-            - Treat this as owner/reviewer feedback — re-dispatch implementation agent with the comment as instructions
-
-            ### pull_request:closed (merged)
-            - Find the linked issue from the PR body or branch name
-            - Verify the issue is marked Done
-            - Query what this issue was blocking (merge cascade)
-            - For each newly-unblocked sprint issue, trigger a new dispatch:
-              `gh workflow run claude-implementation.yml -f issue_number={N}`
-            - Update Current Sprint Overview
-
-            ### pull_request:opened / pull_request:synchronize
-            - Check if the PR is linked to a sprint issue (has `agentic` label)
-            - If not a sprint PR, skip entirely
-            - If sprint PR, update status as needed
-
             ### pull_request_review:submitted
             - Check if the PR has the `agentic` label; skip if not
-            - If review passes (comment, no request-changes): set Ready to Merge, tag owner
+            - If approved by the repo owner: merge the PR, set status to Done, trigger merge cascade
             - If review requests changes: re-dispatch implementation agent with feedback
-
-            ### check_suite:completed
-            - Check if the PR is linked to a sprint issue
-            - If CI passes: set In Review
-            - If CI fails: re-dispatch implementation agent with failure details
+            - If comment only (no approval/rejection): no action needed
 
             ## Spawning Agents
             When spawning agents (architect, backend, frontend, devops):
