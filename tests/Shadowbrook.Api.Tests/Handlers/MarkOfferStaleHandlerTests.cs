@@ -8,12 +8,12 @@ using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 
 namespace Shadowbrook.Api.Tests.Handlers;
 
-public class RejectStaleOfferHandlerTests
+public class MarkOfferStaleHandlerTests
 {
     private readonly IWaitlistOfferRepository offerRepo = Substitute.For<IWaitlistOfferRepository>();
     private readonly ITimeProvider timeProvider = Substitute.For<ITimeProvider>();
 
-    public RejectStaleOfferHandlerTests()
+    public MarkOfferStaleHandlerTests()
     {
         this.timeProvider.GetCurrentTimestamp().Returns(DateTimeOffset.UtcNow);
     }
@@ -26,25 +26,26 @@ public class RejectStaleOfferHandlerTests
     }
 
     [Fact]
-    public async Task Handle_PendingOffer_RejectsAndReturnsStaleEvent()
+    public async Task Handle_PendingOffer_MarksStaleAndRaisesDomainEvent()
     {
         var openingId = Guid.NewGuid();
         var offer = CreatePendingOffer(openingId);
         this.offerRepo.GetByIdAsync(offer.Id).Returns(offer);
 
-        var command = new RejectStaleOffer(offer.Id, openingId);
+        var command = new MarkOfferStale(offer.Id, openingId);
 
-        var result = await RejectStaleOfferHandler.Handle(command, this.offerRepo, NullLogger.Instance);
+        await MarkOfferStaleHandler.Handle(command, this.offerRepo, NullLogger.Instance);
 
-        Assert.Equal(OfferStatus.Rejected, offer.Status);
-        Assert.Contains(offer.DomainEvents, e => e is WaitlistOfferRejected);
-        var stale = Assert.IsType<WaitlistOfferStale>(result);
+        Assert.True(offer.IsStale);
+        Assert.Equal(OfferStatus.Pending, offer.Status);
+        var domainEvent = Assert.Single(offer.DomainEvents);
+        var stale = Assert.IsType<WaitlistOfferStale>(domainEvent);
         Assert.Equal(offer.Id, stale.WaitlistOfferId);
         Assert.Equal(openingId, stale.OpeningId);
     }
 
     [Fact]
-    public async Task Handle_AlreadyRejectedOffer_LogsAndReturnsNull()
+    public async Task Handle_AlreadyRejectedOffer_LogsAndSkips()
     {
         var openingId = Guid.NewGuid();
         var offer = CreatePendingOffer(openingId);
@@ -52,11 +53,11 @@ public class RejectStaleOfferHandlerTests
         offer.ClearDomainEvents();
         this.offerRepo.GetByIdAsync(offer.Id).Returns(offer);
 
-        var command = new RejectStaleOffer(offer.Id, openingId);
+        var command = new MarkOfferStale(offer.Id, openingId);
 
-        var result = await RejectStaleOfferHandler.Handle(command, this.offerRepo, NullLogger.Instance);
+        await MarkOfferStaleHandler.Handle(command, this.offerRepo, NullLogger.Instance);
 
-        Assert.Null(result);
+        Assert.False(offer.IsStale);
         Assert.Empty(offer.DomainEvents);
     }
 
@@ -66,9 +67,9 @@ public class RejectStaleOfferHandlerTests
         var offerId = Guid.NewGuid();
         this.offerRepo.GetByIdAsync(offerId).Returns((WaitlistOffer?)null);
 
-        var command = new RejectStaleOffer(offerId, Guid.NewGuid());
+        var command = new MarkOfferStale(offerId, Guid.NewGuid());
 
         await Assert.ThrowsAsync<EntityNotFoundException>(
-            () => RejectStaleOfferHandler.Handle(command, this.offerRepo, NullLogger.Instance));
+            () => MarkOfferStaleHandler.Handle(command, this.offerRepo, NullLogger.Instance));
     }
 }
