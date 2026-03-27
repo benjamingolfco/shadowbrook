@@ -39,7 +39,7 @@ record BookingCancelled : IDomainEvent
 
 ### BookingNotCancellableException
 
-New domain exception for attempting to cancel a Rejected booking. Maps to 400 in the global exception handler.
+New domain exception for attempting to cancel a Rejected booking. Maps to 409 Conflict in the global exception handler (consistent with other state-conflict exceptions like BookingNotPendingException).
 
 ## Handler Changes
 
