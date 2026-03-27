@@ -2,7 +2,7 @@ import { formatWallClockDate, formatWallClockTime } from '@/lib/course-time';
 import type { WaitlistOfferAcceptResponse, WaitlistOfferResponse } from '@/types/waitlist';
 
 interface AcceptConfirmationProps {
-  response: WaitlistOfferAcceptResponse;
+  response?: WaitlistOfferAcceptResponse;
   offer: WaitlistOfferResponse;
 }
 
@@ -32,7 +32,7 @@ export default function AcceptConfirmation({ response, offer }: AcceptConfirmati
 
       <div className="space-y-2">
         <h2 className="text-2xl font-bold">Tee Time Claimed</h2>
-        <p className="text-muted-foreground">{response.message}</p>
+        {response?.message && <p className="text-muted-foreground">{response.message}</p>}
       </div>
 
       <div className="space-y-1">

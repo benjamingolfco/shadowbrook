@@ -125,6 +125,18 @@ export default function WalkUpOfferPage() {
     );
   }
 
+  // Already accepted (e.g. page reload after claiming)
+  if (offer.status === 'Accepted') {
+    return (
+      <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
+        <div className="w-full max-w-sm">
+          <h1 className="text-xl font-bold text-center mb-8">Shadowbrook</h1>
+          <AcceptConfirmation offer={offer} />
+        </div>
+      </div>
+    );
+  }
+
   // Format for confirmation dialog
   const dateFormatted = formatWallClockDate(offer.teeTime);
   const timeFormatted = formatWallClockTime(offer.teeTime);
