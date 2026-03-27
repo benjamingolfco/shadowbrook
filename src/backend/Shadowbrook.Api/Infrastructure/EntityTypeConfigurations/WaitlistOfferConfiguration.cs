@@ -28,7 +28,12 @@ public class WaitlistOfferConfiguration : IEntityTypeConfiguration<WaitlistOffer
         builder.HasShadowRowVersion();
         builder.HasShadowAuditProperties();
 
+        builder.Property(o => o.CourseId).IsRequired();
+        builder.Property(o => o.Date).IsRequired();
+        builder.Property(o => o.TeeTime).HasColumnType("time").IsRequired();
+
         builder.HasIndex(o => o.OpeningId);
+        builder.HasIndex(o => o.CourseId);
         builder.HasIndex(o => new { o.GolferWaitlistEntryId, o.OpeningId });
     }
 }

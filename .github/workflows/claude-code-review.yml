@@ -42,7 +42,57 @@ jobs:
             echo "agentic=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Check for redundant review
+        id: check-redundant
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          PR=${{ github.event.pull_request.number }}
+          BOT_LOGIN="benjamingolfco-claude-agent[bot]"
+
+          # Get the bot's most recent review
+          LAST_REVIEW=$(gh api "repos/${{ github.repository }}/pulls/$PR/reviews" \
+            --jq "[.[] | select(.user.login == \"$BOT_LOGIN\")] | sort_by(.submitted_at) | last // empty")
+
+          if [ -z "$LAST_REVIEW" ]; then
+            echo "No prior bot review — running full review."
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "follow_up=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          REVIEW_STATE=$(echo "$LAST_REVIEW" | jq -r '.state')
+          REVIEW_TIME=$(echo "$LAST_REVIEW" | jq -r '.submitted_at')
+
+          echo "Last bot review: state=$REVIEW_STATE at $REVIEW_TIME"
+
+          # If the last review requested changes, always re-review
+          if [ "$REVIEW_STATE" = "CHANGES_REQUESTED" ]; then
+            echo "Last review requested changes — running follow-up review."
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "follow_up=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Count commits after the last review
+          NEW_COMMITS=$(gh api "repos/${{ github.repository }}/pulls/$PR/commits" \
+            --jq "[.[] | select(.commit.committer.date > \"$REVIEW_TIME\")] | length")
+
+          echo "New commits since last review: $NEW_COMMITS"
+
+          if [ "$NEW_COMMITS" = "0" ]; then
+            echo "No new commits since last passing review — skipping."
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "follow_up=false" >> $GITHUB_OUTPUT
+          else
+            echo "New commits found — running follow-up review."
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "follow_up=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Run Code Reviewer
+        if: steps.check-redundant.outputs.skip != 'true'
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -58,6 +108,12 @@ jobs:
 
             Title: ${{ github.event.pull_request.title }}
             Agentic: ${{ steps.check-agentic.outputs.agentic }}
+            Follow-up review: ${{ steps.check-redundant.outputs.follow_up }}
+
+            If Follow-up review is true:
+            - This is a re-review after new commits were pushed. Focus ONLY on the new changes.
+            - Keep your review concise — a few sentences if everything looks good.
+            - Do NOT repeat feedback from prior reviews unless it was not addressed.
 
             If Agentic is true:
             - Use `gh pr review --request-changes` when issues are found
@@ -68,7 +124,7 @@ jobs:
             CRITICAL: You MUST post a review via `gh pr review` before finishing. This is required for the pipeline to advance. If you fail to post a review, the pipeline will stall indefinitely.
 
       - name: Ensure review was posted
-        if: always()
+        if: always() && steps.check-redundant.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |

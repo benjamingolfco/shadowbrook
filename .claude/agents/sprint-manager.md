@@ -81,7 +81,11 @@ If the issue is QA or Done, skip it.
 - Set status to **Implementing**
 - Check for an existing branch matching `issue/{number}-*`
 - If a branch exists, check it out and pull latest from main
-- If no branch exists, create one from main: `issue/{number}-{slug}`
+- If no branch exists, create one linked to the issue using `gh issue develop`:
+  ```bash
+  gh issue develop {number} --name issue/{number}-{slug} --base main --checkout
+  ```
+  This links the branch (and any PR from it) to the issue in GitHub's Development sidebar.
 
 ### Step 2: Architect Writes Detailed Implementation Plan
 
@@ -125,24 +129,16 @@ After all agents have completed:
   - Body: cover all agents' contributions with a test plan. Include "Relates to #{number}"
 - If a PR already exists: update with `gh pr edit`
 
-### Step 5: Monitor PR Lifecycle
+### Step 5: Handle PR Review
 
-After creating/updating the PR, the Sprint Manager monitors its lifecycle through subsequent workflow triggers (PR events, check suite events):
+The sprint workflow triggers on `pull_request_review` events for PRs with the `agentic` label.
 
-**CI passes + code review approved:** Set status to **Ready to Merge**. The owner reviews, approves (satisfying the owner-gate check), and merges. On merge, the implementation workflow detects it and sets status to **QA**, then triggers merge cascade.
+**Owner approves:** Merge the PR, set issue status to **Done**, and trigger merge cascade for any newly-unblocked issues.
 
-**CI fails:**
-1. Read the CI failure logs
-2. Classify the failure (build, test, lint, infra)
-3. Re-dispatch the appropriate implementation agent with failure details
-4. Agent fixes, commits, pushes — CI re-runs
-
-**Code review requests changes:**
+**Review requests changes:**
 1. Read the review feedback
 2. Re-dispatch the appropriate implementation agent with the feedback
-3. Agent fixes, commits, pushes — review re-runs
-
-**CI failure escalation:** After **3 consecutive CI failures** without resolution, set status to **Awaiting Owner**, assign `@aarongbenjamin`, and post an Action Required comment.
+3. Agent fixes, commits, pushes
 
 ### Step 6: Write Summary
 
@@ -152,14 +148,13 @@ Write a `GITHUB_STEP_SUMMARY` table (see SKILL.md § Observability for format).
 
 ## Merge Cascade
 
-When a PR merges to main:
+After merging a PR (triggered by owner approval in Step 5):
 
 1. **Find the linked issue** from the PR body or branch name.
 2. **Set the issue status to QA.** (The issue moves to Done only after QA validation passes via the `/qa` skill.)
 3. **Query what this issue was blocking** (see CLAUDE.md § GitHub Issue Dependencies).
 4. **For each blocked sprint issue:** check if ALL of its blockers are now QA or Done.
 5. **If newly unblocked** → trigger a `workflow_dispatch` for it.
-6. **Update the Current Sprint Overview** with the merge event.
 
 ---
 

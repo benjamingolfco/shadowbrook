@@ -142,6 +142,15 @@ function formatTeeTime(teeTime: string): string {
   return `${hour12}:${minute} ${period}`;
 }
 
+function formatFilledGolfers(filledGolfers: WaitlistOpeningEntry['filledGolfers']): string {
+  if (filledGolfers.length === 0) {
+    return '--';
+  }
+  return filledGolfers
+    .map(golfer => golfer.groupSize > 1 ? `${golfer.golferName} (${golfer.groupSize})` : golfer.golferName)
+    .join(', ');
+}
+
 function OpeningsTable({ openings }: { openings: WaitlistOpeningEntry[] }) {
   const sortedOpenings = [...openings].sort((a, b) => a.teeTime.localeCompare(b.teeTime));
 
@@ -167,6 +176,7 @@ function OpeningsTable({ openings }: { openings: WaitlistOpeningEntry[] }) {
               <TableHead>Slots Available</TableHead>
               <TableHead>Slots Remaining</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Golfers</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -176,6 +186,7 @@ function OpeningsTable({ openings }: { openings: WaitlistOpeningEntry[] }) {
                 <TableCell>{opening.slotsAvailable}</TableCell>
                 <TableCell>{opening.slotsRemaining}</TableCell>
                 <TableCell>{opening.status}</TableCell>
+                <TableCell>{formatFilledGolfers(opening.filledGolfers)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -186,15 +197,23 @@ function OpeningsTable({ openings }: { openings: WaitlistOpeningEntry[] }) {
         {sortedOpenings.map((opening) => (
           <div
             key={opening.id}
-            className="flex items-center justify-between rounded-md border p-3 text-sm"
+            className="flex flex-col gap-2 rounded-md border p-3 text-sm"
           >
-            <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between">
               <span className="font-medium">{formatTeeTime(opening.teeTime)}</span>
+              <span className="text-muted-foreground">{opening.status}</span>
+            </div>
+            <div className="flex flex-col gap-1">
               <span className="text-muted-foreground text-xs">
                 {opening.slotsRemaining} of {opening.slotsAvailable} slot{opening.slotsAvailable !== 1 ? 's' : ''} remaining
               </span>
+              {opening.filledGolfers.length > 0 && (
+                <span className="text-xs">
+                  <span className="text-muted-foreground">Golfers: </span>
+                  {formatFilledGolfers(opening.filledGolfers)}
+                </span>
+              )}
             </div>
-            <span className="text-muted-foreground">{opening.status}</span>
           </div>
         ))}
       </div>
