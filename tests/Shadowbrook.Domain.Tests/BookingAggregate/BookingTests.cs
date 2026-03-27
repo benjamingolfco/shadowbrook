@@ -222,4 +222,83 @@ public class BookingTests
 
         Assert.Throws<BookingNotPendingException>(() => booking.Reject());
     }
+
+    [Fact]
+    public void Cancel_FromPending_TransitionsToCancelledAndRaisesEvent()
+    {
+        var bookingId = Guid.CreateVersion7();
+        var booking = Booking.Create(
+            bookingId,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 15),
+            new TimeOnly(9, 0),
+            "Jane Smith",
+            1);
+
+        booking.Cancel();
+
+        Assert.Equal(BookingStatus.Cancelled, booking.Status);
+        var cancelledEvent = Assert.IsType<BookingCancelled>(booking.DomainEvents.Last());
+        Assert.Equal(bookingId, cancelledEvent.BookingId);
+    }
+
+    [Fact]
+    public void Cancel_FromConfirmed_TransitionsToCancelledAndRaisesEvent()
+    {
+        var bookingId = Guid.CreateVersion7();
+        var booking = Booking.Create(
+            bookingId,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 15),
+            new TimeOnly(9, 0),
+            "Jane Smith",
+            1);
+
+        booking.Confirm();
+        booking.Cancel();
+
+        Assert.Equal(BookingStatus.Cancelled, booking.Status);
+        var cancelledEvent = Assert.IsType<BookingCancelled>(booking.DomainEvents.Last());
+        Assert.Equal(bookingId, cancelledEvent.BookingId);
+    }
+
+    [Fact]
+    public void Cancel_WhenAlreadyCancelled_IsIdempotent()
+    {
+        var booking = Booking.Create(
+            Guid.CreateVersion7(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 15),
+            new TimeOnly(9, 0),
+            "Jane Smith",
+            1);
+
+        booking.Cancel();
+        var eventsAfterFirst = booking.DomainEvents.Count;
+
+        booking.Cancel();
+
+        Assert.Equal(BookingStatus.Cancelled, booking.Status);
+        Assert.Equal(eventsAfterFirst, booking.DomainEvents.Count);
+    }
+
+    [Fact]
+    public void Cancel_WhenRejected_ThrowsBookingNotCancellableException()
+    {
+        var booking = Booking.Create(
+            Guid.CreateVersion7(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 15),
+            new TimeOnly(9, 0),
+            "Jane Smith",
+            1);
+
+        booking.Reject();
+
+        Assert.Throws<BookingNotCancellableException>(() => booking.Cancel());
+    }
 }
