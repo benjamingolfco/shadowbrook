@@ -67,7 +67,7 @@ test.describe.serial('Walkup Waitlist Flow', () => {
 
     // Verify it appears in the Tee Time Openings tab
     await waitlist.selectOpeningsTab();
-    await expect(page.getByRole('cell', { name: /Open/i })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Open', exact: true })).toBeVisible();
   });
 
   test('golfer receives offer via SMS', async () => {
