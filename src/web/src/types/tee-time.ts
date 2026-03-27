@@ -1,5 +1,5 @@
 export interface TeeSheetSlot {
-  time: string;
+  teeTime: string; // ISO 8601 DateTime
   status: string;
   golferName: string | null;
   playerCount: number;
@@ -8,6 +8,5 @@ export interface TeeSheetSlot {
 export interface TeeSheetResponse {
   courseId: string;
   courseName: string;
-  date: string;
   slots: TeeSheetSlot[];
 }

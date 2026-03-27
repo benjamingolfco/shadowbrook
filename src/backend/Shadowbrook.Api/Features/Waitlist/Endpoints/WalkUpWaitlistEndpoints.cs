@@ -127,7 +127,7 @@ public static class WalkUpWaitlistEndpoints
             .OrderBy(o => o.TeeTime.Time)
             .Select(o => new WalkUpWaitlistOpeningResponse(
                 o.Id,
-                o.TeeTime.Time.ToString("HH:mm"),
+                o.TeeTime.Value,
                 o.SlotsAvailable,
                 o.SlotsRemaining,
                 o.Status.ToString(),
@@ -160,7 +160,7 @@ public static class WalkUpWaitlistEndpoints
 
         return Results.Created(
             $"/courses/{courseId}/tee-time-openings/{opening.Id}",
-            new WalkUpWaitlistOpeningResponse(opening.Id, opening.TeeTime.Time.ToString("HH:mm"), opening.SlotsAvailable, opening.SlotsRemaining, opening.Status.ToString(), []));
+            new WalkUpWaitlistOpeningResponse(opening.Id, opening.TeeTime.Value, opening.SlotsAvailable, opening.SlotsRemaining, opening.Status.ToString(), []));
     }
 
     [WolverinePost("/courses/{courseId}/tee-time-openings/{openingId}/cancel")]
@@ -186,7 +186,7 @@ public static class WalkUpWaitlistEndpoints
 
         return Results.Ok(new WalkUpWaitlistOpeningResponse(
             opening.Id,
-            opening.TeeTime.Time.ToString("HH:mm"),
+            opening.TeeTime.Value,
             opening.SlotsAvailable,
             opening.SlotsRemaining,
             opening.Status.ToString(),
@@ -330,7 +330,7 @@ public record FilledGolferResponse(
 
 public record WalkUpWaitlistOpeningResponse(
     Guid Id,
-    string TeeTime,
+    DateTime TeeTime,
     int SlotsAvailable,
     int SlotsRemaining,
     string Status,

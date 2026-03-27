@@ -27,7 +27,8 @@ When an issue number is provided:
    - The issue title
 
 3. **Determine the environment URL:**
-   - Default: `https://dev.shadowbrook.golf` (or override via argument: `/qa 247 --url http://localhost:3000`)
+   - Read the `## Test Environment` section of `README.md` in the repo root to get the **Frontend** URL
+   - Override via argument: `/qa 247 --url http://localhost:3000`
    - If the URL is not reachable, stop and tell the user
 
 4. **Dispatch the QA tester agent** via the Agent tool:

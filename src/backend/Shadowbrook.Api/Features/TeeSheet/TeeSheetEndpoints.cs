@@ -55,7 +55,7 @@ public static class TeeSheetEndpoints
             var booking = bookings.FirstOrDefault(b => b.TeeTime.Time == currentTime);
 
             slots.Add(new TeeSheetSlot(
-                currentTime.ToString("HH:mm"),
+                dateOnly.ToDateTime(currentTime),
                 booking is not null ? "booked" : "open",
                 booking?.GolferName,
                 booking?.PlayerCount ?? 0));
@@ -66,7 +66,6 @@ public static class TeeSheetEndpoints
         return Results.Ok(new TeeSheetResponse(
             course.Id,
             course.Name,
-            dateOnly.ToString("yyyy-MM-dd"),
             slots));
     }
 }
@@ -74,11 +73,10 @@ public static class TeeSheetEndpoints
 public record TeeSheetResponse(
     Guid CourseId,
     string CourseName,
-    string Date,
     List<TeeSheetSlot> Slots);
 
 public record TeeSheetSlot(
-    string Time,
+    DateTime TeeTime,
     string Status,
     string? GolferName,
     int PlayerCount);

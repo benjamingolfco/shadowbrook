@@ -36,8 +36,7 @@ public static class WaitlistOfferEndpoints
         return Results.Ok(new WaitlistOfferResponse(
             offer.Token,
             offer.CourseName,
-            DateOnly.FromDateTime(offer.TeeTime).ToString("yyyy-MM-dd"),
-            TimeOnly.FromDateTime(offer.TeeTime).ToString("HH:mm"),
+            offer.TeeTime,
             offer.SlotsAvailable,
             $"{offer.FirstName} {offer.LastName}",
             offer.Status.ToString()));
@@ -66,8 +65,7 @@ public static class WaitlistOfferEndpoints
 public record WaitlistOfferResponse(
     Guid Token,
     string CourseName,
-    string Date,
-    string TeeTime,
+    DateTime TeeTime,
     int SlotsAvailable,
     string GolferName,
     string Status);

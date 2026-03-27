@@ -60,7 +60,9 @@ export default function TeeSheet() {
       {teeSheetQuery.data && (
         <div className="mt-6">
           <h2 className="text-xl font-semibold">
-            {teeSheetQuery.data.courseName} - {formatDate(teeSheetQuery.data.date)}
+            {teeSheetQuery.data.courseName} - {teeSheetQuery.data.slots.length > 0
+              ? formatDate(teeSheetQuery.data.slots[0]!.teeTime)
+              : selectedDate}
           </h2>
           <div className="mt-4">
             <Table>
@@ -76,7 +78,7 @@ export default function TeeSheet() {
                 {teeSheetQuery.data.slots.map((slot, index) => (
                   <TableRow key={index}>
                     <TableCell className="font-semibold">
-                      {formatTime(slot.time)}
+                      {formatTime(slot.teeTime)}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -102,12 +104,8 @@ export default function TeeSheet() {
   );
 }
 
-function formatDate(dateString: string): string {
-  const parts = dateString.split('-').map(Number);
-  const year = parts[0] ?? 0;
-  const month = parts[1] ?? 0;
-  const day = parts[2] ?? 0;
-  const date = new Date(year, month - 1, day);
+function formatDate(isoDateTime: string): string {
+  const date = new Date(isoDateTime);
   return date.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -116,12 +114,11 @@ function formatDate(dateString: string): string {
   });
 }
 
-function formatTime(timeString: string): string {
-  const parts = timeString.split(':');
-  const hours = parts[0] ?? '0';
-  const minutes = parts[1] ?? '00';
-  const hour = parseInt(hours, 10);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-  return `${displayHour}:${minutes} ${ampm}`;
+function formatTime(isoDateTime: string): string {
+  const date = new Date(isoDateTime);
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
 }
