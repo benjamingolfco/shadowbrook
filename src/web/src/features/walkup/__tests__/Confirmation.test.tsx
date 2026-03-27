@@ -17,10 +17,17 @@ describe('Confirmation', () => {
     expect(screen.getByText("You're on the list, John!")).toBeInTheDocument();
   });
 
-  it('shows position number', () => {
+  it('shows position number when position > 0', () => {
     render(<Confirmation result={result} />);
 
     expect(screen.getByText(/#3 in line at/)).toBeInTheDocument();
+  });
+
+  it('shows only course name when position is 0', () => {
+    render(<Confirmation result={{ ...result, position: 0 }} />);
+
+    expect(screen.getByText('Pine Valley Golf Club')).toBeInTheDocument();
+    expect(screen.queryByText(/#\d+ in line/)).not.toBeInTheDocument();
   });
 
   it('shows course name', () => {

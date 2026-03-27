@@ -105,11 +105,10 @@ describe('JoinForm', () => {
     });
   });
 
-  it('treats 409 duplicate as success and calls onJoined with position', async () => {
+  it('treats 409 duplicate as success and calls onJoined', async () => {
     const onJoined = vi.fn();
     const error = Object.assign(new Error("You're already on the waitlist."), {
       status: 409,
-      data: { error: "You're already on the waitlist.", position: 2 },
     });
 
     mockUseJoinWaitlist.mockReturnValue({
@@ -129,7 +128,7 @@ describe('JoinForm', () => {
 
     await waitFor(() => {
       expect(onJoined).toHaveBeenCalledWith(
-        expect.objectContaining({ position: 2, courseName: 'Pine Valley Golf Club' }),
+        expect.objectContaining({ position: 0, courseName: 'Pine Valley Golf Club' }),
       );
     });
   });

@@ -12,7 +12,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useJoinWaitlist } from '../hooks/useWalkupJoin';
-import type { VerifyCodeResponse, JoinWaitlistResponse, DuplicateEntryError } from '@/types/waitlist';
+import type { VerifyCodeResponse, JoinWaitlistResponse } from '@/types/waitlist';
 
 const joinSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -52,14 +52,13 @@ export default function JoinForm({ verifyData, onJoined }: JoinFormProps) {
           onJoined(result);
         },
         onError: (error) => {
-          const err = error as Error & { status?: number; data?: DuplicateEntryError };
-          // 409 duplicate: treat as success using position from error body
+          const err = error as Error & { status?: number };
+          // 409 duplicate: treat as success — golfer is already on the list
           if (err.status === 409) {
-            const position = err.data?.position ?? 1;
             onJoined({
               entryId: '',
               golferName: `${data.firstName} ${data.lastName}`,
-              position,
+              position: 0,
               courseName: verifyData.courseName,
             });
           }
