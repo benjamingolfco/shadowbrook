@@ -81,7 +81,11 @@ If the issue is QA or Done, skip it.
 - Set status to **Implementing**
 - Check for an existing branch matching `issue/{number}-*`
 - If a branch exists, check it out and pull latest from main
-- If no branch exists, create one from main: `issue/{number}-{slug}`
+- If no branch exists, create one linked to the issue using `gh issue develop`:
+  ```bash
+  gh issue develop {number} --name issue/{number}-{slug} --base main --checkout
+  ```
+  This links the branch (and any PR from it) to the issue in GitHub's Development sidebar.
 
 ### Step 2: Architect Writes Detailed Implementation Plan
 
