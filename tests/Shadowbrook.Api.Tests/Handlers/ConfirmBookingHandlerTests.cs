@@ -19,7 +19,6 @@ public class ConfirmBookingHandlerTests
             golferId: Guid.NewGuid(),
             date: new DateOnly(2026, 3, 25),
             teeTime: new TimeOnly(10, 0),
-            golferName: "Jane Smith",
             playerCount: 2);
     }
 
