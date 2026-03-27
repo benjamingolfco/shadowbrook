@@ -510,6 +510,9 @@ namespace Shadowbrook.Api.Migrations
                     b.Property<int>("GroupSize")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsStale")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsWalkUp")
                         .HasColumnType("bit");
 
