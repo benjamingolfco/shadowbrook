@@ -177,10 +177,18 @@ function OpeningsTable({
     );
   }
 
+  // Calculate aggregate counts across all non-cancelled openings
+  const nonCancelledOpenings = sortedOpenings.filter((o) => o.status !== 'Cancelled');
+  const totalFilled = nonCancelledOpenings.reduce(
+    (sum, opening) => sum + (opening.slotsAvailable - opening.slotsRemaining),
+    0
+  );
+  const totalPending = nonCancelledOpenings.reduce((sum, opening) => sum + opening.slotsRemaining, 0);
+
   return (
     <div>
       <p className="text-sm text-muted-foreground mb-2">
-        {sortedOpenings.length} opening{sortedOpenings.length !== 1 ? 's' : ''}
+        {sortedOpenings.length} opening{sortedOpenings.length !== 1 ? 's' : ''} -- {totalFilled} filled, {totalPending} pending
       </p>
       {/* Desktop table */}
       <div className="hidden md:block">
@@ -188,84 +196,92 @@ function OpeningsTable({
           <TableHeader>
             <TableRow>
               <TableHead>Tee Time</TableHead>
-              <TableHead>Slots Available</TableHead>
-              <TableHead>Slots Remaining</TableHead>
+              <TableHead>Filled</TableHead>
+              <TableHead>Pending</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Golfers</TableHead>
               <TableHead className="w-24">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedOpenings.map((opening) => (
-              <TableRow key={opening.id} className={cancellingOpeningId === opening.id ? 'opacity-50' : ''}>
-                <TableCell>{formatWallClockTime(opening.teeTime)}</TableCell>
-                <TableCell>{opening.slotsAvailable}</TableCell>
-                <TableCell>{opening.slotsRemaining}</TableCell>
-                <TableCell>
-                  <Badge variant={getStatusBadgeVariant(opening.status)}>
-                    {opening.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>{formatFilledGolfers(opening.filledGolfers)}</TableCell>
-                <TableCell>
-                  {opening.status === 'Open' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onCancel(opening)}
-                      disabled={cancellingOpeningId === opening.id}
-                      aria-label={`Cancel opening at ${formatWallClockTime(opening.teeTime)}`}
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
+            {sortedOpenings.map((opening) => {
+              const filled = opening.slotsAvailable - opening.slotsRemaining;
+              const pending = opening.slotsRemaining;
+              return (
+                <TableRow key={opening.id} className={cancellingOpeningId === opening.id ? 'opacity-50' : ''}>
+                  <TableCell>{formatWallClockTime(opening.teeTime)}</TableCell>
+                  <TableCell>{filled}</TableCell>
+                  <TableCell>{pending}</TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusBadgeVariant(opening.status)}>
+                      {opening.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{formatFilledGolfers(opening.filledGolfers)}</TableCell>
+                  <TableCell>
+                    {opening.status === 'Open' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onCancel(opening)}
+                        disabled={cancellingOpeningId === opening.id}
+                        aria-label={`Cancel opening at ${formatWallClockTime(opening.teeTime)}`}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
       {/* Mobile stacked cards */}
       <div className="md:hidden space-y-2">
-        {sortedOpenings.map((opening) => (
-          <div
-            key={opening.id}
-            className={`flex flex-col gap-2 rounded-md border p-3 text-sm ${
-              cancellingOpeningId === opening.id ? 'opacity-50' : ''
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-medium">{formatWallClockTime(opening.teeTime)}</span>
-              <Badge variant={getStatusBadgeVariant(opening.status)}>
-                {opening.status}
-              </Badge>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-muted-foreground text-xs">
-                {opening.slotsRemaining} of {opening.slotsAvailable} slot{opening.slotsAvailable !== 1 ? 's' : ''} remaining
-              </span>
-              {opening.filledGolfers.length > 0 && (
-                <span className="text-xs">
-                  <span className="text-muted-foreground">Golfers: </span>
-                  {formatFilledGolfers(opening.filledGolfers)}
+        {sortedOpenings.map((opening) => {
+          const filled = opening.slotsAvailable - opening.slotsRemaining;
+          const pending = opening.slotsRemaining;
+          return (
+            <div
+              key={opening.id}
+              className={`flex flex-col gap-2 rounded-md border p-3 text-sm ${
+                cancellingOpeningId === opening.id ? 'opacity-50' : ''
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-medium">{formatWallClockTime(opening.teeTime)}</span>
+                <Badge variant={getStatusBadgeVariant(opening.status)}>
+                  {opening.status}
+                </Badge>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-muted-foreground text-xs">
+                  {filled} filled, {pending} pending
                 </span>
+                {opening.filledGolfers.length > 0 && (
+                  <span className="text-xs">
+                    <span className="text-muted-foreground">Golfers: </span>
+                    {formatFilledGolfers(opening.filledGolfers)}
+                  </span>
+                )}
+              </div>
+              {opening.status === 'Open' && (
+                <div className="flex justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onCancel(opening)}
+                    disabled={cancellingOpeningId === opening.id}
+                    aria-label={`Cancel opening at ${formatWallClockTime(opening.teeTime)}`}
+                  >
+                    Cancel
+                  </Button>
+                </div>
               )}
             </div>
-            {opening.status === 'Open' && (
-              <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onCancel(opening)}
-                  disabled={cancellingOpeningId === opening.id}
-                  aria-label={`Cancel opening at ${formatWallClockTime(opening.teeTime)}`}
-                >
-                  Cancel
-                </Button>
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
