@@ -44,7 +44,7 @@ public class WaitlistOfferResponsePolicyTests
     }
 
     [Fact]
-    public void Handle_BufferTimeout_ReturnsRejectCommandAndMarksCompleted()
+    public void Handle_BufferTimeout_ReturnsMarkStaleCommandAndMarksCompleted()
     {
         var offerId = Guid.NewGuid();
         var openingId = Guid.NewGuid();
@@ -52,7 +52,7 @@ public class WaitlistOfferResponsePolicyTests
 
         var command = policy.Handle(new OfferResponseBufferTimeout(TimeSpan.FromSeconds(60)));
 
-        Assert.IsType<RejectStaleOffer>(command);
+        Assert.IsType<MarkOfferStale>(command);
         Assert.Equal(offerId, command.WaitlistOfferId);
         Assert.Equal(openingId, command.OpeningId);
         Assert.True(policy.IsCompleted());
