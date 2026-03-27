@@ -125,6 +125,25 @@ export default function WalkUpOfferPage() {
     );
   }
 
+  // Rejected offer
+  if (offer.status === 'Rejected') {
+    return (
+      <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
+        <div className="w-full max-w-sm">
+          <h1 className="text-xl font-bold text-center mb-8">Shadowbrook</h1>
+          <Card>
+            <CardContent className="pt-6 text-center space-y-4">
+              <h2 className="text-xl font-semibold">Offer No Longer Available</h2>
+              <p className="text-muted-foreground">
+                This tee time offer is no longer available. It may have expired or been filled.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   // Already accepted (e.g. page reload after claiming)
   if (offer.status === 'Accepted') {
     return (
