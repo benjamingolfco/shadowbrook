@@ -49,7 +49,13 @@ export function formatWallClockDate(dateTimeString: string): string {
   if (!datePart) {
     throw new Error('Invalid date string format');
   }
-  const [year, month, day] = datePart.split('-').map(Number);
+  const parts = datePart.split('-').map(Number);
+
+  if (parts.length !== 3 || parts.some(isNaN)) {
+    throw new Error('Invalid date string format');
+  }
+
+  const [year, month, day] = parts;
 
   // Create a Date using UTC to prevent browser timezone shifting
   const date = new Date(Date.UTC(year!, month! - 1, day));
