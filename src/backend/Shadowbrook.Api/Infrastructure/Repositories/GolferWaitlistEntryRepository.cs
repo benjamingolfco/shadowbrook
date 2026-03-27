@@ -32,9 +32,11 @@ public class GolferWaitlistEntryRepository(ApplicationDbContext db) : IGolferWai
     public async Task<List<GolferWaitlistEntry>> FindEligibleEntriesAsync(
         Guid courseId, DateOnly date, TimeOnly teeTime, int maxGroupSize, CancellationToken ct = default)
     {
+        var teeTimeDateTime = date.ToDateTime(teeTime);
+
         return await db.GolferWaitlistEntries
             .Where(e => e.RemovedAt == null)
-            .Where(e => e.WindowStart <= teeTime && e.WindowEnd >= teeTime)
+            .Where(e => e.WindowStart <= teeTimeDateTime && e.WindowEnd >= teeTimeDateTime)
             .Where(e => e.GroupSize <= maxGroupSize)
             .Where(e => db.CourseWaitlists
                 .Any(w => w.Id == e.CourseWaitlistId && w.CourseId == courseId && w.Date == date))

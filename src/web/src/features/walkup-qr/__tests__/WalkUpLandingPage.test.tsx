@@ -130,4 +130,30 @@ describe('WalkUpLandingPage', () => {
 
     expect(document.title).toBe('Walk-Up Waitlist');
   });
+
+  it('renders date correctly without UTC timezone shift (open state)', () => {
+    const testStatus = {
+      status: 'open' as const,
+      courseName: 'Test Course',
+      date: '2026-03-26',
+    };
+    setupHook({ data: testStatus });
+
+    render(<WalkUpLandingPage />);
+
+    expect(screen.getByText(/The walk-up waitlist is open for 3\/26\/2026/)).toBeInTheDocument();
+  });
+
+  it('renders date correctly without UTC timezone shift (expired state)', () => {
+    const testStatus = {
+      status: 'expired' as const,
+      courseName: 'Test Course',
+      date: '2026-03-26',
+    };
+    setupHook({ data: testStatus });
+
+    render(<WalkUpLandingPage />);
+
+    expect(screen.getByText(/It was valid on 3\/26\/2026/)).toBeInTheDocument();
+  });
 });

@@ -27,8 +27,8 @@ public class OnlineWaitlistTests
     {
         var waitlist = OnlineWaitlist.Create(Guid.NewGuid(), new DateOnly(2026, 4, 1), this.timeProvider);
         var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
-        var windowStart = new TimeOnly(8, 0);
-        var windowEnd = new TimeOnly(10, 0);
+        var windowStart = new DateTime(2026, 4, 1, 8, 0, 0);
+        var windowEnd = new DateTime(2026, 4, 1, 10, 0, 0);
 
         var entry = await waitlist.Join(golfer, this.entryRepository, this.timeProvider, 2, windowStart, windowEnd);
 
@@ -47,8 +47,8 @@ public class OnlineWaitlistTests
     {
         var waitlist = OnlineWaitlist.Create(Guid.NewGuid(), new DateOnly(2026, 4, 1), this.timeProvider);
         var golfer = Golfer.Create("+15559990000", "Test", "Golfer");
-        var windowStart = new TimeOnly(9, 0);
-        var windowEnd = new TimeOnly(11, 0);
+        var windowStart = new DateTime(2026, 4, 1, 9, 0, 0);
+        var windowEnd = new DateTime(2026, 4, 1, 11, 0, 0);
 
         var entry = await waitlist.Join(golfer, this.entryRepository, this.timeProvider, 1, windowStart, windowEnd);
 
@@ -63,8 +63,8 @@ public class OnlineWaitlistTests
     {
         var waitlist = OnlineWaitlist.Create(Guid.NewGuid(), new DateOnly(2026, 4, 1), this.timeProvider);
         var golfer = Golfer.Create("+15552222222", "Dup", "Golfer");
-        var windowStart = new TimeOnly(8, 0);
-        var windowEnd = new TimeOnly(10, 0);
+        var windowStart = new DateTime(2026, 4, 1, 8, 0, 0);
+        var windowEnd = new DateTime(2026, 4, 1, 10, 0, 0);
 
         var firstEntry = await waitlist.Join(golfer, this.entryRepository, this.timeProvider, 1, windowStart, windowEnd);
         this.entryRepository.GetActiveByWaitlistAndGolferAsync(waitlist.Id, golfer.Id)

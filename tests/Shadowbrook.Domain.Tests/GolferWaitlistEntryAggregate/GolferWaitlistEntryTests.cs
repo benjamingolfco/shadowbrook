@@ -27,6 +27,7 @@ public class GolferWaitlistEntryTests
         this.timeProvider.GetCurrentTime().Returns(new TimeOnly(10, 0));
         this.timeProvider.GetCurrentTimeByTimeZone(Arg.Any<string>()).Returns(new TimeOnly(10, 0));
         this.timeProvider.GetCurrentDate().Returns(new DateOnly(2026, 3, 25));
+        this.timeProvider.GetCurrentDateByTimeZone(Arg.Any<string>()).Returns(new DateOnly(2026, 3, 25));
     }
 
     private async Task<(WalkUpWaitlist Waitlist, GolferWaitlistEntry Entry)> JoinAsync(
@@ -70,7 +71,7 @@ public class GolferWaitlistEntryTests
     {
         var (_, entry) = await JoinAsync();
         var walkUpEntry = Assert.IsType<WalkUpGolferWaitlistEntry>(entry);
-        var newEnd = walkUpEntry.WindowEnd.Add(TimeSpan.FromMinutes(15));
+        var newEnd = walkUpEntry.WindowEnd.AddMinutes(15);
 
         walkUpEntry.ExtendWindow(newEnd);
 
@@ -82,7 +83,7 @@ public class GolferWaitlistEntryTests
     {
         var (_, entry) = await JoinAsync();
         var walkUpEntry = Assert.IsType<WalkUpGolferWaitlistEntry>(entry);
-        var newEnd = walkUpEntry.WindowEnd.Add(TimeSpan.FromMinutes(15));
+        var newEnd = walkUpEntry.WindowEnd.AddMinutes(15);
 
         walkUpEntry.ExtendWindow(newEnd);
 
@@ -111,7 +112,7 @@ public class GolferWaitlistEntryTests
         var (_, entry) = await JoinAsync();
         var walkUpEntry = Assert.IsType<WalkUpGolferWaitlistEntry>(entry);
         walkUpEntry.Remove(this.timeProvider);
-        var newEnd = walkUpEntry.WindowEnd.Add(TimeSpan.FromMinutes(15));
+        var newEnd = walkUpEntry.WindowEnd.AddMinutes(15);
 
         Assert.Throws<CannotExtendRemovedEntryException>(() => walkUpEntry.ExtendWindow(newEnd));
     }

@@ -20,8 +20,8 @@ public class GolferWaitlistEntryConfiguration : IEntityTypeConfiguration<GolferW
             .HasValue<WalkUpGolferWaitlistEntry>(true)
             .HasValue<OnlineGolferWaitlistEntry>(false);
 
-        builder.Property(e => e.WindowStart).HasColumnType("time");
-        builder.Property(e => e.WindowEnd).HasColumnType("time");
+        builder.Property(e => e.WindowStart).HasColumnType("datetime2");
+        builder.Property(e => e.WindowEnd).HasColumnType("datetime2");
 
         builder.HasOne<Golfer>()
             .WithMany()

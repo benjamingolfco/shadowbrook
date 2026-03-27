@@ -24,6 +24,7 @@ public class WalkUpWaitlistTests
         this.timeProvider.GetCurrentTime().Returns(new TimeOnly(10, 0));
         this.timeProvider.GetCurrentTimeByTimeZone(Arg.Any<string>()).Returns(new TimeOnly(10, 0));
         this.timeProvider.GetCurrentDate().Returns(new DateOnly(2026, 3, 25));
+        this.timeProvider.GetCurrentDateByTimeZone(Arg.Any<string>()).Returns(new DateOnly(2026, 3, 25));
     }
 
     [Fact]
@@ -135,8 +136,8 @@ public class WalkUpWaitlistTests
         Assert.Equal(golfer.Id, walkUpEntry.GolferId);
         Assert.Equal(2, walkUpEntry.GroupSize);
         Assert.True(walkUpEntry.IsWalkUp);
-        Assert.Equal(new TimeOnly(10, 0), walkUpEntry.WindowStart);
-        Assert.Equal(new TimeOnly(10, 30), walkUpEntry.WindowEnd);
+        Assert.Equal(new DateTime(2026, 3, 25, 10, 0, 0), walkUpEntry.WindowStart);
+        Assert.Equal(new DateTime(2026, 3, 25, 10, 30, 0), walkUpEntry.WindowEnd);
     }
 
     [Fact]
@@ -144,6 +145,7 @@ public class WalkUpWaitlistTests
     {
         // UTC is 10:00, but America/Chicago is 04:00 (UTC-6 in March)
         this.timeProvider.GetCurrentTimeByTimeZone("America/Chicago").Returns(new TimeOnly(4, 0));
+        this.timeProvider.GetCurrentDateByTimeZone("America/Chicago").Returns(new DateOnly(2026, 3, 25));
 
         var waitlist = await CreateOpenWaitlistAsync();
         var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
@@ -151,8 +153,8 @@ public class WalkUpWaitlistTests
         var entry = await waitlist.Join(golfer, this.entryRepository, this.timeProvider, "America/Chicago");
 
         var walkUpEntry = Assert.IsType<WalkUpGolferWaitlistEntry>(entry);
-        Assert.Equal(new TimeOnly(4, 0), walkUpEntry.WindowStart);
-        Assert.Equal(new TimeOnly(4, 30), walkUpEntry.WindowEnd);
+        Assert.Equal(new DateTime(2026, 3, 25, 4, 0, 0), walkUpEntry.WindowStart);
+        Assert.Equal(new DateTime(2026, 3, 25, 4, 30, 0), walkUpEntry.WindowEnd);
     }
 
     [Fact]
