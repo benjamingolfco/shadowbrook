@@ -13,6 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { formatWallClockDate, formatWallClockTime } from '@/lib/course-time';
 import { useWalkUpOffer, useAcceptOffer } from '../hooks/useWalkUpOffer';
 import OfferCard from '../components/OfferCard';
 import AcceptConfirmation from '../components/AcceptConfirmation';
@@ -125,16 +126,8 @@ export default function WalkUpOfferPage() {
   }
 
   // Format for confirmation dialog
-  const teeTime = new Date(offer.teeTime);
-  const dateFormatted = teeTime.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
-  const timeFormatted = teeTime.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-  });
+  const dateFormatted = formatWallClockDate(offer.teeTime);
+  const timeFormatted = formatWallClockTime(offer.teeTime);
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
