@@ -15,6 +15,7 @@ public class TeeTimeOpening : Entity
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? FilledAt { get; private set; }
     public DateTimeOffset? ExpiredAt { get; private set; }
+    public DateTimeOffset? CancelledAt { get; private set; }
 
     private readonly List<ClaimedSlot> claimedSlots = [];
     public IReadOnlyList<ClaimedSlot> ClaimedSlots => this.claimedSlots.AsReadOnly();
@@ -112,6 +113,25 @@ public class TeeTimeOpening : Entity
         }
 
         return ClaimResult.Claimed();
+    }
+
+    public void Cancel(ITimeProvider timeProvider)
+    {
+        if (Status != TeeTimeOpeningStatus.Open)
+        {
+            return;
+        }
+
+        Status = TeeTimeOpeningStatus.Cancelled;
+        CancelledAt = timeProvider.GetCurrentTimestamp();
+
+        AddDomainEvent(new TeeTimeOpeningCancelled
+        {
+            OpeningId = Id,
+            CourseId = CourseId,
+            Date = TeeTime.Date,
+            TeeTime = TeeTime.Time,
+        });
     }
 
     public void Expire(ITimeProvider timeProvider)

@@ -162,6 +162,17 @@ public class TeeTimeOpeningTests
     }
 
     [Fact]
+    public void TryClaim_WhenCancelled_ReturnsRejected()
+    {
+        var opening = CreateOpening();
+        opening.Cancel(this.timeProvider);
+
+        var result = opening.TryClaim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
+
+        Assert.False(result.Success);
+    }
+
+    [Fact]
     public void Expire_WhenOpen_TransitionsToExpired()
     {
         var opening = CreateOpening();
@@ -281,5 +292,59 @@ public class TeeTimeOpeningTests
 
         Assert.False(result.Success);
         Assert.Empty(opening.ClaimedSlots);
+    }
+
+    [Fact]
+    public void Cancel_WhenOpen_TransitionsToCancelled()
+    {
+        var opening = CreateOpening();
+
+        opening.Cancel(this.timeProvider);
+
+        Assert.Equal(TeeTimeOpeningStatus.Cancelled, opening.Status);
+        Assert.NotNull(opening.CancelledAt);
+    }
+
+    [Fact]
+    public void Cancel_WhenOpen_RaisesCancelledEvent()
+    {
+        var opening = CreateOpening();
+        opening.ClearDomainEvents();
+
+        opening.Cancel(this.timeProvider);
+
+        var domainEvent = Assert.Single(opening.DomainEvents);
+        var cancelled = Assert.IsType<TeeTimeOpeningCancelled>(domainEvent);
+        Assert.Equal(opening.Id, cancelled.OpeningId);
+        Assert.Equal(opening.CourseId, cancelled.CourseId);
+        Assert.Equal(opening.TeeTime.Date, cancelled.Date);
+        Assert.Equal(opening.TeeTime.Time, cancelled.TeeTime);
+    }
+
+    [Fact]
+    public void Cancel_WhenAlreadyCancelled_IsIdempotent()
+    {
+        var opening = CreateOpening();
+        opening.Cancel(this.timeProvider);
+        opening.ClearDomainEvents();
+
+        opening.Cancel(this.timeProvider);
+
+        Assert.Equal(TeeTimeOpeningStatus.Cancelled, opening.Status);
+        Assert.Empty(opening.DomainEvents);
+    }
+
+    [Fact]
+    public void Expire_WhenCancelled_IsIdempotent()
+    {
+        var opening = CreateOpening();
+        opening.Cancel(this.timeProvider);
+        opening.ClearDomainEvents();
+
+        opening.Expire(this.timeProvider);
+
+        Assert.Equal(TeeTimeOpeningStatus.Cancelled, opening.Status);
+        Assert.Null(opening.ExpiredAt);
+        Assert.Empty(opening.DomainEvents);
     }
 }

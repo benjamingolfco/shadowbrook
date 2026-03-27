@@ -82,4 +82,20 @@ public class Booking : Entity
         Status = BookingStatus.Rejected;
         AddDomainEvent(new BookingRejected { BookingId = Id });
     }
+
+    public void Cancel()
+    {
+        if (Status == BookingStatus.Cancelled)
+        {
+            return;
+        }
+
+        if (Status == BookingStatus.Rejected)
+        {
+            throw new BookingNotCancellableException(Id, Status);
+        }
+
+        Status = BookingStatus.Cancelled;
+        AddDomainEvent(new BookingCancelled { BookingId = Id });
+    }
 }

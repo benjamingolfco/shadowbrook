@@ -25,6 +25,7 @@ public static class DomainExceptionHandler
                     OfferNotPendingException => StatusCodes.Status409Conflict,
                     OfferAlreadyNotifiedException => StatusCodes.Status409Conflict,
                     BookingNotPendingException => StatusCodes.Status409Conflict,
+                    BookingNotCancellableException => StatusCodes.Status409Conflict,
                     CannotExtendRemovedEntryException => StatusCodes.Status409Conflict,
                     EntityNotFoundException => StatusCodes.Status404NotFound,
                     InvalidSlotsAvailableException => StatusCodes.Status422UnprocessableEntity,

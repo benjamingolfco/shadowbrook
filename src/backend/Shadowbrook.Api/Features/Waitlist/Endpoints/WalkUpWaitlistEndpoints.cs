@@ -161,6 +161,36 @@ public static class WalkUpWaitlistEndpoints
             new WalkUpWaitlistOpeningResponse(opening.Id, opening.TeeTime.Time.ToString("HH:mm"), opening.SlotsAvailable, opening.SlotsRemaining, opening.Status.ToString(), []));
     }
 
+    [WolverinePost("/courses/{courseId}/tee-time-openings/{openingId}/cancel")]
+    public static async Task<IResult> CancelOpening(
+        Guid courseId,
+        Guid openingId,
+        ITeeTimeOpeningRepository openingRepo,
+        ITimeProvider timeProvider)
+    {
+        var opening = await openingRepo.GetByIdAsync(openingId);
+
+        if (opening is null)
+        {
+            return Results.NotFound(new { error = "Tee time opening not found." });
+        }
+
+        if (opening.CourseId != courseId)
+        {
+            return Results.NotFound(new { error = "Tee time opening not found." });
+        }
+
+        opening.Cancel(timeProvider);
+
+        return Results.Ok(new WalkUpWaitlistOpeningResponse(
+            opening.Id,
+            opening.TeeTime.Time.ToString("HH:mm"),
+            opening.SlotsAvailable,
+            opening.SlotsRemaining,
+            opening.Status.ToString(),
+            []));
+    }
+
     [WolverinePost("/courses/{courseId}/walkup-waitlist/entries")]
     public static async Task<IResult> AddGolferToWaitlist(
         Guid courseId,
