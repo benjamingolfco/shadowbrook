@@ -28,7 +28,6 @@ export interface AddGolferToWaitlistResponse {
   golferName: string;
   golferPhone: string;
   groupSize: number;
-  position: number;
   courseName: string;
 }
 
@@ -82,7 +81,6 @@ export interface JoinWaitlistResponse {
 
 export interface DuplicateEntryError {
   error: string;
-  position: number;
 }
 
 // Walk-up offer (golfer claim flow)

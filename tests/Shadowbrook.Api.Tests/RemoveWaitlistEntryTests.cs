@@ -200,7 +200,6 @@ public class RemoveWaitlistEntryTests(TestWebApplicationFactory factory) : IAsyn
         string GolferName,
         string GolferPhone,
         int GroupSize,
-        int Position,
         string CourseName);
 
     private record WalkUpWaitlistTodayResponse(

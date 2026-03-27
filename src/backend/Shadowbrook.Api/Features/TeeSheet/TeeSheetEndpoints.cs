@@ -39,8 +39,14 @@ public static class TeeSheetEndpoints
         }
 
         // Fetch all bookings for the course and date, joining to golfer for the name
+        // Compare against TeeTime.Value (the mapped DateTime column) so EF can translate
+        var startOfDay = dateOnly.ToDateTime(TimeOnly.MinValue);
+        var startOfNextDay = dateOnly.AddDays(1).ToDateTime(TimeOnly.MinValue);
+
         var bookings = await db.Bookings
-            .Where(b => b.CourseId == courseId.Value && b.TeeTime.Date == dateOnly)
+            .Where(b => b.CourseId == courseId.Value
+                && b.TeeTime.Value >= startOfDay
+                && b.TeeTime.Value < startOfNextDay)
             .Join(
                 db.Golfers,
                 b => b.GolferId,

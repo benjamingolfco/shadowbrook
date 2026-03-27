@@ -109,27 +109,18 @@ public static class WalkUpJoinEndpoints
             .Select(c => c.TimeZoneId)
             .FirstAsync();
 
+        var activeCount = await db.GolferWaitlistEntries
+            .CountAsync(e => e.CourseWaitlistId == waitlist.Id && e.RemovedAt == null);
+
         var entry = await waitlist.Join(golfer, entryRepo, timeProvider, courseTimeZoneId);
         entryRepo.Add(entry);
-
-        // Intentional mid-flow save: position query reads from DB,
-        // so the new entry must be flushed first. This mirrors the golfer
-        // upsert pattern above. Wolverine won't double-save a clean tracker.
-        await db.SaveChangesAsync();
-
-        var joinedAt = entry.JoinedAt;
-        var activeEntries = await db.GolferWaitlistEntries
-            .Where(e => e.CourseWaitlistId == waitlist.Id && e.RemovedAt == null)
-            .Select(e => e.JoinedAt)
-            .ToListAsync();
-        var position = activeEntries.Count(t => t <= joinedAt);
 
         var submittedName = $"{request.FirstName.Trim()} {request.LastName.Trim()}";
 
         return Results.Created($"/walkup/join", new JoinWaitlistResponse(
             entry.Id,
             submittedName,
-            position,
+            activeCount + 1,
             courseName));
     }
 }

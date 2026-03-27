@@ -50,7 +50,7 @@ public static class WaitlistOfferEndpoints
         Guid token,
         IWaitlistOfferRepository offerRepository,
         ITeeTimeOpeningRepository openingRepository,
-        WaitlistOfferClaimService claimService)
+        [NotBody] WaitlistOfferClaimService claimService)
     {
         var offer = await offerRepository.GetByTokenAsync(token);
 
@@ -67,7 +67,7 @@ public static class WaitlistOfferEndpoints
             return Results.Conflict(new { reason = result.Reason });
         }
 
-        return Results.Ok(new { status = "Confirmed" });
+        return Results.Ok(new { status = "Confirmed", message = "Your tee time has been confirmed. See you on the course!" });
     }
 }
 
