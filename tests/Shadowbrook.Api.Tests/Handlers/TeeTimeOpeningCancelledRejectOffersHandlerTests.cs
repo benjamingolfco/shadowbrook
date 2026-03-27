@@ -23,7 +23,13 @@ public class TeeTimeOpeningCancelledRejectOffersHandlerTests
         var openingId = Guid.NewGuid();
         this.offerRepo.GetPendingByOpeningAsync(openingId).Returns(new List<WaitlistOffer>());
 
-        var evt = new TeeTimeOpeningCancelled { OpeningId = openingId };
+        var evt = new TeeTimeOpeningCancelled
+        {
+            OpeningId = openingId,
+            CourseId = Guid.NewGuid(),
+            Date = new DateOnly(2026, 3, 26),
+            TeeTime = new TimeOnly(10, 0),
+        };
 
         await TeeTimeOpeningCancelledRejectOffersHandler.Handle(evt, this.offerRepo);
 
@@ -45,7 +51,13 @@ public class TeeTimeOpeningCancelledRejectOffersHandlerTests
         this.offerRepo.GetPendingByOpeningAsync(openingId)
             .Returns(new List<WaitlistOffer> { offer1, offer2 });
 
-        var evt = new TeeTimeOpeningCancelled { OpeningId = openingId };
+        var evt = new TeeTimeOpeningCancelled
+        {
+            OpeningId = openingId,
+            CourseId = courseId,
+            Date = date,
+            TeeTime = teeTime,
+        };
 
         await TeeTimeOpeningCancelledRejectOffersHandler.Handle(evt, this.offerRepo);
 

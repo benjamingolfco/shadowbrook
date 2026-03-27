@@ -316,33 +316,22 @@ public class TeeTimeOpeningTests
         var domainEvent = Assert.Single(opening.DomainEvents);
         var cancelled = Assert.IsType<TeeTimeOpeningCancelled>(domainEvent);
         Assert.Equal(opening.Id, cancelled.OpeningId);
+        Assert.Equal(opening.CourseId, cancelled.CourseId);
+        Assert.Equal(opening.TeeTime.Date, cancelled.Date);
+        Assert.Equal(opening.TeeTime.Time, cancelled.TeeTime);
     }
 
     [Fact]
-    public void Cancel_WhenFilled_ThrowsOpeningNotAvailableException()
-    {
-        var opening = CreateOpening(slotsAvailable: 1);
-        opening.TryClaim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
-
-        Assert.Throws<OpeningNotAvailableException>(() => opening.Cancel(this.timeProvider));
-    }
-
-    [Fact]
-    public void Cancel_WhenExpired_ThrowsOpeningNotAvailableException()
-    {
-        var opening = CreateOpening();
-        opening.Expire(this.timeProvider);
-
-        Assert.Throws<OpeningNotAvailableException>(() => opening.Cancel(this.timeProvider));
-    }
-
-    [Fact]
-    public void Cancel_WhenAlreadyCancelled_ThrowsOpeningNotAvailableException()
+    public void Cancel_WhenAlreadyCancelled_IsIdempotent()
     {
         var opening = CreateOpening();
         opening.Cancel(this.timeProvider);
+        opening.ClearDomainEvents();
 
-        Assert.Throws<OpeningNotAvailableException>(() => opening.Cancel(this.timeProvider));
+        opening.Cancel(this.timeProvider);
+
+        Assert.Equal(TeeTimeOpeningStatus.Cancelled, opening.Status);
+        Assert.Empty(opening.DomainEvents);
     }
 
     [Fact]

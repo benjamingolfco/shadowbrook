@@ -11,4 +11,9 @@ public class BookingRepository(ApplicationDbContext db) : IBookingRepository
 
     public void Add(Booking booking) =>
         db.Bookings.Add(booking);
+
+    public async Task<List<Booking>> GetByCourseAndTeeTimeAsync(Guid courseId, DateOnly date, TimeOnly teeTime, CancellationToken ct = default) =>
+        await db.Bookings
+            .Where(b => b.CourseId == courseId && b.TeeTime.Date == date && b.TeeTime.Time == teeTime)
+            .ToListAsync(ct);
 }

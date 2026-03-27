@@ -119,7 +119,7 @@ public class TeeTimeOpening : Entity
     {
         if (Status != TeeTimeOpeningStatus.Open)
         {
-            throw new OpeningNotAvailableException(Id);
+            return;
         }
 
         Status = TeeTimeOpeningStatus.Cancelled;
@@ -128,6 +128,9 @@ public class TeeTimeOpening : Entity
         AddDomainEvent(new TeeTimeOpeningCancelled
         {
             OpeningId = Id,
+            CourseId = CourseId,
+            Date = TeeTime.Date,
+            TeeTime = TeeTime.Time,
         });
     }
 
