@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Features.Bookings;
-using Shadowbrook.Api.Features.Bookings.Policies;
 using Shadowbrook.Api.Features.Waitlist;
 using Shadowbrook.Api.Features.Waitlist.Policies;
 using Shadowbrook.Api.Infrastructure.Dev;
@@ -38,7 +37,6 @@ public class ApplicationDbContext(
     public DbSet<TeeTimeOpeningExpirationPolicy> TeeTimeOpeningExpirationPolicies => Set<TeeTimeOpeningExpirationPolicy>();
     public DbSet<TeeTimeOpeningOfferPolicy> TeeTimeOpeningOfferPolicies => Set<TeeTimeOpeningOfferPolicy>();
     public DbSet<WaitlistOfferResponsePolicy> WaitlistOfferResponsePolicies => Set<WaitlistOfferResponsePolicy>();
-    public DbSet<BookingConfirmationPolicy> BookingConfirmationPolicies => Set<BookingConfirmationPolicy>();
     public DbSet<DevSmsMessage> DevSmsMessages => Set<DevSmsMessage>();
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -91,6 +89,5 @@ public class ApplicationDbContext(
         modelBuilder.ApplyConfiguration(new TeeTimeOpeningExpirationPolicyConfiguration());
         modelBuilder.ApplyConfiguration(new TeeTimeOpeningOfferPolicyConfiguration());
         modelBuilder.ApplyConfiguration(new WaitlistOfferResponsePolicyConfiguration());
-        modelBuilder.ApplyConfiguration(new BookingConfirmationPolicyConfiguration());
     }
 }
