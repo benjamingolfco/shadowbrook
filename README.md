@@ -1,5 +1,9 @@
 # Shadowbrook
 
+[![Deploy API](https://github.com/benjamingolfco/shadowbrook/actions/workflows/deploy-api.yml/badge.svg)](https://github.com/benjamingolfco/shadowbrook/actions/workflows/deploy-api.yml)
+[![Deploy Web](https://github.com/benjamingolfco/shadowbrook/actions/workflows/deploy-web.yml/badge.svg)](https://github.com/benjamingolfco/shadowbrook/actions/workflows/deploy-web.yml)
+[![E2E Tests](https://github.com/benjamingolfco/shadowbrook/actions/workflows/e2e.yml/badge.svg)](https://github.com/benjamingolfco/shadowbrook/actions/workflows/e2e.yml)
+
 Tee time booking platform for golf courses.
 
 > Private repository — [BenjaminGolfCo](https://github.com/benjamingolfco)
