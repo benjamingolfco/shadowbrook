@@ -34,7 +34,12 @@ public class GolferWaitlistEntryRepository(ApplicationDbContext db) : IGolferWai
     {
         return await db.GolferWaitlistEntries
             .Where(e => e.RemovedAt == null)
-            .Where(e => e.WindowStart <= teeTime && e.WindowEnd >= teeTime)
+            .Where(e =>
+                // Normal case: window doesn't cross midnight
+                (e.WindowEnd >= e.WindowStart && e.WindowStart <= teeTime && e.WindowEnd >= teeTime)
+                ||
+                // Wrap-around case: window crosses midnight
+                (e.WindowEnd < e.WindowStart && (e.WindowStart <= teeTime || e.WindowEnd >= teeTime)))
             .Where(e => e.GroupSize <= maxGroupSize)
             .Where(e => db.CourseWaitlists
                 .Any(w => w.Id == e.CourseWaitlistId && w.CourseId == courseId && w.Date == date))
