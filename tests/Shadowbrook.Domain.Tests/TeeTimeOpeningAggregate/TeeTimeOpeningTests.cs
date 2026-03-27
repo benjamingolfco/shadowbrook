@@ -236,15 +236,16 @@ public class TeeTimeOpeningTests
     }
 
     [Fact]
-    public void Claim_WhenSlotsAvailable_AddsClaimedSlot()
+    public void TryClaim_WhenSlotsAvailable_AddsClaimedSlot()
     {
         var opening = CreateOpening(slotsAvailable: 3);
         opening.ClearDomainEvents();
         var bookingId = Guid.NewGuid();
         var golferId = Guid.NewGuid();
 
-        opening.Claim(bookingId, golferId, groupSize: 2, this.timeProvider);
+        var result = opening.TryClaim(bookingId, golferId, groupSize: 2, this.timeProvider);
 
+        Assert.True(result.Success);
         var claimedSlot = Assert.Single(opening.ClaimedSlots);
         Assert.Equal(bookingId, claimedSlot.BookingId);
         Assert.Equal(golferId, claimedSlot.GolferId);
@@ -253,7 +254,7 @@ public class TeeTimeOpeningTests
     }
 
     [Fact]
-    public void Claim_WhenMultipleClaims_AccumulatesClaimedSlots()
+    public void TryClaim_WhenMultipleClaims_AccumulatesClaimedSlots()
     {
         var opening = CreateOpening(slotsAvailable: 4);
         opening.ClearDomainEvents();
@@ -262,8 +263,8 @@ public class TeeTimeOpeningTests
         var bookingId2 = Guid.NewGuid();
         var golferId2 = Guid.NewGuid();
 
-        opening.Claim(bookingId1, golferId1, groupSize: 2, this.timeProvider);
-        opening.Claim(bookingId2, golferId2, groupSize: 1, this.timeProvider);
+        opening.TryClaim(bookingId1, golferId1, groupSize: 2, this.timeProvider);
+        opening.TryClaim(bookingId2, golferId2, groupSize: 1, this.timeProvider);
 
         Assert.Equal(2, opening.ClaimedSlots.Count);
         Assert.Contains(opening.ClaimedSlots, cs => cs.BookingId == bookingId1 && cs.GolferId == golferId1 && cs.GroupSize == 2);
@@ -271,13 +272,14 @@ public class TeeTimeOpeningTests
     }
 
     [Fact]
-    public void Claim_WhenRejected_DoesNotAddClaimedSlot()
+    public void TryClaim_WhenRejected_DoesNotAddClaimedSlot()
     {
         var opening = CreateOpening(slotsAvailable: 1);
         opening.ClearDomainEvents();
 
-        opening.Claim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 2, this.timeProvider);
+        var result = opening.TryClaim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 2, this.timeProvider);
 
+        Assert.False(result.Success);
         Assert.Empty(opening.ClaimedSlots);
     }
 }
