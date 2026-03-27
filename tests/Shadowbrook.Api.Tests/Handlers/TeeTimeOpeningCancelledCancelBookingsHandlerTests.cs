@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Shadowbrook.Api.Features.Waitlist.Handlers;
+using Shadowbrook.Api.Features.Bookings.Handlers;
 using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
 
@@ -17,91 +17,82 @@ public class TeeTimeOpeningCancelledCancelBookingsHandlerTests
         this.handler = new TeeTimeOpeningCancelledCancelBookingsHandler(this.bookingRepository, this.logger);
     }
 
-    [Fact]
-    public async Task Handle_WhenBookingsExist_RejectsThemAll()
+    private static TeeTimeOpeningCancelled CreateEvent() => new()
     {
-        var evt = new TeeTimeOpeningCancelled
-        {
-            OpeningId = Guid.NewGuid(),
-            CourseId = Guid.NewGuid(),
-            Date = new DateOnly(2026, 6, 1),
-            TeeTime = new TimeOnly(9, 0),
-        };
+        OpeningId = Guid.NewGuid(),
+        CourseId = Guid.NewGuid(),
+        Date = new DateOnly(2026, 6, 1),
+        TeeTime = new TimeOnly(9, 0),
+    };
 
-        var booking1 = Booking.Create(
-            Guid.NewGuid(),
-            evt.CourseId,
-            Guid.NewGuid(),
-            evt.Date,
-            evt.TeeTime,
-            "Jane Doe",
-            2);
+    private static Booking CreateBooking(TeeTimeOpeningCancelled evt) =>
+        Booking.Create(Guid.NewGuid(), evt.CourseId, Guid.NewGuid(), evt.Date, evt.TeeTime, "Jane Doe", 2);
 
-        var booking2 = Booking.Create(
-            Guid.NewGuid(),
-            evt.CourseId,
-            Guid.NewGuid(),
-            evt.Date,
-            evt.TeeTime,
-            "John Smith",
-            1);
+    [Fact]
+    public async Task Handle_WhenPendingAndConfirmedBookings_CancelsAll()
+    {
+        var evt = CreateEvent();
+        var pending = CreateBooking(evt);
+        var confirmed = CreateBooking(evt);
+        confirmed.Confirm();
 
         this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, evt.Date, evt.TeeTime, Arg.Any<CancellationToken>())
-            .Returns([booking1, booking2]);
+            .Returns([pending, confirmed]);
 
         await this.handler.Handle(evt, CancellationToken.None);
 
-        Assert.Equal(BookingStatus.Rejected, booking1.Status);
-        Assert.Equal(BookingStatus.Rejected, booking2.Status);
+        Assert.Equal(BookingStatus.Cancelled, pending.Status);
+        Assert.Equal(BookingStatus.Cancelled, confirmed.Status);
     }
 
     [Fact]
-    public async Task Handle_WhenNoBookingsExist_ReturnsGracefully()
+    public async Task Handle_WhenNoBookingsExist_LogsWarningAndReturns()
     {
-        var evt = new TeeTimeOpeningCancelled
-        {
-            OpeningId = Guid.NewGuid(),
-            CourseId = Guid.NewGuid(),
-            Date = new DateOnly(2026, 6, 1),
-            TeeTime = new TimeOnly(9, 0),
-        };
+        var evt = CreateEvent();
 
         this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, evt.Date, evt.TeeTime, Arg.Any<CancellationToken>())
             .Returns([]);
 
         await this.handler.Handle(evt, CancellationToken.None);
 
-        // Just verify it completes without error - logging is verified manually/observability
         await this.bookingRepository.Received(1).GetByCourseAndTeeTimeAsync(evt.CourseId, evt.Date, evt.TeeTime, Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task Handle_WhenNoPendingBookings_ReturnsGracefully()
+    public async Task Handle_WhenOnlyTerminalBookings_DoesNothing()
     {
-        var evt = new TeeTimeOpeningCancelled
-        {
-            OpeningId = Guid.NewGuid(),
-            CourseId = Guid.NewGuid(),
-            Date = new DateOnly(2026, 6, 1),
-            TeeTime = new TimeOnly(9, 0),
-        };
-
-        var booking = Booking.Create(
-            Guid.NewGuid(),
-            evt.CourseId,
-            Guid.NewGuid(),
-            evt.Date,
-            evt.TeeTime,
-            "Jane Doe",
-            2);
-        booking.RejectBooking(); // Already rejected
+        var evt = CreateEvent();
+        var rejected = CreateBooking(evt);
+        rejected.Reject();
+        var cancelled = CreateBooking(evt);
+        cancelled.Cancel();
 
         this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, evt.Date, evt.TeeTime, Arg.Any<CancellationToken>())
-            .Returns([booking]);
+            .Returns([rejected, cancelled]);
 
         await this.handler.Handle(evt, CancellationToken.None);
 
-        // Just verify it completes without error - booking should still be Rejected
-        Assert.Equal(BookingStatus.Rejected, booking.Status);
+        Assert.Equal(BookingStatus.Rejected, rejected.Status);
+        Assert.Equal(BookingStatus.Cancelled, cancelled.Status);
+    }
+
+    [Fact]
+    public async Task Handle_WhenMixOfStates_CancelsOnlyNonTerminal()
+    {
+        var evt = CreateEvent();
+        var pending = CreateBooking(evt);
+        var confirmed = CreateBooking(evt);
+        confirmed.Confirm();
+        var rejected = CreateBooking(evt);
+        rejected.Reject();
+
+        this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, evt.Date, evt.TeeTime, Arg.Any<CancellationToken>())
+            .Returns([pending, confirmed, rejected]);
+
+        await this.handler.Handle(evt, CancellationToken.None);
+
+        Assert.Equal(BookingStatus.Cancelled, pending.Status);
+        Assert.Equal(BookingStatus.Cancelled, confirmed.Status);
+        Assert.Equal(BookingStatus.Rejected, rejected.Status);
     }
 }
