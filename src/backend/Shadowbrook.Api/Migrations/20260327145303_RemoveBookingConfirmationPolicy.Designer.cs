@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Shadowbrook.Api.Infrastructure.Data;
 
@@ -12,9 +13,11 @@ using Shadowbrook.Api.Infrastructure.Data;
 namespace Shadowbrook.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260327145303_RemoveBookingConfirmationPolicy")]
+    partial class RemoveBookingConfirmationPolicy
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -132,8 +135,12 @@ namespace Shadowbrook.Api.Migrations
                         {
                             b1.IsRequired();
 
-                            b1.Property<DateTime>("Value")
-                                .HasColumnType("datetime2")
+                            b1.Property<DateOnly>("Date")
+                                .HasColumnType("date")
+                                .HasColumnName("Date");
+
+                            b1.Property<TimeOnly>("Time")
+                                .HasColumnType("time")
                                 .HasColumnName("TeeTime");
                         });
 
@@ -424,8 +431,12 @@ namespace Shadowbrook.Api.Migrations
                         {
                             b1.IsRequired();
 
-                            b1.Property<DateTime>("Value")
-                                .HasColumnType("datetime2")
+                            b1.Property<DateOnly>("Date")
+                                .HasColumnType("date")
+                                .HasColumnName("Date");
+
+                            b1.Property<TimeOnly>("Time")
+                                .HasColumnType("time")
                                 .HasColumnName("TeeTime");
                         });
 

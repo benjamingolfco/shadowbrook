@@ -14,17 +14,15 @@ public class BookingTests
         var golferId = Guid.NewGuid();
         var date = new DateOnly(2026, 6, 15);
         var time = new TimeOnly(9, 0);
-        var golferName = "Jane Smith";
         var playerCount = 2;
 
-        var booking = Booking.Create(bookingId, courseId, golferId, date, time, golferName, playerCount);
+        var booking = Booking.Create(bookingId, courseId, golferId, date, time, playerCount);
 
         Assert.Equal(bookingId, booking.Id);
         Assert.Equal(courseId, booking.CourseId);
         Assert.Equal(golferId, booking.GolferId);
         Assert.Equal(date, booking.TeeTime.Date);
         Assert.Equal(time, booking.TeeTime.Time);
-        Assert.Equal(golferName, booking.GolferName);
         Assert.Equal(playerCount, booking.PlayerCount);
         Assert.NotEqual(default, booking.CreatedAt);
     }
@@ -38,7 +36,6 @@ public class BookingTests
             Guid.NewGuid(),
             new DateOnly(2026, 6, 15),
             new TimeOnly(9, 0),
-            "Jane Smith",
             2);
 
         Assert.Equal(BookingStatus.Pending, booking.Status);
@@ -55,7 +52,6 @@ public class BookingTests
             Guid.NewGuid(),
             new DateOnly(2026, 6, 15),
             new TimeOnly(9, 0),
-            "Jane Smith",
             1);
 
         Assert.Equal(bookingId, booking.Id);
@@ -74,7 +70,6 @@ public class BookingTests
             golferId,
             new DateOnly(2026, 6, 15),
             new TimeOnly(9, 0),
-            "Jane Smith",
             1);
 
         var domainEvent = Assert.Single(booking.DomainEvents);
@@ -97,7 +92,6 @@ public class BookingTests
             Guid.NewGuid(),
             date,
             time,
-            "Jane Smith",
             playerCount);
 
         var domainEvent = Assert.Single(booking.DomainEvents);
@@ -105,6 +99,77 @@ public class BookingTests
         Assert.Equal(date, createdEvent.Date);
         Assert.Equal(time, createdEvent.TeeTime);
         Assert.Equal(playerCount, createdEvent.GroupSize);
+    }
+
+    [Fact]
+    public void CreateConfirmed_SetsStatusToConfirmed()
+    {
+        var bookingId = Guid.CreateVersion7();
+
+        var booking = Booking.CreateConfirmed(
+            bookingId,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 15),
+            new TimeOnly(9, 0),
+            2);
+
+        Assert.Equal(BookingStatus.Confirmed, booking.Status);
+    }
+
+    [Fact]
+    public void CreateConfirmed_SetsAllProperties()
+    {
+        var bookingId = Guid.CreateVersion7();
+        var courseId = Guid.NewGuid();
+        var golferId = Guid.NewGuid();
+        var date = new DateOnly(2026, 6, 15);
+        var time = new TimeOnly(9, 0);
+        var playerCount = 2;
+
+        var booking = Booking.CreateConfirmed(bookingId, courseId, golferId, date, time, playerCount);
+
+        Assert.Equal(bookingId, booking.Id);
+        Assert.Equal(courseId, booking.CourseId);
+        Assert.Equal(golferId, booking.GolferId);
+        Assert.Equal(date, booking.TeeTime.Date);
+        Assert.Equal(time, booking.TeeTime.Time);
+        Assert.Equal(playerCount, booking.PlayerCount);
+        Assert.NotEqual(default, booking.CreatedAt);
+    }
+
+    [Fact]
+    public void CreateConfirmed_RaisesBookingConfirmedEvent()
+    {
+        var bookingId = Guid.CreateVersion7();
+
+        var booking = Booking.CreateConfirmed(
+            bookingId,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 15),
+            new TimeOnly(9, 0),
+            1);
+
+        var domainEvent = Assert.Single(booking.DomainEvents);
+        var confirmedEvent = Assert.IsType<BookingConfirmed>(domainEvent);
+        Assert.Equal(bookingId, confirmedEvent.BookingId);
+    }
+
+    [Fact]
+    public void CreateConfirmed_UsesPreAllocatedBookingId()
+    {
+        var bookingId = Guid.CreateVersion7();
+
+        var booking = Booking.CreateConfirmed(
+            bookingId,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 15),
+            new TimeOnly(9, 0),
+            1);
+
+        Assert.Equal(bookingId, booking.Id);
     }
 
     [Fact]
@@ -117,7 +182,6 @@ public class BookingTests
             Guid.NewGuid(),
             new DateOnly(2026, 6, 15),
             new TimeOnly(9, 0),
-            "Jane Smith",
             1);
 
         booking.Confirm();
@@ -136,7 +200,6 @@ public class BookingTests
             Guid.NewGuid(),
             new DateOnly(2026, 6, 15),
             new TimeOnly(9, 0),
-            "Jane Smith",
             1);
 
         booking.Confirm();
@@ -157,7 +220,6 @@ public class BookingTests
             Guid.NewGuid(),
             new DateOnly(2026, 6, 15),
             new TimeOnly(9, 0),
-            "Jane Smith",
             1);
 
         booking.Reject();
@@ -175,7 +237,6 @@ public class BookingTests
             Guid.NewGuid(),
             new DateOnly(2026, 6, 15),
             new TimeOnly(9, 0),
-            "Jane Smith",
             1);
 
         booking.Reject();
@@ -194,7 +255,6 @@ public class BookingTests
             Guid.NewGuid(),
             new DateOnly(2026, 6, 15),
             new TimeOnly(9, 0),
-            "Jane Smith",
             1);
 
         booking.Reject();
@@ -215,7 +275,6 @@ public class BookingTests
             Guid.NewGuid(),
             new DateOnly(2026, 6, 15),
             new TimeOnly(9, 0),
-            "Jane Smith",
             1);
 
         booking.Confirm();
@@ -233,7 +292,6 @@ public class BookingTests
             Guid.NewGuid(),
             new DateOnly(2026, 6, 15),
             new TimeOnly(9, 0),
-            "Jane Smith",
             1);
 
         booking.Cancel();
@@ -253,7 +311,6 @@ public class BookingTests
             Guid.NewGuid(),
             new DateOnly(2026, 6, 15),
             new TimeOnly(9, 0),
-            "Jane Smith",
             1);
 
         booking.Confirm();
@@ -273,7 +330,6 @@ public class BookingTests
             Guid.NewGuid(),
             new DateOnly(2026, 6, 15),
             new TimeOnly(9, 0),
-            "Jane Smith",
             1);
 
         booking.Cancel();
@@ -294,7 +350,6 @@ public class BookingTests
             Guid.NewGuid(),
             new DateOnly(2026, 6, 15),
             new TimeOnly(9, 0),
-            "Jane Smith",
             1);
 
         booking.Reject();

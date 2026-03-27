@@ -67,6 +67,7 @@ public class WaitlistOfferResponsePolicyTests
         policy.Handle(new WaitlistOfferAccepted
         {
             WaitlistOfferId = offerId,
+            BookingId = Guid.NewGuid(),
             OpeningId = Guid.NewGuid(),
             GolferWaitlistEntryId = Guid.NewGuid(),
             GolferId = Guid.NewGuid(),

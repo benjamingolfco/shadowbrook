@@ -27,7 +27,7 @@ public class TeeTimeOpeningCancelledCancelBookingsHandlerTests
     };
 
     private static Booking CreateBooking(TeeTimeOpeningCancelled evt) =>
-        Booking.Create(Guid.NewGuid(), evt.CourseId, Guid.NewGuid(), evt.Date, evt.TeeTime, "Jane Doe", 2);
+        Booking.Create(Guid.NewGuid(), evt.CourseId, Guid.NewGuid(), evt.Date, evt.TeeTime, 2);
 
     [Fact]
     public async Task Handle_WhenPendingAndConfirmedBookings_CancelsAll()

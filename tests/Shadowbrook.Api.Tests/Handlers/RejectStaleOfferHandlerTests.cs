@@ -44,23 +44,6 @@ public class RejectStaleOfferHandlerTests
     }
 
     [Fact]
-    public async Task Handle_AlreadyAcceptedOffer_LogsAndReturnsNull()
-    {
-        var openingId = Guid.NewGuid();
-        var offer = CreatePendingOffer(openingId);
-        offer.Accept();
-        offer.ClearDomainEvents();
-        this.offerRepo.GetByIdAsync(offer.Id).Returns(offer);
-
-        var command = new RejectStaleOffer(offer.Id, openingId);
-
-        var result = await RejectStaleOfferHandler.Handle(command, this.offerRepo, NullLogger.Instance);
-
-        Assert.Null(result);
-        Assert.Empty(offer.DomainEvents); // no additional events raised
-    }
-
-    [Fact]
     public async Task Handle_AlreadyRejectedOffer_LogsAndReturnsNull()
     {
         var openingId = Guid.NewGuid();

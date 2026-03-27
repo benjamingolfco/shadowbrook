@@ -38,11 +38,19 @@ public static class TeeSheetEndpoints
             return Results.NotFound(new { error = "Tee time settings not configured for this course." });
         }
 
-        // Fetch all bookings for the course and date
-        var dayStart = dateOnly.ToDateTime(TimeOnly.MinValue);
-        var dayEnd = dateOnly.AddDays(1).ToDateTime(TimeOnly.MinValue);
+        // Fetch all bookings for the course and date, joining to golfer for the name
         var bookings = await db.Bookings
-            .Where(b => b.CourseId == courseId.Value && b.TeeTime.Value >= dayStart && b.TeeTime.Value < dayEnd)
+            .Where(b => b.CourseId == courseId.Value && b.TeeTime.Date == dateOnly)
+            .Join(
+                db.Golfers,
+                b => b.GolferId,
+                g => g.Id,
+                (b, g) => new
+                {
+                    b.TeeTime,
+                    b.PlayerCount,
+                    GolferName = g.FirstName + " " + g.LastName
+                })
             .ToListAsync();
 
         // Generate all time slots

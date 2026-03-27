@@ -9,7 +9,6 @@ public class Booking : Entity
     public Guid CourseId { get; private set; }
     public Guid GolferId { get; private set; }
     public TeeTime TeeTime { get; private set; } = null!;
-    public string GolferName { get; private set; } = string.Empty;
     public int PlayerCount { get; private set; }
     public BookingStatus Status { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
@@ -22,7 +21,6 @@ public class Booking : Entity
         Guid golferId,
         DateOnly date,
         TimeOnly teeTime,
-        string golferName,
         int playerCount)
     {
         var now = DateTimeOffset.UtcNow;
@@ -32,7 +30,6 @@ public class Booking : Entity
             CourseId = courseId,
             GolferId = golferId,
             TeeTime = new TeeTime(date, teeTime),
-            GolferName = golferName,
             PlayerCount = playerCount,
             Status = BookingStatus.Pending,
             CreatedAt = now
@@ -47,6 +44,31 @@ public class Booking : Entity
             TeeTime = teeTime,
             GroupSize = playerCount
         });
+
+        return booking;
+    }
+
+    public static Booking CreateConfirmed(
+        Guid bookingId,
+        Guid courseId,
+        Guid golferId,
+        DateOnly date,
+        TimeOnly teeTime,
+        int playerCount)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var booking = new Booking
+        {
+            Id = bookingId,
+            CourseId = courseId,
+            GolferId = golferId,
+            TeeTime = new TeeTime(date, teeTime),
+            PlayerCount = playerCount,
+            Status = BookingStatus.Confirmed,
+            CreatedAt = now
+        };
+
+        booking.AddDomainEvent(new BookingConfirmed { BookingId = bookingId });
 
         return booking;
     }
