@@ -122,6 +122,7 @@ public static class WalkUpWaitlistEndpoints
             : new Dictionary<Guid, string>();
 
         var openings = openingEntities
+            .OrderBy(o => o.TeeTime.Time)
             .Select(o => new WalkUpWaitlistOpeningResponse(
                 o.Id,
                 o.TeeTime.Time.ToString("HH:mm"),
