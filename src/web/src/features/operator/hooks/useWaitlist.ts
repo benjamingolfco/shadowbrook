@@ -56,3 +56,16 @@ export function useRemoveGolferFromWaitlist() {
     },
   });
 }
+
+export function useCancelTeeTimeOpening() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ courseId, openingId }: { courseId: string; openingId: string }) =>
+      api.post<WaitlistOpeningEntry>(`/courses/${courseId}/tee-time-openings/${openingId}/cancel`, {}),
+    onSuccess: (_, { courseId }) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.walkUpWaitlist.today(courseId),
+      });
+    },
+  });
+}

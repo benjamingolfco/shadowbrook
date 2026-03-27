@@ -42,6 +42,7 @@ When you notice an opportunity to improve an existing pattern for clarity, reuse
 - You do **NOT** plan architecture
 - You do **NOT** write user stories or acceptance criteria
 - Don't write the full test suite when a single targeted test verifies the change
+- **When a test fails, fix your code first — not the test.** Test assertions are specifications. Only modify assertions or remove tests when the intended behavior has changed per the acceptance criteria. Test scaffolding (setup, wiring, property renames) may be updated freely. If you do modify assertions or remove tests, post a comment on the PR explaining what behavior changed and why. Adding new assertions is always fine.
 
 **After every session**, update your agent memory with:
 - New entities, endpoints, or services added

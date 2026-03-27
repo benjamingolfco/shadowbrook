@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.BookingAggregate;
+using Shadowbrook.Domain.GolferAggregate;
 
 namespace Shadowbrook.Api.Tests;
 
@@ -21,13 +22,19 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         using var scope = this.factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        var booking = Booking.Create(
+        var nameParts = golferName.Split(' ', 2);
+        var firstName = nameParts[0];
+        var lastName = nameParts.Length > 1 ? nameParts[1] : string.Empty;
+        var phone = $"+1555{new Random().Next(1000000, 9999999)}";
+        var golfer = Golfer.Create(phone, firstName, lastName);
+        db.Golfers.Add(golfer);
+
+        var booking = Booking.CreateConfirmed(
             bookingId: Guid.CreateVersion7(),
             courseId: courseId,
-            golferId: Guid.Empty,
+            golferId: golfer.Id,
             date: DateOnly.ParseExact(date, "yyyy-MM-dd"),
             teeTime: TimeOnly.ParseExact(time, "HH:mm"),
-            golferName: golferName,
             playerCount: playerCount);
 
         db.Bookings.Add(booking);
@@ -76,7 +83,6 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         Assert.NotNull(teeSheet);
         Assert.Equal(course.Id, teeSheet!.CourseId);
         Assert.Equal("Test Course", teeSheet.CourseName);
-        Assert.Equal("2026-02-07", teeSheet.Date);
         Assert.NotEmpty(teeSheet.Slots);
     }
 
@@ -114,11 +120,11 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         Assert.Equal(6, teeSheet!.Slots.Count);
 
         // First slot should be open
-        Assert.Equal("07:00", teeSheet.Slots[0].Time);
+        Assert.Equal(new DateTime(2026, 2, 7, 7, 0, 0), teeSheet.Slots[0].TeeTime);
         Assert.Equal("open", teeSheet.Slots[0].Status);
 
         // Second slot should be booked
-        Assert.Equal("07:10", teeSheet.Slots[1].Time);
+        Assert.Equal(new DateTime(2026, 2, 7, 7, 10, 0), teeSheet.Slots[1].TeeTime);
         Assert.Equal("booked", teeSheet.Slots[1].Status);
         Assert.Equal("John Doe", teeSheet.Slots[1].GolferName);
         Assert.Equal(4, teeSheet.Slots[1].PlayerCount);
@@ -283,11 +289,10 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
     private record TeeSheetResponse(
         Guid CourseId,
         string CourseName,
-        string Date,
         List<TeeSheetSlot> Slots);
 
     private record TeeSheetSlot(
-        string Time,
+        DateTime TeeTime,
         string Status,
         string? GolferName,
         int PlayerCount);

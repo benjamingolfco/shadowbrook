@@ -19,7 +19,7 @@ import {
   useCloseWalkUpWaitlist,
   useReopenWalkUpWaitlist,
 } from '../hooks/useWalkUpWaitlist';
-import { useRemoveGolferFromWaitlist } from '../hooks/useWaitlist';
+import { useRemoveGolferFromWaitlist, useCancelTeeTimeOpening } from '../hooks/useWaitlist';
 import { useCourseContext } from '../context/CourseContext';
 import { OpenWaitlistDialog } from '../components/OpenWaitlistDialog';
 import { AddGolferDialog } from '../components/AddGolferDialog';
@@ -28,6 +28,7 @@ import { CloseWaitlistDialog } from '../components/CloseWaitlistDialog';
 import { QrCodePanel } from '../components/QrCodePanel';
 import { ReopenWaitlistDialog } from '../components/ReopenWaitlistDialog';
 import { RemoveGolferDialog } from '../components/RemoveGolferDialog';
+import { CancelOpeningDialog } from '../components/CancelOpeningDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { WalkUpWaitlistEntry, WaitlistOpeningEntry } from '@/types/waitlist';
 
@@ -133,13 +134,28 @@ function QueueTable({
   );
 }
 
-function formatTeeTime(teeTime: string): string {
-  const parts = teeTime.split(':');
-  const hour = parseInt(parts[0] ?? '0', 10);
-  const minute = parts[1] ?? '00';
-  const period = hour >= 12 ? 'PM' : 'AM';
-  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-  return `${hour12}:${minute} ${period}`;
+function formatTeeTime(isoDateTime: string): string {
+  const date = new Date(isoDateTime);
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
+function getStatusBadgeVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' | 'success' {
+  switch (status) {
+    case 'Open':
+      return 'success';
+    case 'Filled':
+      return 'default';
+    case 'Expired':
+      return 'secondary';
+    case 'Cancelled':
+      return 'destructive';
+    default:
+      return 'outline';
+  }
 }
 
 function formatFilledGolfers(filledGolfers: WaitlistOpeningEntry['filledGolfers']): string {
@@ -151,8 +167,18 @@ function formatFilledGolfers(filledGolfers: WaitlistOpeningEntry['filledGolfers'
     .join(', ');
 }
 
-function OpeningsTable({ openings }: { openings: WaitlistOpeningEntry[] }) {
-  if (openings.length === 0) {
+function OpeningsTable({
+  openings,
+  onCancel,
+  cancellingOpeningId,
+}: {
+  openings: WaitlistOpeningEntry[];
+  onCancel: (opening: WaitlistOpeningEntry) => void;
+  cancellingOpeningId: string | null;
+}) {
+  const sortedOpenings = [...openings].sort((a, b) => a.teeTime.localeCompare(b.teeTime));
+
+  if (sortedOpenings.length === 0) {
     return (
       <p className="text-muted-foreground text-sm py-4">
         No tee time openings for today.
@@ -163,7 +189,7 @@ function OpeningsTable({ openings }: { openings: WaitlistOpeningEntry[] }) {
   return (
     <div>
       <p className="text-sm text-muted-foreground mb-2">
-        {openings.length} opening{openings.length !== 1 ? 's' : ''}
+        {sortedOpenings.length} opening{sortedOpenings.length !== 1 ? 's' : ''}
       </p>
       {/* Desktop table */}
       <div className="hidden md:block">
@@ -175,16 +201,34 @@ function OpeningsTable({ openings }: { openings: WaitlistOpeningEntry[] }) {
               <TableHead>Slots Remaining</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Golfers</TableHead>
+              <TableHead className="w-24">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {openings.map((opening) => (
-              <TableRow key={opening.id}>
+            {sortedOpenings.map((opening) => (
+              <TableRow key={opening.id} className={cancellingOpeningId === opening.id ? 'opacity-50' : ''}>
                 <TableCell>{formatTeeTime(opening.teeTime)}</TableCell>
                 <TableCell>{opening.slotsAvailable}</TableCell>
                 <TableCell>{opening.slotsRemaining}</TableCell>
-                <TableCell>{opening.status}</TableCell>
+                <TableCell>
+                  <Badge variant={getStatusBadgeVariant(opening.status)}>
+                    {opening.status}
+                  </Badge>
+                </TableCell>
                 <TableCell>{formatFilledGolfers(opening.filledGolfers)}</TableCell>
+                <TableCell>
+                  {opening.status === 'Open' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onCancel(opening)}
+                      disabled={cancellingOpeningId === opening.id}
+                      aria-label={`Cancel opening at ${formatTeeTime(opening.teeTime)}`}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -192,14 +236,18 @@ function OpeningsTable({ openings }: { openings: WaitlistOpeningEntry[] }) {
       </div>
       {/* Mobile stacked cards */}
       <div className="md:hidden space-y-2">
-        {openings.map((opening) => (
+        {sortedOpenings.map((opening) => (
           <div
             key={opening.id}
-            className="flex flex-col gap-2 rounded-md border p-3 text-sm"
+            className={`flex flex-col gap-2 rounded-md border p-3 text-sm ${
+              cancellingOpeningId === opening.id ? 'opacity-50' : ''
+            }`}
           >
             <div className="flex items-center justify-between">
               <span className="font-medium">{formatTeeTime(opening.teeTime)}</span>
-              <span className="text-muted-foreground">{opening.status}</span>
+              <Badge variant={getStatusBadgeVariant(opening.status)}>
+                {opening.status}
+              </Badge>
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-muted-foreground text-xs">
@@ -212,6 +260,19 @@ function OpeningsTable({ openings }: { openings: WaitlistOpeningEntry[] }) {
                 </span>
               )}
             </div>
+            {opening.status === 'Open' && (
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onCancel(opening)}
+                  disabled={cancellingOpeningId === opening.id}
+                  aria-label={`Cancel opening at ${formatTeeTime(opening.teeTime)}`}
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -229,12 +290,15 @@ export default function WalkUpWaitlist() {
   const [reopenDialogOpen, setReopenDialogOpen] = useState(false);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [removalTarget, setRemovalTarget] = useState<WalkUpWaitlistEntry | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancellationTarget, setCancellationTarget] = useState<WaitlistOpeningEntry | null>(null);
 
   const todayQuery = useWalkUpWaitlistToday(course?.id);
   const openMutation = useOpenWalkUpWaitlist();
   const closeMutation = useCloseWalkUpWaitlist();
   const reopenMutation = useReopenWalkUpWaitlist();
   const removeMutation = useRemoveGolferFromWaitlist();
+  const cancelMutation = useCancelTeeTimeOpening();
 
   if (!course) {
     return (
@@ -280,6 +344,24 @@ export default function WalkUpWaitlist() {
         onSuccess: () => {
           setRemoveDialogOpen(false);
           setRemovalTarget(null);
+        },
+      }
+    );
+  }
+
+  function handleCancelClick(opening: WaitlistOpeningEntry) {
+    setCancellationTarget(opening);
+    setCancelDialogOpen(true);
+  }
+
+  function handleCancelConfirm() {
+    if (!cancellationTarget || !courseId) return;
+    cancelMutation.mutate(
+      { courseId, openingId: cancellationTarget.id },
+      {
+        onSuccess: () => {
+          setCancelDialogOpen(false);
+          setCancellationTarget(null);
         },
       }
     );
@@ -410,7 +492,11 @@ export default function WalkUpWaitlist() {
             />
           </TabsContent>
           <TabsContent value="openings">
-            <OpeningsTable openings={openings} />
+            <OpeningsTable
+              openings={openings}
+              onCancel={handleCancelClick}
+              cancellingOpeningId={cancelMutation.isPending ? cancellationTarget?.id ?? null : null}
+            />
           </TabsContent>
         </Tabs>
       </div>
@@ -487,6 +573,13 @@ export default function WalkUpWaitlist() {
         isPending={removeMutation.isPending}
       />
 
+      <CancelOpeningDialog
+        open={cancelDialogOpen}
+        onOpenChange={setCancelDialogOpen}
+        onConfirm={handleCancelConfirm}
+        isPending={cancelMutation.isPending}
+      />
+
       {closeMutation.isError && (
         <p className="text-destructive text-sm mb-4" role="alert">
           Error closing waitlist: {(closeMutation.error as Error).message}
@@ -499,6 +592,17 @@ export default function WalkUpWaitlist() {
             Error removing golfer: {(removeMutation.error as Error).message}
           </p>
           <Button onClick={() => removeMutation.reset()} variant="outline" size="sm">
+            Dismiss
+          </Button>
+        </div>
+      )}
+
+      {cancelMutation.isError && (
+        <div className="mb-4 space-y-2">
+          <p className="text-destructive text-sm" role="alert">
+            Error cancelling opening: {(cancelMutation.error as Error).message}
+          </p>
+          <Button onClick={() => cancelMutation.reset()} variant="outline" size="sm">
             Dismiss
           </Button>
         </div>
@@ -521,7 +625,11 @@ export default function WalkUpWaitlist() {
           />
         </TabsContent>
         <TabsContent value="openings">
-          <OpeningsTable openings={openings} />
+          <OpeningsTable
+            openings={openings}
+            onCancel={handleCancelClick}
+            cancellingOpeningId={cancelMutation.isPending ? cancellationTarget?.id ?? null : null}
+          />
         </TabsContent>
       </Tabs>
     </div>

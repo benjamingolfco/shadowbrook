@@ -55,6 +55,7 @@ public class TeeTimeOpeningOfferPolicyTests
         var result = policy.Handle(new WaitlistOfferAccepted
         {
             WaitlistOfferId = Guid.NewGuid(),
+            BookingId = Guid.NewGuid(),
             OpeningId = openingId,
             GolferWaitlistEntryId = Guid.NewGuid(),
             GolferId = Guid.NewGuid(),
@@ -65,7 +66,7 @@ public class TeeTimeOpeningOfferPolicyTests
         });
 
         Assert.Equal(1, policy.PendingOfferCount);
-        Assert.Null(result); // Slot update deferred to TeeTimeOpeningClaimed — no follow-on dispatch here
+        Assert.Null(result); // Slot update deferred to TeeTimeOpeningSlotsClaimed — no follow-on dispatch here
     }
 
     [Fact]
@@ -74,14 +75,15 @@ public class TeeTimeOpeningOfferPolicyTests
         var openingId = Guid.NewGuid();
         var policy = new TeeTimeOpeningOfferPolicy { Id = openingId, SlotsRemaining = 3, PendingOfferCount = 1 };
 
-        var result = policy.Handle(new TeeTimeOpeningClaimed
+        var result = policy.Handle(new TeeTimeOpeningSlotsClaimed
         {
             OpeningId = openingId,
             BookingId = Guid.NewGuid(),
             GolferId = Guid.NewGuid(),
             CourseId = Guid.NewGuid(),
             Date = new DateOnly(2026, 3, 25),
-            TeeTime = new TimeOnly(14, 30)
+            TeeTime = new TimeOnly(14, 30),
+            GroupSize = 1
         });
 
         Assert.Equal(2, policy.SlotsRemaining);

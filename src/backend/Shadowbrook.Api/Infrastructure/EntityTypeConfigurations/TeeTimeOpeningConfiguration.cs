@@ -14,10 +14,7 @@ public class TeeTimeOpeningConfiguration : IEntityTypeConfiguration<TeeTimeOpeni
         builder.Property(o => o.Id).ValueGeneratedNever();
 
         builder.ComplexProperty(o => o.TeeTime, t =>
-        {
-            t.Property(x => x.Date).HasColumnName("Date");
-            t.Property(x => x.Time).HasColumnName("TeeTime").HasColumnType("time");
-        });
+            t.Property(x => x.Value).HasColumnName("TeeTime").HasColumnType("datetime2"));
 
         builder.Property(o => o.Status).HasConversion<string>().HasMaxLength(10);
 

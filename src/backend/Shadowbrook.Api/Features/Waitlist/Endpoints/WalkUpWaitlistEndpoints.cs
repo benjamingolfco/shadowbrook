@@ -104,9 +104,11 @@ public static class WalkUpWaitlistEndpoints
                 .ToList()
             : new List<WalkUpWaitlistEntryResponse>();
 
+        var dayStart = today.ToDateTime(TimeOnly.MinValue);
+        var dayEnd = today.AddDays(1).ToDateTime(TimeOnly.MinValue);
         var openingEntities = await db.TeeTimeOpenings
             .Include(o => o.ClaimedSlots)
-            .Where(o => o.CourseId == courseId && o.TeeTime.Date == today)
+            .Where(o => o.CourseId == courseId && o.TeeTime.Value >= dayStart && o.TeeTime.Value < dayEnd)
             .ToListAsync();
 
         var golferIds = openingEntities
@@ -122,9 +124,10 @@ public static class WalkUpWaitlistEndpoints
             : new Dictionary<Guid, string>();
 
         var openings = openingEntities
+            .OrderBy(o => o.TeeTime.Time)
             .Select(o => new WalkUpWaitlistOpeningResponse(
                 o.Id,
-                o.TeeTime.Time.ToString("HH:mm"),
+                o.TeeTime.Value,
                 o.SlotsAvailable,
                 o.SlotsRemaining,
                 o.Status.ToString(),
@@ -157,7 +160,37 @@ public static class WalkUpWaitlistEndpoints
 
         return Results.Created(
             $"/courses/{courseId}/tee-time-openings/{opening.Id}",
-            new WalkUpWaitlistOpeningResponse(opening.Id, opening.TeeTime.Time.ToString("HH:mm"), opening.SlotsAvailable, opening.SlotsRemaining, opening.Status.ToString(), []));
+            new WalkUpWaitlistOpeningResponse(opening.Id, opening.TeeTime.Value, opening.SlotsAvailable, opening.SlotsRemaining, opening.Status.ToString(), []));
+    }
+
+    [WolverinePost("/courses/{courseId}/tee-time-openings/{openingId}/cancel")]
+    public static async Task<IResult> CancelOpening(
+        Guid courseId,
+        Guid openingId,
+        ITeeTimeOpeningRepository openingRepo,
+        ITimeProvider timeProvider)
+    {
+        var opening = await openingRepo.GetByIdAsync(openingId);
+
+        if (opening is null)
+        {
+            return Results.NotFound(new { error = "Tee time opening not found." });
+        }
+
+        if (opening.CourseId != courseId)
+        {
+            return Results.NotFound(new { error = "Tee time opening not found." });
+        }
+
+        opening.Cancel(timeProvider);
+
+        return Results.Ok(new WalkUpWaitlistOpeningResponse(
+            opening.Id,
+            opening.TeeTime.Value,
+            opening.SlotsAvailable,
+            opening.SlotsRemaining,
+            opening.Status.ToString(),
+            []));
     }
 
     [WolverinePost("/courses/{courseId}/walkup-waitlist/entries")]
@@ -297,7 +330,7 @@ public record FilledGolferResponse(
 
 public record WalkUpWaitlistOpeningResponse(
     Guid Id,
-    string TeeTime,
+    DateTime TeeTime,
     int SlotsAvailable,
     int SlotsRemaining,
     string Status,

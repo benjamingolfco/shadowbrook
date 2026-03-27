@@ -23,16 +23,6 @@ namespace Shadowbrook.Api.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Shadowbrook.Api.Features.Bookings.Policies.BookingConfirmationPolicy", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("BookingConfirmationPolicies", (string)null);
-                });
-
             modelBuilder.Entity("Shadowbrook.Api.Features.Waitlist.Policies.TeeTimeOpeningExpirationPolicy", b =>
                 {
                     b.Property<Guid>("Id")
@@ -118,11 +108,6 @@ namespace Shadowbrook.Api.Migrations
                     b.Property<Guid>("GolferId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("GolferName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<int>("PlayerCount")
                         .HasColumnType("int");
 
@@ -147,12 +132,8 @@ namespace Shadowbrook.Api.Migrations
                         {
                             b1.IsRequired();
 
-                            b1.Property<DateOnly>("Date")
-                                .HasColumnType("date")
-                                .HasColumnName("Date");
-
-                            b1.Property<TimeOnly>("Time")
-                                .HasColumnType("time")
+                            b1.Property<DateTime>("Value")
+                                .HasColumnType("datetime2")
                                 .HasColumnName("TeeTime");
                         });
 
@@ -398,6 +379,9 @@ namespace Shadowbrook.Api.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<Guid>("CourseId")
                         .HasColumnType("uniqueidentifier");
 
@@ -440,12 +424,8 @@ namespace Shadowbrook.Api.Migrations
                         {
                             b1.IsRequired();
 
-                            b1.Property<DateOnly>("Date")
-                                .HasColumnType("date")
-                                .HasColumnName("Date");
-
-                            b1.Property<TimeOnly>("Time")
-                                .HasColumnType("time")
+                            b1.Property<DateTime>("Value")
+                                .HasColumnType("datetime2")
                                 .HasColumnName("TeeTime");
                         });
 
@@ -507,6 +487,9 @@ namespace Shadowbrook.Api.Migrations
             modelBuilder.Entity("Shadowbrook.Domain.WaitlistOfferAggregate.WaitlistOffer", b =>
                 {
                     b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BookingId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CourseId")
@@ -670,7 +653,6 @@ namespace Shadowbrook.Api.Migrations
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<Guid>("BookingId")
-                                .ValueGeneratedOnAdd()
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<DateTimeOffset>("ClaimedAt")

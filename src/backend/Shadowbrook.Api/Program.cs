@@ -132,6 +132,7 @@ builder.Services.AddScoped<IGolferRepository, GolferRepository>();
 builder.Services.AddScoped<ICourseWaitlistRepository, CourseWaitlistRepository>();
 builder.Services.AddScoped<ITeeTimeOpeningRepository, TeeTimeOpeningRepository>();
 builder.Services.AddScoped<Shadowbrook.Domain.WaitlistServices.WaitlistMatchingService>();
+builder.Services.AddScoped<Shadowbrook.Domain.WaitlistServices.WaitlistOfferClaimService>();
 builder.Services.AddScoped<IWaitlistOfferRepository, WaitlistOfferRepository>();
 builder.Services.AddScoped<IGolferWaitlistEntryRepository, GolferWaitlistEntryRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();

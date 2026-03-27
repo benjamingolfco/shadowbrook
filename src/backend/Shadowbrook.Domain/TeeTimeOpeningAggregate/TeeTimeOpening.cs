@@ -15,6 +15,7 @@ public class TeeTimeOpening : Entity
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? FilledAt { get; private set; }
     public DateTimeOffset? ExpiredAt { get; private set; }
+    public DateTimeOffset? CancelledAt { get; private set; }
 
     private readonly List<ClaimedSlot> claimedSlots = [];
     public IReadOnlyList<ClaimedSlot> ClaimedSlots => this.claimedSlots.AsReadOnly();
@@ -67,7 +68,7 @@ public class TeeTimeOpening : Entity
 
         if (Status != TeeTimeOpeningStatus.Open)
         {
-            AddDomainEvent(new TeeTimeOpeningClaimRejected
+            AddDomainEvent(new TeeTimeOpeningSlotsClaimRejected
             {
                 OpeningId = Id,
                 BookingId = bookingId,
@@ -78,7 +79,7 @@ public class TeeTimeOpening : Entity
 
         if (SlotsRemaining < groupSize)
         {
-            AddDomainEvent(new TeeTimeOpeningClaimRejected
+            AddDomainEvent(new TeeTimeOpeningSlotsClaimRejected
             {
                 OpeningId = Id,
                 BookingId = bookingId,
@@ -90,7 +91,7 @@ public class TeeTimeOpening : Entity
         SlotsRemaining -= groupSize;
         this.claimedSlots.Add(new ClaimedSlot(bookingId, golferId, groupSize, timeProvider.GetCurrentTimestamp()));
 
-        AddDomainEvent(new TeeTimeOpeningClaimed
+        AddDomainEvent(new TeeTimeOpeningSlotsClaimed
         {
             OpeningId = Id,
             BookingId = bookingId,
@@ -98,6 +99,7 @@ public class TeeTimeOpening : Entity
             CourseId = CourseId,
             Date = TeeTime.Date,
             TeeTime = TeeTime.Time,
+            GroupSize = groupSize,
         });
 
         if (SlotsRemaining == 0)
@@ -112,6 +114,25 @@ public class TeeTimeOpening : Entity
         }
 
         return ClaimResult.Claimed();
+    }
+
+    public void Cancel(ITimeProvider timeProvider)
+    {
+        if (Status != TeeTimeOpeningStatus.Open)
+        {
+            return;
+        }
+
+        Status = TeeTimeOpeningStatus.Cancelled;
+        CancelledAt = timeProvider.GetCurrentTimestamp();
+
+        AddDomainEvent(new TeeTimeOpeningCancelled
+        {
+            OpeningId = Id,
+            CourseId = CourseId,
+            Date = TeeTime.Date,
+            TeeTime = TeeTime.Time,
+        });
     }
 
     public void Expire(ITimeProvider timeProvider)

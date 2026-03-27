@@ -75,14 +75,23 @@ jobs:
             exit 0
           fi
 
-          # Count commits after the last review
+          # Only skip if the last review was an explicit APPROVED — COMMENTED reviews
+          # (including fallback "no issues found" comments) should not prevent re-review
+          if [ "$REVIEW_STATE" != "APPROVED" ]; then
+            echo "Last review was $REVIEW_STATE (not APPROVED) — running full review."
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "follow_up=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Count commits after the last approved review
           NEW_COMMITS=$(gh api "repos/${{ github.repository }}/pulls/$PR/commits" \
             --jq "[.[] | select(.commit.committer.date > \"$REVIEW_TIME\")] | length")
 
-          echo "New commits since last review: $NEW_COMMITS"
+          echo "New commits since last approved review: $NEW_COMMITS"
 
           if [ "$NEW_COMMITS" = "0" ]; then
-            echo "No new commits since last passing review — skipping."
+            echo "No new commits since last approved review — skipping."
             echo "skip=true" >> $GITHUB_OUTPUT
             echo "follow_up=false" >> $GITHUB_OUTPUT
           else
@@ -128,13 +137,14 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          # Check if any review was posted on this PR by the bot during this workflow run
-          REVIEW_COUNT=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews" \
-            --jq '[.[] | select(.user.login == "benjamingolfco-claude-agent[bot]")] | length')
-          if [ "$REVIEW_COUNT" = "0" ]; then
+          # Check if a review was posted during THIS workflow run (not just any prior review)
+          RUN_START="${{ github.event.pull_request.updated_at }}"
+          RECENT_REVIEW=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews" \
+            --jq "[.[] | select(.user.login == \"benjamingolfco-claude-agent[bot]\" and .submitted_at > \"$RUN_START\")] | length")
+          if [ "$RECENT_REVIEW" = "0" ]; then
             echo "::warning::Code reviewer did not post a review. Posting fallback."
             gh pr review ${{ github.event.pull_request.number }} --comment \
-              --body "Code review completed — no issues found. (Fallback: reviewer agent did not post a review explicitly.)"
+              --body "Code review incomplete — reviewer agent did not post a review. Please re-run the workflow or review manually."
           else
-            echo "Review was posted successfully ($REVIEW_COUNT review(s) found)."
+            echo "Review was posted successfully ($RECENT_REVIEW review(s) found)."
           fi

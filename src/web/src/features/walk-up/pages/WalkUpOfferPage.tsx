@@ -125,16 +125,13 @@ export default function WalkUpOfferPage() {
   }
 
   // Format for confirmation dialog
-  const dateParts = offer.date.split('-').map(Number);
-  const date = new Date(dateParts[0] ?? 0, (dateParts[1] ?? 1) - 1, dateParts[2] ?? 1);
-  const dateFormatted = date.toLocaleDateString('en-US', {
+  const teeTime = new Date(offer.teeTime);
+  const dateFormatted = teeTime.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
   });
-
-  const timeParts = offer.teeTime.split(':').map(Number);
-  const timeFormatted = new Date(2000, 0, 1, timeParts[0] ?? 0, timeParts[1] ?? 0).toLocaleTimeString('en-US', {
+  const timeFormatted = teeTime.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
   });

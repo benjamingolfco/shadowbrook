@@ -59,6 +59,7 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - Run `pnpm --dir src/web lint` after TypeScript changes
 - Run `pnpm --dir src/web test` after frontend component changes
 - **Testing pyramid: unit tests first, integration tests second.** Test behavior at the cheapest layer possible — validators, handlers, domain logic should all be unit tested without spinning up a DB or HTTP server. Integration tests are for DB-dependent behavior, middleware, and E2E flows only. See `.claude/rules/backend/backend-conventions.md` for backend-specific patterns; the same principle applies to frontend (component tests before browser tests).
+- **Test integrity: assertions are specifications.** Test assertions define expected system behavior and are protected. When a test fails after a code change, assume the code is wrong first — fix the implementation, not the test. Only modify existing assertions or remove tests when the intended behavior has changed per the acceptance criteria. Adding new assertions or new tests is always encouraged. Test scaffolding (setup, arrangement, dependency wiring, property renames) may be updated freely to match code changes. When modifying assertions or removing tests, post a justification on the PR explaining what behavior changed and why.
 - Prefer running single tests over full suites for speed
 - `dotnet-ef` tool path: `export PATH="$PATH:/home/aaron/.dotnet/tools"`
 - Add migration: `dotnet ef migrations add <Name> --project src/backend/Shadowbrook.Api`

@@ -418,9 +418,22 @@ PR merged to main → Sprint Manager detects
 | Ready (in iteration) | Cron / dependency unblock | Set Implementing, create issue branch from main, spawn Architect for detailed plan, implement (Sprint) |
 | Implementing | Agents complete | Create/update PR targeting main (Sprint) |
 | Implementing | CI fails | Re-dispatch agent with failure details (Sprint) |
-| Implementing | Review requests changes | Re-dispatch agent with feedback (Sprint) |
+| Implementing | Review requests changes | Acknowledge with eyes emoji, re-dispatch agent with feedback + thread data, agent replies and resolves threads (Sprint) |
 | Implementing | CI + review pass | Set Ready to Merge, owner approves and merges to main (Sprint) |
 | Ready to Merge | PR merged | Set QA, trigger merge cascade (Sprint) |
+
+## Review Thread Handling
+
+When a PR review requests changes, the Sprint Manager and implementation agents follow this protocol:
+
+1. **Sprint Manager acknowledges** — reacts with eyes emoji on each inline review comment immediately (before dispatching the agent)
+2. **Sprint Manager fetches thread data** — queries review comments and their GraphQL thread node IDs, passes structured data to the agent
+3. **Agent fixes code** — addresses each review comment, commits, and pushes
+4. **Agent replies and resolves** — for each comment thread:
+   - If the fix was made: replies with what was changed, then resolves the thread via GraphQL `resolveReviewThread`
+   - If the comment is unclear: replies with a follow-up question, does NOT resolve the thread
+
+See `sprint-manager.md` § Step 5 for the full implementation including API commands.
 
 ## Inter-Agent Questions
 

@@ -166,6 +166,9 @@ jobs:
             Event: ${{ github.event_name }}
             Action: ${{ github.event.action || 'N/A' }}
             Issue Number: ${{ inputs.issue_number || 'N/A' }}
+            Review ID: ${{ github.event.review.id || 'N/A' }}
+            Review State: ${{ github.event.review.state || 'N/A' }}
+            Reviewer: ${{ github.event.review.user.login || 'N/A' }}
             Run ID: ${{ github.run_id }}
             Run Link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
@@ -186,9 +189,10 @@ jobs:
             - For other statuses: resume from where the issue stalled
 
             ### pull_request_review:submitted
+            Review ID, Review State, and Reviewer are provided above.
             - Check if the PR has the `agentic` label; skip if not
             - If approved by the repo owner: merge the PR, set status to Done, trigger merge cascade
-            - If review requests changes: re-dispatch implementation agent with feedback
+            - If review requests changes: follow the Review Thread Handling protocol in sprint-manager.md § Step 5
             - If comment only (no approval/rejection): no action needed
 
             ## Spawning Agents

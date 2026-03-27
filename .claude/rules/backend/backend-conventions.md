@@ -39,16 +39,17 @@ Shadowbrook.Api/
         WalkUpQrEndpoints.cs
         WaitlistOfferEndpoints.cs
       Handlers/                           ← grouped by triggering event/command
-        BookingCreated/
-          ClaimHandler.cs                 ← calls opening.Claim()
-          RemoveFromWaitlistHandler.cs
         GolferJoinedWaitlist/
           SmsHandler.cs
           WakeUpOfferPolicyHandler.cs
         TeeTimeOpeningFilled/
           RejectOffersHandler.cs
+        TeeTimeOpeningCancelled/
+          RejectOffersHandler.cs
+        TeeTimeOpeningSlotsClaimed/
+          SmsHandler.cs                   ← confirmation SMS to golfer
         WaitlistOfferAccepted/
-          SmsHandler.cs
+          RemoveFromWaitlistHandler.cs
         WaitlistOfferRejected/
           SmsHandler.cs
       Policies/                           ← Wolverine sagas
@@ -57,12 +58,8 @@ Shadowbrook.Api/
         WaitlistOfferResponsePolicy.cs
     Bookings/
       Handlers/
-        WaitlistOfferAccepted/
-          CreateBookingHandler.cs
-        ConfirmBooking/
-          Handler.cs
-      Policies/
-        BookingConfirmationPolicy.cs
+        TeeTimeOpeningSlotsClaimed/
+          CreateConfirmedBookingHandler.cs
   Infrastructure/                         ← shared horizontal concerns
     Data/ApplicationDbContext.cs
     Middleware/                            ← shared Wolverine Before middleware

@@ -7,6 +7,7 @@ namespace Shadowbrook.Domain.WaitlistOfferAggregate;
 
 public class WaitlistOffer : Entity
 {
+    public Guid BookingId { get; private set; }
     public Guid Token { get; private set; }
     public Guid OpeningId { get; private set; }
     public Guid GolferWaitlistEntryId { get; private set; }
@@ -37,6 +38,7 @@ public class WaitlistOffer : Entity
         var offer = new WaitlistOffer
         {
             Id = Guid.CreateVersion7(),
+            BookingId = Guid.CreateVersion7(),
             Token = Guid.CreateVersion7(),
             OpeningId = openingId,
             GolferWaitlistEntryId = golferWaitlistEntryId,
@@ -53,6 +55,7 @@ public class WaitlistOffer : Entity
         offer.AddDomainEvent(new WaitlistOfferCreated
         {
             WaitlistOfferId = offer.Id,
+            BookingId = offer.BookingId,
             OpeningId = openingId,
             GolferWaitlistEntryId = golferWaitlistEntryId,
             GolferId = golferId,
@@ -86,7 +89,7 @@ public class WaitlistOffer : Entity
         });
     }
 
-    public void Accept()
+    internal void Accept()
     {
         if (Status != OfferStatus.Pending)
         {
@@ -98,6 +101,7 @@ public class WaitlistOffer : Entity
         AddDomainEvent(new WaitlistOfferAccepted
         {
             WaitlistOfferId = Id,
+            BookingId = BookingId,
             OpeningId = OpeningId,
             GolferWaitlistEntryId = GolferWaitlistEntryId,
             GolferId = GolferId,

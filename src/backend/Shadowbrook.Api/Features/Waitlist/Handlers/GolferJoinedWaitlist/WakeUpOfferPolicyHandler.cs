@@ -19,9 +19,11 @@ public static class GolferJoinedWaitlistWakeUpHandler
             ?? throw new InvalidOperationException($"CourseWaitlist {evt.CourseWaitlistId} not found for event {nameof(GolferJoinedWaitlist)}.");
 
         // Find any active opening for this course/date
+        var dayStart = waitlist.Date.ToDateTime(TimeOnly.MinValue);
+        var dayEnd = waitlist.Date.AddDays(1).ToDateTime(TimeOnly.MinValue);
         var activeOpening = await db.TeeTimeOpenings
             .FirstOrDefaultAsync(o => o.CourseId == waitlist.CourseId
-                && o.TeeTime.Date == waitlist.Date
+                && o.TeeTime.Value >= dayStart && o.TeeTime.Value < dayEnd
                 && o.Status == TeeTimeOpeningStatus.Open);
 
         if (activeOpening is null)

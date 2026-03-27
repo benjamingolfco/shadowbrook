@@ -23,6 +23,16 @@ Review criteria for the Shadowbrook tee time booking platform. The Code Reviewer
 - Are tests at the right pyramid level? Validators and handlers should have unit tests (NSubstitute for repos, no DB). Integration tests only for DB-dependent behavior.
 - Are tests using the project's existing patterns (xUnit, NSubstitute for stubs, TestWebApplicationFactory for integration)?
 
+## Test Integrity
+
+- **Every modified or removed assertion is a red flag until proven otherwise.** Check the diff for any test assertion that was changed, weakened, or removed.
+- **Removed tests are blockers** unless the developer justified why and the justification traces to a change in requirements or acceptance criteria.
+- **Modified assertions are blockers** if they weaken coverage (e.g., `Assert.Equal` → `Assert.NotNull`, expected value changed to match new code without requirement backing, edge case assertions removed).
+- **Adding new assertions or new tests is always fine** — no scrutiny needed.
+- **Test scaffolding changes are fine** — setup, arrangement, dependency wiring, property renames, constructor changes. These naturally evolve with the code.
+- **Require justification on the PR.** If the developer agent modified assertions or removed tests, there must be a comment on the PR explaining what behavior changed and why. Missing justification = blocker.
+- **The key question:** Did the test change because the *intended system behavior* changed (per acceptance criteria), or because the developer made the test match their code? The latter is always a blocker.
+
 ## Naming Conventions
 
 - Are names clear, descriptive, and consistent with the rest of the codebase?

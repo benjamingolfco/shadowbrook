@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.BookingAggregate;
+using Shadowbrook.Domain.Common;
 
 namespace Shadowbrook.Api.Infrastructure.Repositories;
 
@@ -11,4 +12,9 @@ public class BookingRepository(ApplicationDbContext db) : IBookingRepository
 
     public void Add(Booking booking) =>
         db.Bookings.Add(booking);
+
+    public async Task<List<Booking>> GetByCourseAndTeeTimeAsync(Guid courseId, TeeTime teeTime, CancellationToken ct = default) =>
+        await db.Bookings
+            .Where(b => b.CourseId == courseId && b.TeeTime.Value == teeTime.Value)
+            .ToListAsync(ct);
 }
