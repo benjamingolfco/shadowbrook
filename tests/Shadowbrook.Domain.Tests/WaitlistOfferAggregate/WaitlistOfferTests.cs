@@ -40,6 +40,7 @@ public class WaitlistOfferTests
         var offer = WaitlistOffer.Create(openingId, entryId, golferId, 2, true, courseId, date, teeTime, this.timeProvider);
 
         Assert.NotEqual(Guid.Empty, offer.Id);
+        Assert.NotEqual(Guid.Empty, offer.BookingId);
         Assert.NotEqual(Guid.Empty, offer.Token);
         Assert.Equal(openingId, offer.OpeningId);
         Assert.Equal(entryId, offer.GolferWaitlistEntryId);
@@ -68,6 +69,7 @@ public class WaitlistOfferTests
         var domainEvent = Assert.Single(offer.DomainEvents);
         var created = Assert.IsType<WaitlistOfferCreated>(domainEvent);
         Assert.Equal(offer.Id, created.WaitlistOfferId);
+        Assert.Equal(offer.BookingId, created.BookingId);
         Assert.Equal(openingId, created.OpeningId);
         Assert.Equal(entryId, created.GolferWaitlistEntryId);
         Assert.Equal(golferId, created.GolferId);
@@ -76,45 +78,6 @@ public class WaitlistOfferTests
         Assert.Equal(courseId, created.CourseId);
         Assert.Equal(date, created.Date);
         Assert.Equal(teeTime, created.TeeTime);
-    }
-
-    [Fact]
-    public void Accept_PendingOffer_SetsAcceptedAndRaisesEvent()
-    {
-        var offer = CreateOffer();
-        offer.ClearDomainEvents();
-
-        offer.Accept();
-
-        Assert.Equal(OfferStatus.Accepted, offer.Status);
-        var domainEvent = Assert.Single(offer.DomainEvents);
-        var accepted = Assert.IsType<WaitlistOfferAccepted>(domainEvent);
-        Assert.Equal(offer.Id, accepted.WaitlistOfferId);
-        Assert.Equal(offer.OpeningId, accepted.OpeningId);
-        Assert.Equal(offer.GolferWaitlistEntryId, accepted.GolferWaitlistEntryId);
-        Assert.Equal(offer.GolferId, accepted.GolferId);
-        Assert.Equal(offer.GroupSize, accepted.GroupSize);
-        Assert.Equal(offer.CourseId, accepted.CourseId);
-        Assert.Equal(offer.Date, accepted.Date);
-        Assert.Equal(offer.TeeTime, accepted.TeeTime);
-    }
-
-    [Fact]
-    public void Accept_AlreadyAccepted_ThrowsOfferNotPending()
-    {
-        var offer = CreateOffer();
-        offer.Accept();
-
-        Assert.Throws<OfferNotPendingException>(() => offer.Accept());
-    }
-
-    [Fact]
-    public void Accept_AlreadyRejected_ThrowsOfferNotPending()
-    {
-        var offer = CreateOffer();
-        offer.Reject("test reason");
-
-        Assert.Throws<OfferNotPendingException>(() => offer.Accept());
     }
 
     [Fact]
@@ -132,19 +95,6 @@ public class WaitlistOfferTests
         Assert.Equal(offer.Id, rejected.WaitlistOfferId);
         Assert.Equal(offer.OpeningId, rejected.OpeningId);
         Assert.Equal("Tee time has been filled.", rejected.Reason);
-    }
-
-    [Fact]
-    public void Reject_AlreadyAccepted_NoChange()
-    {
-        var offer = CreateOffer();
-        offer.Accept();
-        offer.ClearDomainEvents();
-
-        offer.Reject("test");
-
-        Assert.Equal(OfferStatus.Accepted, offer.Status);
-        Assert.Empty(offer.DomainEvents);
     }
 
     [Fact]

@@ -56,11 +56,11 @@ public static class WaitlistOfferEndpoints
             return Results.NotFound(new { error = "Offer not found." });
         }
 
-        offer.Accept();
-
-        return Results.Ok(new WaitlistOfferAcceptResponse(
-            "Processing",
-            "We're processing your request — you'll receive a confirmation shortly."));
+        // TODO: acceptance is being moved to a domain service that atomically accepts
+        // the offer and claims the slot. This endpoint will be updated in a follow-up task.
+        return Results.Problem(
+            detail: "Offer acceptance is not yet available.",
+            statusCode: StatusCodes.Status501NotImplemented);
     }
 }
 
@@ -73,6 +73,3 @@ public record WaitlistOfferResponse(
     string GolferName,
     string Status);
 
-public record WaitlistOfferAcceptResponse(
-    string Status,
-    string Message);

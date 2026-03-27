@@ -55,6 +55,7 @@ public class TeeTimeOpeningOfferPolicyTests
         var result = policy.Handle(new WaitlistOfferAccepted
         {
             WaitlistOfferId = Guid.NewGuid(),
+            BookingId = Guid.NewGuid(),
             OpeningId = openingId,
             GolferWaitlistEntryId = Guid.NewGuid(),
             GolferId = Guid.NewGuid(),

@@ -25,6 +25,7 @@ public class WaitlistOfferAcceptedCreateBookingHandlerTests
         var evt = new WaitlistOfferAccepted
         {
             WaitlistOfferId = Guid.NewGuid(),
+            BookingId = Guid.NewGuid(),
             OpeningId = Guid.NewGuid(),
             GolferWaitlistEntryId = Guid.NewGuid(),
             GolferId = golfer.Id,
@@ -54,6 +55,7 @@ public class WaitlistOfferAcceptedCreateBookingHandlerTests
         var evt = new WaitlistOfferAccepted
         {
             WaitlistOfferId = Guid.NewGuid(),
+            BookingId = Guid.NewGuid(),
             OpeningId = Guid.NewGuid(),
             GolferWaitlistEntryId = Guid.NewGuid(),
             GolferId = golferId,

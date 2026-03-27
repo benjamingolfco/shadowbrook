@@ -44,6 +44,7 @@ public class WaitlistOfferAcceptedRemoveFromWaitlistHandlerTests
         var evt = new WaitlistOfferAccepted
         {
             WaitlistOfferId = Guid.NewGuid(),
+            BookingId = Guid.NewGuid(),
             OpeningId = Guid.NewGuid(),
             GolferWaitlistEntryId = entry.Id,
             GolferId = golfer.Id,
@@ -67,6 +68,7 @@ public class WaitlistOfferAcceptedRemoveFromWaitlistHandlerTests
         var evt = new WaitlistOfferAccepted
         {
             WaitlistOfferId = Guid.NewGuid(),
+            BookingId = Guid.NewGuid(),
             OpeningId = Guid.NewGuid(),
             GolferWaitlistEntryId = entryId,
             GolferId = Guid.NewGuid(),
