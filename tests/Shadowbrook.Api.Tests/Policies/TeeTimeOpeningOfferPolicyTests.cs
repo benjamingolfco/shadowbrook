@@ -65,7 +65,7 @@ public class TeeTimeOpeningOfferPolicyTests
         });
 
         Assert.Equal(1, policy.PendingOfferCount);
-        Assert.Null(result); // Slot update deferred to TeeTimeOpeningClaimed — no follow-on dispatch here
+        Assert.Null(result); // Slot update deferred to TeeTimeOpeningSlotsClaimed — no follow-on dispatch here
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public class TeeTimeOpeningOfferPolicyTests
         var openingId = Guid.NewGuid();
         var policy = new TeeTimeOpeningOfferPolicy { Id = openingId, SlotsRemaining = 3, PendingOfferCount = 1 };
 
-        var result = policy.Handle(new TeeTimeOpeningClaimed
+        var result = policy.Handle(new TeeTimeOpeningSlotsClaimed
         {
             OpeningId = openingId,
             BookingId = Guid.NewGuid(),

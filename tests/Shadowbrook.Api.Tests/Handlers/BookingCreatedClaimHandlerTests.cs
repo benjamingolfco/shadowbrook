@@ -60,7 +60,7 @@ public class BookingCreatedClaimHandlerTests
 
         await BookingCreatedClaimHandler.Handle(evt, this.openingRepo, this.timeProvider, this.logger);
 
-        Assert.Contains(opening.DomainEvents, e => e is TeeTimeOpeningClaimed);
+        Assert.Contains(opening.DomainEvents, e => e is TeeTimeOpeningSlotsClaimed);
     }
 
     [Fact]
@@ -79,6 +79,6 @@ public class BookingCreatedClaimHandlerTests
 
         await BookingCreatedClaimHandler.Handle(evt, this.openingRepo, this.timeProvider, this.logger);
 
-        Assert.Contains(opening.DomainEvents, e => e is TeeTimeOpeningClaimRejected);
+        Assert.Contains(opening.DomainEvents, e => e is TeeTimeOpeningSlotsClaimRejected);
     }
 }

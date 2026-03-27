@@ -78,7 +78,7 @@ public class TeeTimeOpeningTests
         opening.TryClaim(bookingId, golferId, groupSize: 1, this.timeProvider);
 
         var domainEvent = Assert.Single(opening.DomainEvents);
-        var claimed = Assert.IsType<TeeTimeOpeningClaimed>(domainEvent);
+        var claimed = Assert.IsType<TeeTimeOpeningSlotsClaimed>(domainEvent);
         Assert.Equal(opening.Id, claimed.OpeningId);
         Assert.Equal(bookingId, claimed.BookingId);
         Assert.Equal(golferId, claimed.GolferId);
@@ -96,7 +96,7 @@ public class TeeTimeOpeningTests
         opening.TryClaim(Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
 
         Assert.Equal(2, opening.DomainEvents.Count);
-        Assert.Contains(opening.DomainEvents, e => e is TeeTimeOpeningClaimed);
+        Assert.Contains(opening.DomainEvents, e => e is TeeTimeOpeningSlotsClaimed);
         Assert.Contains(opening.DomainEvents, e => e is TeeTimeOpeningFilled f && f.OpeningId == opening.Id);
         Assert.Equal(TeeTimeOpeningStatus.Filled, opening.Status);
         Assert.NotNull(opening.FilledAt);
@@ -115,7 +115,7 @@ public class TeeTimeOpeningTests
         Assert.False(result.Success);
         Assert.Equal("Insufficient slots remaining", result.Reason);
         var domainEvent = Assert.Single(opening.DomainEvents);
-        var rejected = Assert.IsType<TeeTimeOpeningClaimRejected>(domainEvent);
+        var rejected = Assert.IsType<TeeTimeOpeningSlotsClaimRejected>(domainEvent);
         Assert.Equal(opening.Id, rejected.OpeningId);
         Assert.Equal(bookingId, rejected.BookingId);
         Assert.Equal(golferId, rejected.GolferId);
@@ -137,7 +137,7 @@ public class TeeTimeOpeningTests
         Assert.False(result.Success);
         Assert.Equal("Opening is not available", result.Reason);
         var domainEvent = Assert.Single(opening.DomainEvents);
-        var rejected = Assert.IsType<TeeTimeOpeningClaimRejected>(domainEvent);
+        var rejected = Assert.IsType<TeeTimeOpeningSlotsClaimRejected>(domainEvent);
         Assert.Equal(bookingId, rejected.BookingId);
         Assert.Equal(golferId, rejected.GolferId);
     }
@@ -156,7 +156,7 @@ public class TeeTimeOpeningTests
         Assert.False(result.Success);
         Assert.Equal("Opening is not available", result.Reason);
         var domainEvent = Assert.Single(opening.DomainEvents);
-        var rejected = Assert.IsType<TeeTimeOpeningClaimRejected>(domainEvent);
+        var rejected = Assert.IsType<TeeTimeOpeningSlotsClaimRejected>(domainEvent);
         Assert.Equal(bookingId, rejected.BookingId);
         Assert.Equal(golferId, rejected.GolferId);
     }

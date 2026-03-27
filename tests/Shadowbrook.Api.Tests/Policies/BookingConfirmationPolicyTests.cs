@@ -26,12 +26,12 @@ public class BookingConfirmationPolicyTests
     }
 
     [Fact]
-    public void Handle_TeeTimeOpeningClaimed_ReturnsConfirmBookingCommandAndMarksCompleted()
+    public void Handle_TeeTimeOpeningSlotsClaimed_ReturnsConfirmBookingCommandAndMarksCompleted()
     {
         var bookingId = Guid.NewGuid();
         var policy = new BookingConfirmationPolicy { Id = bookingId };
 
-        var result = policy.Handle(new TeeTimeOpeningClaimed
+        var result = policy.Handle(new TeeTimeOpeningSlotsClaimed
         {
             OpeningId = Guid.NewGuid(),
             BookingId = bookingId,
@@ -46,12 +46,12 @@ public class BookingConfirmationPolicyTests
     }
 
     [Fact]
-    public void Handle_TeeTimeOpeningClaimRejected_ReturnsRejectBookingCommandAndMarksCompleted()
+    public void Handle_TeeTimeOpeningSlotsClaimRejected_ReturnsRejectBookingCommandAndMarksCompleted()
     {
         var bookingId = Guid.NewGuid();
         var policy = new BookingConfirmationPolicy { Id = bookingId };
 
-        var result = policy.Handle(new TeeTimeOpeningClaimRejected
+        var result = policy.Handle(new TeeTimeOpeningSlotsClaimRejected
         {
             OpeningId = Guid.NewGuid(),
             BookingId = bookingId,

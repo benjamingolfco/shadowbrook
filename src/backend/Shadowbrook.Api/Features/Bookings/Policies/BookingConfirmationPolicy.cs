@@ -16,14 +16,14 @@ public class BookingConfirmationPolicy : Saga
     }
 
     public ConfirmBookingCommand Handle(
-        [SagaIdentityFrom("BookingId")] TeeTimeOpeningClaimed evt)
+        [SagaIdentityFrom("BookingId")] TeeTimeOpeningSlotsClaimed evt)
     {
         MarkCompleted();
         return new ConfirmBookingCommand(Id);
     }
 
     public RejectBookingCommand Handle(
-        [SagaIdentityFrom("BookingId")] TeeTimeOpeningClaimRejected evt)
+        [SagaIdentityFrom("BookingId")] TeeTimeOpeningSlotsClaimRejected evt)
     {
         MarkCompleted();
         return new RejectBookingCommand(Id);
