@@ -18,7 +18,7 @@ public class TeeTimeOpeningCancelledCancelBookingsHandler(IBookingRepository boo
 
         if (bookings.Count == 0)
         {
-            logger.LogWarning(
+            logger.LogInformation(
                 "No bookings found for cancelled opening {OpeningId} (Course: {CourseId}, Date: {Date}, TeeTime: {TeeTime})",
                 domainEvent.OpeningId,
                 domainEvent.CourseId,
