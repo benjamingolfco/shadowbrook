@@ -75,23 +75,14 @@ jobs:
             exit 0
           fi
 
-          # Only skip if the last review was an explicit APPROVED — COMMENTED reviews
-          # (including fallback "no issues found" comments) should not prevent re-review
-          if [ "$REVIEW_STATE" != "APPROVED" ]; then
-            echo "Last review was $REVIEW_STATE (not APPROVED) — running full review."
-            echo "skip=false" >> $GITHUB_OUTPUT
-            echo "follow_up=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # Count commits after the last approved review
+          # Count commits after the last bot review (regardless of state)
           NEW_COMMITS=$(gh api "repos/${{ github.repository }}/pulls/$PR/commits" \
             --jq "[.[] | select(.commit.committer.date > \"$REVIEW_TIME\")] | length")
 
-          echo "New commits since last approved review: $NEW_COMMITS"
+          echo "New commits since last bot review: $NEW_COMMITS"
 
           if [ "$NEW_COMMITS" = "0" ]; then
-            echo "No new commits since last approved review — skipping."
+            echo "No new commits since last bot review — skipping."
             echo "skip=true" >> $GITHUB_OUTPUT
             echo "follow_up=false" >> $GITHUB_OUTPUT
           else
