@@ -18,6 +18,7 @@ public class WaitlistOffer : Entity
     public string? RejectionReason { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? NotifiedAt { get; private set; }
+    public bool IsStale { get; private set; }
     public Guid CourseId { get; private set; }
     public DateOnly Date { get; private set; }
     public TimeOnly TeeTime { get; private set; }
@@ -128,6 +129,22 @@ public class WaitlistOffer : Entity
             OpeningId = OpeningId,
             GolferWaitlistEntryId = GolferWaitlistEntryId,
             Reason = reason
+        });
+    }
+
+    public void MarkStale()
+    {
+        if (Status != OfferStatus.Pending || IsStale)
+        {
+            return; // Idempotent — already resolved or already stale
+        }
+
+        IsStale = true;
+
+        AddDomainEvent(new WaitlistOfferStale
+        {
+            WaitlistOfferId = Id,
+            OpeningId = OpeningId
         });
     }
 }
