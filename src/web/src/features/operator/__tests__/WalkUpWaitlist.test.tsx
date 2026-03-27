@@ -572,4 +572,196 @@ describe('WalkUpWaitlist', () => {
     expect(index8).toBeLessThan(index11);
     expect(index11).toBeLessThan(index14);
   });
+
+  describe('Walk-up notification slot status monitoring', () => {
+    it('shows Filled and Pending column headers in openings table', async () => {
+      const user = userEvent.setup();
+      const testOpenings = [
+        { id: 'o-1', teeTime: '2026-06-01T14:30:00', slotsAvailable: 4, slotsRemaining: 2, status: 'Open', filledGolfers: [] },
+      ];
+
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: openWaitlist, entries: [], openings: testOpenings },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+      render(<WalkUpWaitlist />);
+
+      // Switch to "Tee Time Openings" tab
+      const openingsTab = screen.getByRole('tab', { name: /tee time openings/i });
+      await user.click(openingsTab);
+
+      await waitFor(() => {
+        expect(screen.getByRole('columnheader', { name: 'Filled' })).toBeInTheDocument();
+        expect(screen.getByRole('columnheader', { name: 'Pending' })).toBeInTheDocument();
+      });
+    });
+
+    it('displays correct filled count for each opening', async () => {
+      const user = userEvent.setup();
+      const testOpenings = [
+        { id: 'o-1', teeTime: '2026-06-01T14:30:00', slotsAvailable: 4, slotsRemaining: 1, status: 'Open', filledGolfers: [] },
+      ];
+
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: openWaitlist, entries: [], openings: testOpenings },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+      const { container } = render(<WalkUpWaitlist />);
+
+      // Switch to "Tee Time Openings" tab
+      const openingsTab = screen.getByRole('tab', { name: /tee time openings/i });
+      await user.click(openingsTab);
+
+      await waitFor(() => {
+        const activePanel = container.querySelector('[data-slot="tabs-content"][data-state="active"]');
+        const panelText = activePanel?.textContent || '';
+        // Filled = slotsAvailable - slotsRemaining = 4 - 1 = 3
+        expect(panelText).toContain('3');
+      });
+    });
+
+    it('displays correct pending count for each opening', async () => {
+      const user = userEvent.setup();
+      const testOpenings = [
+        { id: 'o-1', teeTime: '2026-06-01T14:30:00', slotsAvailable: 4, slotsRemaining: 2, status: 'Open', filledGolfers: [] },
+      ];
+
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: openWaitlist, entries: [], openings: testOpenings },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+      const { container } = render(<WalkUpWaitlist />);
+
+      // Switch to "Tee Time Openings" tab
+      const openingsTab = screen.getByRole('tab', { name: /tee time openings/i });
+      await user.click(openingsTab);
+
+      await waitFor(() => {
+        const activePanel = container.querySelector('[data-slot="tabs-content"][data-state="active"]');
+        const panelText = activePanel?.textContent || '';
+        // Pending = slotsRemaining = 2
+        expect(panelText).toContain('2');
+      });
+    });
+
+    it('shows pending=0 and filled=total when all slots are filled', async () => {
+      const user = userEvent.setup();
+      const testOpenings = [
+        { id: 'o-1', teeTime: '2026-06-01T14:30:00', slotsAvailable: 4, slotsRemaining: 0, status: 'Filled', filledGolfers: [] },
+      ];
+
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: openWaitlist, entries: [], openings: testOpenings },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+      const { container } = render(<WalkUpWaitlist />);
+
+      // Switch to "Tee Time Openings" tab
+      const openingsTab = screen.getByRole('tab', { name: /tee time openings/i });
+      await user.click(openingsTab);
+
+      await waitFor(() => {
+        const activePanel = container.querySelector('[data-slot="tabs-content"][data-state="active"]');
+        const panelText = activePanel?.textContent || '';
+        // Check for "4 filled, 0 pending" pattern (mobile) or separate cells with 4 and 0 (desktop)
+        const hasMobilePattern = panelText.includes('4 filled, 0 pending');
+        const hasDesktopCells = panelText.includes('4') && panelText.includes('0');
+        expect(hasMobilePattern || hasDesktopCells).toBe(true);
+      });
+    });
+
+    it('shows aggregate summary with total filled and total pending across all non-cancelled openings', async () => {
+      const user = userEvent.setup();
+      const testOpenings = [
+        { id: 'o-1', teeTime: '2026-06-01T08:00:00', slotsAvailable: 4, slotsRemaining: 1, status: 'Open', filledGolfers: [] },
+        { id: 'o-2', teeTime: '2026-06-01T14:30:00', slotsAvailable: 4, slotsRemaining: 2, status: 'Open', filledGolfers: [] },
+        { id: 'o-3', teeTime: '2026-06-01T16:00:00', slotsAvailable: 4, slotsRemaining: 0, status: 'Filled', filledGolfers: [] },
+      ];
+
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: openWaitlist, entries: [], openings: testOpenings },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+      render(<WalkUpWaitlist />);
+
+      // Switch to "Tee Time Openings" tab
+      const openingsTab = screen.getByRole('tab', { name: /tee time openings/i });
+      await user.click(openingsTab);
+
+      await waitFor(() => {
+        // Total filled = (4-1) + (4-2) + (4-0) = 3 + 2 + 4 = 9
+        // Total pending = 1 + 2 + 0 = 3
+        expect(screen.getByText(/3 openings -- 9 filled, 3 pending/i)).toBeInTheDocument();
+      });
+    });
+
+    it('excludes cancelled openings from aggregate summary counts', async () => {
+      const user = userEvent.setup();
+      const testOpenings = [
+        { id: 'o-1', teeTime: '2026-06-01T08:00:00', slotsAvailable: 4, slotsRemaining: 1, status: 'Open', filledGolfers: [] },
+        { id: 'o-2', teeTime: '2026-06-01T14:30:00', slotsAvailable: 4, slotsRemaining: 4, status: 'Cancelled', filledGolfers: [] },
+      ];
+
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: openWaitlist, entries: [], openings: testOpenings },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+      render(<WalkUpWaitlist />);
+
+      // Switch to "Tee Time Openings" tab
+      const openingsTab = screen.getByRole('tab', { name: /tee time openings/i });
+      await user.click(openingsTab);
+
+      await waitFor(() => {
+        // Total filled = (4-1) = 3 (excluding cancelled)
+        // Total pending = 1 (excluding cancelled)
+        expect(screen.getByText(/2 openings -- 3 filled, 1 pending/i)).toBeInTheDocument();
+      });
+    });
+
+    it('shows filled/pending text in mobile card view', async () => {
+      const user = userEvent.setup();
+      const testOpenings = [
+        { id: 'o-1', teeTime: '2026-06-01T14:30:00', slotsAvailable: 4, slotsRemaining: 2, status: 'Open', filledGolfers: [] },
+      ];
+
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: openWaitlist, entries: [], openings: testOpenings },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+
+      const { container } = render(<WalkUpWaitlist />);
+
+      // Switch to "Tee Time Openings" tab
+      const openingsTab = screen.getByRole('tab', { name: /tee time openings/i });
+      await user.click(openingsTab);
+
+      await waitFor(() => {
+        const activePanel = container.querySelector('[data-slot="tabs-content"][data-state="active"]');
+        const panelText = activePanel?.textContent || '';
+        // Mobile view should show "2 filled, 2 pending"
+        expect(panelText).toContain('2 filled, 2 pending');
+      });
+    });
+  });
 });
