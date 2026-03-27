@@ -17,6 +17,7 @@ public class WaitlistOfferConfiguration : IEntityTypeConfiguration<WaitlistOffer
         builder.HasIndex(o => o.Token).IsUnique();
 
         builder.Property(o => o.NotifiedAt);
+        builder.Property(o => o.IsStale).HasDefaultValue(false);
         builder.Property(o => o.RejectionReason).HasMaxLength(500);
         builder.Property(o => o.Status).HasConversion<string>().HasMaxLength(20);
 
