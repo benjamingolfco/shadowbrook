@@ -16,13 +16,13 @@ public static class WalkUpWaitlistEndpoints
     [WolverinePost("/courses/{courseId}/walkup-waitlist/open")]
     public static async Task<IResult> OpenWaitlist(
         Guid courseId,
-        [NotBody] ApplicationDbContext db,
+        ICourseTimeZoneProvider timeZoneProvider,
         ICourseWaitlistRepository repo,
         IShortCodeGenerator shortCodeGenerator,
         ITimeProvider timeProvider,
         TimeProvider systemTimeProvider)
     {
-        var timeZoneId = await db.Courses.Where(c => c.Id == courseId).Select(c => c.TimeZoneId).FirstAsync();
+        var timeZoneId = await timeZoneProvider.GetTimeZoneIdAsync(courseId);
         var today = CourseTime.Today(systemTimeProvider, timeZoneId);
 
         var waitlist = await Domain.CourseWaitlistAggregate.WalkUpWaitlist.OpenAsync(
@@ -37,12 +37,12 @@ public static class WalkUpWaitlistEndpoints
     [WolverinePost("/courses/{courseId}/walkup-waitlist/close")]
     public static async Task<IResult> CloseWaitlist(
         Guid courseId,
-        [NotBody] ApplicationDbContext db,
+        ICourseTimeZoneProvider timeZoneProvider,
         ICourseWaitlistRepository repo,
         ITimeProvider timeProvider,
         TimeProvider systemTimeProvider)
     {
-        var timeZoneId = await db.Courses.Where(c => c.Id == courseId).Select(c => c.TimeZoneId).FirstAsync();
+        var timeZoneId = await timeZoneProvider.GetTimeZoneIdAsync(courseId);
         var today = CourseTime.Today(systemTimeProvider, timeZoneId);
 
         var waitlist = await repo.GetOpenByCourseDateAsync(courseId, today);
@@ -60,11 +60,11 @@ public static class WalkUpWaitlistEndpoints
     [WolverinePost("/courses/{courseId}/walkup-waitlist/reopen")]
     public static async Task<IResult> ReopenWaitlist(
         Guid courseId,
-        [NotBody] ApplicationDbContext db,
+        ICourseTimeZoneProvider timeZoneProvider,
         ICourseWaitlistRepository repo,
         TimeProvider systemTimeProvider)
     {
-        var timeZoneId = await db.Courses.Where(c => c.Id == courseId).Select(c => c.TimeZoneId).FirstAsync();
+        var timeZoneId = await timeZoneProvider.GetTimeZoneIdAsync(courseId);
         var today = CourseTime.Today(systemTimeProvider, timeZoneId);
 
         var waitlist = await repo.GetByCourseDateAsync(courseId, today);
@@ -83,10 +83,11 @@ public static class WalkUpWaitlistEndpoints
     public static async Task<IResult> GetToday(
         Guid courseId,
         ApplicationDbContext db,
+        ICourseTimeZoneProvider timeZoneProvider,
         ICourseWaitlistRepository repo,
         TimeProvider systemTimeProvider)
     {
-        var timeZoneId = await db.Courses.Where(c => c.Id == courseId).Select(c => c.TimeZoneId).FirstAsync();
+        var timeZoneId = await timeZoneProvider.GetTimeZoneIdAsync(courseId);
         var today = CourseTime.Today(systemTimeProvider, timeZoneId);
 
         var waitlist = await repo.GetByCourseDateAsync(courseId, today);
@@ -198,13 +199,14 @@ public static class WalkUpWaitlistEndpoints
         Guid courseId,
         AddGolferToWaitlistRequest request,
         ApplicationDbContext db,
+        ICourseTimeZoneProvider timeZoneProvider,
         ICourseWaitlistRepository repo,
         IGolferWaitlistEntryRepository entryRepo,
         IGolferRepository golferRepo,
         ITimeProvider timeProvider,
         TimeProvider systemTimeProvider)
     {
-        var timeZoneId = await db.Courses.Where(c => c.Id == courseId).Select(c => c.TimeZoneId).FirstAsync();
+        var timeZoneId = await timeZoneProvider.GetTimeZoneIdAsync(courseId);
         var today = CourseTime.Today(systemTimeProvider, timeZoneId);
         var normalizedPhone = PhoneNormalizer.Normalize(request.Phone);
 
