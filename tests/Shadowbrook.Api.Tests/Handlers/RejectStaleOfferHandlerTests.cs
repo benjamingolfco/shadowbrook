@@ -20,7 +20,7 @@ public class RejectStaleOfferHandlerTests
 
     private WaitlistOffer CreatePendingOffer(Guid openingId)
     {
-        var offer = WaitlistOffer.Create(openingId, Guid.NewGuid(), Guid.NewGuid(), 1, true, this.timeProvider);
+        var offer = WaitlistOffer.Create(openingId, Guid.NewGuid(), Guid.NewGuid(), 1, true, Guid.NewGuid(), new DateOnly(2026, 3, 25), new TimeOnly(10, 0), this.timeProvider);
         offer.ClearDomainEvents();
         return offer;
     }
