@@ -11,8 +11,8 @@ public abstract class GolferWaitlistEntry : Entity
     public Guid GolferId { get; private set; }
     public bool IsWalkUp { get; protected set; }
     public int GroupSize { get; private set; }
-    public TimeOnly WindowStart { get; protected set; }
-    public TimeOnly WindowEnd { get; protected set; }
+    public DateTime WindowStart { get; protected set; }
+    public DateTime WindowEnd { get; protected set; }
     public DateTimeOffset JoinedAt { get; private set; }
     public DateTimeOffset? RemovedAt { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
@@ -24,8 +24,8 @@ public abstract class GolferWaitlistEntry : Entity
         Guid golferId,
         int groupSize,
         bool isWalkUp,
-        TimeOnly windowStart,
-        TimeOnly windowEnd,
+        DateTime windowStart,
+        DateTime windowEnd,
         DateTimeOffset now)
     {
         Id = Guid.CreateVersion7();

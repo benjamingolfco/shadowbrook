@@ -10,14 +10,14 @@ public class WalkUpGolferWaitlistEntry : GolferWaitlistEntry
         Guid courseWaitlistId,
         Guid golferId,
         int groupSize,
-        TimeOnly windowStart,
-        TimeOnly windowEnd,
+        DateTime windowStart,
+        DateTime windowEnd,
         DateTimeOffset now)
         : base(courseWaitlistId, golferId, groupSize, isWalkUp: true, windowStart, windowEnd, now)
     {
     }
 
-    public void ExtendWindow(TimeOnly newEnd)
+    public void ExtendWindow(DateTime newEnd)
     {
         if (RemovedAt is not null)
         {

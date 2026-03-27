@@ -19,16 +19,16 @@ public class GolferWaitlistEntryRepositoryEligibilityTests(TestWebApplicationFac
     public Task DisposeAsync() => Task.CompletedTask;
 
     // -------------------------------------------------------------------------
-    // Normal Window (No Midnight Wrap)
+    // Window Matching
     // -------------------------------------------------------------------------
 
     [Fact]
-    public async Task FindEligibleEntries_NormalWindow_TeeTimeInWindow_ReturnsEntry()
+    public async Task FindEligibleEntries_TeeTimeInWindow_ReturnsEntry()
     {
-        // Window: 10:00-10:30, Tee time: 10:15
-        var (courseId, date, entryId) = await CreateEntryAsync(
-            windowStart: new TimeOnly(10, 0),
-            windowEnd: new TimeOnly(10, 30));
+        var date = DateOnly.FromDateTime(DateTime.UtcNow);
+        var (courseId, entryId) = await CreateEntryAsync(date,
+            windowStart: date.ToDateTime(new TimeOnly(10, 0)),
+            windowEnd: date.ToDateTime(new TimeOnly(10, 30)));
 
         var entries = await FindEligibleAsync(courseId, date, new TimeOnly(10, 15));
 
@@ -37,12 +37,12 @@ public class GolferWaitlistEntryRepositoryEligibilityTests(TestWebApplicationFac
     }
 
     [Fact]
-    public async Task FindEligibleEntries_NormalWindow_TeeTimeAtStart_ReturnsEntry()
+    public async Task FindEligibleEntries_TeeTimeAtStart_ReturnsEntry()
     {
-        // Window: 10:00-10:30, Tee time: 10:00 (boundary)
-        var (courseId, date, entryId) = await CreateEntryAsync(
-            windowStart: new TimeOnly(10, 0),
-            windowEnd: new TimeOnly(10, 30));
+        var date = DateOnly.FromDateTime(DateTime.UtcNow);
+        var (courseId, entryId) = await CreateEntryAsync(date,
+            windowStart: date.ToDateTime(new TimeOnly(10, 0)),
+            windowEnd: date.ToDateTime(new TimeOnly(10, 30)));
 
         var entries = await FindEligibleAsync(courseId, date, new TimeOnly(10, 0));
 
@@ -51,12 +51,12 @@ public class GolferWaitlistEntryRepositoryEligibilityTests(TestWebApplicationFac
     }
 
     [Fact]
-    public async Task FindEligibleEntries_NormalWindow_TeeTimeAtEnd_ReturnsEntry()
+    public async Task FindEligibleEntries_TeeTimeAtEnd_ReturnsEntry()
     {
-        // Window: 10:00-10:30, Tee time: 10:30 (boundary)
-        var (courseId, date, entryId) = await CreateEntryAsync(
-            windowStart: new TimeOnly(10, 0),
-            windowEnd: new TimeOnly(10, 30));
+        var date = DateOnly.FromDateTime(DateTime.UtcNow);
+        var (courseId, entryId) = await CreateEntryAsync(date,
+            windowStart: date.ToDateTime(new TimeOnly(10, 0)),
+            windowEnd: date.ToDateTime(new TimeOnly(10, 30)));
 
         var entries = await FindEligibleAsync(courseId, date, new TimeOnly(10, 30));
 
@@ -65,12 +65,12 @@ public class GolferWaitlistEntryRepositoryEligibilityTests(TestWebApplicationFac
     }
 
     [Fact]
-    public async Task FindEligibleEntries_NormalWindow_TeeTimeBeforeWindow_ReturnsEmpty()
+    public async Task FindEligibleEntries_TeeTimeBeforeWindow_ReturnsEmpty()
     {
-        // Window: 10:00-10:30, Tee time: 09:59
-        var (courseId, date, _) = await CreateEntryAsync(
-            windowStart: new TimeOnly(10, 0),
-            windowEnd: new TimeOnly(10, 30));
+        var date = DateOnly.FromDateTime(DateTime.UtcNow);
+        var (courseId, _) = await CreateEntryAsync(date,
+            windowStart: date.ToDateTime(new TimeOnly(10, 0)),
+            windowEnd: date.ToDateTime(new TimeOnly(10, 30)));
 
         var entries = await FindEligibleAsync(courseId, date, new TimeOnly(9, 59));
 
@@ -78,29 +78,26 @@ public class GolferWaitlistEntryRepositoryEligibilityTests(TestWebApplicationFac
     }
 
     [Fact]
-    public async Task FindEligibleEntries_NormalWindow_TeeTimeAfterWindow_ReturnsEmpty()
+    public async Task FindEligibleEntries_TeeTimeAfterWindow_ReturnsEmpty()
     {
-        // Window: 10:00-10:30, Tee time: 10:31
-        var (courseId, date, _) = await CreateEntryAsync(
-            windowStart: new TimeOnly(10, 0),
-            windowEnd: new TimeOnly(10, 30));
+        var date = DateOnly.FromDateTime(DateTime.UtcNow);
+        var (courseId, _) = await CreateEntryAsync(date,
+            windowStart: date.ToDateTime(new TimeOnly(10, 0)),
+            windowEnd: date.ToDateTime(new TimeOnly(10, 30)));
 
         var entries = await FindEligibleAsync(courseId, date, new TimeOnly(10, 31));
 
         Assert.Empty(entries);
     }
 
-    // -------------------------------------------------------------------------
-    // Midnight Wrap-Around Window
-    // -------------------------------------------------------------------------
-
     [Fact]
-    public async Task FindEligibleEntries_MidnightWrap_TeeTimeInLateNightPortion_ReturnsEntry()
+    public async Task FindEligibleEntries_MidnightCrossing_TeeTimeInLateNightPortion_ReturnsEntry()
     {
-        // Window: 23:45-00:15 (wraps midnight), Tee time: 23:50
-        var (courseId, date, entryId) = await CreateEntryAsync(
-            windowStart: new TimeOnly(23, 45),
-            windowEnd: new TimeOnly(0, 15));
+        // Window: 2026-03-25 23:45 to 2026-03-26 00:15, Tee time: 23:50 on 2026-03-25
+        var date = new DateOnly(2026, 3, 25);
+        var (courseId, entryId) = await CreateEntryAsync(date,
+            windowStart: new DateTime(2026, 3, 25, 23, 45, 0),
+            windowEnd: new DateTime(2026, 3, 26, 0, 15, 0));
 
         var entries = await FindEligibleAsync(courseId, date, new TimeOnly(23, 50));
 
@@ -108,83 +105,17 @@ public class GolferWaitlistEntryRepositoryEligibilityTests(TestWebApplicationFac
         Assert.Equal(entryId, entries[0].Id);
     }
 
-    [Fact]
-    public async Task FindEligibleEntries_MidnightWrap_TeeTimeInEarlyMorningPortion_ReturnsEntry()
-    {
-        // Window: 23:45-00:15 (wraps midnight), Tee time: 00:10
-        var (courseId, date, entryId) = await CreateEntryAsync(
-            windowStart: new TimeOnly(23, 45),
-            windowEnd: new TimeOnly(0, 15));
-
-        var entries = await FindEligibleAsync(courseId, date, new TimeOnly(0, 10));
-
-        Assert.Single(entries);
-        Assert.Equal(entryId, entries[0].Id);
-    }
-
-    [Fact]
-    public async Task FindEligibleEntries_MidnightWrap_TeeTimeAtMidnight_ReturnsEntry()
-    {
-        // Window: 23:45-00:15 (wraps midnight), Tee time: 00:00
-        var (courseId, date, entryId) = await CreateEntryAsync(
-            windowStart: new TimeOnly(23, 45),
-            windowEnd: new TimeOnly(0, 15));
-
-        var entries = await FindEligibleAsync(courseId, date, new TimeOnly(0, 0));
-
-        Assert.Single(entries);
-        Assert.Equal(entryId, entries[0].Id);
-    }
-
-    [Fact]
-    public async Task FindEligibleEntries_MidnightWrap_TeeTimeInGap_ReturnsEmpty()
-    {
-        // Window: 23:45-00:15 (wraps midnight), Tee time: 12:00 (in the gap)
-        var (courseId, date, _) = await CreateEntryAsync(
-            windowStart: new TimeOnly(23, 45),
-            windowEnd: new TimeOnly(0, 15));
-
-        var entries = await FindEligibleAsync(courseId, date, new TimeOnly(12, 0));
-
-        Assert.Empty(entries);
-    }
-
-    [Fact]
-    public async Task FindEligibleEntries_MidnightWrap_TeeTimeJustBeforeWindow_ReturnsEmpty()
-    {
-        // Window: 23:45-00:15 (wraps midnight), Tee time: 23:44
-        var (courseId, date, _) = await CreateEntryAsync(
-            windowStart: new TimeOnly(23, 45),
-            windowEnd: new TimeOnly(0, 15));
-
-        var entries = await FindEligibleAsync(courseId, date, new TimeOnly(23, 44));
-
-        Assert.Empty(entries);
-    }
-
-    [Fact]
-    public async Task FindEligibleEntries_MidnightWrap_TeeTimeJustAfterWindow_ReturnsEmpty()
-    {
-        // Window: 23:45-00:15 (wraps midnight), Tee time: 00:16
-        var (courseId, date, _) = await CreateEntryAsync(
-            windowStart: new TimeOnly(23, 45),
-            windowEnd: new TimeOnly(0, 15));
-
-        var entries = await FindEligibleAsync(courseId, date, new TimeOnly(0, 16));
-
-        Assert.Empty(entries);
-    }
-
     // -------------------------------------------------------------------------
-    // Other Filter Checks (ensure we respect all filters)
+    // Other Filter Checks
     // -------------------------------------------------------------------------
 
     [Fact]
     public async Task FindEligibleEntries_RemovedEntry_ExcludedFromResults()
     {
-        var (courseId, date, entryId) = await CreateEntryAsync(
-            windowStart: new TimeOnly(10, 0),
-            windowEnd: new TimeOnly(10, 30));
+        var date = DateOnly.FromDateTime(DateTime.UtcNow);
+        var (courseId, entryId) = await CreateEntryAsync(date,
+            windowStart: date.ToDateTime(new TimeOnly(10, 0)),
+            windowEnd: date.ToDateTime(new TimeOnly(10, 30)));
 
         // Remove the entry
         using (var scope = this.factory.Services.CreateScope())
@@ -203,10 +134,10 @@ public class GolferWaitlistEntryRepositoryEligibilityTests(TestWebApplicationFac
     [Fact]
     public async Task FindEligibleEntries_GroupSizeExceedsMax_ExcludedFromResults()
     {
-        // Entry has group size 4, max is 3
-        var (courseId, date, _) = await CreateEntryAsync(
-            windowStart: new TimeOnly(10, 0),
-            windowEnd: new TimeOnly(10, 30),
+        var date = DateOnly.FromDateTime(DateTime.UtcNow);
+        var (courseId, _) = await CreateEntryAsync(date,
+            windowStart: date.ToDateTime(new TimeOnly(10, 0)),
+            windowEnd: date.ToDateTime(new TimeOnly(10, 30)),
             groupSize: 4);
 
         var entries = await FindEligibleAsync(courseId, date, new TimeOnly(10, 15), maxGroupSize: 3);
@@ -256,21 +187,24 @@ public class GolferWaitlistEntryRepositoryEligibilityTests(TestWebApplicationFac
             // Create 3 golfers and entries with different join times
             var baseTime = DateTimeOffset.UtcNow;
 
+            var windowStart = date.ToDateTime(new TimeOnly(10, 0));
+            var windowEnd = date.ToDateTime(new TimeOnly(10, 30));
+
             var golfer1 = Golfer.Create($"+1555{Random.Shared.Next(1000000, 9999999)}", "Test", "Golfer1");
             db.Golfers.Add(golfer1);
-            var entry1 = CreateEntry(waitlist.Id, golfer1.Id, new TimeOnly(10, 0), new TimeOnly(10, 30), baseTime.Add(TimeSpan.FromMinutes(10)));
+            var entry1 = CreateEntry(waitlist.Id, golfer1.Id, windowStart, windowEnd, baseTime.Add(TimeSpan.FromMinutes(10)));
             db.GolferWaitlistEntries.Add(entry1);
             entry1Id = entry1.Id;
 
             var golfer2 = Golfer.Create($"+1555{Random.Shared.Next(1000000, 9999999)}", "Test", "Golfer2");
             db.Golfers.Add(golfer2);
-            var entry2 = CreateEntry(waitlist.Id, golfer2.Id, new TimeOnly(10, 0), new TimeOnly(10, 30), baseTime.Add(TimeSpan.FromMinutes(5)));
+            var entry2 = CreateEntry(waitlist.Id, golfer2.Id, windowStart, windowEnd, baseTime.Add(TimeSpan.FromMinutes(5)));
             db.GolferWaitlistEntries.Add(entry2);
             entry2Id = entry2.Id;
 
             var golfer3 = Golfer.Create($"+1555{Random.Shared.Next(1000000, 9999999)}", "Test", "Golfer3");
             db.Golfers.Add(golfer3);
-            var entry3 = CreateEntry(waitlist.Id, golfer3.Id, new TimeOnly(10, 0), new TimeOnly(10, 30), baseTime.Add(TimeSpan.FromMinutes(15)));
+            var entry3 = CreateEntry(waitlist.Id, golfer3.Id, windowStart, windowEnd, baseTime.Add(TimeSpan.FromMinutes(15)));
             db.GolferWaitlistEntries.Add(entry3);
             entry3Id = entry3.Id;
 
@@ -289,8 +223,8 @@ public class GolferWaitlistEntryRepositoryEligibilityTests(TestWebApplicationFac
     private static WalkUpGolferWaitlistEntry CreateEntry(
         Guid waitlistId,
         Guid golferId,
-        TimeOnly windowStart,
-        TimeOnly windowEnd,
+        DateTime windowStart,
+        DateTime windowEnd,
         DateTimeOffset joinedAt)
     {
         var entryType = typeof(WalkUpGolferWaitlistEntry);
@@ -314,12 +248,12 @@ public class GolferWaitlistEntryRepositoryEligibilityTests(TestWebApplicationFac
     // Helper Methods
     // -------------------------------------------------------------------------
 
-    private async Task<(Guid courseId, DateOnly date, Guid entryId)> CreateEntryAsync(
-        TimeOnly windowStart,
-        TimeOnly windowEnd,
+    private async Task<(Guid courseId, Guid entryId)> CreateEntryAsync(
+        DateOnly date,
+        DateTime windowStart,
+        DateTime windowEnd,
         int groupSize = 1)
     {
-        var date = DateOnly.FromDateTime(DateTime.UtcNow);
         var entryId = await CreateSingleEntryAsync(date, windowStart, windowEnd, groupSize);
 
         Guid courseId;
@@ -331,13 +265,13 @@ public class GolferWaitlistEntryRepositoryEligibilityTests(TestWebApplicationFac
             courseId = waitlist!.CourseId;
         }
 
-        return (courseId, date, entryId);
+        return (courseId, entryId);
     }
 
     private async Task<Guid> CreateSingleEntryAsync(
         DateOnly date,
-        TimeOnly windowStart,
-        TimeOnly windowEnd,
+        DateTime windowStart,
+        DateTime windowEnd,
         int groupSize = 1,
         TimeSpan? joinedAtOffset = null)
     {

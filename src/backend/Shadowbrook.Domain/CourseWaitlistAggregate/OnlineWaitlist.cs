@@ -27,8 +27,8 @@ public class OnlineWaitlist : CourseWaitlist
         IGolferWaitlistEntryRepository entryRepository,
         ITimeProvider timeProvider,
         int groupSize,
-        TimeOnly windowStart,
-        TimeOnly windowEnd)
+        DateTime windowStart,
+        DateTime windowEnd)
     {
         var existing = await entryRepository.GetActiveByWaitlistAndGolferAsync(Id, golfer.Id);
         if (existing is not null)

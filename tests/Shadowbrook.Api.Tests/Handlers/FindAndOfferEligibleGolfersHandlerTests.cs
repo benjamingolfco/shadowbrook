@@ -26,6 +26,8 @@ public class FindAndOfferEligibleGolfersHandlerTests
         this.timeProvider.GetCurrentTimestamp().Returns(DateTimeOffset.UtcNow);
         this.timeProvider.GetCurrentTime().Returns(new TimeOnly(14, 15));
         this.timeProvider.GetCurrentTimeByTimeZone(Arg.Any<string>()).Returns(new TimeOnly(14, 15));
+        this.timeProvider.GetCurrentDate().Returns(new DateOnly(2026, 3, 25));
+        this.timeProvider.GetCurrentDateByTimeZone(Arg.Any<string>()).Returns(new DateOnly(2026, 3, 25));
         this.shortCodeGen.GenerateAsync(Arg.Any<DateOnly>()).Returns("1234");
         this.matchingService = new WaitlistMatchingService(this.entryRepo);
     }
