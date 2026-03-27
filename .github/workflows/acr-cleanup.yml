@@ -2,13 +2,13 @@
 #
 # Removes old container images from Azure Container Registry to save storage.
 # Keeps the N most recent tags and deletes the rest.
-# Runs weekly on Sunday at midnight UTC, or on-demand via workflow_dispatch.
+# Runs daily at midnight UTC, or on-demand via workflow_dispatch.
 
 name: ACR Cleanup
 
 on:
   schedule:
-    - cron: '0 0 * * 0' # Sunday midnight UTC
+    - cron: '0 0 * * *' # Daily midnight UTC
   workflow_dispatch:
     inputs:
       keep-count:
