@@ -7,6 +7,7 @@ public record WaitlistOfferAccepted : IDomainEvent
     public Guid EventId { get; init; } = Guid.NewGuid();
     public DateTimeOffset OccurredAt { get; init; } = DateTimeOffset.UtcNow;
     public required Guid WaitlistOfferId { get; init; }
+    public required Guid BookingId { get; init; }
     public required Guid OpeningId { get; init; }
     public required Guid GolferWaitlistEntryId { get; init; }
     public required Guid GolferId { get; init; }

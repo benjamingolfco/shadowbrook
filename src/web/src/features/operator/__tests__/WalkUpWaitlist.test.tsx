@@ -530,9 +530,9 @@ describe('WalkUpWaitlist', () => {
   it('sorts tee time openings in ascending order by tee time', async () => {
     const user = userEvent.setup();
     const unsortedOpenings = [
-      { id: 'o-1', teeTime: '14:30', slotsAvailable: 4, slotsRemaining: 2, status: 'Available', filledGolfers: [] },
-      { id: 'o-2', teeTime: '08:00', slotsAvailable: 4, slotsRemaining: 4, status: 'Available', filledGolfers: [] },
-      { id: 'o-3', teeTime: '11:15', slotsAvailable: 4, slotsRemaining: 1, status: 'Available', filledGolfers: [] },
+      { id: 'o-1', teeTime: '2026-06-01T14:30:00', slotsAvailable: 4, slotsRemaining: 2, status: 'Available', filledGolfers: [] },
+      { id: 'o-2', teeTime: '2026-06-01T08:00:00', slotsAvailable: 4, slotsRemaining: 4, status: 'Available', filledGolfers: [] },
+      { id: 'o-3', teeTime: '2026-06-01T11:15:00', slotsAvailable: 4, slotsRemaining: 1, status: 'Available', filledGolfers: [] },
     ];
 
     mockUseWalkUpWaitlistToday.mockReturnValue({

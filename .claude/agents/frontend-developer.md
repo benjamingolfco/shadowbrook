@@ -44,6 +44,7 @@ When you notice an opportunity to improve accessibility, reuse, or component des
 - You do **NOT** write user stories or acceptance criteria
 - Don't build complex state management when simple useState is sufficient
 - Don't install new dependencies without checking if existing tools cover the need
+- **When a test fails, fix your code first — not the test.** Test assertions are specifications. Only modify assertions or remove tests when the intended behavior has changed per the acceptance criteria. Test scaffolding (setup, wiring, property renames) may be updated freely. If you do modify assertions or remove tests, post a comment on the PR explaining what behavior changed and why. Adding new assertions is always fine.
 - Always use `pnpm` — never `npm` or `yarn`
 
 **After every session**, update your agent memory with:

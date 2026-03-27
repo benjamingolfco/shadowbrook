@@ -28,10 +28,10 @@ public class TeeTimeOpeningOfferPolicy : Saga
     public FindAndOfferEligibleGolfers? Handle([SagaIdentityFrom("OpeningId")] WaitlistOfferAccepted evt)
     {
         PendingOfferCount = Math.Max(0, PendingOfferCount - 1);
-        return null; // Slots updated via TeeTimeOpeningClaimed
+        return null; // Slots updated via TeeTimeOpeningSlotsClaimed
     }
 
-    public FindAndOfferEligibleGolfers? Handle([SagaIdentityFrom("OpeningId")] TeeTimeOpeningClaimed evt)
+    public FindAndOfferEligibleGolfers? Handle([SagaIdentityFrom("OpeningId")] TeeTimeOpeningSlotsClaimed evt)
     {
         SlotsRemaining = Math.Max(0, SlotsRemaining - 1);
         return DispatchMoreOffersIfNeeded();

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Shadowbrook.Domain.BookingAggregate;
+using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
 
 namespace Shadowbrook.Api.Features.Bookings.Handlers;
@@ -12,8 +13,7 @@ public class TeeTimeOpeningCancelledCancelBookingsHandler(IBookingRepository boo
     {
         var bookings = await bookingRepository.GetByCourseAndTeeTimeAsync(
             domainEvent.CourseId,
-            domainEvent.Date,
-            domainEvent.TeeTime,
+            new TeeTime(domainEvent.Date, domainEvent.TeeTime),
             ct);
 
         if (bookings.Count == 0)

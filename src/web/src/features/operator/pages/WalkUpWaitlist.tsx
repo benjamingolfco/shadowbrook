@@ -134,13 +134,13 @@ function QueueTable({
   );
 }
 
-function formatTeeTime(teeTime: string): string {
-  const parts = teeTime.split(':');
-  const hour = parseInt(parts[0] ?? '0', 10);
-  const minute = parts[1] ?? '00';
-  const period = hour >= 12 ? 'PM' : 'AM';
-  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-  return `${hour12}:${minute} ${period}`;
+function formatTeeTime(isoDateTime: string): string {
+  const date = new Date(isoDateTime);
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
 }
 
 function getStatusBadgeVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' | 'success' {

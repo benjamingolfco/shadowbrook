@@ -47,7 +47,7 @@ export interface FilledGolfer {
 
 export interface WaitlistOpeningEntry {
   id: string;
-  teeTime: string; // "HH:mm"
+  teeTime: string; // ISO 8601 DateTime
   slotsAvailable: number;
   slotsRemaining: number;
   status: string;
@@ -89,9 +89,8 @@ export interface DuplicateEntryError {
 export interface WaitlistOfferResponse {
   token: string;
   courseName: string;
-  date: string;       // "yyyy-MM-dd"
-  teeTime: string;    // "HH:mm"
-  golfersNeeded: number;
+  teeTime: string;    // ISO 8601 DateTime
+  slotsAvailable: number;
   golferName: string;
   status: 'Pending' | 'Accepted';
 }

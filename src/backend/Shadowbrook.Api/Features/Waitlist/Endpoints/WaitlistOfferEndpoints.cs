@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
+using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Shadowbrook.Domain.WaitlistServices;
 using Wolverine.Http;
 
 namespace Shadowbrook.Api.Features.Waitlist.Endpoints;
@@ -20,8 +23,7 @@ public static class WaitlistOfferEndpoints
             {
                 ooeg.Offer.Token,
                 CourseName = c.Name,
-                Date = ooeg.Opening.TeeTime.Date,
-                TeeTime = ooeg.Opening.TeeTime.Time,
+                TeeTime = ooeg.Opening.TeeTime.Value,
                 ooeg.Opening.SlotsAvailable,
                 ooeg.Golfer.FirstName,
                 ooeg.Golfer.LastName,
@@ -37,8 +39,7 @@ public static class WaitlistOfferEndpoints
         return Results.Ok(new WaitlistOfferResponse(
             offer.Token,
             offer.CourseName,
-            offer.Date.ToString("yyyy-MM-dd"),
-            offer.TeeTime.ToString("HH:mm"),
+            offer.TeeTime,
             offer.SlotsAvailable,
             $"{offer.FirstName} {offer.LastName}",
             offer.Status.ToString()));
@@ -47,7 +48,9 @@ public static class WaitlistOfferEndpoints
     [WolverinePost("/waitlist/offers/{token}/accept")]
     public static async Task<IResult> AcceptOffer(
         Guid token,
-        IWaitlistOfferRepository offerRepository)
+        IWaitlistOfferRepository offerRepository,
+        ITeeTimeOpeningRepository openingRepository,
+        WaitlistOfferClaimService claimService)
     {
         var offer = await offerRepository.GetByTokenAsync(token);
 
@@ -56,23 +59,23 @@ public static class WaitlistOfferEndpoints
             return Results.NotFound(new { error = "Offer not found." });
         }
 
-        offer.Accept();
+        var opening = await openingRepository.GetRequiredByIdAsync(offer.OpeningId);
+        var result = claimService.AcceptOffer(offer, opening);
 
-        return Results.Ok(new WaitlistOfferAcceptResponse(
-            "Processing",
-            "We're processing your request — you'll receive a confirmation shortly."));
+        if (!result.Success)
+        {
+            return Results.Conflict(new { reason = result.Reason });
+        }
+
+        return Results.Ok(new { status = "Confirmed" });
     }
 }
 
 public record WaitlistOfferResponse(
     Guid Token,
     string CourseName,
-    string Date,
-    string TeeTime,
+    DateTime TeeTime,
     int SlotsAvailable,
     string GolferName,
     string Status);
 
-public record WaitlistOfferAcceptResponse(
-    string Status,
-    string Message);

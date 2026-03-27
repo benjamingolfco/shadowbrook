@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shadowbrook.Api.Features.Bookings.Handlers;
 using Shadowbrook.Domain.BookingAggregate;
+using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
 
 namespace Shadowbrook.Api.Tests.Handlers;
@@ -26,7 +27,7 @@ public class TeeTimeOpeningCancelledCancelBookingsHandlerTests
     };
 
     private static Booking CreateBooking(TeeTimeOpeningCancelled evt) =>
-        Booking.Create(Guid.NewGuid(), evt.CourseId, Guid.NewGuid(), evt.Date, evt.TeeTime, "Jane Doe", 2);
+        Booking.Create(Guid.NewGuid(), evt.CourseId, Guid.NewGuid(), evt.Date, evt.TeeTime, 2);
 
     [Fact]
     public async Task Handle_WhenPendingAndConfirmedBookings_CancelsAll()
@@ -36,7 +37,7 @@ public class TeeTimeOpeningCancelledCancelBookingsHandlerTests
         var confirmed = CreateBooking(evt);
         confirmed.Confirm();
 
-        this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, evt.Date, evt.TeeTime, Arg.Any<CancellationToken>())
+        this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, Arg.Any<TeeTime>(), Arg.Any<CancellationToken>())
             .Returns([pending, confirmed]);
 
         await this.handler.Handle(evt, CancellationToken.None);
@@ -50,12 +51,12 @@ public class TeeTimeOpeningCancelledCancelBookingsHandlerTests
     {
         var evt = CreateEvent();
 
-        this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, evt.Date, evt.TeeTime, Arg.Any<CancellationToken>())
+        this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, Arg.Any<TeeTime>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         await this.handler.Handle(evt, CancellationToken.None);
 
-        await this.bookingRepository.Received(1).GetByCourseAndTeeTimeAsync(evt.CourseId, evt.Date, evt.TeeTime, Arg.Any<CancellationToken>());
+        await this.bookingRepository.Received(1).GetByCourseAndTeeTimeAsync(evt.CourseId, Arg.Any<TeeTime>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -67,7 +68,7 @@ public class TeeTimeOpeningCancelledCancelBookingsHandlerTests
         var cancelled = CreateBooking(evt);
         cancelled.Cancel();
 
-        this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, evt.Date, evt.TeeTime, Arg.Any<CancellationToken>())
+        this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, Arg.Any<TeeTime>(), Arg.Any<CancellationToken>())
             .Returns([rejected, cancelled]);
 
         await this.handler.Handle(evt, CancellationToken.None);
@@ -86,7 +87,7 @@ public class TeeTimeOpeningCancelledCancelBookingsHandlerTests
         var rejected = CreateBooking(evt);
         rejected.Reject();
 
-        this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, evt.Date, evt.TeeTime, Arg.Any<CancellationToken>())
+        this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, Arg.Any<TeeTime>(), Arg.Any<CancellationToken>())
             .Returns([pending, confirmed, rejected]);
 
         await this.handler.Handle(evt, CancellationToken.None);

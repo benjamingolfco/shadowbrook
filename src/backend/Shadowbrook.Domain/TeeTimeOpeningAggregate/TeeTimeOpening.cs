@@ -68,7 +68,7 @@ public class TeeTimeOpening : Entity
 
         if (Status != TeeTimeOpeningStatus.Open)
         {
-            AddDomainEvent(new TeeTimeOpeningClaimRejected
+            AddDomainEvent(new TeeTimeOpeningSlotsClaimRejected
             {
                 OpeningId = Id,
                 BookingId = bookingId,
@@ -79,7 +79,7 @@ public class TeeTimeOpening : Entity
 
         if (SlotsRemaining < groupSize)
         {
-            AddDomainEvent(new TeeTimeOpeningClaimRejected
+            AddDomainEvent(new TeeTimeOpeningSlotsClaimRejected
             {
                 OpeningId = Id,
                 BookingId = bookingId,
@@ -91,7 +91,7 @@ public class TeeTimeOpening : Entity
         SlotsRemaining -= groupSize;
         this.claimedSlots.Add(new ClaimedSlot(bookingId, golferId, groupSize, timeProvider.GetCurrentTimestamp()));
 
-        AddDomainEvent(new TeeTimeOpeningClaimed
+        AddDomainEvent(new TeeTimeOpeningSlotsClaimed
         {
             OpeningId = Id,
             BookingId = bookingId,
@@ -99,6 +99,7 @@ public class TeeTimeOpening : Entity
             CourseId = CourseId,
             Date = TeeTime.Date,
             TeeTime = TeeTime.Time,
+            GroupSize = groupSize,
         });
 
         if (SlotsRemaining == 0)
