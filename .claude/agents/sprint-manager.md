@@ -131,14 +131,81 @@ After all agents have completed:
 
 ### Step 5: Handle PR Review
 
-The sprint workflow triggers on `pull_request_review` events for PRs with the `agentic` label.
+The sprint workflow triggers on `pull_request_review` events for PRs with the `agentic` label. The Review ID, Review State, and Reviewer are provided in the workflow context.
 
-**Owner approves:** Merge the PR, set issue status to **Done**, and trigger merge cascade for any newly-unblocked issues.
+**Owner approves:** Merge the PR, set issue status to **QA**, and trigger merge cascade for any newly-unblocked issues.
 
 **Review requests changes:**
-1. Read the review feedback
-2. Re-dispatch the appropriate implementation agent with the feedback
-3. Agent fixes, commits, pushes
+
+#### 5a. Acknowledge — React with eyes emoji
+
+Fetch the review's inline comments and react with eyes on each one immediately (before dispatching the agent):
+
+```bash
+# Fetch comments for this review
+COMMENTS=$(gh api repos/benjamingolfco/shadowbrook/pulls/{pr}/reviews/{review_id}/comments)
+
+# React with eyes on each comment
+for COMMENT_ID in $(echo "$COMMENTS" | jq -r '.[].id'); do
+  gh api repos/benjamingolfco/shadowbrook/pulls/comments/$COMMENT_ID/reactions -X POST -f content=eyes
+done
+```
+
+#### 5b. Fetch thread node IDs for resolution
+
+Query the PR's review threads via GraphQL to get node IDs (needed for resolving threads later):
+
+```bash
+gh api graphql -f query='
+  query($owner: String!, $repo: String!, $pr: Int!) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: $pr) {
+        reviewThreads(first: 100) {
+          nodes {
+            id
+            isResolved
+            comments(first: 1) {
+              nodes { databaseId body path line }
+            }
+          }
+        }
+      }
+    }
+  }
+' -f owner=benjamingolfco -f repo=shadowbrook -F pr={pr_number}
+```
+
+Map each review comment's `databaseId` to its thread `id` (node ID) so the agent can resolve threads after fixing.
+
+#### 5c. Dispatch agent with structured review data
+
+Re-dispatch the appropriate implementation agent with the review feedback. In the Task prompt, include:
+
+1. **All standard context** (issue context, implementation plan, branch info)
+2. **Structured review comments** — for each comment, include:
+   - Comment ID (database ID)
+   - Thread node ID (for resolution)
+   - File path and line number
+   - Comment body (the feedback)
+3. **Review thread handling instructions** (paste these into the agent prompt):
+
+   > After completing your code fixes, handle each review comment thread:
+   >
+   > **If you made the requested change:** Reply to the thread explaining what you did, then resolve it.
+   > ```bash
+   > # Reply to the thread
+   > gh api repos/benjamingolfco/shadowbrook/pulls/{pr}/comments/{comment_id}/replies -X POST -f body="Fixed — {brief description of what you changed}"
+   >
+   > # Resolve the thread
+   > gh api graphql -f query='mutation($threadId: ID!) { resolveReviewThread(input: { threadId: $threadId }) { thread { id isResolved } } }' -f threadId='{thread_node_id}'
+   > ```
+   >
+   > **If the comment is unclear or you have a question:** Reply with your question. Do NOT resolve the thread.
+   > ```bash
+   > gh api repos/benjamingolfco/shadowbrook/pulls/{pr}/comments/{comment_id}/replies -X POST -f body="Question — {your question}"
+   > ```
+   >
+   > **If the comment is about the review body only (no inline comments):** Address it in your commit message or PR update. No thread to resolve.
 
 ### Step 6: Write Summary
 
