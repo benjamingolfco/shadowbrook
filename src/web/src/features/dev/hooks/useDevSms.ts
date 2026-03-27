@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-keys';
 
@@ -17,5 +17,18 @@ export function useDevSms() {
     queryKey: queryKeys.devSms.all,
     queryFn: () => api.get<SmsMessage[]>('/dev/sms'),
     refetchInterval: 5000,
+  });
+}
+
+export function useDeleteConversation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (phoneNumber: string) =>
+      api.delete(`/dev/sms/conversations/${encodeURIComponent(phoneNumber)}`),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.devSms.all,
+      });
+    },
   });
 }

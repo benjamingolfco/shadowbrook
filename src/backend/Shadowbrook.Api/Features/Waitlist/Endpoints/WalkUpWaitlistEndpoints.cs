@@ -104,12 +104,37 @@ public static class WalkUpWaitlistEndpoints
                 .ToList()
             : new List<WalkUpWaitlistEntryResponse>();
 
-        var openings = (await db.TeeTimeOpenings
-                .Where(o => o.CourseId == courseId && o.TeeTime.Date == today)
-                .Select(o => new { o.Id, TeeTimeTime = o.TeeTime.Time, o.SlotsAvailable, o.SlotsRemaining, o.Status })
-                .ToListAsync())
-                .Select(o => new WalkUpWaitlistOpeningResponse(o.Id, o.TeeTimeTime.ToString("HH:mm"), o.SlotsAvailable, o.SlotsRemaining, o.Status.ToString()))
-                .ToList();
+        var openingEntities = await db.TeeTimeOpenings
+            .Include(o => o.ClaimedSlots)
+            .Where(o => o.CourseId == courseId && o.TeeTime.Date == today)
+            .ToListAsync();
+
+        var golferIds = openingEntities
+            .SelectMany(o => o.ClaimedSlots)
+            .Select(cs => cs.GolferId)
+            .Distinct()
+            .ToList();
+
+        var golferNames = golferIds.Count > 0
+            ? await db.Golfers.IgnoreQueryFilters()
+                .Where(g => golferIds.Contains(g.Id))
+                .ToDictionaryAsync(g => g.Id, g => g.FirstName + " " + g.LastName)
+            : new Dictionary<Guid, string>();
+
+        var openings = openingEntities
+            .Select(o => new WalkUpWaitlistOpeningResponse(
+                o.Id,
+                o.TeeTime.Time.ToString("HH:mm"),
+                o.SlotsAvailable,
+                o.SlotsRemaining,
+                o.Status.ToString(),
+                o.ClaimedSlots
+                    .Select(cs => new FilledGolferResponse(
+                        cs.GolferId,
+                        golferNames.GetValueOrDefault(cs.GolferId, "Unknown"),
+                        cs.GroupSize))
+                    .ToList()))
+            .ToList();
 
         return Results.Ok(new WalkUpWaitlistTodayResponse(waitlistResponse, entries, openings));
     }
@@ -132,7 +157,7 @@ public static class WalkUpWaitlistEndpoints
 
         return Results.Created(
             $"/courses/{courseId}/tee-time-openings/{opening.Id}",
-            new WalkUpWaitlistOpeningResponse(opening.Id, opening.TeeTime.Time.ToString("HH:mm"), opening.SlotsAvailable, opening.SlotsRemaining, opening.Status.ToString()));
+            new WalkUpWaitlistOpeningResponse(opening.Id, opening.TeeTime.Time.ToString("HH:mm"), opening.SlotsAvailable, opening.SlotsRemaining, opening.Status.ToString(), []));
     }
 
     [WolverinePost("/courses/{courseId}/tee-time-openings/{openingId}/cancel")]
@@ -294,12 +319,18 @@ public class CreateTeeTimeOpeningRequestValidator : AbstractValidator<CreateTeeT
     }
 }
 
+public record FilledGolferResponse(
+    Guid GolferId,
+    string GolferName,
+    int GroupSize);
+
 public record WalkUpWaitlistOpeningResponse(
     Guid Id,
     string TeeTime,
     int SlotsAvailable,
     int SlotsRemaining,
-    string Status);
+    string Status,
+    List<FilledGolferResponse> FilledGolfers);
 
 public record WalkUpWaitlistResponse(
     Guid Id,

@@ -27,4 +27,7 @@ export const queryKeys = {
   walkUpQr: {
     status: (shortCode: string) => ['walkup-qr', 'status', shortCode] as const,
   },
+  features: {
+    all: ['features'] as const,
+  },
 };

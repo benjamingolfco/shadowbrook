@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useDevSms, type SmsMessage } from '../hooks/useDevSms';
+import { useDevSms, useDeleteConversation, type SmsMessage } from '../hooks/useDevSms';
+import { DeleteConversationDialog } from '../components/DeleteConversationDialog';
 
 const SYSTEM_NUMBER = '+10000000000';
 
@@ -106,6 +109,9 @@ function ConversationThread({ messages }: { messages: SmsMessage[] }) {
 export default function DevSmsPage() {
   const { data: messages, isLoading, isError } = useDevSms();
   const [selectedPhone, setSelectedPhone] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const deleteMutation = useDeleteConversation();
 
   const groups = messages ? groupByPhoneNumber(messages) : new Map<string, SmsMessage[]>();
   const phoneNumbers = [...groups.keys()];
@@ -113,6 +119,25 @@ export default function DevSmsPage() {
   // Auto-select the first phone number once data loads
   const activePhone = selectedPhone ?? phoneNumbers[0] ?? null;
   const activeMessages = activePhone ? (groups.get(activePhone) ?? []) : [];
+
+  function handleDeleteClick(phone: string) {
+    setDeleteTarget(phone);
+    setDeleteDialogOpen(true);
+  }
+
+  function handleDeleteConfirm() {
+    if (!deleteTarget) return;
+    deleteMutation.mutate(deleteTarget, {
+      onSuccess: () => {
+        // Reset selected phone if we deleted the active conversation
+        if (deleteTarget === selectedPhone) {
+          setSelectedPhone(null);
+        }
+        setDeleteDialogOpen(false);
+        setDeleteTarget(null);
+      },
+    });
+  }
 
   return (
     <div className="p-6 h-full flex flex-col gap-4">
@@ -153,20 +178,33 @@ export default function DevSmsPage() {
                   const isActive = phone === activePhone;
                   return (
                     <li key={phone}>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedPhone(phone)}
+                      <div
                         className={cn(
-                          'w-full text-left px-4 py-3 flex items-center justify-between gap-2 hover:bg-muted/50 transition-colors',
+                          'w-full px-4 py-3 flex items-center justify-between gap-2 hover:bg-muted/50 transition-colors',
                           isActive && 'bg-muted'
                         )}
-                        aria-current={isActive ? 'true' : undefined}
                       >
-                        <span className="text-sm font-mono truncate">{phone}</span>
-                        <Badge variant="secondary" className="shrink-0 text-xs">
-                          {msgs.length}
-                        </Badge>
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPhone(phone)}
+                          className="flex-1 text-left flex items-center gap-2 min-w-0"
+                          aria-current={isActive ? 'true' : undefined}
+                        >
+                          <span className="text-sm font-mono truncate">{phone}</span>
+                          <Badge variant="secondary" className="shrink-0 text-xs">
+                            {msgs.length}
+                          </Badge>
+                        </button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0"
+                          onClick={() => handleDeleteClick(phone)}
+                          aria-label={`Delete conversation with ${phone}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </li>
                   );
                 })}
@@ -188,6 +226,14 @@ export default function DevSmsPage() {
           </Card>
         </div>
       )}
+
+      <DeleteConversationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        phoneNumber={deleteTarget ?? ''}
+        isPending={deleteMutation.isPending}
+      />
     </div>
   );
 }

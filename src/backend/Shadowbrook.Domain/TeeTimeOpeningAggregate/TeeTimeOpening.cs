@@ -17,6 +17,9 @@ public class TeeTimeOpening : Entity
     public DateTimeOffset? ExpiredAt { get; private set; }
     public DateTimeOffset? CancelledAt { get; private set; }
 
+    private readonly List<ClaimedSlot> claimedSlots = [];
+    public IReadOnlyList<ClaimedSlot> ClaimedSlots => this.claimedSlots.AsReadOnly();
+
     private TeeTimeOpening() { } // EF
 
     public static TeeTimeOpening Create(
@@ -56,16 +59,22 @@ public class TeeTimeOpening : Entity
         return opening;
     }
 
-    public void Claim(Guid bookingId, Guid golferId, int groupSize, ITimeProvider timeProvider)
+    public ClaimResult TryClaim(Guid bookingId, Guid golferId, int groupSize, ITimeProvider timeProvider)
     {
-        if (Status != TeeTimeOpeningStatus.Open)
-        {
-            throw new OpeningNotAvailableException(Id);
-        }
-
         if (groupSize <= 0)
         {
             throw new InvalidGroupSizeException();
+        }
+
+        if (Status != TeeTimeOpeningStatus.Open)
+        {
+            AddDomainEvent(new TeeTimeOpeningClaimRejected
+            {
+                OpeningId = Id,
+                BookingId = bookingId,
+                GolferId = golferId,
+            });
+            return ClaimResult.Rejected("Opening is not available");
         }
 
         if (SlotsRemaining < groupSize)
@@ -76,10 +85,11 @@ public class TeeTimeOpening : Entity
                 BookingId = bookingId,
                 GolferId = golferId,
             });
-            return;
+            return ClaimResult.Rejected("Insufficient slots remaining");
         }
 
         SlotsRemaining -= groupSize;
+        this.claimedSlots.Add(new ClaimedSlot(bookingId, golferId, groupSize, timeProvider.GetCurrentTimestamp()));
 
         AddDomainEvent(new TeeTimeOpeningClaimed
         {
@@ -101,6 +111,8 @@ public class TeeTimeOpening : Entity
                 OpeningId = Id,
             });
         }
+
+        return ClaimResult.Claimed();
     }
 
     public void Cancel(ITimeProvider timeProvider)

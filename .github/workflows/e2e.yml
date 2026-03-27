@@ -6,6 +6,10 @@ on:
     workflows: ["Deploy Test"]
     types: [completed]
 
+concurrency:
+  group: e2e-tests
+  cancel-in-progress: true
+
 env:
   E2E_BASE_URL: https://white-stone-00610060f.1.azurestaticapps.net
   E2E_API_URL: https://shadowbrook-app-test.happypond-1a892999.eastus2.azurecontainerapps.io

@@ -158,6 +158,15 @@ function getStatusBadgeVariant(status: string): 'default' | 'secondary' | 'destr
   }
 }
 
+function formatFilledGolfers(filledGolfers: WaitlistOpeningEntry['filledGolfers']): string {
+  if (filledGolfers.length === 0) {
+    return '--';
+  }
+  return filledGolfers
+    .map(golfer => golfer.groupSize > 1 ? `${golfer.golferName} (${golfer.groupSize})` : golfer.golferName)
+    .join(', ');
+}
+
 function OpeningsTable({
   openings,
   onCancel,
@@ -189,6 +198,7 @@ function OpeningsTable({
               <TableHead>Slots Available</TableHead>
               <TableHead>Slots Remaining</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Golfers</TableHead>
               <TableHead className="w-24">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -203,6 +213,7 @@ function OpeningsTable({
                     {opening.status}
                   </Badge>
                 </TableCell>
+                <TableCell>{formatFilledGolfers(opening.filledGolfers)}</TableCell>
                 <TableCell>
                   {opening.status === 'Open' && (
                     <Button
@@ -226,21 +237,29 @@ function OpeningsTable({
         {openings.map((opening) => (
           <div
             key={opening.id}
-            className={`flex items-center justify-between rounded-md border p-3 text-sm ${
+            className={`flex flex-col gap-2 rounded-md border p-3 text-sm ${
               cancellingOpeningId === opening.id ? 'opacity-50' : ''
             }`}
           >
-            <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between">
               <span className="font-medium">{formatTeeTime(opening.teeTime)}</span>
-              <span className="text-muted-foreground text-xs">
-                {opening.slotsRemaining} of {opening.slotsAvailable} slot{opening.slotsAvailable !== 1 ? 's' : ''} remaining
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
               <Badge variant={getStatusBadgeVariant(opening.status)}>
                 {opening.status}
               </Badge>
-              {opening.status === 'Open' && (
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-muted-foreground text-xs">
+                {opening.slotsRemaining} of {opening.slotsAvailable} slot{opening.slotsAvailable !== 1 ? 's' : ''} remaining
+              </span>
+              {opening.filledGolfers.length > 0 && (
+                <span className="text-xs">
+                  <span className="text-muted-foreground">Golfers: </span>
+                  {formatFilledGolfers(opening.filledGolfers)}
+                </span>
+              )}
+            </div>
+            {opening.status === 'Open' && (
+              <div className="flex justify-end">
                 <Button
                   variant="outline"
                   size="sm"
@@ -250,8 +269,8 @@ function OpeningsTable({
                 >
                   Cancel
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

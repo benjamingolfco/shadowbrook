@@ -47,7 +47,10 @@ public class WaitlistOfferAcceptedRemoveFromWaitlistHandlerTests
             OpeningId = Guid.NewGuid(),
             GolferWaitlistEntryId = entry.Id,
             GolferId = golfer.Id,
-            GroupSize = 1
+            GroupSize = 1,
+            CourseId = Guid.NewGuid(),
+            Date = new DateOnly(2026, 3, 25),
+            TeeTime = new TimeOnly(10, 0)
         };
 
         await WaitlistOfferAcceptedRemoveFromWaitlistHandler.Handle(evt, this.entryRepo, this.timeProvider);
@@ -67,7 +70,10 @@ public class WaitlistOfferAcceptedRemoveFromWaitlistHandlerTests
             OpeningId = Guid.NewGuid(),
             GolferWaitlistEntryId = entryId,
             GolferId = Guid.NewGuid(),
-            GroupSize = 1
+            GroupSize = 1,
+            CourseId = Guid.NewGuid(),
+            Date = new DateOnly(2026, 3, 25),
+            TeeTime = new TimeOnly(10, 0)
         };
 
         await Assert.ThrowsAsync<EntityNotFoundException>(

@@ -40,6 +40,15 @@ public static class DevSmsEndpoints
             return Results.NoContent();
         }).WithSummary("Clear all SMS messages");
 
+        group.MapDelete("/conversations/{phoneNumber}", async (string phoneNumber, ApplicationDbContext db) =>
+        {
+            var decoded = Uri.UnescapeDataString(phoneNumber);
+            await db.DevSmsMessages
+                .Where(m => m.From == decoded || m.To == decoded)
+                .ExecuteDeleteAsync();
+            return Results.NoContent();
+        }).WithSummary("Delete all messages for a phone number");
+
         return app;
     }
 
