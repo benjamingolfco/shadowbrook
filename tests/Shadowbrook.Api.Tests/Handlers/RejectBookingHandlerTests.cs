@@ -63,4 +63,20 @@ public class RejectBookingHandlerTests
         await Assert.ThrowsAsync<BookingNotPendingException>(
             () => RejectBookingHandler.Handle(command, this.bookingRepo));
     }
+
+    [Fact]
+    public async Task Handle_AlreadyRejectedBooking_IsIdempotent()
+    {
+        var booking = CreatePendingBooking();
+        booking.Reject(); // move to Rejected
+        booking.ClearDomainEvents();
+        this.bookingRepo.GetByIdAsync(booking.Id).Returns(booking);
+
+        var command = new RejectBookingCommand(booking.Id);
+
+        await RejectBookingHandler.Handle(command, this.bookingRepo);
+
+        Assert.Equal(BookingStatus.Rejected, booking.Status);
+        Assert.Empty(booking.DomainEvents);
+    }
 }

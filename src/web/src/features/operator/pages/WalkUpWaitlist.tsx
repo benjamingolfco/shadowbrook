@@ -176,7 +176,9 @@ function OpeningsTable({
   onCancel: (opening: WaitlistOpeningEntry) => void;
   cancellingOpeningId: string | null;
 }) {
-  if (openings.length === 0) {
+  const sortedOpenings = [...openings].sort((a, b) => a.teeTime.localeCompare(b.teeTime));
+
+  if (sortedOpenings.length === 0) {
     return (
       <p className="text-muted-foreground text-sm py-4">
         No tee time openings for today.
@@ -187,7 +189,7 @@ function OpeningsTable({
   return (
     <div>
       <p className="text-sm text-muted-foreground mb-2">
-        {openings.length} opening{openings.length !== 1 ? 's' : ''}
+        {sortedOpenings.length} opening{sortedOpenings.length !== 1 ? 's' : ''}
       </p>
       {/* Desktop table */}
       <div className="hidden md:block">
@@ -203,7 +205,7 @@ function OpeningsTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {openings.map((opening) => (
+            {sortedOpenings.map((opening) => (
               <TableRow key={opening.id} className={cancellingOpeningId === opening.id ? 'opacity-50' : ''}>
                 <TableCell>{formatTeeTime(opening.teeTime)}</TableCell>
                 <TableCell>{opening.slotsAvailable}</TableCell>
@@ -234,7 +236,7 @@ function OpeningsTable({
       </div>
       {/* Mobile stacked cards */}
       <div className="md:hidden space-y-2">
-        {openings.map((opening) => (
+        {sortedOpenings.map((opening) => (
           <div
             key={opening.id}
             className={`flex flex-col gap-2 rounded-md border p-3 text-sm ${

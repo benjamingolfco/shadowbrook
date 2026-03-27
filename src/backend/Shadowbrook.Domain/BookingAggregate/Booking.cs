@@ -53,6 +53,11 @@ public class Booking : Entity
 
     public void Confirm()
     {
+        if (Status == BookingStatus.Confirmed)
+        {
+            return;
+        }
+
         if (Status != BookingStatus.Pending)
         {
             throw new BookingNotPendingException(Id, Status);
@@ -62,8 +67,13 @@ public class Booking : Entity
         AddDomainEvent(new BookingConfirmed { BookingId = Id });
     }
 
-    public void RejectBooking()
+    public void Reject()
     {
+        if (Status == BookingStatus.Rejected)
+        {
+            return;
+        }
+
         if (Status != BookingStatus.Pending)
         {
             throw new BookingNotPendingException(Id, Status);
