@@ -1,17 +1,21 @@
 ---
 name: qa
-description: Run QA validation against deployed environment for user stories. Verifies acceptance criteria via headed Playwright browser, posts reports, files bugs.
+description: Run QA validation against deployed environment for user stories. Verifies acceptance criteria via Playwright browser (headless by default), posts reports, files bugs.
 user-invocable: true
 ---
 
 # QA Validation
 
-Validate user stories against a deployed environment by walking through acceptance criteria in a headed browser.
+Validate user stories against a deployed environment by walking through acceptance criteria in a browser (headless by default).
 
 ## Usage
 
 - `/qa 247` — test a specific issue
 - `/qa` — test all issues in QA status in the current iteration
+- `/qa 247 --headed` — run with a visible browser window
+- `/qa --url http://localhost:3000` — override the environment URL
+
+Default is **headless** (no visible browser). Use `--headed` when you want to watch the tests run.
 
 ## Single Issue Mode
 
@@ -37,7 +41,7 @@ When an issue number is provided:
      - The issue number and title
      - The full story and acceptance criteria text
      - The environment URL
-     - Instruction to use Playwright MCP tools in headed mode
+     - Instruction to use Playwright MCP tools in headless mode (or headed if `--headed` was passed)
    - Wait for the agent to return the QA report
 
 5. **Post the report on the issue:**
@@ -86,21 +90,24 @@ When an issue number is provided:
    - Present the suggested story titles to the user
    - Ask if they want to create them as new issues (these are NOT sub-issues — they are new scope)
 
+7. **Summarize to the user** what was done for this issue:
+   - Whether all ACs passed or which failed
+   - That the QA report was posted to the issue (link to the comment)
+   - Whether the issue was moved to Done and closed, or left in QA
+   - Any bugs filed or stories suggested
+
 ## Queue Mode
 
 When no issue number is provided:
 
-1. **Query the project board** for issues in QA status in the current iteration:
+1. **Query the project board** for open issues in QA status in the current iteration:
    ```bash
    gh api graphql -f query='
      query {
        organization(login: "benjamingolfco") {
          projectV2(number: 1) {
-           items(first: 100, query: "iteration:@current") {
+           items(first: 100, query: "iteration:@current status:QA") {
              nodes {
-               fieldValueByName(name: "Status") {
-                 ... on ProjectV2ItemFieldSingleSelectValue { name }
-               }
                content {
                  ... on Issue { number title state }
                }
@@ -109,9 +116,8 @@ When no issue number is provided:
          }
        }
      }
-   '
+   ' --jq '.data.organization.projectV2.items.nodes[] | select(.content.state == "OPEN") | .content'
    ```
-   Filter for items where status is "QA" and state is "OPEN".
 
 2. **Present the list:**
    "Found {N} issues in QA: #{a}, #{b}, #{c}. Starting QA session."
