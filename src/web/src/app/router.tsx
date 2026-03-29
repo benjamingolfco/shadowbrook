@@ -82,10 +82,10 @@ export const router = createBrowserRouter([
       <LazyFeature><WalkUpQrFeature /></LazyFeature>
     ),
   },
-  {
+  ...((import.meta.env.DEV || import.meta.env.VITE_SHOW_DEV_TOOLS === 'true') ? [{
     path: '/dev/sms/golfer/:golferId',
     element: (
       <LazyFeature><DevGolferSmsPage /></LazyFeature>
     ),
-  },
+  }] : []),
 ]);
