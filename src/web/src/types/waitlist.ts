@@ -74,6 +74,7 @@ export interface JoinWaitlistRequest {
 
 export interface JoinWaitlistResponse {
   entryId: string;
+  golferId: string;
   golferName: string;
   position: number;
   courseName: string;
@@ -96,4 +97,5 @@ export interface WaitlistOfferResponse {
 export interface WaitlistOfferAcceptResponse {
   status: string;
   message: string;
+  golferId: string;
 }

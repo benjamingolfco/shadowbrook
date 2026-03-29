@@ -5,6 +5,7 @@ import type { JoinWaitlistResponse } from '@/types/waitlist';
 
 const result: JoinWaitlistResponse = {
   entryId: 'e-1',
+  golferId: 'g-1',
   golferName: 'John Smith',
   position: 3,
   courseName: 'Pine Valley Golf Club',
@@ -52,5 +53,13 @@ describe('Confirmation', () => {
     );
 
     expect(screen.getByText("You're on the list, Mary!")).toBeInTheDocument();
+  });
+
+  it('shows dev SMS link in dev mode', () => {
+    render(<Confirmation result={result} />);
+
+    const link = screen.getByText('View SMS messages');
+    expect(link).toBeInTheDocument();
+    expect(link.closest('a')).toHaveAttribute('href', '/dev/sms/golfer/g-1');
   });
 });

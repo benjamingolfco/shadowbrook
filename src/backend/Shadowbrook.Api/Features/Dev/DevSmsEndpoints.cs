@@ -28,6 +28,27 @@ public static class DevSmsEndpoints
             return Results.Ok(messages);
         }).WithSummary("Get conversation thread for a phone number");
 
+        group.MapGet("/golfers/{golferId:guid}", async (Guid golferId, ApplicationDbContext db) =>
+        {
+            var phone = await db.Golfers
+                .IgnoreQueryFilters()
+                .Where(g => g.Id == golferId)
+                .Select(g => g.Phone)
+                .FirstOrDefaultAsync();
+
+            if (phone is null)
+            {
+                return Results.NotFound(new { error = "Golfer not found." });
+            }
+
+            var messages = await db.DevSmsMessages
+                .Where(m => m.From == phone || m.To == phone)
+                .OrderBy(m => m.Timestamp)
+                .ToListAsync();
+
+            return Results.Ok(messages);
+        }).WithSummary("Get SMS conversation for a golfer by ID");
+
         group.MapPost("/inbound", async (InboundSmsRequest request, DatabaseTextMessageService smsService) =>
         {
             await smsService.AddInboundAsync(request.FromPhoneNumber, request.Message);

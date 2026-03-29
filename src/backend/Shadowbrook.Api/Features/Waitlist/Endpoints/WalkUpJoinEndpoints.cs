@@ -119,6 +119,7 @@ public static class WalkUpJoinEndpoints
 
         return Results.Created($"/walkup/join", new JoinWaitlistResponse(
             entry.Id,
+            golfer.Id,
             submittedName,
             activeCount + 1,
             courseName));
@@ -166,6 +167,7 @@ public class JoinWaitlistRequestValidator : AbstractValidator<JoinWaitlistReques
 
 public record JoinWaitlistResponse(
     Guid EntryId,
+    Guid GolferId,
     string GolferName,
     int Position,
     string CourseName);

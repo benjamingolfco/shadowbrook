@@ -1,9 +1,11 @@
 using System.Net;
+using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Dev;
 using Shadowbrook.Api.Infrastructure.Services;
+using Shadowbrook.Domain.GolferAggregate;
 
 namespace Shadowbrook.Api.Tests.Features.Dev;
 
@@ -95,5 +97,61 @@ public class DevSmsEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         var response = await this.client.DeleteAsync($"/dev/sms/conversations/{encodedPhoneNumber}");
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetByGolfer_ReturnsConversationForGolfer()
+    {
+        Guid golferId;
+
+        using (var scope = this.factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            // Create a golfer
+            var golfer = Golfer.Create("+15551112222", "Test", "Golfer");
+            db.Golfers.Add(golfer);
+            await db.SaveChangesAsync();
+            golferId = golfer.Id;
+
+            // Seed SMS messages for this golfer's phone
+            db.DevSmsMessages.Add(new DevSmsMessage
+            {
+                Id = Guid.CreateVersion7(),
+                From = DatabaseTextMessageService.SystemPhoneNumber,
+                To = "+15551112222",
+                Body = "You're booked!",
+                Direction = SmsDirection.Outbound,
+                Timestamp = DateTimeOffset.UtcNow.AddMinutes(-10)
+            });
+            // Also seed a message for a different phone to verify filtering
+            db.DevSmsMessages.Add(new DevSmsMessage
+            {
+                Id = Guid.CreateVersion7(),
+                From = DatabaseTextMessageService.SystemPhoneNumber,
+                To = "+15559999999",
+                Body = "Different golfer",
+                Direction = SmsDirection.Outbound,
+                Timestamp = DateTimeOffset.UtcNow.AddMinutes(-5)
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var response = await this.client.GetAsync($"/dev/sms/golfers/{golferId}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var messages = await response.Content.ReadFromJsonAsync<DevSmsMessage[]>();
+        Assert.NotNull(messages);
+        Assert.Single(messages);
+        Assert.Equal("You're booked!", messages[0].Body);
+    }
+
+    [Fact]
+    public async Task GetByGolfer_WithNonexistentGolfer_ReturnsNotFound()
+    {
+        var response = await this.client.GetAsync($"/dev/sms/golfers/{Guid.NewGuid()}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 }

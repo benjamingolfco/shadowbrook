@@ -57,6 +57,7 @@ export default function JoinForm({ verifyData, onJoined }: JoinFormProps) {
           if (err.status === 409) {
             onJoined({
               entryId: '',
+              golferId: '',
               golferName: `${data.firstName} ${data.lastName}`,
               position: 0,
               courseName: verifyData.courseName,

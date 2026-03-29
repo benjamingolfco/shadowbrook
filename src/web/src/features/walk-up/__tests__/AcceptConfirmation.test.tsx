@@ -15,6 +15,7 @@ const offer: WaitlistOfferResponse = {
 const response: WaitlistOfferAcceptResponse = {
   status: 'Accepted',
   message: 'Your tee time has been confirmed!',
+  golferId: 'g-1',
 };
 
 describe('AcceptConfirmation', () => {
@@ -59,5 +60,13 @@ describe('AcceptConfirmation', () => {
 
     const svg = iconWrapper?.querySelector('svg.text-green-600');
     expect(svg).toBeInTheDocument();
+  });
+
+  it('shows dev SMS link in dev mode', () => {
+    render(<AcceptConfirmation offer={offer} response={response} />);
+
+    const link = screen.getByText('View SMS messages');
+    expect(link).toBeInTheDocument();
+    expect(link.closest('a')).toHaveAttribute('href', '/dev/sms/golfer/g-1');
   });
 });

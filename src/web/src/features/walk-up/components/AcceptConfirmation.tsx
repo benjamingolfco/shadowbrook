@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { formatWallClockDate, formatWallClockTime } from '@/lib/course-time';
 import type { WaitlistOfferAcceptResponse, WaitlistOfferResponse } from '@/types/waitlist';
 
@@ -39,6 +40,15 @@ export default function AcceptConfirmation({ response, offer }: AcceptConfirmati
         <p className="text-lg font-semibold">{offer.courseName}</p>
         <p className="text-muted-foreground">{dateFormatted} at {timeFormatted}</p>
       </div>
+
+      {(import.meta.env.DEV || import.meta.env.VITE_SHOW_DEV_TOOLS === 'true') && response?.golferId && (
+        <Link
+          to={`/dev/sms/golfer/${response.golferId}`}
+          className="text-xs text-muted-foreground underline"
+        >
+          View SMS messages
+        </Link>
+      )}
     </div>
   );
 }

@@ -431,7 +431,7 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IAsyn
     }
 
     private record VerifyCodeResponse(Guid CourseWaitlistId, string CourseName, string ShortCode);
-    private record JoinWaitlistResponse(Guid EntryId, string GolferName, int Position, string CourseName);
+    private record JoinWaitlistResponse(Guid EntryId, Guid GolferId, string GolferName, int Position, string CourseName);
     private record DuplicateEntryError(string Error);
     private record ErrorResponse(string Error);
     private record CourseIdResponse(Guid Id);

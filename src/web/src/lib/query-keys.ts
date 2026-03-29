@@ -23,6 +23,7 @@ export const queryKeys = {
   },
   devSms: {
     all: ['dev-sms'] as const,
+    byGolfer: (golferId: string) => ['dev-sms', 'golfer', golferId] as const,
   },
   walkUpQr: {
     status: (shortCode: string) => ['walkup-qr', 'status', shortCode] as const,
