@@ -11,6 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Input } from '@/components/ui/input';
 
 export default function TeeSheet() {
   const { course } = useCourseContext();
@@ -31,20 +33,21 @@ export default function TeeSheet() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold">Tee Sheet</h1>
-      <p className="text-muted-foreground">View the day's tee time bookings</p>
+      <PageHeader title="Tee Sheet">
+        <p className="text-muted-foreground">View the day's tee time bookings</p>
+      </PageHeader>
 
       <div className="mt-6">
         <div className="space-y-2">
           <label htmlFor="date-input" className="text-sm font-medium">
             Date
           </label>
-          <input
+          <Input
             id="date-input"
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="flex h-9 w-full max-w-xs rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+            className="max-w-xs"
           />
         </div>
       </div>
@@ -59,7 +62,7 @@ export default function TeeSheet() {
 
       {teeSheetQuery.data && (
         <div className="mt-6">
-          <h2 className="text-xl font-semibold">
+          <h2 className="text-xl font-semibold font-[family-name:var(--font-heading)]">
             {teeSheetQuery.data.courseName} - {teeSheetQuery.data.slots.length > 0
               ? formatWallClockDate(teeSheetQuery.data.slots[0]!.teeTime)
               : selectedDate}

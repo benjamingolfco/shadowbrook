@@ -44,7 +44,7 @@ export default function CoursePortfolio() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="w-full max-w-3xl space-y-6 p-8">
-          <h1 className="text-2xl font-bold">Select a Course</h1>
+          <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Select a Course</h1>
           <p className="text-muted-foreground">Showing courses for {tenant?.organizationName}.</p>
           <div className="space-y-3" aria-busy="true" aria-label="Loading courses">
             {[1, 2, 3].map((i) => (
@@ -65,7 +65,7 @@ export default function CoursePortfolio() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="w-full max-w-3xl space-y-6 p-8">
-          <h1 className="text-2xl font-bold">Select a Course</h1>
+          <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Select a Course</h1>
           <p className="text-destructive">Error loading courses: {coursesQuery.error.message}</p>
           <Button variant="outline" onClick={() => void coursesQuery.refetch()}>
             Retry
@@ -79,8 +79,8 @@ export default function CoursePortfolio() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="w-full max-w-3xl space-y-6 p-8 text-center">
-          <h1 className="text-2xl font-bold">Select a Course</h1>
-          <p className="text-base font-medium">Get started by adding your first course</p>
+          <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Select a Course</h1>
+          <p className="text-base font-medium font-[family-name:var(--font-heading)]">Get started by adding your first course</p>
           <p className="text-sm text-muted-foreground">
             Once a course is registered, you can manage tee sheets, settings, and bookings.
           </p>
@@ -95,7 +95,7 @@ export default function CoursePortfolio() {
   return (
     <div className="flex h-full items-center justify-center">
       <div className="w-full max-w-3xl space-y-6 p-8">
-        <h1 className="text-2xl font-bold">Select a Course</h1>
+        <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Select a Course</h1>
         <p className="text-muted-foreground">Showing courses for {tenant?.organizationName}.</p>
         <div className="space-y-3">
           {coursesQuery.data.map((course) => (
