@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import type { JoinWaitlistResponse } from '@/types/waitlist';
 
 interface ConfirmationProps {
@@ -39,6 +40,15 @@ export default function Confirmation({ result }: ConfirmationProps) {
       <p className="text-sm text-muted-foreground">
         Keep your phone handy — we'll text you when a spot opens up.
       </p>
+
+      {(import.meta.env.DEV || import.meta.env.VITE_SHOW_DEV_TOOLS === 'true') && (
+        <Link
+          to={`/dev/sms/golfer/${result.golferId}`}
+          className="text-xs text-muted-foreground underline"
+        >
+          View SMS messages
+        </Link>
+      )}
     </div>
   );
 }

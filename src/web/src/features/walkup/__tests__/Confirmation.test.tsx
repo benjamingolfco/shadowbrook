@@ -54,4 +54,12 @@ describe('Confirmation', () => {
 
     expect(screen.getByText("You're on the list, Mary!")).toBeInTheDocument();
   });
+
+  it('shows dev SMS link in dev mode', () => {
+    render(<Confirmation result={result} />);
+
+    const link = screen.getByText('View SMS messages');
+    expect(link).toBeInTheDocument();
+    expect(link.closest('a')).toHaveAttribute('href', '/dev/sms/golfer/g-1');
+  });
 });
