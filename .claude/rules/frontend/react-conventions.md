@@ -49,9 +49,10 @@ export function useCourses() {
 }
 ```
 
-- API client: `@/lib/api-client.ts` — thin `fetch` wrapper with `api.get/post/put/delete`
+- API client: `@/lib/api-client.ts` — thin `fetch` wrapper with `api.get/post/put/delete`. Keep it thin — no retry logic, no interceptors. It throws `ApiError` (subclass of `Error` with `.status` and `.data`) on non-OK responses.
 - Query keys: `@/lib/query-keys.ts` — centralized factory for cache invalidation
 - Mutations use `useMutation` with `onSuccess` invalidation via `queryClient.invalidateQueries`
+- Retry and backoff are configured on the `QueryClient` in `providers.tsx`, not in the API client. Use TanStack Query's built-in `retry` and `retryDelay` options — don't write custom retry logic.
 
 ## Forms
 
