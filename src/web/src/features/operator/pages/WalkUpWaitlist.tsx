@@ -242,52 +242,50 @@ export default function WalkUpWaitlist() {
   return (
     <div className="p-6 max-w-[860px]">
       {/* Zone 1: Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">
-              Walk-Up Waitlist
-            </h1>
-            <Badge variant="success">Open</Badge>
-            <span className="font-mono font-bold text-lg tracking-[0.25em]">
-              {waitlist.shortCode.split('').join(' ')}
-            </span>
-            <button
-              type="button"
-              className="text-muted-foreground hover:text-foreground transition-colors p-1"
-              onClick={() => handleCopyCode(waitlist.shortCode)}
-              aria-label="Copy short code"
-            >
-              {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
-            </button>
-          </div>
-          <div className="mt-1">
-            <Dialog>
-              <DialogTrigger asChild>
-                <button
-                  type="button"
-                  className="text-xs text-muted-foreground hover:text-foreground hover:underline"
-                >
-                  Print sign
-                </button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>QR Code Sign</DialogTitle>
-                </DialogHeader>
-                <QrCodePanel shortCode={waitlist.shortCode} />
-              </DialogContent>
-            </Dialog>
-          </div>
+      <div className="mb-6">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">
+            Walk-Up Waitlist
+          </h1>
+          <Badge variant="success">Open</Badge>
+          <span className="font-mono font-bold text-lg tracking-[0.25em]">
+            {waitlist.shortCode.split('').join(' ')}
+          </span>
+          <button
+            type="button"
+            className="text-muted-foreground hover:text-foreground transition-colors p-1"
+            onClick={() => handleCopyCode(waitlist.shortCode)}
+            aria-label="Copy short code"
+          >
+            {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+          </button>
         </div>
-
-        <QueueDrawer
-          entries={entries}
-          timeZoneId={course.timeZoneId}
-          isOpen={true}
-          onRemove={handleRemoveClick}
-          removingEntryId={removeMutation.isPending ? removalTarget?.id ?? null : null}
-        />
+        <div className="flex items-center gap-4 mt-2">
+          <QueueDrawer
+            entries={entries}
+            timeZoneId={course.timeZoneId}
+            isOpen={true}
+            onRemove={handleRemoveClick}
+            removingEntryId={removeMutation.isPending ? removalTarget?.id ?? null : null}
+          />
+          <span className="text-muted-foreground">·</span>
+          <Dialog>
+            <DialogTrigger asChild>
+              <button
+                type="button"
+                className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+              >
+                Print sign
+              </button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>QR Code Sign</DialogTitle>
+              </DialogHeader>
+              <QrCodePanel shortCode={waitlist.shortCode} />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Zone 2: Post Tee Time */}

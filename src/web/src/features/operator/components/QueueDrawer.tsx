@@ -24,7 +24,7 @@ export function QueueDrawer({
     <div>
       <div className="flex items-center gap-2">
         <p className="text-sm">
-          <span className={count > 0 ? 'font-bold text-foreground' : 'text-muted-foreground'}>
+          <span className={count > 0 ? 'font-bold text-lg text-foreground' : 'text-lg text-muted-foreground'}>
             {count}
           </span>{' '}
           <span className="text-muted-foreground">waiting</span>
