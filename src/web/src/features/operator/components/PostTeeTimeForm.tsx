@@ -27,6 +27,7 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
   const createMutation = useCreateTeeTimeOpening();
   const timeInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedSlots, setSelectedSlots] = useState(1);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -61,6 +62,8 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
           setSelectedSlots(1);
           createMutation.reset();
           timeInputRef.current?.focus();
+          setShowSuccess(true);
+          setTimeout(() => setShowSuccess(false), 1500);
         },
       },
     );
@@ -126,7 +129,7 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
           </div>
 
           <Button type="submit" disabled={createMutation.isPending}>
-            {createMutation.isPending ? 'Posting...' : 'Post Tee Time'}
+            {showSuccess ? 'Posted!' : createMutation.isPending ? 'Posting...' : 'Post Tee Time'}
           </Button>
         </form>
 
