@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   formatWallClockDate,
   formatWallClockTime,
@@ -6,6 +6,7 @@ import {
   getCourseNow,
   formatCourseTime,
   getBrowserTimeZone,
+  getNextTeeTimeInterval,
 } from '../course-time';
 
 describe('formatWallClockDate', () => {
@@ -131,5 +132,36 @@ describe('getBrowserTimeZone', () => {
     const tz = getBrowserTimeZone();
     expect(typeof tz).toBe('string');
     expect(tz.length).toBeGreaterThan(0);
+  });
+});
+
+describe('getNextTeeTimeInterval', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('rounds up to the next 10-minute mark', () => {
+    vi.useFakeTimers({ now: new Date('2026-03-29T10:33:00Z') });
+    expect(getNextTeeTimeInterval('UTC')).toBe('10:40');
+  });
+
+  it('returns current time if already on a 10-minute mark', () => {
+    vi.useFakeTimers({ now: new Date('2026-03-29T10:30:00Z') });
+    expect(getNextTeeTimeInterval('UTC')).toBe('10:30');
+  });
+
+  it('rolls over to next hour', () => {
+    vi.useFakeTimers({ now: new Date('2026-03-29T10:55:00Z') });
+    expect(getNextTeeTimeInterval('UTC')).toBe('11:00');
+  });
+
+  it('handles midnight rollover', () => {
+    vi.useFakeTimers({ now: new Date('2026-03-29T23:55:00Z') });
+    expect(getNextTeeTimeInterval('UTC')).toBe('00:00');
+  });
+
+  it('returns zero-padded hours and minutes', () => {
+    vi.useFakeTimers({ now: new Date('2026-03-29T08:01:00Z') });
+    expect(getNextTeeTimeInterval('UTC')).toBe('08:10');
   });
 });

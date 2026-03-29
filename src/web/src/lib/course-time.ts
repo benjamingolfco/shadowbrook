@@ -70,6 +70,35 @@ export function formatWallClockDate(dateTimeString: string): string {
 }
 
 /**
+ * Returns the next 10-minute interval as "HH:mm" in the given IANA timezone.
+ * If the current time is already on a 10-minute mark, returns the current time.
+ * Used as the default value for the Post Tee Time form.
+ */
+export function getNextTeeTimeInterval(timeZoneId: string): string {
+  const now = new Date();
+  const parts = now.toLocaleTimeString('en-US', {
+    timeZone: timeZoneId,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).split(':').map(Number);
+
+  const hours = parts[0] ?? 0;
+  const minutes = parts[1] ?? 0;
+
+  const remainder = minutes % 10;
+  if (remainder === 0) {
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  }
+
+  const totalMinutes = hours * 60 + minutes + (10 - remainder);
+  const newHours = Math.floor(totalMinutes / 60) % 24;
+  const newMinutes = totalMinutes % 60;
+
+  return `${String(newHours).padStart(2, '0')}:${String(newMinutes).padStart(2, '0')}`;
+}
+
+/**
  * Formats a wall-clock time string to 12-hour format (e.g., "8:30 AM").
  * Accepts either "HH:mm" or full ISO datetime "yyyy-MM-ddTHH:mm:ss" format.
  * Uses manual conversion to avoid Date object timezone issues.
