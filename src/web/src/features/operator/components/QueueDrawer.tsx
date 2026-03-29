@@ -23,11 +23,11 @@ export function QueueDrawer({
   return (
     <div>
       <div className="flex items-center gap-2">
-        <p className="text-sm">
-          <span className={count > 0 ? 'font-bold text-lg text-foreground' : 'text-lg text-muted-foreground'}>
+        <p className="flex items-baseline gap-1.5">
+          <span className={count > 0 ? 'text-xl font-semibold text-foreground' : 'text-xl font-semibold text-muted-foreground'}>
             {count}
-          </span>{' '}
-          <span className="text-muted-foreground">waiting</span>
+          </span>
+          <span className="text-sm text-muted-foreground">waiting</span>
         </p>
         {count > 0 && (
           <button
