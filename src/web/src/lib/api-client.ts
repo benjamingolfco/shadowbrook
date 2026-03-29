@@ -1,8 +1,5 @@
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
-const RETRY_COUNT = 3;
-const RETRY_BASE_DELAY_MS = 2000;
-
 let activeTenantId: string | null = null;
 
 export function setActiveTenantId(id: string | null): void {
@@ -11,6 +8,18 @@ export function setActiveTenantId(id: string | null): void {
 
 export function getActiveTenantId(): string | null {
   return activeTenantId;
+}
+
+export class ApiError extends Error {
+  status: number;
+  data?: unknown;
+
+  constructor(message: string, status: number, data?: unknown) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -23,38 +32,15 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     (headers as Record<string, string>)['X-Tenant-Id'] = activeTenantId;
   }
 
-  let lastResponse: Response | undefined;
-
-  for (let attempt = 0; attempt <= RETRY_COUNT; attempt++) {
-    if (attempt > 0) {
-      const delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1);
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
-
-    const response = await fetch(`${BASE_URL}${path}`, {
-      headers,
-      ...options,
-    });
-
-    if (response.status !== 503) {
-      lastResponse = response;
-      break;
-    }
-
-    lastResponse = response;
-  }
-
-  const response = lastResponse!;
+  const response = await fetch(`${BASE_URL}${path}`, {
+    headers,
+    ...options,
+  });
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: response.statusText }));
     const errorMessage = error.error || error.title || response.statusText || `Request failed (${response.status})`;
-
-    // Include status code and full body for better error handling downstream
-    const errorWithStatus = new Error(errorMessage) as Error & { status?: number; data?: unknown };
-    errorWithStatus.status = response.status;
-    errorWithStatus.data = error;
-    throw errorWithStatus;
+    throw new ApiError(errorMessage, response.status, error);
   }
 
   if (response.status === 204) return undefined as T;
