@@ -67,7 +67,10 @@ public static class WaitlistOfferEndpoints
             return Results.Conflict(new { reason = result.Reason });
         }
 
-        return Results.Ok(new { status = "Confirmed", message = "Your tee time has been confirmed. See you on the course!" });
+        return Results.Ok(new WaitlistOfferAcceptResponse(
+            "Confirmed",
+            "Your tee time has been confirmed. See you on the course!",
+            offer.GolferId));
     }
 }
 
@@ -78,4 +81,9 @@ public record WaitlistOfferResponse(
     int SlotsAvailable,
     string GolferName,
     string Status);
+
+public record WaitlistOfferAcceptResponse(
+    string Status,
+    string Message,
+    Guid GolferId);
 
