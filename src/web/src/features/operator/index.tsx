@@ -8,6 +8,7 @@ import OrganizationSelect from './pages/OrganizationSelect';
 import CoursePortfolio from './pages/CoursePortfolio';
 import { TenantProvider, useTenantContext } from './context/TenantContext';
 import { CourseProvider, useCourseContext } from './context/CourseContext';
+import { ThemeProvider } from '@/components/ThemeProvider';
 
 function CourseGate() {
   const { course } = useCourseContext();
@@ -61,8 +62,10 @@ function TenantGate() {
 
 export default function OperatorFeature() {
   return (
-    <TenantProvider>
-      <TenantGate />
-    </TenantProvider>
+    <ThemeProvider>
+      <TenantProvider>
+        <TenantGate />
+      </TenantProvider>
+    </ThemeProvider>
   );
 }
