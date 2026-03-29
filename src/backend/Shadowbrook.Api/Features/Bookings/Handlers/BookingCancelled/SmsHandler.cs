@@ -20,6 +20,12 @@ public static class BookingCancelledSmsHandler
     {
         var booking = await bookingRepository.GetRequiredByIdAsync(evt.BookingId);
 
+        if (evt.PreviousStatus != BookingStatus.Confirmed)
+        {
+            logger.LogWarning("Booking {BookingId} was cancelled from {PreviousStatus} status, skipping SMS (only confirmed bookings receive cancellation SMS)", evt.BookingId, evt.PreviousStatus);
+            return;
+        }
+
         var golfer = await golferRepository.GetByIdAsync(booking.GolferId);
 
         if (golfer is null)

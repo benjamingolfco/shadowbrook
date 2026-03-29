@@ -17,17 +17,18 @@ public class BookingCancelledSmsHandlerTests
     private readonly ITextMessageService sms = Substitute.For<ITextMessageService>();
     private readonly ILogger logger = Substitute.For<ILogger>();
 
-    private static BookingCancelled BuildEvent(Guid? bookingId = null)
+    private static BookingCancelled BuildEvent(Guid? bookingId = null, BookingStatus? previousStatus = null)
     {
         return new BookingCancelled
         {
-            BookingId = bookingId ?? Guid.NewGuid()
+            BookingId = bookingId ?? Guid.NewGuid(),
+            PreviousStatus = previousStatus ?? BookingStatus.Confirmed
         };
     }
 
     private static Booking BuildCancelledBooking(Guid? bookingId = null, Guid? courseId = null, Guid? golferId = null)
     {
-        var booking = Booking.Create(
+        var booking = Booking.CreateConfirmed(
             bookingId ?? Guid.CreateVersion7(),
             courseId ?? Guid.NewGuid(),
             golferId ?? Guid.NewGuid(),
@@ -99,5 +100,33 @@ public class BookingCancelledSmsHandlerTests
             "+15559876543",
             Arg.Is<string>(m => m.Contains("Shadowbrook Golf Club") && m.Contains("cancelled") && m.Contains("July 4, 2026") && m.Contains("8:00 AM")),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_PendingBookingCancelled_NoSmsAndLogsWarning()
+    {
+        var booking = Booking.Create(
+            Guid.CreateVersion7(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 7, 4),
+            new TimeOnly(8, 0),
+            2);
+        booking.Cancel();
+        booking.ClearDomainEvents();
+
+        var evt = BuildEvent(bookingId: booking.Id, previousStatus: BookingStatus.Pending);
+
+        this.bookingRepo.GetByIdAsync(booking.Id).Returns(booking);
+
+        await BookingCancelledSmsHandler.Handle(evt, this.bookingRepo, this.golferRepo, this.courseRepo, this.sms, this.logger, CancellationToken.None);
+
+        await this.sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        this.logger.Received().Log(
+            LogLevel.Warning,
+            Arg.Any<EventId>(),
+            Arg.Any<object>(),
+            Arg.Any<Exception?>(),
+            Arg.Any<Func<object, Exception?, string>>());
     }
 }

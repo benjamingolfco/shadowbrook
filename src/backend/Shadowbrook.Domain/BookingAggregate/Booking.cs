@@ -117,7 +117,8 @@ public class Booking : Entity
             throw new BookingNotCancellableException(Id, Status);
         }
 
+        var previousStatus = Status;
         Status = BookingStatus.Cancelled;
-        AddDomainEvent(new BookingCancelled { BookingId = Id });
+        AddDomainEvent(new BookingCancelled { BookingId = Id, PreviousStatus = previousStatus });
     }
 }
