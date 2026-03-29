@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { useTeeSheet } from '@/features/operator/hooks/useTeeSheet';
 import { useCourseContext } from '../context/CourseContext';
 import { getCourseToday, getBrowserTimeZone, formatWallClockDate, formatWallClockTime } from '@/lib/course-time';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -52,13 +54,25 @@ export default function TeeSheet() {
         </div>
       </div>
 
-      {teeSheetQuery.isError && (
-        <p className="mt-4 text-sm text-destructive">
-          {teeSheetQuery.error instanceof Error
-            ? teeSheetQuery.error.message
-            : 'Failed to load tee sheet'}
-        </p>
-      )}
+      {teeSheetQuery.isError && (() => {
+        const message = teeSheetQuery.error instanceof Error
+          ? teeSheetQuery.error.message
+          : 'Failed to load tee sheet';
+        const isNotConfigured = message.toLowerCase().includes('not configured');
+        return isNotConfigured ? (
+          <div className="mt-6 border rounded-lg p-6 text-center max-w-md">
+            <p className="font-medium">Configure your tee times to get started</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Set your tee time interval, first tee time, and last tee time in Settings.
+            </p>
+            <Button asChild variant="default" size="sm" className="mt-4">
+              <Link to="/operator/settings">Go to Settings</Link>
+            </Button>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-destructive">{message}</p>
+        );
+      })()}
 
       {teeSheetQuery.data && (
         <div className="mt-6">
