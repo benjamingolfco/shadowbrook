@@ -119,7 +119,7 @@ export default function TeeTimeSettings() {
             name="teeTimeIntervalMinutes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Tee Time Interval *</FormLabel>
+                <FormLabel>Tee Time Interval</FormLabel>
                 <Select
                   value={String(field.value)}
                   onValueChange={(value) => field.onChange(Number(value))}
@@ -146,7 +146,7 @@ export default function TeeTimeSettings() {
               name="firstTeeTime"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First Tee Time *</FormLabel>
+                  <FormLabel>First Tee Time</FormLabel>
                   <FormControl>
                     <Input type="time" {...field} />
                   </FormControl>
@@ -160,7 +160,7 @@ export default function TeeTimeSettings() {
               name="lastTeeTime"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Last Tee Time *</FormLabel>
+                  <FormLabel>Last Tee Time</FormLabel>
                   <FormControl>
                     <Input type="time" {...field} />
                   </FormControl>
