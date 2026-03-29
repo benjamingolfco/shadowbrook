@@ -10,6 +10,18 @@ export function getActiveTenantId(): string | null {
   return activeTenantId;
 }
 
+export class ApiError extends Error {
+  status: number;
+  data?: unknown;
+
+  constructor(message: string, status: number, data?: unknown) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -28,12 +40,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: response.statusText }));
     const errorMessage = error.error || error.title || response.statusText || `Request failed (${response.status})`;
-
-    // Include status code and full body for better error handling downstream
-    const errorWithStatus = new Error(errorMessage) as Error & { status?: number; data?: unknown };
-    errorWithStatus.status = response.status;
-    errorWithStatus.data = error;
-    throw errorWithStatus;
+    throw new ApiError(errorMessage, response.status, error);
   }
 
   if (response.status === 204) return undefined as T;
