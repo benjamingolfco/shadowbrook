@@ -12,5 +12,6 @@ public class TeeTimeOpeningOfferPolicyConfiguration : IEntityTypeConfiguration<T
         builder.HasKey(p => p.Id);
         builder.Property(p => p.Id).ValueGeneratedNever();
         builder.Ignore(p => p.Version);
+        builder.Property(p => p.GracePeriodExpired);
     }
 }
