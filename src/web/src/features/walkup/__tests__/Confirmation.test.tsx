@@ -5,6 +5,7 @@ import type { JoinWaitlistResponse } from '@/types/waitlist';
 
 const result: JoinWaitlistResponse = {
   entryId: 'e-1',
+  golferId: 'g-1',
   golferName: 'John Smith',
   position: 3,
   courseName: 'Pine Valley Golf Club',

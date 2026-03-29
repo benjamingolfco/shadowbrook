@@ -15,6 +15,7 @@ const offer: WaitlistOfferResponse = {
 const response: WaitlistOfferAcceptResponse = {
   status: 'Accepted',
   message: 'Your tee time has been confirmed!',
+  golferId: 'g-1',
 };
 
 describe('AcceptConfirmation', () => {
