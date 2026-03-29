@@ -20,6 +20,6 @@ export class WalkUpOfferPage {
   }
 
   async expectConfirmation() {
-    await expect(this.page.getByText('Request Received')).toBeVisible();
+    await expect(this.page.getByText('Tee Time Claimed')).toBeVisible();
   }
 }
