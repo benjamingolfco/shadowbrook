@@ -44,7 +44,7 @@ public static class TenantEndpoints
                 t.ContactName,
                 t.ContactEmail,
                 t.ContactPhone,
-                db.Courses.IgnoreQueryFilters().Count(c => c.TenantId == t.Id),
+                db.Courses.IgnoreQueryFilters().Count(c => c.OrganizationId == t.Id),
                 t.CreatedAt))
             .ToListAsync();
 

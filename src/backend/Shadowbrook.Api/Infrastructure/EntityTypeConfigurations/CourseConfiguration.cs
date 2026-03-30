@@ -25,11 +25,11 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course>
 
         builder.HasOne<Tenant>()
             .WithMany()
-            .HasForeignKey(c => c.TenantId)
+            .HasForeignKey(c => c.OrganizationId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(c => c.TenantId);
-        builder.HasIndex(c => new { c.TenantId, c.Name }).IsUnique();
+        builder.HasIndex(c => c.OrganizationId);
+        builder.HasIndex(c => new { c.OrganizationId, c.Name }).IsUnique();
 
         builder.HasShadowRowVersion();
         builder.HasShadowAuditProperties();

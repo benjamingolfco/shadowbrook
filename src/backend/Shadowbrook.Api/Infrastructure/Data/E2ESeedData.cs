@@ -41,7 +41,7 @@ public static class E2ESeedData
     {
         var exists = await db.Courses
             .IgnoreQueryFilters()
-            .AnyAsync(c => c.TenantId == tenantId && c.Name == name);
+            .AnyAsync(c => c.OrganizationId == tenantId && c.Name == name);
 
         if (exists)
         {

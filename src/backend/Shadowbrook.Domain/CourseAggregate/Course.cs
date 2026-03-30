@@ -4,7 +4,7 @@ namespace Shadowbrook.Domain.CourseAggregate;
 
 public class Course : Entity
 {
-    public Guid TenantId { get; private set; }
+    public Guid OrganizationId { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public string? StreetAddress { get; private set; }
     public string? City { get; private set; }
@@ -23,7 +23,7 @@ public class Course : Entity
     private Course() { } // EF
 
     public static Course Create(
-        Guid tenantId,
+        Guid organizationId,
         string name,
         string timeZoneId,
         string? streetAddress = null,
@@ -36,7 +36,7 @@ public class Course : Entity
         return new Course
         {
             Id = Guid.CreateVersion7(),
-            TenantId = tenantId,
+            OrganizationId = organizationId,
             Name = name.Trim(),
             TimeZoneId = timeZoneId,
             StreetAddress = streetAddress,

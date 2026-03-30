@@ -12,7 +12,7 @@ public class CourseTests
         var course = Course.Create(TenantId, "Pebble Beach", "America/Los_Angeles");
 
         Assert.NotEqual(Guid.Empty, course.Id);
-        Assert.Equal(TenantId, course.TenantId);
+        Assert.Equal(TenantId, course.OrganizationId);
         Assert.Equal("Pebble Beach", course.Name);
         Assert.Equal("America/Los_Angeles", course.TimeZoneId);
         Assert.NotEqual(default, course.CreatedAt);

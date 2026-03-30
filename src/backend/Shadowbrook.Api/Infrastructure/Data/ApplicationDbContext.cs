@@ -21,10 +21,10 @@ public class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,
     ICurrentUser? currentUser = null) : DbContext(options)
 {
-    // Snapshot TenantId at DbContext construction time so the query filter sees the correct
-    // tenant for this request. EF Core evaluates query filters referencing 'this' against the
+    // Snapshot OrganizationId at DbContext construction time so the query filter sees the correct
+    // organization for this request. EF Core evaluates query filters referencing 'this' against the
     // specific DbContext instance executing the query, so a new instance per request is required.
-    public Guid? CurrentTenantId { get; } = currentUser?.TenantId;
+    public Guid? CurrentOrganizationId { get; } = currentUser?.TenantId;
 
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Course> Courses => Set<Course>();
@@ -70,10 +70,10 @@ public class ApplicationDbContext(
             b.HasIndex(m => m.Timestamp);
         });
 
-        // Apply tenant query filter — reference 'this' so EF Core substitutes the actual
-        // DbContext instance at query time, ensuring CurrentTenantId is re-read per request.
+        // Apply organization query filter — reference 'this' so EF Core substitutes the actual
+        // DbContext instance at query time, ensuring CurrentOrganizationId is re-read per request.
         modelBuilder.Entity<Course>()
-            .HasQueryFilter(c => CurrentTenantId == null || c.TenantId == CurrentTenantId);
+            .HasQueryFilter(c => CurrentOrganizationId == null || c.OrganizationId == CurrentOrganizationId);
 
         // Apply domain entity configurations
         modelBuilder.ApplyConfiguration(new CourseConfiguration());

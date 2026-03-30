@@ -62,7 +62,7 @@ public static class CourseEndpoints
     {
         var courses = await (
             from c in db.Courses
-            join t in db.Tenants on c.TenantId equals t.Id
+            join t in db.Tenants on c.OrganizationId equals t.Id
             select new CourseResponse(
                 c.Id,
                 c.Name,
@@ -85,7 +85,7 @@ public static class CourseEndpoints
     {
         var course = await (
             from c in db.Courses
-            join t in db.Tenants on c.TenantId equals t.Id
+            join t in db.Tenants on c.OrganizationId equals t.Id
             where c.Id == id
             select new CourseResponse(
                 c.Id,
