@@ -1,5 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { setActiveTenantId } from '@/lib/api-client';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 
 export interface SelectedTenant {
   id: string;
@@ -25,11 +24,7 @@ export function TenantProvider({ children }: TenantProviderProps) {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
-        const parsed = JSON.parse(stored) as SelectedTenant;
-        // Set immediately so the api-client module variable is ready before
-        // any child component's useEffect fires and triggers data fetching.
-        setActiveTenantId(parsed.id);
-        return parsed;
+        return JSON.parse(stored) as SelectedTenant;
       } catch {
         return null;
       }
@@ -37,20 +32,14 @@ export function TenantProvider({ children }: TenantProviderProps) {
     return null;
   });
 
-  useEffect(() => {
-    setActiveTenantId(tenant?.id ?? null);
-  }, [tenant]);
-
   const selectTenant = (newTenant: SelectedTenant) => {
     setTenant(newTenant);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newTenant));
-    setActiveTenantId(newTenant.id);
   };
 
   const clearTenant = () => {
     setTenant(null);
     localStorage.removeItem(STORAGE_KEY);
-    setActiveTenantId(null);
   };
 
   return (

@@ -1,5 +1,4 @@
 import { type ReactNode } from 'react';
-import { Navigate } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
 
 interface AuthGuardProps {
@@ -7,10 +6,12 @@ interface AuthGuardProps {
 }
 
 export default function AuthGuard({ children }: AuthGuardProps) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading, login } = useAuth();
 
+  if (isLoading) return null;
   if (!isAuthenticated) {
-    return <Navigate to="/auth/login" replace />;
+    login();
+    return null;
   }
 
   return <>{children}</>;

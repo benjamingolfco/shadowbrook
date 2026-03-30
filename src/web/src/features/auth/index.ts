@@ -1,5 +1,4 @@
-export { useAuth, AuthContext, type Role, type AuthContextValue } from './hooks/useAuth';
-export { MockAuthProvider } from './components/MockAuthProvider';
+export { useAuth, AuthContext, type AuthContextValue } from './hooks/useAuth';
+export { AuthProvider } from './providers/MsalAuthProvider';
 export { default as AuthGuard } from './components/AuthGuard';
-export { default as RoleGuard } from './components/RoleGuard';
-export { DevRoleSwitcher } from './components/DevRoleSwitcher';
+export { default as PermissionGuard } from './components/PermissionGuard';

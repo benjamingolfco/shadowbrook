@@ -3,7 +3,7 @@ import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router';
 import { useAuth } from '@/features/auth';
 import AuthGuard from '@/features/auth/components/AuthGuard';
-import RoleGuard from '@/features/auth/components/RoleGuard';
+import PermissionGuard from '@/features/auth/components/PermissionGuard';
 
 const AdminFeature = lazy(() => import('@/features/admin'));
 const OperatorFeature = lazy(() => import('@/features/operator'));
@@ -18,15 +18,15 @@ function LazyFeature({ children }: { children: React.ReactNode }) {
 }
 
 function RoleRedirect() {
-  const { role } = useAuth();
+  const { hasPermission, isLoading } = useAuth();
 
-  const routes = {
-    admin: '/admin/tenants',
-    operator: '/operator',
-    golfer: '/golfer/tee-times',
-  };
+  if (isLoading) return null;
 
-  return <Navigate to={routes[role]} replace />;
+  if (hasPermission('users:manage')) {
+    return <Navigate to="/admin/tenants" replace />;
+  }
+
+  return <Navigate to="/operator" replace />;
 }
 
 export const router = createBrowserRouter([
@@ -38,9 +38,9 @@ export const router = createBrowserRouter([
     path: '/admin/*',
     element: (
       <AuthGuard>
-        <RoleGuard allowedRoles={['admin']}>
+        <PermissionGuard permission="users:manage">
           <LazyFeature><AdminFeature /></LazyFeature>
-        </RoleGuard>
+        </PermissionGuard>
       </AuthGuard>
     ),
   },
@@ -48,20 +48,14 @@ export const router = createBrowserRouter([
     path: '/operator/*',
     element: (
       <AuthGuard>
-        <RoleGuard allowedRoles={['operator']}>
-          <LazyFeature><OperatorFeature /></LazyFeature>
-        </RoleGuard>
+        <LazyFeature><OperatorFeature /></LazyFeature>
       </AuthGuard>
     ),
   },
   {
     path: '/golfer/*',
     element: (
-      <AuthGuard>
-        <RoleGuard allowedRoles={['golfer']}>
-          <LazyFeature><GolferFeature /></LazyFeature>
-        </RoleGuard>
-      </AuthGuard>
+      <LazyFeature><GolferFeature /></LazyFeature>
     ),
   },
   {

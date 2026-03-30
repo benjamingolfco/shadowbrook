@@ -1,13 +1,23 @@
+import { msalInstance, loginRequest } from './msal-config';
+
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
+const useDevAuth = import.meta.env.VITE_USE_DEV_AUTH === 'true';
+const devIdentityId = import.meta.env.VITE_DEV_IDENTITY_ID ?? '';
 
-let activeTenantId: string | null = null;
-
-export function setActiveTenantId(id: string | null): void {
-  activeTenantId = id;
-}
-
-export function getActiveTenantId(): string | null {
-  return activeTenantId;
+async function getAuthToken(): Promise<string | null> {
+  if (useDevAuth) return devIdentityId || null;
+  const accounts = msalInstance.getAllAccounts();
+  if (accounts.length === 0) return null;
+  try {
+    const response = await msalInstance.acquireTokenSilent({
+      ...loginRequest,
+      account: accounts[0],
+    });
+    return response.accessToken;
+  } catch {
+    await msalInstance.acquireTokenRedirect(loginRequest);
+    return null;
+  }
 }
 
 export class ApiError extends Error {
@@ -23,18 +33,19 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options?.headers,
+    ...(options?.headers as Record<string, string>),
   };
 
-  if (activeTenantId) {
-    (headers as Record<string, string>)['X-Tenant-Id'] = activeTenantId;
+  const token = await getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   const response = await fetch(`${BASE_URL}${path}`, {
-    headers,
     ...options,
+    headers,
   });
 
   if (!response.ok) {
