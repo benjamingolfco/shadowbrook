@@ -1,6 +1,10 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Web;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Serilog;
@@ -141,6 +145,32 @@ builder.Services.AddScoped<ITimeProvider, Shadowbrook.Api.Infrastructure.Service
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+// Authentication
+var useDevAuth = builder.Configuration.GetValue<bool>("Auth:UseDevAuth");
+if (useDevAuth)
+{
+    builder.Services.AddAuthentication("DevAuth")
+        .AddScheme<AuthenticationSchemeOptions, DevAuthHandler>("DevAuth", null);
+}
+else
+{
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+}
+
+// Authorization
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("RequireAppAccess", policy =>
+        policy.AddRequirements(new PermissionRequirement(Permissions.AppAccess)))
+    .AddPolicy("RequireUsersManage", policy =>
+        policy.AddRequirements(new PermissionRequirement(Permissions.UsersManage)))
+    .AddPolicy("RequireCourseAccess", policy =>
+        policy.AddRequirements(new CourseAccessRequirement()));
+
+builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, CourseAccessAuthorizationHandler>();
+
 builder.Services.AddWolverineHttp();
 
 var app = builder.Build();
@@ -173,7 +203,9 @@ if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testi
 app.UseDomainExceptionHandler();
 
 app.UseCors();
-app.UseMiddleware<TenantClaimMiddleware>();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseMiddleware<AppUserEnrichmentMiddleware>();
 
 app.MapHealthChecks("/health");
 

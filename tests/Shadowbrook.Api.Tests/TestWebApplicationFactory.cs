@@ -79,6 +79,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:DefaultConnection", this.connectionString);
+        builder.UseSetting("Auth:UseDevAuth", "true");
 
         builder.ConfigureServices(services =>
         {
