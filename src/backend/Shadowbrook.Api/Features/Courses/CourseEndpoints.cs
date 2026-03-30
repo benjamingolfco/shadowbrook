@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.CourseAggregate;
+using Shadowbrook.Domain.OrganizationAggregate;
 using Shadowbrook.Domain.TenantAggregate;
 using Wolverine.Http;
 
@@ -15,6 +16,7 @@ public static class CourseEndpoints
         CreateCourseRequest request,
         [NotBody] ICourseRepository courseRepository,
         [NotBody] ITenantRepository tenantRepository,
+        [NotBody] ApplicationDbContext db,
         [NotBody] ICurrentUser currentUser)
     {
         var organizationId = currentUser.TenantId ?? request.TenantId;
@@ -33,6 +35,15 @@ public static class CourseEndpoints
         if (duplicateExists)
         {
             return Results.Conflict(new { error = "A course with this name already exists for this tenant." });
+        }
+
+        // Transitional bridge: ensure an Organization row exists with the same ID as the tenant.
+        // Courses must reference Organizations. This will be replaced when the full org/auth flow lands.
+        var organizationExists = await db.Organizations.AnyAsync(o => o.Id == organizationId.Value);
+        if (!organizationExists)
+        {
+            var organization = Organization.CreateWithId(organizationId.Value, tenant.OrganizationName);
+            db.Organizations.Add(organization);
         }
 
         var course = Course.Create(organizationId.Value, request.Name, request.TimeZoneId,

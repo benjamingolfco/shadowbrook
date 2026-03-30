@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Shadowbrook.Domain.CourseAggregate;
-using Shadowbrook.Domain.TenantAggregate;
+using Shadowbrook.Domain.OrganizationAggregate;
 
 namespace Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
 
@@ -23,7 +23,7 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course>
         builder.Property(c => c.ContactPhone).HasMaxLength(20);
         builder.Property(c => c.FlatRatePrice).HasPrecision(18, 2);
 
-        builder.HasOne<Tenant>()
+        builder.HasOne<Organization>()
             .WithMany()
             .HasForeignKey(c => c.OrganizationId)
             .OnDelete(DeleteBehavior.Cascade);

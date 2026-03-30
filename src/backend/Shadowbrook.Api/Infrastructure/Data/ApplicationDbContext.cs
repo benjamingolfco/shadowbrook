@@ -5,12 +5,14 @@ using Shadowbrook.Api.Features.Waitlist;
 using Shadowbrook.Api.Features.Waitlist.Policies;
 using Shadowbrook.Api.Infrastructure.Dev;
 using Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
+using Shadowbrook.Domain.AppUserAggregate;
 using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseAggregate;
 using Shadowbrook.Domain.CourseWaitlistAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
+using Shadowbrook.Domain.OrganizationAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.TenantAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
@@ -26,6 +28,9 @@ public class ApplicationDbContext(
     // specific DbContext instance executing the query, so a new instance per request is required.
     public Guid? CurrentOrganizationId { get; } = currentUser?.TenantId;
 
+    public DbSet<Organization> Organizations => Set<Organization>();
+    public DbSet<AppUser> AppUsers => Set<AppUser>();
+    public DbSet<CourseAssignment> CourseAssignments => Set<CourseAssignment>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<Booking> Bookings => Set<Booking>();
@@ -76,6 +81,9 @@ public class ApplicationDbContext(
             .HasQueryFilter(c => CurrentOrganizationId == null || c.OrganizationId == CurrentOrganizationId);
 
         // Apply domain entity configurations
+        modelBuilder.ApplyConfiguration(new OrganizationConfiguration());
+        modelBuilder.ApplyConfiguration(new AppUserConfiguration());
+        modelBuilder.ApplyConfiguration(new CourseAssignmentConfiguration());
         modelBuilder.ApplyConfiguration(new CourseConfiguration());
         modelBuilder.ApplyConfiguration(new TenantConfiguration());
         modelBuilder.ApplyConfiguration(new BookingConfiguration());

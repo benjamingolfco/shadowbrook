@@ -18,4 +18,19 @@ public class Organization : Entity
             CreatedAt = DateTimeOffset.UtcNow,
         };
     }
+
+    /// <summary>
+    /// Transitional bridge: creates an Organization with an explicit ID so that it can mirror an
+    /// existing Tenant row. Will be removed once the full organization/auth flow replaces legacy
+    /// tenant-based course creation.
+    /// </summary>
+    public static Organization CreateWithId(Guid id, string name)
+    {
+        return new Organization
+        {
+            Id = id,
+            Name = name.Trim(),
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+    }
 }

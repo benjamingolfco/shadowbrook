@@ -6,6 +6,7 @@ using Shadowbrook.Domain.CourseAggregate;
 using Shadowbrook.Domain.CourseWaitlistAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
+using Shadowbrook.Domain.OrganizationAggregate;
 
 namespace Shadowbrook.Api.Tests.Repositories;
 
@@ -159,16 +160,12 @@ public class GolferWaitlistEntryRepositoryEligibilityTests(TestWebApplicationFac
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-            // Create tenant
-            var tenant = Shadowbrook.Domain.TenantAggregate.Tenant.Create(
-                $"Test Tenant {Guid.NewGuid()}",
-                "Test Contact",
-                "test@test.com",
-                "555-0000");
-            db.Tenants.Add(tenant);
+            // Create organization
+            var organization = Organization.Create($"Test Org {Guid.NewGuid()}");
+            db.Organizations.Add(organization);
 
             // Create course
-            var course = Course.Create(tenant.Id, $"Test Course {Guid.NewGuid()}", "America/Chicago");
+            var course = Course.Create(organization.Id, $"Test Course {Guid.NewGuid()}", "America/Chicago");
             db.Courses.Add(course);
             courseId = course.Id;
 
@@ -278,16 +275,12 @@ public class GolferWaitlistEntryRepositoryEligibilityTests(TestWebApplicationFac
         using var scope = this.factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        // Create tenant
-        var tenant = Shadowbrook.Domain.TenantAggregate.Tenant.Create(
-            $"Test Tenant {Guid.NewGuid()}",
-            "Test Contact",
-            "test@test.com",
-            "555-0000");
-        db.Tenants.Add(tenant);
+        // Create organization
+        var organization = Organization.Create($"Test Org {Guid.NewGuid()}");
+        db.Organizations.Add(organization);
 
         // Create course
-        var course = Course.Create(tenant.Id, $"Test Course {Guid.NewGuid()}", "America/Chicago");
+        var course = Course.Create(organization.Id, $"Test Course {Guid.NewGuid()}", "America/Chicago");
         db.Courses.Add(course);
 
         // Create waitlist using reflection (private constructor)
