@@ -77,15 +77,18 @@ public class DevSmsEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         // Assert endpoint returns 204
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        // Verify only conversation 2 remains
+        // Verify conversation 1 is gone and conversation 2 remains
         using (var scope = this.factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var remaining = await db.DevSmsMessages.ToListAsync();
+            var allMessages = await db.DevSmsMessages.ToListAsync();
 
-            Assert.Equal(2, remaining.Count);
-            Assert.All(remaining, m =>
-                Assert.True(m.From == "+15559876543" || m.To == "+15559876543"));
+            // Conversation 1 must be fully deleted
+            Assert.DoesNotContain(allMessages, m => m.From == "+15551234567" || m.To == "+15551234567");
+
+            // Conversation 2 must still exist (both rows)
+            var conv2 = allMessages.Where(m => m.From == "+15559876543" || m.To == "+15559876543").ToList();
+            Assert.Equal(2, conv2.Count);
         }
     }
 
