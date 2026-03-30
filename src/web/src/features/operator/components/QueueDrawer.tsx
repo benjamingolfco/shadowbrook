@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { formatCourseTime } from '@/lib/course-time';
 import type { WalkUpWaitlistEntry } from '@/types/waitlist';
 
@@ -22,23 +23,19 @@ export function QueueDrawer({
 
   return (
     <div>
-      <div className="flex items-center gap-2">
-        <p className="flex items-baseline gap-1.5">
-          <span className={count > 0 ? 'text-xl font-semibold text-foreground' : 'text-xl font-semibold text-muted-foreground'}>
-            {count}
-          </span>
-          <span className="text-sm text-muted-foreground">waiting</span>
-        </p>
-        {count > 0 && (
-          <button
-            type="button"
-            className="text-xs text-muted-foreground hover:text-foreground hover:underline"
-            onClick={() => setExpanded(!expanded)}
-          >
-            {expanded ? 'Hide queue' : 'View queue'}
-          </button>
-        )}
-      </div>
+      <button
+        type="button"
+        className="flex items-center gap-1.5 hover:text-foreground transition-colors"
+        onClick={() => setExpanded(!expanded)}
+        aria-expanded={expanded}
+        aria-label={`${count} golfers waiting. ${expanded ? 'Hide' : 'Show'} queue`}
+      >
+        <span className={count > 0 ? 'text-xl font-semibold text-foreground' : 'text-xl font-semibold text-muted-foreground'}>
+          {count}
+        </span>
+        <span className="text-sm text-muted-foreground">waiting</span>
+        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />
+      </button>
 
       {expanded && (
         <div className="mt-3 border rounded-lg max-h-[320px] overflow-y-auto">
