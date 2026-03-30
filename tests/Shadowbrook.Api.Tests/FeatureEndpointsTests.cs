@@ -9,13 +9,18 @@ namespace Shadowbrook.Api.Tests;
 [IntegrationTest]
 public class FeatureEndpointsTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>, IAsyncLifetime
 {
-    public Task InitializeAsync() => factory.ResetDatabaseAsync();
+    public async Task InitializeAsync()
+    {
+        await factory.ResetDatabaseAsync();
+        await factory.SeedTestAdminAsync();
+    }
+
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task GetFeatures_ReturnsOk_WithAllKnownKeys()
     {
-        var client = factory.CreateClient();
+        var client = factory.CreateAuthenticatedClient();
 
         var response = await client.GetAsync("/features");
 

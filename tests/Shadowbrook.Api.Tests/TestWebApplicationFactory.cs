@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Respawn;
 using Shadowbrook.Api.Infrastructure.Data;
+using Shadowbrook.Domain.AppUserAggregate;
 using Testcontainers.MsSql;
 using Wolverine;
 
@@ -24,6 +25,27 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
     {
         await this.sqlContainer.StartAsync();
         this.connectionString = this.sqlContainer.GetConnectionString();
+    }
+
+    public HttpClient CreateAuthenticatedClient(string identityId = "test-admin-oid")
+    {
+        var client = CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", identityId);
+        return client;
+    }
+
+    public async Task SeedTestAdminAsync(string identityId = "test-admin-oid")
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        if (!await db.AppUsers.AnyAsync(u => u.IdentityId == identityId))
+        {
+            var admin = AppUser.Create(identityId, "admin@test.com", "Test Admin", AppUserRole.Admin, null);
+            db.AppUsers.Add(admin);
+            await db.SaveChangesAsync();
+        }
     }
 
     public async Task ResetDatabaseAsync()

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Wolverine.Http;
@@ -7,6 +8,7 @@ namespace Shadowbrook.Api.Features.TeeSheet;
 public static class TeeSheetEndpoints
 {
     [WolverineGet("/tee-sheets")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> GetTeeSheet(
         Guid? courseId,
         string? date,

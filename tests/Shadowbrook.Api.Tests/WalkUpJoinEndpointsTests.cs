@@ -7,9 +7,15 @@ namespace Shadowbrook.Api.Tests;
 [IntegrationTest]
 public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
-    private readonly HttpClient client = factory.CreateClient();
+    private HttpClient client = null!;
 
-    public Task InitializeAsync() => factory.ResetDatabaseAsync();
+    public async Task InitializeAsync()
+    {
+        await factory.ResetDatabaseAsync();
+        await factory.SeedTestAdminAsync();
+        this.client = factory.CreateAuthenticatedClient();
+    }
+
     public Task DisposeAsync() => Task.CompletedTask;
 
     // -------------------------------------------------------------------------
@@ -318,10 +324,7 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IAsyn
         var tenantId = await CreateTestTenantAsync();
         var expectedName = $"Specific Course {Guid.NewGuid()}";
 
-        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = expectedName, TimeZoneId = TestTimeZones.Chicago });
-        var createResponse = await this.client.SendAsync(createRequest);
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = expectedName, TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         var openResponse = await PostOpenWaitlistAsync(course!.Id);
@@ -340,10 +343,7 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IAsyn
         var tenantId = await CreateTestTenantAsync();
         var courseName = $"Full Flow Course {Guid.NewGuid()}";
 
-        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = courseName, TimeZoneId = TestTimeZones.Chicago });
-        var createResponse = await this.client.SendAsync(createRequest);
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = courseName, TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         // Open waitlist
@@ -404,10 +404,7 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IAsyn
     {
         var tenantId = await CreateTestTenantAsync();
 
-        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = $"Test Course {Guid.NewGuid()}", TimeZoneId = TestTimeZones.Chicago });
-        var createResponse = await this.client.SendAsync(createRequest);
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = $"Test Course {Guid.NewGuid()}", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         var openResponse = await PostOpenWaitlistAsync(course!.Id);

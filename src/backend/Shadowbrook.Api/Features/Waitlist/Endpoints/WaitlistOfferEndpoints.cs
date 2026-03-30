@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.Common;
@@ -11,6 +12,7 @@ namespace Shadowbrook.Api.Features.Waitlist.Endpoints;
 public static class WaitlistOfferEndpoints
 {
     [WolverineGet("/waitlist/offers/{token}")]
+    [AllowAnonymous]
     public static async Task<IResult> GetOffer(Guid token, ApplicationDbContext db)
     {
         var offer = await db.WaitlistOffers
@@ -46,6 +48,7 @@ public static class WaitlistOfferEndpoints
     }
 
     [WolverinePost("/waitlist/offers/{token}/accept")]
+    [AllowAnonymous]
     public static async Task<IResult> AcceptOffer(
         Guid token,
         IWaitlistOfferRepository offerRepository,

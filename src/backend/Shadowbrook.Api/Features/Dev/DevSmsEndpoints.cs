@@ -8,7 +8,7 @@ public static class DevSmsEndpoints
 {
     public static IEndpointRouteBuilder MapDevSmsEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/dev/sms").WithTags("Dev SMS");
+        var group = app.MapGroup("/dev/sms").WithTags("Dev SMS").RequireAuthorization("RequireAppAccess");
 
         group.MapGet("/", async (ApplicationDbContext db) =>
         {

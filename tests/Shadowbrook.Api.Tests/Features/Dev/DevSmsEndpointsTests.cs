@@ -13,10 +13,16 @@ namespace Shadowbrook.Api.Tests.Features.Dev;
 [IntegrationTest]
 public class DevSmsEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
-    private readonly HttpClient client = factory.CreateClient();
     private readonly TestWebApplicationFactory factory = factory;
+    private HttpClient client = null!;
 
-    public Task InitializeAsync() => this.factory.ResetDatabaseAsync();
+    public async Task InitializeAsync()
+    {
+        await this.factory.ResetDatabaseAsync();
+        await this.factory.SeedTestAdminAsync();
+        this.client = this.factory.CreateAuthenticatedClient();
+    }
+
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]

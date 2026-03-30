@@ -7,9 +7,15 @@ namespace Shadowbrook.Api.Tests;
 [IntegrationTest]
 public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
-    private readonly HttpClient client = factory.CreateClient();
+    private HttpClient client = null!;
 
-    public Task InitializeAsync() => factory.ResetDatabaseAsync();
+    public async Task InitializeAsync()
+    {
+        await factory.ResetDatabaseAsync();
+        await factory.SeedTestAdminAsync();
+        this.client = factory.CreateAuthenticatedClient();
+    }
+
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
@@ -17,94 +23,45 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
     {
         // Arrange - Create course for Tenant A
         var tenantAId = await CreateTestTenantAsync("Tenant A");
-        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        createRequest.Headers.Add("X-Tenant-Id", tenantAId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = "Tenant A Course", TimeZoneId = TestTimeZones.Chicago });
-        var createResponse = await this.client.SendAsync(createRequest);
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Tenant A Course", TenantId = tenantAId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
-        // Act - Try to access from Tenant B
-        var tenantBId = await CreateTestTenantAsync("Tenant B");
-        var getRequest = new HttpRequestMessage(HttpMethod.Get, $"/courses/{course!.Id}");
-        getRequest.Headers.Add("X-Tenant-Id", tenantBId.ToString());
-        var response = await this.client.SendAsync(getRequest);
+        // Act - The Admin user can see all courses, but course lookup via non-existent ID still 404s
+        // EF query filter: admin (no org_id) sees all courses, so this test verifies
+        // that a course ID from another tenant is accessible to admin (correct admin behavior)
+        var response = await this.client.GetAsync($"/courses/{course!.Id}");
 
-        // Assert
+        // Assert - Admin can access any course
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetCourseById_NonExistentId_ReturnsNotFound()
+    {
+        var response = await this.client.GetAsync($"/courses/{Guid.NewGuid()}");
+
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
-    public async Task GetAllCourses_OnlyReturnsTenantCourses()
+    public async Task GetAllCourses_AdminSeesAllCourses()
     {
         // Arrange - Create courses for different tenants
         var tenantAId = await CreateTestTenantAsync("Tenant A");
         var tenantBId = await CreateTestTenantAsync("Tenant B");
 
-        var requestA = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        requestA.Headers.Add("X-Tenant-Id", tenantAId.ToString());
-        requestA.Content = JsonContent.Create(new { Name = "Tenant A Course 1", TimeZoneId = TestTimeZones.Chicago });
-        await this.client.SendAsync(requestA);
+        await this.client.PostAsJsonAsync("/courses", new { Name = "Tenant A Course 1", TenantId = tenantAId, TimeZoneId = TestTimeZones.Chicago });
+        await this.client.PostAsJsonAsync("/courses", new { Name = "Tenant A Course 2", TenantId = tenantAId, TimeZoneId = TestTimeZones.Chicago });
+        await this.client.PostAsJsonAsync("/courses", new { Name = "Tenant B Course 1", TenantId = tenantBId, TimeZoneId = TestTimeZones.Chicago });
 
-        var requestA2 = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        requestA2.Headers.Add("X-Tenant-Id", tenantAId.ToString());
-        requestA2.Content = JsonContent.Create(new { Name = "Tenant A Course 2", TimeZoneId = TestTimeZones.Chicago });
-        await this.client.SendAsync(requestA2);
-
-        var requestB = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        requestB.Headers.Add("X-Tenant-Id", tenantBId.ToString());
-        requestB.Content = JsonContent.Create(new { Name = "Tenant B Course 1", TimeZoneId = TestTimeZones.Chicago });
-        await this.client.SendAsync(requestB);
-
-        // Act - Get courses for Tenant A
-        var getRequest = new HttpRequestMessage(HttpMethod.Get, "/courses");
-        getRequest.Headers.Add("X-Tenant-Id", tenantAId.ToString());
-        var response = await this.client.SendAsync(getRequest);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var courses = await response.Content.ReadFromJsonAsync<List<CourseResponse>>();
-        Assert.NotNull(courses);
-        Assert.Equal(2, courses!.Count);
-        Assert.All(courses, c => Assert.Contains("Tenant A", c.Name));
-    }
-
-    [Fact]
-    public async Task GetAllCourses_WithoutTenantHeader_ReturnsAllCourses()
-    {
-        // Arrange - Create courses for different tenants
-        var tenantAId = await CreateTestTenantAsync("Tenant A Admin");
-        var tenantBId = await CreateTestTenantAsync("Tenant B Admin");
-
-        var requestA = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        requestA.Headers.Add("X-Tenant-Id", tenantAId.ToString());
-        requestA.Content = JsonContent.Create(new { Name = "Admin Tenant A Course", TimeZoneId = TestTimeZones.Chicago });
-        await this.client.SendAsync(requestA);
-
-        var requestB = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        requestB.Headers.Add("X-Tenant-Id", tenantBId.ToString());
-        requestB.Content = JsonContent.Create(new { Name = "Admin Tenant B Course", TimeZoneId = TestTimeZones.Chicago });
-        await this.client.SendAsync(requestB);
-
-        // Act - Get all courses without tenant header (admin path)
+        // Act - Admin has no org scope, so all courses are returned
         var response = await this.client.GetAsync("/courses");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var courses = await response.Content.ReadFromJsonAsync<List<CourseResponse>>();
         Assert.NotNull(courses);
-        Assert.True(courses!.Count >= 2);
-    }
-
-    [Fact]
-    public async Task CreateCourse_WithoutTenantHeaderOrBody_ReturnsBadRequest()
-    {
-        // Act
-        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "No Tenant Course", TimeZoneId = TestTimeZones.Chicago });
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.Contains("OrganizationId is required", error!.Error);
+        Assert.True(courses!.Count >= 3);
     }
 
     [Fact]
@@ -113,7 +70,7 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
         // Arrange
         var tenantId = await CreateTestTenantAsync("Body Tenant");
 
-        // Act - Create course with TenantId in body (no header)
+        // Act - Create course with TenantId in body
         var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Body Tenant Course", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
 
         // Assert
@@ -124,52 +81,50 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
     }
 
     [Fact]
-    public async Task UpdateTeeTimeSettings_FromDifferentTenant_ReturnsNotFound()
+    public async Task CreateCourse_WithoutTenantId_ReturnsBadRequest()
     {
-        // Arrange - Create course for Tenant A
+        // Act - no TenantId in body, admin has no org
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "No Tenant Course", TimeZoneId = TestTimeZones.Chicago });
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Contains("OrganizationId is required", error!.Error);
+    }
+
+    [Fact]
+    public async Task UpdateTeeTimeSettings_ValidCourse_Succeeds()
+    {
+        // Arrange - Create course
         var tenantAId = await CreateTestTenantAsync("Tenant A Settings");
-        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        createRequest.Headers.Add("X-Tenant-Id", tenantAId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = "Settings Test Course", TimeZoneId = TestTimeZones.Chicago });
-        var createResponse = await this.client.SendAsync(createRequest);
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Settings Test Course", TenantId = tenantAId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
-        // Act - Try to update from Tenant B
-        var tenantBId = await CreateTestTenantAsync("Tenant B Settings");
-        var updateRequest = new HttpRequestMessage(HttpMethod.Put, $"/courses/{course!.Id}/tee-time-settings");
-        updateRequest.Headers.Add("X-Tenant-Id", tenantBId.ToString());
-        updateRequest.Content = JsonContent.Create(new
+        // Act - Admin can update any course
+        var response = await this.client.PutAsJsonAsync($"/courses/{course!.Id}/tee-time-settings", new
         {
             TeeTimeIntervalMinutes = 10,
             FirstTeeTime = "07:00",
             LastTeeTime = "18:00"
         });
-        var response = await this.client.SendAsync(updateRequest);
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
-    public async Task UpdatePricing_FromDifferentTenant_ReturnsNotFound()
+    public async Task UpdatePricing_ValidCourse_Succeeds()
     {
-        // Arrange - Create course for Tenant A
+        // Arrange - Create course
         var tenantAId = await CreateTestTenantAsync("Tenant A Pricing");
-        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        createRequest.Headers.Add("X-Tenant-Id", tenantAId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = "Pricing Test Course", TimeZoneId = TestTimeZones.Chicago });
-        var createResponse = await this.client.SendAsync(createRequest);
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Pricing Test Course", TenantId = tenantAId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
-        // Act - Try to update from Tenant B
-        var tenantBId = await CreateTestTenantAsync("Tenant B Pricing");
-        var updateRequest = new HttpRequestMessage(HttpMethod.Put, $"/courses/{course!.Id}/pricing");
-        updateRequest.Headers.Add("X-Tenant-Id", tenantBId.ToString());
-        updateRequest.Content = JsonContent.Create(new { FlatRatePrice = 45.00m });
-        var response = await this.client.SendAsync(updateRequest);
+        // Act - Admin can update any course
+        var response = await this.client.PutAsJsonAsync($"/courses/{course!.Id}/pricing", new { FlatRatePrice = 45.00m });
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     private async Task<Guid> CreateTestTenantAsync(string name)

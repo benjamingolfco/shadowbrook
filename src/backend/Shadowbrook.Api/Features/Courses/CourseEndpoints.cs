@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
@@ -12,6 +13,7 @@ namespace Shadowbrook.Api.Features.Courses;
 public static class CourseEndpoints
 {
     [WolverinePost("/courses")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> CreateCourse(
         CreateCourseRequest request,
         [NotBody] ICourseRepository courseRepository,
@@ -69,6 +71,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> GetAllCourses(ApplicationDbContext db)
     {
         var courses = await (
@@ -92,6 +95,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses/{id}")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> GetCourseById(Guid id, ApplicationDbContext db)
     {
         var course = await (
@@ -116,6 +120,7 @@ public static class CourseEndpoints
     }
 
     [WolverinePut("/courses/{id}/tee-time-settings")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> UpdateTeeTimeSettings(
         Guid id,
         TeeTimeSettingsRequest request,
@@ -137,6 +142,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses/{id}/tee-time-settings")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> GetTeeTimeSettings(Guid id, ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
@@ -158,6 +164,7 @@ public static class CourseEndpoints
     }
 
     [WolverinePut("/courses/{id}/pricing")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> UpdatePricing(
         Guid id,
         PricingRequest request,
@@ -176,6 +183,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses/{id}/pricing")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> GetPricing(Guid id, ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);

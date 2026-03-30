@@ -8,9 +8,15 @@ namespace Shadowbrook.Api.Tests;
 [IntegrationTest]
 public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
-    private readonly HttpClient client = factory.CreateClient();
+    private HttpClient client = null!;
 
-    public Task InitializeAsync() => factory.ResetDatabaseAsync();
+    public async Task InitializeAsync()
+    {
+        await factory.ResetDatabaseAsync();
+        await factory.SeedTestAdminAsync();
+        this.client = factory.CreateAuthenticatedClient();
+    }
+
     public Task DisposeAsync() => Task.CompletedTask;
 
     // -------------------------------------------------------------------------
@@ -534,10 +540,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     {
         var tenantId = await CreateTestTenantAsync();
 
-        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = $"Test Course {Guid.NewGuid()}", TimeZoneId = TestTimeZones.Chicago });
-        var createResponse = await this.client.SendAsync(createRequest);
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = $"Test Course {Guid.NewGuid()}", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         return (tenantId, course!.Id);
