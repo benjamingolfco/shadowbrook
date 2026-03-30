@@ -105,23 +105,12 @@ public class BookingCancelledSmsHandlerTests
     [Fact]
     public async Task Handle_PendingBookingCancelled_NoSmsAndLogsWarning()
     {
-        var booking = Booking.Create(
-            Guid.CreateVersion7(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            new DateOnly(2026, 7, 4),
-            new TimeOnly(8, 0),
-            2);
-        booking.Cancel();
-        booking.ClearDomainEvents();
-
-        var evt = BuildEvent(bookingId: booking.Id, previousStatus: BookingStatus.Pending);
-
-        this.bookingRepo.GetByIdAsync(booking.Id).Returns(booking);
+        var evt = BuildEvent(previousStatus: BookingStatus.Pending);
 
         await BookingCancelledSmsHandler.Handle(evt, this.bookingRepo, this.golferRepo, this.courseRepo, this.sms, this.logger, CancellationToken.None);
 
         await this.sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await this.bookingRepo.DidNotReceive().GetByIdAsync(Arg.Any<Guid>());
         this.logger.Received().Log(
             LogLevel.Warning,
             Arg.Any<EventId>(),
