@@ -174,7 +174,18 @@ Use Wolverine's `Saga` base class for stateful, long-running processes — but c
 
 **Correlation:** Domain events carry `TeeTimeRequestId`, not `{SagaTypeName}Id`. Use `[SagaIdentityFrom("TeeTimeRequestId")]` from `Wolverine.Persistence.Sagas` on each `Handle` method parameter. `Start` methods set the `Id` directly — no attribute needed.
 
-**Timeout messages don't need correlation:** When a `TimeoutMessage` is returned as a cascading message from a saga's `Start` or `Handle` method, Wolverine automatically stamps the saga identity onto the message envelope. Do NOT add saga-specific IDs to timeout messages or use `[SagaIdentityFrom]` on timeout handlers — use `this.Id` in the handler body instead. `[SagaIdentityFrom]` is only needed for **external** messages (domain events) where Wolverine has no envelope context linking them to the saga.
+**Timeout messages need the saga ID as a property:** Wolverine resolves saga identity from message properties, not from the envelope. `TimeoutMessage` records must include the saga ID so Wolverine can load the correct saga instance when the timeout fires. Use a property named `Id` (matches the saga's `Id` property by convention). `[SagaIdentityFrom]` is only needed on **external** messages (domain events) where the property name differs from `Id`.
+
+```csharp
+// GOOD — timeout carries saga ID
+public record MyTimeout(Guid Id, TimeSpan Delay) : TimeoutMessage(Delay);
+
+// In Start():
+return (policy, new MyTimeout(policy.Id, GracePeriod));
+
+// BAD — Wolverine can't correlate this back to the saga
+public record MyTimeout(TimeSpan Delay) : TimeoutMessage(Delay);
+```
 
 **Persistence:** Map policy types in `ApplicationDbContext` with `IEntityTypeConfiguration`. Ignore the `Version` property from the `Saga` base class. Wolverine handles load/save/delete automatically.
 
@@ -253,17 +264,21 @@ builder.ComplexProperty(o => o.TeeTime, t =>
 
 Unit tests first, integration tests second. Test at the cheapest layer that can prove the behavior.
 
-**Unit tests** (no DB, no HTTP, no container):
+**Unit tests** (`Shadowbrook.Api.Tests` — no DB, no HTTP, no container):
 - Domain aggregates and services — pure behavior, state transitions, event raising
 - FluentValidation validators — call `validator.Validate()` directly
-- Wolverine message handlers — call `Handle()` with fake repositories (see `tests/Shadowbrook.Api.Tests/Fakes/`)
-- Infrastructure utilities (e.g., `PhoneNormalizer`)
+- Wolverine message handlers — call `Handle()` with NSubstitute stubs
+- Wolverine policies (sagas) — call `Start()` / `Handle()` directly with constructed events
+- Infrastructure utilities (e.g., `PhoneNormalizer`, `CourseTime`)
 
-**Integration tests** (TestWebApplicationFactory + SQL Server container) — only for what genuinely needs the real stack. Always apply both `[Collection("Integration")]` (fixture sharing) and `[IntegrationTest]` (category trait for `dotnet test --filter Category=Integration`):
-- Happy-path E2E flows (tenant → course → waitlist → join)
+**Integration tests** (`Shadowbrook.Api.IntegrationTests` — TestWebApplicationFactory + SQL Server container):
+- Flow-based scenario tests (dependent steps telling a user story)
 - DB-dependent behavior (unique constraints, query filters, tenant isolation)
 - Middleware behavior (tenant claim, course-exists)
+- Repository queries that need real SQL Server (eligibility, filtering)
 - Smoke tests (health, OpenAPI)
+
+See `.claude/rules/backend/integration-test-conventions.md` for the scenario test pattern.
 
 **Do not** use integration tests to verify validation rules, null guards, or handler branching logic. Those belong in unit tests.
 
@@ -272,10 +287,29 @@ Unit tests first, integration tests second. Test at the cheapest layer that can 
 ```
 tests/Shadowbrook.Domain.Tests/
   {Aggregate}Aggregate/              ← domain unit tests
+
 tests/Shadowbrook.Api.Tests/
-  Validators/                        ← FluentValidation unit tests
-  Handlers/                          ← Wolverine handler unit tests
-  *.cs                               ← integration tests (use TestWebApplicationFactory)
+  Features/
+    Waitlist/
+      Handlers/                      ← Wolverine handler unit tests
+      Policies/                      ← Wolverine policy unit tests
+      Validators/                    ← FluentValidation unit tests
+    Courses/
+      Validators/
+    Tenants/
+      Validators/
+    TeeSheet/
+      Validators/
+    Bookings/
+      Handlers/
+  Services/                          ← utility unit tests
+
+tests/Shadowbrook.Api.IntegrationTests/
+  *Tests.cs                          ← scenario-based integration tests
+  TestWebApplicationFactory.cs       ← shared test server + SQL container
+  TestSetup.cs                       ← shared setup helpers
+  ResponseDtos.cs                    ← shared response records
+  StepOrderer.cs                     ← test execution ordering
 ```
 
 ### NSubstitute for Stubs
