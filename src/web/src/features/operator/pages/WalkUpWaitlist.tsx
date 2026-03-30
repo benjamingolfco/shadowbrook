@@ -248,17 +248,19 @@ export default function WalkUpWaitlist() {
             Walk-Up Waitlist
           </h1>
           <Badge variant="success">Open</Badge>
-          <span className="font-mono font-bold text-base md:text-lg tracking-[0.25em] whitespace-nowrap">
-            {waitlist.shortCode.split('').join(' ')}
+          <span className="inline-flex items-center gap-1 whitespace-nowrap">
+            <span className="font-mono font-bold text-base md:text-lg tracking-[0.15em] md:tracking-[0.25em]">
+              {waitlist.shortCode.split('').join(' ')}
+            </span>
+            <button
+              type="button"
+              className="text-muted-foreground hover:text-foreground transition-colors p-1"
+              onClick={() => handleCopyCode(waitlist.shortCode)}
+              aria-label="Copy short code"
+            >
+              {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+            </button>
           </span>
-          <button
-            type="button"
-            className="text-muted-foreground hover:text-foreground transition-colors p-1"
-            onClick={() => handleCopyCode(waitlist.shortCode)}
-            aria-label="Copy short code"
-          >
-            {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
-          </button>
         </div>
         <div className="flex items-center gap-4 mt-2">
           <QueueDrawer

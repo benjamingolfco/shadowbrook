@@ -128,7 +128,7 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
             </div>
           </div>
 
-          <Button type="submit" disabled={createMutation.isPending} className="w-full sm:w-auto">
+          <Button type="submit" disabled={createMutation.isPending} className="basis-full sm:basis-auto w-full sm:w-auto">
             {showSuccess ? 'Posted!' : createMutation.isPending ? 'Posting...' : 'Post Tee Time'}
           </Button>
         </form>

@@ -73,29 +73,60 @@ export function OpeningsList({ openings, onCancel, cancellingId }: OpeningsListP
                 ${isCancelling ? 'opacity-40' : ''}
                 ${opening.status === 'Filled' ? 'border-l-3 border-l-success' : ''}`}
             >
-              {/*
-               * Single layout that adapts via CSS grid.
-               * Mobile (< md): 2 columns [auto, auto] — time+badge on row 1, details on rows 2-3
-               * Desktop (md+): single flex row with fixed-width columns
-               */}
-              <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-0.5 md:flex md:items-center md:gap-4">
-                <span className="text-base font-semibold md:w-[80px] md:shrink-0">
+              {/* Mobile layout — stacked rows, hidden at md+ */}
+              <div className="md:hidden space-y-0.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-base font-semibold">
+                    {formatWallClockTime(opening.teeTime)}
+                  </span>
+                  <Badge variant={getStatusVariant(opening.status)} className="text-xs">
+                    {opening.status}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {opening.status === 'Cancelled'
+                    ? '—'
+                    : `${filled} / ${opening.slotsAvailable} ${opening.status === 'Expired' ? 'claimed' : 'slots filled'}`}
+                </p>
+                {opening.filledGolfers.length > 0 && (
+                  <p className="text-sm truncate">{formatGolferNames(opening.filledGolfers)}</p>
+                )}
+                {opening.status === 'Open' && opening.filledGolfers.length === 0 && (
+                  <p className="text-sm text-muted-foreground italic">Waiting for golfers...</p>
+                )}
+                {opening.status === 'Open' && !isCancelling && (
+                  <div className="text-right pt-0.5">
+                    <button
+                      type="button"
+                      className="text-sm text-destructive hover:underline"
+                      onClick={() => onCancel(opening)}
+                      aria-label={`Cancel opening at ${formatWallClockTime(opening.teeTime)}`}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop layout — single flex row, hidden below md */}
+              <div className="hidden md:flex md:items-center md:gap-4">
+                <span className="text-base font-semibold w-[80px] shrink-0">
                   {formatWallClockTime(opening.teeTime)}
                 </span>
 
-                <span className="md:w-[80px] md:shrink-0 justify-self-end md:justify-self-auto">
+                <span className="w-[80px] shrink-0">
                   <Badge variant={getStatusVariant(opening.status)} className="text-xs">
                     {opening.status}
                   </Badge>
                 </span>
 
-                <span className="col-span-2 text-sm text-muted-foreground md:w-[120px] md:shrink-0">
+                <span className="text-sm text-muted-foreground w-[120px] shrink-0">
                   {opening.status === 'Cancelled'
                     ? '—'
                     : `${filled} / ${opening.slotsAvailable} ${opening.status === 'Expired' ? 'claimed' : 'slots filled'}`}
                 </span>
 
-                <span className="col-span-2 text-sm md:flex-1 md:min-w-0 truncate">
+                <span className="text-sm flex-1 min-w-0 truncate">
                   {opening.filledGolfers.length > 0 ? (
                     formatGolferNames(opening.filledGolfers)
                   ) : opening.status === 'Open' ? (
@@ -103,7 +134,7 @@ export function OpeningsList({ openings, onCancel, cancellingId }: OpeningsListP
                   ) : null}
                 </span>
 
-                <span className="col-span-2 md:w-[60px] md:shrink-0 md:text-right">
+                <span className="w-[60px] shrink-0 text-right">
                   {opening.status === 'Open' && !isCancelling && (
                     <button
                       type="button"

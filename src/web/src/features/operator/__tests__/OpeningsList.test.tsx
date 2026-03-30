@@ -68,9 +68,10 @@ describe('OpeningsList', () => {
       />,
     );
 
-    expect(screen.getByText('Open')).toBeInTheDocument();
-    expect(screen.getByText('Filled')).toBeInTheDocument();
-    expect(screen.getByText('Cancelled')).toBeInTheDocument();
+    // Each status appears in both the mobile and desktop layout
+    expect(screen.getAllByText('Open').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Filled').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Cancelled').length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows fill count text for open openings', () => {
@@ -78,7 +79,7 @@ describe('OpeningsList', () => {
       <OpeningsList openings={[openOpening]} onCancel={vi.fn()} cancellingId={null} />,
     );
 
-    expect(screen.getByText('2 / 4 slots filled')).toBeInTheDocument();
+    expect(screen.getAllByText('2 / 4 slots filled').length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows golfer names', () => {
@@ -86,8 +87,8 @@ describe('OpeningsList', () => {
       <OpeningsList openings={[openOpening]} onCancel={vi.fn()} cancellingId={null} />,
     );
 
-    expect(screen.getByText(/Alice Smith/)).toBeInTheDocument();
-    expect(screen.getByText(/Bob Jones/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Alice Smith/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/Bob Jones/).length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows cancel link only for Open openings', () => {
@@ -99,8 +100,9 @@ describe('OpeningsList', () => {
       />,
     );
 
+    // One Cancel per layout (mobile + desktop) for the single Open opening = 2 total
     const cancelLinks = screen.getAllByText('Cancel');
-    expect(cancelLinks).toHaveLength(1);
+    expect(cancelLinks).toHaveLength(2);
   });
 
   it('shows summary line', () => {
