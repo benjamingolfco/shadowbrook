@@ -96,7 +96,7 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
             )}
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-1 shrink-0">
             <Label className="text-xs text-muted-foreground">Slots</Label>
             <div className="flex" role="radiogroup" aria-label="Slots">
               {[1, 2, 3, 4].map((n) => (
@@ -128,7 +128,7 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
             </div>
           </div>
 
-          <Button type="submit" disabled={createMutation.isPending}>
+          <Button type="submit" disabled={createMutation.isPending} className="w-full sm:w-auto">
             {showSuccess ? 'Posted!' : createMutation.isPending ? 'Posting...' : 'Post Tee Time'}
           </Button>
         </form>

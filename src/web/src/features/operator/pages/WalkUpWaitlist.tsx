@@ -161,7 +161,7 @@ export default function WalkUpWaitlist() {
     const is409 = openError?.status === 409;
 
     return (
-      <div className="flex h-full items-center justify-center p-6">
+      <div className="flex h-full items-center justify-center px-4 py-6">
         <div className="w-full max-w-md text-center space-y-4 border rounded-xl p-8">
           <h1 className="text-xl font-semibold font-[family-name:var(--font-heading)]">
             Walk-Up Waitlist
@@ -243,12 +243,12 @@ export default function WalkUpWaitlist() {
     <div className="p-6 max-w-[860px]">
       {/* Zone 1: Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">
             Walk-Up Waitlist
           </h1>
           <Badge variant="success">Open</Badge>
-          <span className="font-mono font-bold text-lg tracking-[0.25em]">
+          <span className="font-mono font-bold text-base md:text-lg tracking-[0.25em] whitespace-nowrap">
             {waitlist.shortCode.split('').join(' ')}
           </span>
           <button
