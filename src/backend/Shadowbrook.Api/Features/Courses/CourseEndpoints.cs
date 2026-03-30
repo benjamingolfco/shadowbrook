@@ -19,10 +19,10 @@ public static class CourseEndpoints
         [NotBody] ApplicationDbContext db,
         [NotBody] ICurrentUser currentUser)
     {
-        var organizationId = currentUser.TenantId ?? request.TenantId;
+        var organizationId = currentUser.OrganizationId ?? request.TenantId;
         if (organizationId is null)
         {
-            return Results.BadRequest(new { error = "TenantId is required (via X-Tenant-Id header or request body)." });
+            return Results.BadRequest(new { error = "OrganizationId is required (via X-Tenant-Id header or request body)." });
         }
 
         var tenant = await tenantRepository.GetByIdAsync(organizationId.Value);

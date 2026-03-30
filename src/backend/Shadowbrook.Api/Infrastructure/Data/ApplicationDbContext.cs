@@ -26,7 +26,7 @@ public class ApplicationDbContext(
     // Snapshot OrganizationId at DbContext construction time so the query filter sees the correct
     // organization for this request. EF Core evaluates query filters referencing 'this' against the
     // specific DbContext instance executing the query, so a new instance per request is required.
-    public Guid? CurrentOrganizationId { get; } = currentUser?.TenantId;
+    public Guid? CurrentOrganizationId { get; } = currentUser?.OrganizationId;
 
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<AppUser> AppUsers => Set<AppUser>();
@@ -47,7 +47,7 @@ public class ApplicationDbContext(
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
-        var userId = currentUser?.UserId;
+        var userId = currentUser?.AppUserId?.ToString();
 
         foreach (var entry in ChangeTracker.Entries<Entity>()
             .Where(e => e.State is EntityState.Added or EntityState.Modified))

@@ -104,7 +104,7 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.Contains("TenantId is required", error!.Error);
+        Assert.Contains("OrganizationId is required", error!.Error);
     }
 
     [Fact]

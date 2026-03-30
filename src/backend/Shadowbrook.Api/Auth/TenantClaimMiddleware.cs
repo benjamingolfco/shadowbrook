@@ -13,7 +13,7 @@ public class TenantClaimMiddleware(RequestDelegate next)
             var tenantIdString = tenantIdHeader.ToString();
             if (Guid.TryParse(tenantIdString, out var tenantId))
             {
-                var claims = new[] { new Claim("tenant_id", tenantId.ToString()) };
+                var claims = new[] { new Claim("organization_id", tenantId.ToString()) };
                 var identity = new ClaimsIdentity(claims);
                 context.User.AddIdentity(identity);
             }

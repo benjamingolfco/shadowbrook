@@ -13,11 +13,11 @@ public class TenantClaimMiddlewareTests(TestWebApplicationFactory factory) : IAs
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
-    public async Task WithValidTenantIdHeader_ReturnsTenantId()
+    public async Task WithValidTenantIdHeader_ReturnsOrganizationId()
     {
-        var expectedTenantId = Guid.NewGuid();
+        var expectedOrganizationId = Guid.NewGuid();
         var request = new HttpRequestMessage(HttpMethod.Get, "/debug/current-user");
-        request.Headers.Add("X-Tenant-Id", expectedTenantId.ToString());
+        request.Headers.Add("X-Tenant-Id", expectedOrganizationId.ToString());
 
         var response = await this.client.SendAsync(request);
 
@@ -25,11 +25,11 @@ public class TenantClaimMiddlewareTests(TestWebApplicationFactory factory) : IAs
 
         var body = await response.Content.ReadFromJsonAsync<CurrentUserResponse>();
         Assert.NotNull(body);
-        Assert.Equal(expectedTenantId, body!.TenantId);
+        Assert.Equal(expectedOrganizationId, body!.OrganizationId);
     }
 
     [Fact]
-    public async Task WithoutTenantIdHeader_ReturnsNullTenantId()
+    public async Task WithoutTenantIdHeader_ReturnsNullOrganizationId()
     {
         var response = await this.client.GetAsync("/debug/current-user");
 
@@ -37,11 +37,11 @@ public class TenantClaimMiddlewareTests(TestWebApplicationFactory factory) : IAs
 
         var body = await response.Content.ReadFromJsonAsync<CurrentUserResponse>();
         Assert.NotNull(body);
-        Assert.Null(body!.TenantId);
+        Assert.Null(body!.OrganizationId);
     }
 
     [Fact]
-    public async Task WithInvalidGuidHeader_ReturnsNullTenantIdAnd200Status()
+    public async Task WithInvalidGuidHeader_ReturnsNullOrganizationIdAnd200Status()
     {
         var request = new HttpRequestMessage(HttpMethod.Get, "/debug/current-user");
         request.Headers.Add("X-Tenant-Id", "not-a-valid-guid");
@@ -52,8 +52,8 @@ public class TenantClaimMiddlewareTests(TestWebApplicationFactory factory) : IAs
 
         var body = await response.Content.ReadFromJsonAsync<CurrentUserResponse>();
         Assert.NotNull(body);
-        Assert.Null(body!.TenantId);
+        Assert.Null(body!.OrganizationId);
     }
 
-    private record CurrentUserResponse(Guid? TenantId);
+    private record CurrentUserResponse(Guid? OrganizationId);
 }

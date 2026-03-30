@@ -184,7 +184,7 @@ if (!app.Environment.IsProduction())
 
 if (app.Environment.EnvironmentName == "Testing")
 {
-    app.MapGet("/debug/current-user", (ICurrentUser currentUser) => Results.Ok(new { TenantId = currentUser.TenantId }));
+    app.MapGet("/debug/current-user", (ICurrentUser currentUser) => Results.Ok(new { currentUser.OrganizationId }));
 }
 
 app.MapWolverineEndpoints(opts =>

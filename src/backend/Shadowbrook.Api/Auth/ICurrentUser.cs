@@ -2,7 +2,10 @@ namespace Shadowbrook.Api.Auth;
 
 public interface ICurrentUser
 {
-    string? UserId { get; }
-    Guid? TenantId { get; }
-    bool HasTenantId { get; }
+    Guid? AppUserId { get; }
+    string? IdentityId { get; }
+    Guid? OrganizationId { get; }
+    IReadOnlyList<string> Permissions { get; }
+    IReadOnlyList<Guid> CourseIds { get; }
+    bool IsAuthenticated { get; }
 }
