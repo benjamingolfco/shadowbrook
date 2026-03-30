@@ -205,8 +205,8 @@ app.UseDomainExceptionHandler();
 
 app.UseCors();
 app.UseAuthentication();
-app.UseAuthorization();
 app.UseMiddleware<AppUserEnrichmentMiddleware>();
+app.UseAuthorization();
 
 app.MapHealthChecks("/health");
 
