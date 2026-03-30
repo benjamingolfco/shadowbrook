@@ -262,7 +262,7 @@ export default function WalkUpWaitlist() {
             </button>
           </span>
         </div>
-        <div className="flex items-center gap-4 mt-2">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-sm text-muted-foreground">
           <QueueDrawer
             entries={entries}
             timeZoneId={course.timeZoneId}
@@ -270,12 +270,12 @@ export default function WalkUpWaitlist() {
             onRemove={handleRemoveClick}
             removingEntryId={removeMutation.isPending ? removalTarget?.id ?? null : null}
           />
-          <span className="text-muted-foreground">·</span>
+          <span>·</span>
           <Dialog>
             <DialogTrigger asChild>
               <button
                 type="button"
-                className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                className="hover:text-foreground hover:underline"
               >
                 Print sign
               </button>
@@ -287,6 +287,23 @@ export default function WalkUpWaitlist() {
               <QrCodePanel shortCode={waitlist.shortCode} />
             </DialogContent>
           </Dialog>
+          <span>·</span>
+          <button
+            type="button"
+            className="hover:text-foreground hover:underline"
+            onClick={() => setAddGolferDialogOpen(true)}
+          >
+            Add golfer manually
+          </button>
+          <span>·</span>
+          <button
+            type="button"
+            className="hover:text-destructive hover:underline"
+            onClick={() => setCloseDialogOpen(true)}
+            disabled={closeMutation.isPending}
+          >
+            {closeMutation.isPending ? 'Closing...' : 'Close waitlist for today'}
+          </button>
         </div>
       </div>
 
@@ -302,26 +319,6 @@ export default function WalkUpWaitlist() {
           onCancel={handleCancelClick}
           cancellingId={cancelMutation.isPending ? cancellationTarget?.id ?? null : null}
         />
-      </div>
-
-      {/* Zone 4: Infrequent Actions */}
-      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-        <button
-          type="button"
-          className="hover:text-foreground hover:underline"
-          onClick={() => setAddGolferDialogOpen(true)}
-        >
-          Add golfer manually
-        </button>
-        <span>·</span>
-        <button
-          type="button"
-          className="hover:text-destructive hover:underline"
-          onClick={() => setCloseDialogOpen(true)}
-          disabled={closeMutation.isPending}
-        >
-          {closeMutation.isPending ? 'Closing...' : 'Close waitlist for today'}
-        </button>
       </div>
 
       {closeMutation.isError && (
