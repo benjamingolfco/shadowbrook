@@ -147,16 +147,13 @@ public static class WalkUpWaitlistEndpoints
     public static async Task<IResult> CreateOpening(
         Guid courseId,
         CreateTeeTimeOpeningRequest request,
-        ApplicationDbContext db,
         ITeeTimeOpeningRepository openingRepo,
-        ITimeProvider timeProvider,
-        TimeProvider systemTimeProvider)
+        ITimeProvider timeProvider)
     {
-        var timeZoneId = await db.Courses.Where(c => c.Id == courseId).Select(c => c.TimeZoneId).FirstAsync();
-        var today = CourseTime.Today(systemTimeProvider, timeZoneId);
-        var parsedTeeTime = TimeOnly.ParseExact(request.TeeTime, ["HH:mm", "HH:mm:ss"]);
+        var date = DateOnly.FromDateTime(request.TeeTime);
+        var time = TimeOnly.FromDateTime(request.TeeTime);
 
-        var teeTime = new TeeTime(today, parsedTeeTime);
+        var teeTime = new TeeTime(date, time);
         var existing = await openingRepo.GetActiveByCourseTeeTimeAsync(courseId, teeTime);
 
         if (existing is not null)
@@ -164,7 +161,7 @@ public static class WalkUpWaitlistEndpoints
             return Results.Conflict(new { error = "An active tee time opening already exists for this time." });
         }
 
-        var opening = TeeTimeOpening.Create(courseId, today, parsedTeeTime, request.SlotsAvailable, operatorOwned: true, timeProvider);
+        var opening = TeeTimeOpening.Create(courseId, date, time, request.SlotsAvailable, operatorOwned: true, timeProvider);
         openingRepo.Add(opening);
 
         return Results.Created(
@@ -302,16 +299,14 @@ public record AddGolferToWaitlistResponse(
     int GroupSize,
     string CourseName);
 
-public record CreateTeeTimeOpeningRequest(string TeeTime, int SlotsAvailable);
+public record CreateTeeTimeOpeningRequest(DateTime TeeTime, int SlotsAvailable);
 
 public class CreateTeeTimeOpeningRequestValidator : AbstractValidator<CreateTeeTimeOpeningRequest>
 {
     public CreateTeeTimeOpeningRequestValidator()
     {
         RuleFor(x => x.TeeTime)
-            .NotEmpty().WithMessage("Tee time is required.")
-            .Must(t => TimeOnly.TryParseExact(t, ["HH:mm", "HH:mm:ss"], out _))
-            .WithMessage("A valid tee time in HH:mm format is required.");
+            .NotEmpty().WithMessage("Tee time is required.");
 
         RuleFor(x => x.SlotsAvailable)
             .InclusiveBetween(1, 4)

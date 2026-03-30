@@ -25,7 +25,7 @@ public class TeeTimeOpeningExpirationPolicy : Saga
             delay = TimeSpan.Zero;
         }
 
-        var timeout = new TeeTimeOpeningExpirationTimeout(delay);
+        var timeout = new TeeTimeOpeningExpirationTimeout(policy.Id, delay);
         return (policy, timeout);
     }
 
@@ -45,6 +45,6 @@ public class TeeTimeOpeningExpirationPolicy : Saga
         [SagaIdentityFrom("OpeningId")] TeeTimeOpeningCancelled evt) => MarkCompleted();
 }
 
-public record TeeTimeOpeningExpirationTimeout(TimeSpan Delay) : TimeoutMessage(Delay);
+public record TeeTimeOpeningExpirationTimeout(Guid Id, TimeSpan Delay) : TimeoutMessage(Delay);
 
 public record ExpireTeeTimeOpening(Guid OpeningId);

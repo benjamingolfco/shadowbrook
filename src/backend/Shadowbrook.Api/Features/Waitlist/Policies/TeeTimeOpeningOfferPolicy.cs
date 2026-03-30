@@ -8,7 +8,7 @@ namespace Shadowbrook.Api.Features.Waitlist.Policies;
 
 public class TeeTimeOpeningOfferPolicy : Saga
 {
-    private static readonly TimeSpan GracePeriod = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan GracePeriod = TimeSpan.FromSeconds(5);
 
     public Guid Id { get; set; }
     public int PendingOfferCount { get; set; }
@@ -23,7 +23,7 @@ public class TeeTimeOpeningOfferPolicy : Saga
             SlotsRemaining = evt.SlotsAvailable
         };
 
-        return (policy, new OfferDispatchGracePeriodTimeout(GracePeriod));
+        return (policy, new OfferDispatchGracePeriodTimeout(policy.Id, GracePeriod));
     }
 
     public FindAndOfferEligibleGolfers Handle(OfferDispatchGracePeriodTimeout timeout)
@@ -85,4 +85,4 @@ public class TeeTimeOpeningOfferPolicy : Saga
 
 public record WakeUpOfferPolicy(Guid OpeningId);
 
-public record OfferDispatchGracePeriodTimeout(TimeSpan Delay) : TimeoutMessage(Delay);
+public record OfferDispatchGracePeriodTimeout(Guid Id, TimeSpan Delay) : TimeoutMessage(Delay);
