@@ -63,7 +63,7 @@ export default function TenantList() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">All Registered Tenants</h1>
+          <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">All Registered Tenants</h1>
           <p className="text-sm text-muted-foreground">Platform Admin View</p>
         </div>
         <Button asChild>
