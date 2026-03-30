@@ -121,7 +121,7 @@ jobs:
             If Agentic is false:
             - Always use `gh pr review --comment` (never request-changes or approve)
 
-            CRITICAL: You MUST post a review via `gh pr review` before finishing. This is required for the pipeline to advance. If you fail to post a review, the pipeline will stall indefinitely.
+            Post exactly ONE review via `gh pr review`. Do NOT post multiple reviews — the fallback step will handle it if yours fails.
 
       - name: Ensure review was posted
         if: always() && steps.check-redundant.outputs.skip != 'true'
