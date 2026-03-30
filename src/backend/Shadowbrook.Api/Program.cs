@@ -71,6 +71,7 @@ builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>();
 builder.Services.AddOpenApi();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
