@@ -18,7 +18,7 @@ export default function OrganizationSelect() {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="w-full max-w-2xl space-y-6 p-8">
-          <h1 className="text-2xl font-bold">Select Organization</h1>
+          <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Select Organization</h1>
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -46,7 +46,7 @@ export default function OrganizationSelect() {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="w-full max-w-2xl space-y-6 p-8">
-          <h1 className="text-2xl font-bold">Select Organization</h1>
+          <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Select Organization</h1>
           <p className="text-destructive">
             Error loading organizations: {error instanceof Error ? error.message : 'Unknown error'}
           </p>
@@ -59,7 +59,7 @@ export default function OrganizationSelect() {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="w-full max-w-2xl space-y-6 p-8">
-          <h1 className="text-2xl font-bold">Select Organization</h1>
+          <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Select Organization</h1>
           <p className="text-muted-foreground">
             No organizations registered yet. Please contact your administrator or register a tenant
             via the Admin view.
@@ -72,7 +72,7 @@ export default function OrganizationSelect() {
   return (
     <div className="flex h-screen items-center justify-center">
       <div className="w-full max-w-2xl space-y-6 p-8">
-        <h1 className="text-2xl font-bold">Select Organization</h1>
+        <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Select Organization</h1>
         <div className="rounded-md border">
           <Table>
             <TableHeader>

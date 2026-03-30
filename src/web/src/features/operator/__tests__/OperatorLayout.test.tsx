@@ -48,7 +48,7 @@ describe('OperatorLayout', () => {
     render(<OperatorLayout />);
     const heading = screen.getByText(longName);
     expect(heading).toHaveClass('truncate');
-    expect(heading).toHaveClass('max-w-[200px]');
+    expect(heading).toHaveClass('max-w-[180px]');
     expect(heading).toHaveAttribute('title', longName);
   });
 

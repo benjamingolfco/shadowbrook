@@ -74,7 +74,7 @@ export default function CourseRegister() {
     <div className="p-6">
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold">Register Course</h1>
+          <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Register Course</h1>
           <p className="text-muted-foreground mt-1">
             Add your golf course to get started with Shadowbrook
           </p>
@@ -203,7 +203,7 @@ export default function CourseRegister() {
             )}
 
             {registerMutation.isSuccess && (
-              <div className="text-green-600 text-sm">
+              <div className="text-success text-sm">
                 Course registered successfully! Redirecting...
               </div>
             )}

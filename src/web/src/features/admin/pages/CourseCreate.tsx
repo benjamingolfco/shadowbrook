@@ -75,7 +75,7 @@ export default function CourseCreate() {
   return (
     <div className="p-6 max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Register a Course</h1>
+        <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Register a Course</h1>
       </div>
 
       <Form {...form}>

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -99,9 +100,7 @@ export default function TeeTimeSettings() {
 
   return (
     <div className="p-6 max-w-2xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Tee Time Settings</h1>
-      </div>
+      <PageHeader title="Tee Time Settings" />
 
       {settingsQuery.isLoading && (
         <p className="text-muted-foreground">Loading settings...</p>
@@ -120,7 +119,7 @@ export default function TeeTimeSettings() {
             name="teeTimeIntervalMinutes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Tee Time Interval *</FormLabel>
+                <FormLabel>Tee Time Interval</FormLabel>
                 <Select
                   value={String(field.value)}
                   onValueChange={(value) => field.onChange(Number(value))}
@@ -147,7 +146,7 @@ export default function TeeTimeSettings() {
               name="firstTeeTime"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First Tee Time *</FormLabel>
+                  <FormLabel>First Tee Time</FormLabel>
                   <FormControl>
                     <Input type="time" {...field} />
                   </FormControl>
@@ -161,7 +160,7 @@ export default function TeeTimeSettings() {
               name="lastTeeTime"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Last Tee Time *</FormLabel>
+                  <FormLabel>Last Tee Time</FormLabel>
                   <FormControl>
                     <Input type="time" {...field} />
                   </FormControl>
@@ -178,7 +177,7 @@ export default function TeeTimeSettings() {
           )}
 
           {updateMutation.isSuccess && (
-            <div className="text-green-600 text-sm">
+            <div className="text-success text-sm">
               Tee time settings saved successfully!
             </div>
           )}

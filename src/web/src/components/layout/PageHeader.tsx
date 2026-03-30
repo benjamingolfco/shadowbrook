@@ -22,7 +22,7 @@ export function PageHeader({ title, actions, children }: PageHeaderProps) {
     <div className="mb-6">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold">{title}</h1>
+          <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">{title}</h1>
           {children && <div className="mt-1">{children}</div>}
         </div>
         {actions && actions.length > 0 && (

@@ -8,11 +8,14 @@ namespace Shadowbrook.Api.Features.Waitlist.Policies;
 
 public class TeeTimeOpeningOfferPolicy : Saga
 {
+    private static readonly TimeSpan GracePeriod = TimeSpan.FromSeconds(15);
+
     public Guid Id { get; set; }
     public int PendingOfferCount { get; set; }
     public int SlotsRemaining { get; set; }
+    public bool GracePeriodExpired { get; set; }
 
-    public static (TeeTimeOpeningOfferPolicy, FindAndOfferEligibleGolfers) Start(TeeTimeOpeningCreated evt)
+    public static (TeeTimeOpeningOfferPolicy, OfferDispatchGracePeriodTimeout) Start(TeeTimeOpeningCreated evt)
     {
         var policy = new TeeTimeOpeningOfferPolicy
         {
@@ -20,8 +23,16 @@ public class TeeTimeOpeningOfferPolicy : Saga
             SlotsRemaining = evt.SlotsAvailable
         };
 
-        return (policy, new FindAndOfferEligibleGolfers(evt.OpeningId, evt.SlotsAvailable));
+        return (policy, new OfferDispatchGracePeriodTimeout(GracePeriod));
     }
+
+    public FindAndOfferEligibleGolfers Handle(OfferDispatchGracePeriodTimeout timeout)
+    {
+        GracePeriodExpired = true;
+        return new FindAndOfferEligibleGolfers(Id, SlotsRemaining);
+    }
+
+    public void Handle([SagaIdentityFrom("OpeningId")] TeeTimeOpeningCancelled evt) => MarkCompleted();
 
     public void Handle([SagaIdentityFrom("OpeningId")] WaitlistOfferSent evt) => PendingOfferCount++;
 
@@ -57,6 +68,11 @@ public class TeeTimeOpeningOfferPolicy : Saga
 
     private FindAndOfferEligibleGolfers? DispatchMoreOffersIfNeeded()
     {
+        if (!GracePeriodExpired)
+        {
+            return null;
+        }
+
         var availableSlots = SlotsRemaining - PendingOfferCount;
         if (availableSlots <= 0)
         {
@@ -68,3 +84,5 @@ public class TeeTimeOpeningOfferPolicy : Saga
 }
 
 public record WakeUpOfferPolicy(Guid OpeningId);
+
+public record OfferDispatchGracePeriodTimeout(TimeSpan Delay) : TimeoutMessage(Delay);
