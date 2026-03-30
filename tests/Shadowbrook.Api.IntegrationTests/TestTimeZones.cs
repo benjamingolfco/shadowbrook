@@ -1,6 +1,6 @@
-namespace Shadowbrook.Api.Tests;
+namespace Shadowbrook.Api.IntegrationTests;
 
-internal static class TestTimeZones
+public static class TestTimeZones
 {
     public const string Chicago = "America/Chicago";
     public const string NewYork = "America/New_York";

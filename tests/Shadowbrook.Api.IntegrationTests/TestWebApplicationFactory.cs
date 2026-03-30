@@ -9,7 +9,7 @@ using Shadowbrook.Api.Infrastructure.Data;
 using Testcontainers.MsSql;
 using Wolverine;
 
-namespace Shadowbrook.Api.Tests;
+namespace Shadowbrook.Api.IntegrationTests;
 
 public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
@@ -79,29 +79,12 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:DefaultConnection", this.connectionString);
+        builder.UseSetting("App:FrontendUrl", "http://localhost:3000");
 
         builder.ConfigureServices(services =>
         {
-            var descriptorsToRemove = services
-                .Where(d =>
-                    d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
-                    d.ServiceType == typeof(DbContextOptions) ||
-                    d.ServiceType.FullName?.Contains("EntityFrameworkCore") == true)
-                .ToList();
-
-            foreach (var descriptor in descriptorsToRemove)
-            {
-                services.Remove(descriptor);
-            }
-
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(this.connectionString));
-
             services.DisableAllExternalWolverineTransports();
             services.RunWolverineInSoloMode();
-
-            services.ConfigureWolverine(opts =>
-                opts.DefaultLocalQueue.BufferedInMemory());
         });
 
         builder.UseEnvironment("Testing");

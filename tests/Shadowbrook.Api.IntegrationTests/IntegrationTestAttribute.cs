@@ -1,9 +1,9 @@
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace Shadowbrook.Api.Tests;
+namespace Shadowbrook.Api.IntegrationTests;
 
-[TraitDiscoverer("Shadowbrook.Api.Tests.IntegrationTestDiscoverer", "Shadowbrook.Api.Tests")]
+[TraitDiscoverer("Shadowbrook.Api.IntegrationTests.IntegrationTestDiscoverer", "Shadowbrook.Api.IntegrationTests")]
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
 public class IntegrationTestAttribute : Attribute, ITraitAttribute;
 

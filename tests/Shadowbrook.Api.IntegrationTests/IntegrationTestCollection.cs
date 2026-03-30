@@ -1,4 +1,4 @@
-namespace Shadowbrook.Api.Tests;
+namespace Shadowbrook.Api.IntegrationTests;
 
 [CollectionDefinition("Integration")]
 public class IntegrationTestCollection : ICollectionFixture<TestWebApplicationFactory>;
