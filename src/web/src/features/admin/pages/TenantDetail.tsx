@@ -69,7 +69,7 @@ export default function TenantDetail() {
 
       {/* Tenant header */}
       <div>
-        <h1 className="text-2xl font-bold">{tenant.organizationName}</h1>
+        <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">{tenant.organizationName}</h1>
         <p className="text-sm text-muted-foreground">
           Registered {new Date(tenant.createdAt).toLocaleDateString()}
         </p>
@@ -93,7 +93,7 @@ export default function TenantDetail() {
 
       {/* Courses section */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">Courses ({tenant.courses.length})</h2>
+        <h2 className="text-lg font-semibold font-[family-name:var(--font-heading)] mb-4">Courses ({tenant.courses.length})</h2>
 
         {tenant.courses.length === 0 ? (
           <div role="status" className="text-center py-8 border rounded-md">

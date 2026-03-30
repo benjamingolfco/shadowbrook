@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@/test/test-utils';
-import userEvent from '@testing-library/user-event';
 import WalkUpWaitlist from '../pages/WalkUpWaitlist';
 import { useCourseContext } from '../context/CourseContext';
 import {
@@ -19,9 +18,107 @@ import {
 vi.mock('../context/CourseContext');
 vi.mock('../hooks/useWalkUpWaitlist');
 vi.mock('../hooks/useWaitlist');
-vi.mock('qrcode.react', () => ({
-  QRCodeCanvas: ({ value }: { value: string }) => (
-    <canvas data-testid="qr-canvas" data-value={value} />
+vi.mock('../components/PostTeeTimeForm', () => ({
+  PostTeeTimeForm: ({ courseId }: { courseId: string }) => (
+    <div data-testid="post-tee-time-form" data-course-id={courseId}>
+      <button type="submit">Post Tee Time</button>
+    </div>
+  ),
+}));
+vi.mock('../components/OpeningsList', () => ({
+  OpeningsList: ({ openings }: { openings: unknown[] }) => (
+    <div data-testid="openings-list" data-count={openings.length} />
+  ),
+}));
+vi.mock('../components/QueueDrawer', () => ({
+  QueueDrawer: ({ entries }: { entries: unknown[] }) => (
+    <div data-testid="queue-drawer">
+      <span>{entries.length} waiting</span>
+      <button type="button">View queue</button>
+    </div>
+  ),
+}));
+vi.mock('../components/CloseWaitlistDialog', () => ({
+  CloseWaitlistDialog: ({
+    open,
+    onConfirm,
+  }: {
+    open: boolean;
+    onOpenChange: (v: boolean) => void;
+    onConfirm: () => void;
+  }) =>
+    open ? (
+      <div role="dialog" aria-label="Close Waitlist">
+        <p>Close Walk-Up Waitlist?</p>
+        <button type="button" onClick={onConfirm}>
+          Confirm Close
+        </button>
+      </div>
+    ) : null,
+}));
+vi.mock('../components/ReopenWaitlistDialog', () => ({
+  ReopenWaitlistDialog: ({
+    open,
+    onConfirm,
+  }: {
+    open: boolean;
+    onOpenChange: (v: boolean) => void;
+    onConfirm: () => void;
+  }) =>
+    open ? (
+      <div role="dialog" aria-label="Reopen Waitlist">
+        <button type="button" onClick={onConfirm}>
+          Confirm Reopen
+        </button>
+      </div>
+    ) : null,
+}));
+vi.mock('../components/AddGolferDialog', () => ({
+  AddGolferDialog: ({ open }: { open: boolean; onOpenChange: (v: boolean) => void; courseId: string }) =>
+    open ? <div role="dialog" aria-label="Add Golfer" /> : null,
+}));
+vi.mock('../components/RemoveGolferDialog', () => ({
+  RemoveGolferDialog: ({
+    open,
+    onConfirm,
+    golferName,
+  }: {
+    open: boolean;
+    onOpenChange: (v: boolean) => void;
+    onConfirm: () => void;
+    golferName: string;
+    isPending: boolean;
+  }) =>
+    open ? (
+      <div role="dialog" aria-label="Remove Golfer">
+        <p>Remove {golferName} from the waitlist</p>
+        <button type="button" onClick={onConfirm}>
+          Remove
+        </button>
+      </div>
+    ) : null,
+}));
+vi.mock('../components/CancelOpeningDialog', () => ({
+  CancelOpeningDialog: ({
+    open,
+    onConfirm,
+  }: {
+    open: boolean;
+    onOpenChange: (v: boolean) => void;
+    onConfirm: () => void;
+    isPending: boolean;
+  }) =>
+    open ? (
+      <div role="dialog" aria-label="Cancel Opening">
+        <button type="button" onClick={onConfirm}>
+          Confirm Cancel
+        </button>
+      </div>
+    ) : null,
+}));
+vi.mock('../components/QrCodePanel', () => ({
+  QrCodePanel: ({ shortCode }: { shortCode: string }) => (
+    <div data-testid="qr-code-panel" data-short-code={shortCode} />
   ),
 }));
 
@@ -163,605 +260,292 @@ beforeEach(() => {
 });
 
 describe('WalkUpWaitlist', () => {
-  it('renders loading state', () => {
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: true,
-      isError: false,
-      data: undefined,
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    expect(document.querySelector('[data-slot="skeleton"]')).toBeInTheDocument();
-  });
-
-  it('renders inactive state with open button when no waitlist exists today', () => {
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: null, entries: [], openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    expect(screen.getByRole('button', { name: 'Open Waitlist' })).toBeInTheDocument();
-  });
-
-  it('does not show Add Tee Time Opening button in inactive state', () => {
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: null, entries: [], openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    expect(screen.queryByText('Add Tee Time Opening')).not.toBeInTheDocument();
-  });
-
-  it('renders open state with short code displayed', () => {
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: openWaitlist, entries: [], openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    // Short code displayed with spaces between digits
-    expect(screen.getByText('4 8 2 7')).toBeInTheDocument();
-  });
-
-  it('renders closed state with Closed badge', () => {
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: closedWaitlist, entries: [], openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    expect(screen.getByText('Closed')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Close Waitlist' })).not.toBeInTheDocument();
-  });
-
-  it('opens confirmation dialog and calls open mutation when confirmed', async () => {
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: null, entries: [], openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    // Click the action button to open the confirmation dialog
-    fireEvent.click(screen.getByRole('button', { name: 'Open Waitlist' }));
-
-    // Wait for the confirmation dialog to appear
-    await waitFor(() => {
-      expect(screen.getByText('Open Walk-Up Waitlist')).toBeInTheDocument();
-    });
-
-    // Click the AlertDialogAction to confirm
-    const confirmButton = document.querySelector('[data-slot="alert-dialog-action"]');
-    expect(confirmButton).toBeInTheDocument();
-    fireEvent.click(confirmButton!);
-
-    expect(mockOpenMutate).toHaveBeenCalledWith({ courseId: 'course-1' });
-  });
-
-  it('shows close confirmation dialog when Close Waitlist button is clicked', async () => {
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: openWaitlist, entries: [], openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Close Waitlist' }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Close Walk-Up Waitlist?')).toBeInTheDocument();
-    });
-
-    expect(
-      screen.getByText('No new golfers will be able to join. Existing entries will be preserved.')
-    ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Keep Open' })).toBeInTheDocument();
-  });
-
-  it('calls close mutation when confirmed in AlertDialog', async () => {
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: openWaitlist, entries: [], openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    // Open the dialog via the action button
-    fireEvent.click(screen.getByRole('button', { name: 'Close Waitlist' }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Close Walk-Up Waitlist?')).toBeInTheDocument();
-    });
-
-    // The confirm action inside the AlertDialog has data-slot="alert-dialog-action"
-    const confirmButton = document.querySelector('[data-slot="alert-dialog-action"]');
-    expect(confirmButton).toBeInTheDocument();
-    fireEvent.click(confirmButton!);
-
-    expect(mockCloseMutate).toHaveBeenCalledWith({ courseId: 'course-1' });
-  });
-
-  it('renders empty queue message when waitlist is open with no entries', () => {
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: openWaitlist, entries: [], openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    expect(
-      screen.getByText('No one is on the walk-up waitlist right now.')
-    ).toBeInTheDocument();
-  });
-
-  it('renders golfer entries in the queue table', () => {
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: openWaitlist, entries: mockEntries, openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    expect(screen.getAllByText('Alice Smith').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Bob Jones').length).toBeGreaterThan(0);
-  });
-
-  it('renders error state when query fails', () => {
-    const mockRefetch = vi.fn();
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: true,
-      data: undefined,
-      error: new Error('Failed to fetch'),
-      refetch: mockRefetch,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    expect(screen.getByText(/Error loading waitlist: Failed to fetch/)).toBeInTheDocument();
-
-    const retryButton = screen.getByRole('button', { name: 'Retry' });
-    expect(retryButton).toBeInTheDocument();
-
-    fireEvent.click(retryButton);
-    expect(mockRefetch).toHaveBeenCalled();
-  });
-
-  it('shows 409 error message when waitlist is already open', () => {
-    const error = Object.assign(new Error('Waitlist is already open for today.'), { status: 409 });
-
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: null, entries: [], openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    mockUseOpenWalkUpWaitlist.mockReturnValue({
-      mutate: mockOpenMutate,
-      isPending: false,
-      isError: true,
-      isSuccess: false,
-      error,
-    } as unknown as ReturnType<typeof useOpenWalkUpWaitlist>);
-
-    render(<WalkUpWaitlist />);
-
-    expect(screen.getByText('Waitlist is already open for today.')).toBeInTheDocument();
-  });
-
-  it('shows Add Tee Time Opening button when waitlist is open', () => {
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: openWaitlist, entries: [], openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    expect(screen.getByRole('button', { name: 'Add Tee Time Opening' })).toBeInTheDocument();
-  });
-
-  it('does not show Add Tee Time Opening button when waitlist is closed', () => {
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: closedWaitlist, entries: [], openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    expect(screen.queryByRole('button', { name: 'Add Tee Time Opening' })).not.toBeInTheDocument();
-  });
-
-  it('renders Remove buttons with correct aria-labels when waitlist is open', () => {
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: openWaitlist, entries: mockEntries, openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    // Both desktop and mobile views render Remove buttons, so we check for at least one of each
-    expect(screen.getAllByRole('button', { name: 'Remove Alice Smith from waitlist' })).toHaveLength(2);
-    expect(screen.getAllByRole('button', { name: 'Remove Bob Jones from waitlist' })).toHaveLength(2);
-  });
-
-  it('does not render Remove buttons when waitlist is closed', () => {
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: closedWaitlist, entries: mockEntries, openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    expect(screen.queryByRole('button', { name: 'Remove Alice Smith from waitlist' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Remove Bob Jones from waitlist' })).not.toBeInTheDocument();
-  });
-
-  it('opens confirmation dialog with golfer name when Remove is clicked', async () => {
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: openWaitlist, entries: mockEntries, openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    // Click the first Remove button (desktop view)
-    const removeButtons = screen.getAllByRole('button', { name: 'Remove Alice Smith from waitlist' });
-    fireEvent.click(removeButtons[0]!);
-
-    await waitFor(() => {
-      expect(screen.getByText('Remove from Waitlist?')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText(/Remove Alice Smith from the waitlist/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Keep on Waitlist' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Remove' })).toBeInTheDocument();
-  });
-
-  it('calls remove mutation with correct parameters when confirmed', async () => {
-    const mockRemoveMutate = vi.fn();
-    mockUseRemoveGolferFromWaitlist.mockReturnValue({
-      mutate: mockRemoveMutate,
-      isPending: false,
-      isSuccess: false,
-      isError: false,
-      error: null,
-      reset: vi.fn(),
-    } as unknown as ReturnType<typeof useRemoveGolferFromWaitlist>);
-
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: openWaitlist, entries: mockEntries, openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    // Click the first Remove button (desktop view)
-    const removeButtons = screen.getAllByRole('button', { name: 'Remove Alice Smith from waitlist' });
-    fireEvent.click(removeButtons[0]!);
-
-    await waitFor(() => {
-      expect(screen.getByText('Remove from Waitlist?')).toBeInTheDocument();
-    });
-
-    // Click confirm in the AlertDialog
-    const confirmButton = document.querySelector('[data-slot="alert-dialog-action"]');
-    expect(confirmButton).toBeInTheDocument();
-    fireEvent.click(confirmButton!);
-
-    expect(mockRemoveMutate).toHaveBeenCalledWith(
-      { courseId: 'course-1', entryId: 'e-1' },
-      expect.objectContaining({
-        onSuccess: expect.any(Function),
-      })
-    );
-  });
-
-  it('shows QR code panel when waitlist is open', () => {
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: openWaitlist, entries: [], openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    const qrCanvas = screen.getByTestId('qr-canvas');
-    expect(qrCanvas).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /download png/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /print/i })).toBeInTheDocument();
-  });
-
-  it('does not show QR code panel when waitlist is closed', () => {
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: closedWaitlist, entries: [], openings: [] },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    render(<WalkUpWaitlist />);
-
-    expect(screen.queryByTestId('qr-canvas')).not.toBeInTheDocument();
-  });
-
-  // Note: Tab switching tests are skipped due to complexity with shadcn Tabs component in test environment
-  // The Cancel button functionality is verified through the CancelOpeningDialog component tests
-
-  it('sorts tee time openings in ascending order by tee time', async () => {
-    const user = userEvent.setup();
-    const unsortedOpenings = [
-      { id: 'o-1', teeTime: '2026-06-01T14:30:00', slotsAvailable: 4, slotsRemaining: 2, status: 'Available', filledGolfers: [] },
-      { id: 'o-2', teeTime: '2026-06-01T08:00:00', slotsAvailable: 4, slotsRemaining: 4, status: 'Available', filledGolfers: [] },
-      { id: 'o-3', teeTime: '2026-06-01T11:15:00', slotsAvailable: 4, slotsRemaining: 1, status: 'Available', filledGolfers: [] },
-    ];
-
-    mockUseWalkUpWaitlistToday.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { waitlist: openWaitlist, entries: [], openings: unsortedOpenings },
-      error: null,
-    } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-    const { container } = render(<WalkUpWaitlist />);
-
-    // Switch to "Tee Time Openings" tab
-    const openingsTab = screen.getByRole('tab', { name: /tee time openings/i });
-    await user.click(openingsTab);
-
-    // Wait for the openings tab content to become active
-    await waitFor(() => {
-      const activePanel = container.querySelector('[data-slot="tabs-content"][data-state="active"]');
-      const panelText = activePanel?.textContent || '';
-      expect(panelText).toContain('8:00 AM');
-    });
-
-    // Get the active tab panel content
-    const tabPanel = container.querySelector('[data-slot="tabs-content"][data-state="active"]');
-    const panelText = tabPanel?.textContent || '';
-
-    // All three times should be present
-    expect(panelText).toContain('8:00 AM');
-    expect(panelText).toContain('11:15 AM');
-    expect(panelText).toContain('2:30 PM');
-
-    // Verify they appear in sorted order
-    const index8 = panelText.indexOf('8:00 AM');
-    const index11 = panelText.indexOf('11:15 AM');
-    const index14 = panelText.indexOf('2:30 PM');
-
-    expect(index8).toBeLessThan(index11);
-    expect(index11).toBeLessThan(index14);
-  });
-
-  describe('Walk-up notification slot status monitoring', () => {
-    it('shows Filled and Pending column headers in openings table', async () => {
-      const user = userEvent.setup();
-      const testOpenings = [
-        { id: 'o-1', teeTime: '2026-06-01T14:30:00', slotsAvailable: 4, slotsRemaining: 2, status: 'Open', filledGolfers: [] },
-      ];
-
+  describe('Loading state', () => {
+    it('renders skeleton while loading', () => {
       mockUseWalkUpWaitlistToday.mockReturnValue({
-        isLoading: false,
+        isLoading: true,
         isError: false,
-        data: { waitlist: openWaitlist, entries: [], openings: testOpenings },
+        data: undefined,
         error: null,
       } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
       render(<WalkUpWaitlist />);
 
-      // Switch to "Tee Time Openings" tab
-      const openingsTab = screen.getByRole('tab', { name: /tee time openings/i });
-      await user.click(openingsTab);
-
-      await waitFor(() => {
-        expect(screen.getByRole('columnheader', { name: 'Filled' })).toBeInTheDocument();
-        expect(screen.getByRole('columnheader', { name: 'Pending' })).toBeInTheDocument();
-      });
+      expect(document.querySelector('[data-slot="skeleton"]')).toBeInTheDocument();
     });
+  });
 
-    it('displays correct filled count for each opening', async () => {
-      const user = userEvent.setup();
-      const testOpenings = [
-        { id: 'o-1', teeTime: '2026-06-01T14:30:00', slotsAvailable: 4, slotsRemaining: 1, status: 'Open', filledGolfers: [] },
-      ];
-
+  describe('Error state', () => {
+    it('renders error message and Retry button when query fails', () => {
+      const mockRefetch = vi.fn();
       mockUseWalkUpWaitlistToday.mockReturnValue({
         isLoading: false,
-        isError: false,
-        data: { waitlist: openWaitlist, entries: [], openings: testOpenings },
-        error: null,
+        isError: true,
+        data: undefined,
+        error: new Error('Network error'),
+        refetch: mockRefetch,
       } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
-      const { container } = render(<WalkUpWaitlist />);
+      render(<WalkUpWaitlist />);
 
-      // Switch to "Tee Time Openings" tab
-      const openingsTab = screen.getByRole('tab', { name: /tee time openings/i });
-      await user.click(openingsTab);
-
-      await waitFor(() => {
-        const activePanel = container.querySelector('[data-slot="tabs-content"][data-state="active"]');
-        const panelText = activePanel?.textContent || '';
-        // Filled = slotsAvailable - slotsRemaining = 4 - 1 = 3
-        expect(panelText).toContain('3');
-      });
+      expect(screen.getByText("Couldn't load waitlist")).toBeInTheDocument();
+      const retryButton = screen.getByRole('button', { name: 'Retry' });
+      expect(retryButton).toBeInTheDocument();
     });
 
-    it('displays correct pending count for each opening', async () => {
-      const user = userEvent.setup();
-      const testOpenings = [
-        { id: 'o-1', teeTime: '2026-06-01T14:30:00', slotsAvailable: 4, slotsRemaining: 2, status: 'Open', filledGolfers: [] },
-      ];
-
+    it('calls refetch when Retry is clicked', () => {
+      const mockRefetch = vi.fn();
       mockUseWalkUpWaitlistToday.mockReturnValue({
         isLoading: false,
-        isError: false,
-        data: { waitlist: openWaitlist, entries: [], openings: testOpenings },
-        error: null,
+        isError: true,
+        data: undefined,
+        error: new Error('Network error'),
+        refetch: mockRefetch,
       } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
-      const { container } = render(<WalkUpWaitlist />);
+      render(<WalkUpWaitlist />);
 
-      // Switch to "Tee Time Openings" tab
-      const openingsTab = screen.getByRole('tab', { name: /tee time openings/i });
-      await user.click(openingsTab);
-
-      await waitFor(() => {
-        const activePanel = container.querySelector('[data-slot="tabs-content"][data-state="active"]');
-        const panelText = activePanel?.textContent || '';
-        // Pending = slotsRemaining = 2
-        expect(panelText).toContain('2');
-      });
+      fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+      expect(mockRefetch).toHaveBeenCalled();
     });
+  });
 
-    it('shows pending=0 and filled=total when all slots are filled', async () => {
-      const user = userEvent.setup();
-      const testOpenings = [
-        { id: 'o-1', teeTime: '2026-06-01T14:30:00', slotsAvailable: 4, slotsRemaining: 0, status: 'Filled', filledGolfers: [] },
-      ];
-
+  describe('Inactive state (no waitlist today)', () => {
+    beforeEach(() => {
       mockUseWalkUpWaitlistToday.mockReturnValue({
         isLoading: false,
         isError: false,
-        data: { waitlist: openWaitlist, entries: [], openings: testOpenings },
+        data: { waitlist: null, entries: [], openings: [] },
         error: null,
       } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
-
-      const { container } = render(<WalkUpWaitlist />);
-
-      // Switch to "Tee Time Openings" tab
-      const openingsTab = screen.getByRole('tab', { name: /tee time openings/i });
-      await user.click(openingsTab);
-
-      await waitFor(() => {
-        const activePanel = container.querySelector('[data-slot="tabs-content"][data-state="active"]');
-        const panelText = activePanel?.textContent || '';
-        // Check for "4 filled, 0 pending" pattern (mobile) or separate cells with 4 and 0 (desktop)
-        const hasMobilePattern = panelText.includes('4 filled, 0 pending');
-        const hasDesktopCells = panelText.includes('4') && panelText.includes('0');
-        expect(hasMobilePattern || hasDesktopCells).toBe(true);
-      });
     });
 
-    it('shows aggregate summary with total filled and total pending across all non-cancelled openings', async () => {
-      const user = userEvent.setup();
-      const testOpenings = [
-        { id: 'o-1', teeTime: '2026-06-01T08:00:00', slotsAvailable: 4, slotsRemaining: 1, status: 'Open', filledGolfers: [] },
-        { id: 'o-2', teeTime: '2026-06-01T14:30:00', slotsAvailable: 4, slotsRemaining: 2, status: 'Open', filledGolfers: [] },
-        { id: 'o-3', teeTime: '2026-06-01T16:00:00', slotsAvailable: 4, slotsRemaining: 0, status: 'Filled', filledGolfers: [] },
-      ];
+    it('renders "Open Waitlist for Today" button', () => {
+      render(<WalkUpWaitlist />);
+      expect(screen.getByRole('button', { name: 'Open Waitlist for Today' })).toBeInTheDocument();
+    });
 
+    it('fires open mutation directly when button is clicked (no dialog)', () => {
+      render(<WalkUpWaitlist />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Open Waitlist for Today' }));
+
+      expect(mockOpenMutate).toHaveBeenCalledWith({ courseId: 'course-1' });
+    });
+
+    it('does not open a confirmation dialog when button is clicked', () => {
+      render(<WalkUpWaitlist />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Open Waitlist for Today' }));
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('does not render PostTeeTimeForm in inactive state', () => {
+      render(<WalkUpWaitlist />);
+      expect(screen.queryByTestId('post-tee-time-form')).not.toBeInTheDocument();
+    });
+
+    it('shows 409 error inline when waitlist is already open', () => {
+      const error = Object.assign(new Error('Waitlist is already open for today.'), { status: 409 });
+      mockUseOpenWalkUpWaitlist.mockReturnValue({
+        mutate: mockOpenMutate,
+        isPending: false,
+        isError: true,
+        isSuccess: false,
+        error,
+      } as unknown as ReturnType<typeof useOpenWalkUpWaitlist>);
+
+      render(<WalkUpWaitlist />);
+
+      expect(screen.getByText('Waitlist is already open — try refreshing the page.')).toBeInTheDocument();
+    });
+  });
+
+  describe('Active state (Open)', () => {
+    beforeEach(() => {
       mockUseWalkUpWaitlistToday.mockReturnValue({
         isLoading: false,
         isError: false,
-        data: { waitlist: openWaitlist, entries: [], openings: testOpenings },
+        data: { waitlist: openWaitlist, entries: [], openings: [] },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+    });
+
+    it('displays short code with spaces between digits', () => {
+      render(<WalkUpWaitlist />);
+      expect(screen.getByText('4 8 2 7')).toBeInTheDocument();
+    });
+
+    it('shows Open badge', () => {
+      render(<WalkUpWaitlist />);
+      expect(screen.getByText('Open')).toBeInTheDocument();
+    });
+
+    it('renders inline PostTeeTimeForm', () => {
+      render(<WalkUpWaitlist />);
+      expect(screen.getByTestId('post-tee-time-form')).toBeInTheDocument();
+    });
+
+    it('renders queue drawer showing count', () => {
+      render(<WalkUpWaitlist />);
+      expect(screen.getByTestId('queue-drawer')).toBeInTheDocument();
+    });
+
+    it('renders queue count showing 0 waiting when no entries', () => {
+      render(<WalkUpWaitlist />);
+      expect(screen.getByText('0 waiting')).toBeInTheDocument();
+    });
+
+    it('renders queue count showing number of entries waiting', () => {
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: openWaitlist, entries: mockEntries, openings: [] },
         error: null,
       } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
       render(<WalkUpWaitlist />);
 
-      // Switch to "Tee Time Openings" tab
-      const openingsTab = screen.getByRole('tab', { name: /tee time openings/i });
-      await user.click(openingsTab);
-
-      await waitFor(() => {
-        // Total filled = (4-1) + (4-2) + (4-0) = 3 + 2 + 4 = 9
-        // Total pending = 1 + 2 + 0 = 3
-        expect(screen.getByText(/3 openings -- 9 filled, 3 pending/i)).toBeInTheDocument();
-      });
+      expect(screen.getByText('2 waiting')).toBeInTheDocument();
     });
 
-    it('excludes cancelled openings from aggregate summary counts', async () => {
-      const user = userEvent.setup();
-      const testOpenings = [
-        { id: 'o-1', teeTime: '2026-06-01T08:00:00', slotsAvailable: 4, slotsRemaining: 1, status: 'Open', filledGolfers: [] },
-        { id: 'o-2', teeTime: '2026-06-01T14:30:00', slotsAvailable: 4, slotsRemaining: 4, status: 'Cancelled', filledGolfers: [] },
-      ];
-
+    it('golfer names are NOT visible by default (hidden in drawer)', () => {
       mockUseWalkUpWaitlistToday.mockReturnValue({
         isLoading: false,
         isError: false,
-        data: { waitlist: openWaitlist, entries: [], openings: testOpenings },
+        data: { waitlist: openWaitlist, entries: mockEntries, openings: [] },
         error: null,
       } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
 
       render(<WalkUpWaitlist />);
 
-      // Switch to "Tee Time Openings" tab
-      const openingsTab = screen.getByRole('tab', { name: /tee time openings/i });
-      await user.click(openingsTab);
-
-      await waitFor(() => {
-        // Total filled = (4-1) = 3 (excluding cancelled)
-        // Total pending = 1 (excluding cancelled)
-        expect(screen.getByText(/2 openings -- 3 filled, 1 pending/i)).toBeInTheDocument();
-      });
+      expect(screen.queryByText('Alice Smith')).not.toBeInTheDocument();
+      expect(screen.queryByText('Bob Jones')).not.toBeInTheDocument();
     });
 
-    it('shows filled/pending text in mobile card view', async () => {
-      const user = userEvent.setup();
-      const testOpenings = [
-        { id: 'o-1', teeTime: '2026-06-01T14:30:00', slotsAvailable: 4, slotsRemaining: 2, status: 'Open', filledGolfers: [] },
-      ];
+    it('renders openings list', () => {
+      render(<WalkUpWaitlist />);
+      expect(screen.getByTestId('openings-list')).toBeInTheDocument();
+    });
 
+    it('renders "Add golfer manually" link', () => {
+      render(<WalkUpWaitlist />);
+      expect(screen.getByText('Add golfer manually')).toBeInTheDocument();
+    });
+
+    it('renders "Close waitlist for today" text link', () => {
+      render(<WalkUpWaitlist />);
+      expect(screen.getByText('Close waitlist for today')).toBeInTheDocument();
+    });
+
+    it('does NOT show a "Print sign" button area as a standalone QR code', () => {
+      render(<WalkUpWaitlist />);
+      // QR code is behind dialog trigger, not directly visible
+      expect(screen.queryByTestId('qr-code-panel')).not.toBeInTheDocument();
+    });
+
+    it('"Print sign" trigger is present and opens QR code dialog when clicked', async () => {
+      render(<WalkUpWaitlist />);
+
+      const printTrigger = screen.getByText('Print sign');
+      expect(printTrigger).toBeInTheDocument();
+
+      fireEvent.click(printTrigger);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('qr-code-panel')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Close waitlist', () => {
+    beforeEach(() => {
       mockUseWalkUpWaitlistToday.mockReturnValue({
         isLoading: false,
         isError: false,
-        data: { waitlist: openWaitlist, entries: [], openings: testOpenings },
+        data: { waitlist: openWaitlist, entries: [], openings: [] },
         error: null,
       } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+    });
 
-      const { container } = render(<WalkUpWaitlist />);
+    it('opens CloseWaitlistDialog when "Close waitlist for today" is clicked', async () => {
+      render(<WalkUpWaitlist />);
 
-      // Switch to "Tee Time Openings" tab
-      const openingsTab = screen.getByRole('tab', { name: /tee time openings/i });
-      await user.click(openingsTab);
+      fireEvent.click(screen.getByText('Close waitlist for today'));
 
       await waitFor(() => {
-        const activePanel = container.querySelector('[data-slot="tabs-content"][data-state="active"]');
-        const panelText = activePanel?.textContent || '';
-        // Mobile view should show "2 filled, 2 pending"
-        expect(panelText).toContain('2 filled, 2 pending');
+        expect(screen.getByText('Close Walk-Up Waitlist?')).toBeInTheDocument();
       });
+    });
+
+    it('calls close mutation when dialog is confirmed', async () => {
+      render(<WalkUpWaitlist />);
+
+      fireEvent.click(screen.getByText('Close waitlist for today'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Close Walk-Up Waitlist?')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm Close' }));
+
+      expect(mockCloseMutate).toHaveBeenCalledWith({ courseId: 'course-1' });
+    });
+  });
+
+  describe('Closed state', () => {
+    beforeEach(() => {
+      mockUseWalkUpWaitlistToday.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { waitlist: closedWaitlist, entries: [], openings: [] },
+        error: null,
+      } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
+    });
+
+    it('renders Closed badge', () => {
+      render(<WalkUpWaitlist />);
+      expect(screen.getByText('Closed')).toBeInTheDocument();
+    });
+
+    it('renders Reopen button', () => {
+      render(<WalkUpWaitlist />);
+      expect(screen.getByRole('button', { name: 'Reopen' })).toBeInTheDocument();
+    });
+
+    it('does not render PostTeeTimeForm', () => {
+      render(<WalkUpWaitlist />);
+      expect(screen.queryByTestId('post-tee-time-form')).not.toBeInTheDocument();
+    });
+
+    it('does not render "Close waitlist for today" link', () => {
+      render(<WalkUpWaitlist />);
+      expect(screen.queryByText('Close waitlist for today')).not.toBeInTheDocument();
+    });
+
+    it('opens ReopenWaitlistDialog when Reopen is clicked', async () => {
+      render(<WalkUpWaitlist />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Reopen' }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog', { name: 'Reopen Waitlist' })).toBeInTheDocument();
+      });
+    });
+
+    it('calls reopen mutation when dialog is confirmed', async () => {
+      render(<WalkUpWaitlist />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Reopen' }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Confirm Reopen' })).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm Reopen' }));
+
+      expect(mockReopenMutate).toHaveBeenCalledWith({ courseId: 'course-1' });
     });
   });
 });

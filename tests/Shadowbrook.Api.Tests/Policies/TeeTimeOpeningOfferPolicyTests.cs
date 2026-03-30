@@ -18,13 +18,55 @@ public class TeeTimeOpeningOfferPolicyTests
             SlotsAvailable = 3
         };
 
-        var (policy, command) = TeeTimeOpeningOfferPolicy.Start(evt);
+        var (policy, timeout) = TeeTimeOpeningOfferPolicy.Start(evt);
 
         Assert.Equal(evt.OpeningId, policy.Id);
         Assert.Equal(3, policy.SlotsRemaining);
         Assert.Equal(0, policy.PendingOfferCount);
-        Assert.Equal(evt.OpeningId, command.OpeningId);
-        Assert.Equal(3, command.MaxOffers);
+        Assert.False(policy.GracePeriodExpired);
+        Assert.Equal(TimeSpan.FromSeconds(15), timeout.Delay);
+    }
+
+    [Fact]
+    public void Handle_GracePeriodTimeout_DispatchesOffersAndSetsFlag()
+    {
+        var openingId = Guid.NewGuid();
+        var policy = new TeeTimeOpeningOfferPolicy { Id = openingId, SlotsRemaining = 3 };
+
+        var result = policy.Handle(new OfferDispatchGracePeriodTimeout(TimeSpan.FromSeconds(15)));
+
+        Assert.True(policy.GracePeriodExpired);
+        Assert.Equal(openingId, result.OpeningId);
+        Assert.Equal(3, result.MaxOffers);
+    }
+
+    [Fact]
+    public void Handle_Cancelled_MarksCompleted()
+    {
+        var openingId = Guid.NewGuid();
+        var policy = new TeeTimeOpeningOfferPolicy { Id = openingId, SlotsRemaining = 3 };
+
+        policy.Handle(new TeeTimeOpeningCancelled
+        {
+            OpeningId = openingId,
+            CourseId = Guid.NewGuid(),
+            Date = new DateOnly(2026, 3, 25),
+            TeeTime = new TimeOnly(14, 30)
+        });
+
+        Assert.True(policy.IsCompleted());
+    }
+
+    [Fact]
+    public void Handle_WakeUp_DuringGracePeriod_ReturnsNull()
+    {
+        var openingId = Guid.NewGuid();
+        var policy = new TeeTimeOpeningOfferPolicy { Id = openingId, SlotsRemaining = 2, PendingOfferCount = 0 };
+        // GracePeriodExpired defaults to false
+
+        var result = policy.Handle(new WakeUpOfferPolicy(openingId));
+
+        Assert.Null(result);
     }
 
     [Fact]
@@ -73,7 +115,7 @@ public class TeeTimeOpeningOfferPolicyTests
     public void Handle_Claimed_UpdatesSlotsAndDispatchesMoreIfNeeded()
     {
         var openingId = Guid.NewGuid();
-        var policy = new TeeTimeOpeningOfferPolicy { Id = openingId, SlotsRemaining = 3, PendingOfferCount = 1 };
+        var policy = new TeeTimeOpeningOfferPolicy { Id = openingId, SlotsRemaining = 3, PendingOfferCount = 1, GracePeriodExpired = true };
 
         var result = policy.Handle(new TeeTimeOpeningSlotsClaimed
         {
@@ -95,7 +137,7 @@ public class TeeTimeOpeningOfferPolicyTests
     public void Handle_OfferRejected_DecrementsPendingAndDispatchesMore()
     {
         var openingId = Guid.NewGuid();
-        var policy = new TeeTimeOpeningOfferPolicy { Id = openingId, SlotsRemaining = 2, PendingOfferCount = 2 };
+        var policy = new TeeTimeOpeningOfferPolicy { Id = openingId, SlotsRemaining = 2, PendingOfferCount = 2, GracePeriodExpired = true };
 
         var result = policy.Handle(new WaitlistOfferRejected
         {
@@ -114,7 +156,7 @@ public class TeeTimeOpeningOfferPolicyTests
     public void Handle_OfferStale_DecrementsPendingAndDispatchesMore()
     {
         var openingId = Guid.NewGuid();
-        var policy = new TeeTimeOpeningOfferPolicy { Id = openingId, SlotsRemaining = 2, PendingOfferCount = 2 };
+        var policy = new TeeTimeOpeningOfferPolicy { Id = openingId, SlotsRemaining = 2, PendingOfferCount = 2, GracePeriodExpired = true };
 
         var result = policy.Handle(new WaitlistOfferStale
         {
@@ -152,7 +194,7 @@ public class TeeTimeOpeningOfferPolicyTests
     public void Handle_WakeUp_DispatchesOffersIfSlotsAvailable()
     {
         var openingId = Guid.NewGuid();
-        var policy = new TeeTimeOpeningOfferPolicy { Id = openingId, SlotsRemaining = 2, PendingOfferCount = 0 };
+        var policy = new TeeTimeOpeningOfferPolicy { Id = openingId, SlotsRemaining = 2, PendingOfferCount = 0, GracePeriodExpired = true };
 
         var result = policy.Handle(new WakeUpOfferPolicy(openingId));
 

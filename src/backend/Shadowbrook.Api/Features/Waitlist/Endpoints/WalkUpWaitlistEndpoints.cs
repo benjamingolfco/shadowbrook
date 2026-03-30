@@ -156,6 +156,14 @@ public static class WalkUpWaitlistEndpoints
         var today = CourseTime.Today(systemTimeProvider, timeZoneId);
         var parsedTeeTime = TimeOnly.ParseExact(request.TeeTime, ["HH:mm", "HH:mm:ss"]);
 
+        var teeTime = new TeeTime(today, parsedTeeTime);
+        var existing = await openingRepo.GetActiveByCourseTeeTimeAsync(courseId, teeTime);
+
+        if (existing is not null)
+        {
+            return Results.Conflict(new { error = "An active tee time opening already exists for this time." });
+        }
+
         var opening = TeeTimeOpening.Create(courseId, today, parsedTeeTime, request.SlotsAvailable, operatorOwned: true, timeProvider);
         openingRepo.Add(opening);
 

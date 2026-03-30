@@ -56,7 +56,7 @@ export default function TenantCreate() {
   return (
     <div className="p-6 max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Register a Tenant</h1>
+        <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Register a Tenant</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Create a new tenant organization that can manage multiple golf courses
         </p>
