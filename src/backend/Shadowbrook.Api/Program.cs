@@ -1,8 +1,10 @@
+using System.Threading.RateLimiting;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using OpenTelemetry.Metrics;
@@ -76,21 +78,23 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
     {
-        var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
-        var originPattern = builder.Configuration["Cors:AllowedOriginPattern"];
-
-        if (!string.IsNullOrEmpty(originPattern))
-        {
-            var regex = new System.Text.RegularExpressions.Regex(originPattern);
-            policy.SetIsOriginAllowed(origin => regex.IsMatch(origin))
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
-        }
-        else if (origins is { Length: > 0 })
-        {
-            policy.WithOrigins(origins).AllowAnyMethod().AllowAnyHeader();
-        }
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? ["http://localhost:3000"];
+        policy.WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     }));
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddFixedWindowLimiter("authenticated", opt =>
+    {
+        opt.PermitLimit = 100;
+        opt.Window = TimeSpan.FromMinutes(1);
+    });
+});
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -203,7 +207,21 @@ if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testi
 
 app.UseDomainExceptionHandler();
 
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Append(
+        "Content-Security-Policy",
+        "default-src 'self'; " +
+        "script-src 'self'; " +
+        "style-src 'self' 'unsafe-inline'; " +
+        "img-src 'self' data:; " +
+        "connect-src 'self' https://*.ciamlogin.com; " +
+        "frame-src https://*.ciamlogin.com;");
+    await next();
+});
+
 app.UseCors();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseMiddleware<AppUserEnrichmentMiddleware>();
 app.UseAuthorization();
