@@ -356,4 +356,43 @@ public class BookingTests
 
         Assert.Throws<BookingNotCancellableException>(() => booking.Cancel());
     }
+
+    [Fact]
+    public void Cancel_FromPending_EventCarriesPendingAsPreviousStatus()
+    {
+        var bookingId = Guid.CreateVersion7();
+        var booking = Booking.Create(
+            bookingId,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 15),
+            new TimeOnly(9, 0),
+            1);
+
+        booking.Cancel();
+
+        var cancelledEvent = Assert.IsType<BookingCancelled>(booking.DomainEvents.Last());
+        Assert.Equal(bookingId, cancelledEvent.BookingId);
+        Assert.Equal(BookingStatus.Pending, cancelledEvent.PreviousStatus);
+    }
+
+    [Fact]
+    public void Cancel_FromConfirmed_EventCarriesConfirmedAsPreviousStatus()
+    {
+        var bookingId = Guid.CreateVersion7();
+        var booking = Booking.Create(
+            bookingId,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 15),
+            new TimeOnly(9, 0),
+            1);
+
+        booking.Confirm();
+        booking.Cancel();
+
+        var cancelledEvent = Assert.IsType<BookingCancelled>(booking.DomainEvents.Last());
+        Assert.Equal(bookingId, cancelledEvent.BookingId);
+        Assert.Equal(BookingStatus.Confirmed, cancelledEvent.PreviousStatus);
+    }
 }

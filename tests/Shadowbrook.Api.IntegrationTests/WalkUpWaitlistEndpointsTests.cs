@@ -473,6 +473,78 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     }
 
     // -------------------------------------------------------------------------
+    // POST /tee-time-openings
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task CreateOpening_ReturnsCreated()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+
+        var response = await PostCreateOpeningAsync(courseId, new { TeeTime = "10:00", SlotsAvailable = 4 });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<TeeTimeOpeningResponse>();
+        Assert.NotNull(body);
+        Assert.Equal(4, body!.SlotsAvailable);
+        Assert.Equal("Open", body.Status);
+    }
+
+    [Fact]
+    public async Task CreateOpening_DuplicateTime_Returns409()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+
+        await PostCreateOpeningAsync(courseId, new { TeeTime = "10:00", SlotsAvailable = 4 });
+        var response = await PostCreateOpeningAsync(courseId, new { TeeTime = "10:00", SlotsAvailable = 2 });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal("An active tee time opening already exists for this time.", body!.Error);
+    }
+
+    [Fact]
+    public async Task CreateOpening_DifferentTimes_BothSucceed()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+
+        var r1 = await PostCreateOpeningAsync(courseId, new { TeeTime = "10:00", SlotsAvailable = 4 });
+        var r2 = await PostCreateOpeningAsync(courseId, new { TeeTime = "10:30", SlotsAvailable = 4 });
+
+        Assert.Equal(HttpStatusCode.Created, r1.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, r2.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateOpening_SameTimeDifferentCourses_BothSucceed()
+    {
+        var (_, courseId1) = await CreateTestCourseAsync();
+        var (_, courseId2) = await CreateTestCourseAsync();
+
+        var r1 = await PostCreateOpeningAsync(courseId1, new { TeeTime = "10:00", SlotsAvailable = 4 });
+        var r2 = await PostCreateOpeningAsync(courseId2, new { TeeTime = "10:00", SlotsAvailable = 4 });
+
+        Assert.Equal(HttpStatusCode.Created, r1.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, r2.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateOpening_AfterCancellation_AllowsSameTime()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+
+        var r1 = await PostCreateOpeningAsync(courseId, new { TeeTime = "10:00", SlotsAvailable = 4 });
+        var body = await r1.Content.ReadFromJsonAsync<TeeTimeOpeningResponse>();
+        await PostCancelOpeningAsync(courseId, body!.Id);
+
+        var r2 = await PostCreateOpeningAsync(courseId, new { TeeTime = "10:00", SlotsAvailable = 2 });
+
+        Assert.Equal(HttpStatusCode.Created, r2.StatusCode);
+    }
+
+    // -------------------------------------------------------------------------
     // Tenant isolation
     // -------------------------------------------------------------------------
 
@@ -530,6 +602,15 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         return await this.client.SendAsync(request);
     }
 
+    private async Task<HttpResponseMessage> PostCreateOpeningAsync(Guid courseId, object body) =>
+        await this.client.PostAsJsonAsync($"/courses/{courseId}/tee-time-openings", body);
+
+    private async Task<HttpResponseMessage> PostCancelOpeningAsync(Guid courseId, Guid openingId)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, $"/courses/{courseId}/tee-time-openings/{openingId}/cancel");
+        return await this.client.SendAsync(request);
+    }
+
     private async Task<(Guid TenantId, Guid CourseId)> CreateTestCourseAsync()
     {
         var tenantId = await CreateTestTenantAsync();
@@ -556,4 +637,6 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         var tenant = await response.Content.ReadFromJsonAsync<TenantIdResponse>();
         return tenant!.Id;
     }
+
+    private record TeeTimeOpeningResponse(Guid Id, int SlotsAvailable, int SlotsRemaining, string Status);
 }
