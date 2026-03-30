@@ -17,25 +17,25 @@ public static class CourseEndpoints
         [NotBody] ITenantRepository tenantRepository,
         [NotBody] ICurrentUser currentUser)
     {
-        var tenantId = currentUser.TenantId ?? request.TenantId;
-        if (tenantId is null)
+        var organizationId = currentUser.TenantId ?? request.TenantId;
+        if (organizationId is null)
         {
             return Results.BadRequest(new { error = "TenantId is required (via X-Tenant-Id header or request body)." });
         }
 
-        var tenant = await tenantRepository.GetByIdAsync(tenantId.Value);
+        var tenant = await tenantRepository.GetByIdAsync(organizationId.Value);
         if (tenant is null)
         {
             return Results.BadRequest(new { error = "Tenant does not exist." });
         }
 
-        var duplicateExists = await courseRepository.ExistsByNameAsync(tenantId.Value, request.Name);
+        var duplicateExists = await courseRepository.ExistsByNameAsync(organizationId.Value, request.Name);
         if (duplicateExists)
         {
             return Results.Conflict(new { error = "A course with this name already exists for this tenant." });
         }
 
-        var course = Course.Create(tenantId.Value, request.Name, request.TimeZoneId,
+        var course = Course.Create(organizationId.Value, request.Name, request.TimeZoneId,
             request.StreetAddress, request.City, request.State, request.ZipCode,
             request.ContactEmail, request.ContactPhone);
 

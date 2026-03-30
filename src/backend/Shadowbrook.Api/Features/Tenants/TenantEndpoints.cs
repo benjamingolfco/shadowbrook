@@ -63,7 +63,7 @@ public static class TenantEndpoints
             return Results.NotFound();
         }
 
-        var courses = await courseRepository.GetByTenantIdAsync(id);
+        var courses = await courseRepository.GetByOrganizationIdAsync(id);
 
         var response = new TenantDetailResponse(
             tenant.Id,
