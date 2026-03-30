@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
-namespace Shadowbrook.Api.Tests;
+namespace Shadowbrook.Api.IntegrationTests;
 
 [Collection("Integration")]
 [IntegrationTest]
@@ -82,7 +82,7 @@ public class RemoveWaitlistEntryTests(TestWebApplicationFactory factory) : IAsyn
         await DeleteEntryAsync(courseId, b2!.EntryId);
 
         var todayResponse = await GetTodayAsync(courseId);
-        var todayBody = await todayResponse.Content.ReadFromJsonAsync<WalkUpWaitlistTodayResponse>();
+        var todayBody = await todayResponse.Content.ReadFromJsonAsync<WaitlistTodayResponse>();
 
         Assert.Equal(HttpStatusCode.OK, todayResponse.StatusCode);
         Assert.NotNull(todayBody);
@@ -108,7 +108,7 @@ public class RemoveWaitlistEntryTests(TestWebApplicationFactory factory) : IAsyn
         await DeleteEntryAsync(courseId, b1!.EntryId);
 
         var todayResponse = await GetTodayAsync(courseId);
-        var todayBody = await todayResponse.Content.ReadFromJsonAsync<WalkUpWaitlistTodayResponse>();
+        var todayBody = await todayResponse.Content.ReadFromJsonAsync<WaitlistTodayResponse>();
 
         Assert.Equal(HttpStatusCode.OK, todayResponse.StatusCode);
         Assert.NotNull(todayBody);
@@ -194,34 +194,4 @@ public class RemoveWaitlistEntryTests(TestWebApplicationFactory factory) : IAsyn
         var tenant = await response.Content.ReadFromJsonAsync<TenantIdResponse>();
         return tenant!.Id;
     }
-
-    private record AddGolferResponse(
-        Guid EntryId,
-        string GolferName,
-        string GolferPhone,
-        int GroupSize,
-        string CourseName);
-
-    private record WalkUpWaitlistTodayResponse(
-        WalkUpWaitlistResponse? Waitlist,
-        List<WalkUpWaitlistEntryResponse> Entries);
-
-    private record WalkUpWaitlistResponse(
-        Guid Id,
-        Guid CourseId,
-        string ShortCode,
-        string Date,
-        string Status,
-        DateTimeOffset OpenedAt,
-        DateTimeOffset? ClosedAt);
-
-    private record WalkUpWaitlistEntryResponse(
-        Guid Id,
-        string GolferName,
-        int GroupSize,
-        DateTimeOffset JoinedAt);
-
-    private record ErrorResponse(string Error);
-    private record CourseIdResponse(Guid Id);
-    private record TenantIdResponse(Guid Id);
 }

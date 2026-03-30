@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Time.Testing;
 using Shadowbrook.Api.Infrastructure.Services;
 
-namespace Shadowbrook.Api.Tests;
+namespace Shadowbrook.Api.IntegrationTests;
 
 public class CourseTimeTests
 {

@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
-namespace Shadowbrook.Api.Tests;
+namespace Shadowbrook.Api.IntegrationTests;
 
 [Collection("Integration")]
 [IntegrationTest]
@@ -54,6 +54,4 @@ public class TenantClaimMiddlewareTests(TestWebApplicationFactory factory) : IAs
         Assert.NotNull(body);
         Assert.Null(body!.TenantId);
     }
-
-    private record CurrentUserResponse(Guid? TenantId);
 }

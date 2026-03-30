@@ -5,7 +5,7 @@ using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 
-namespace Shadowbrook.Api.Tests;
+namespace Shadowbrook.Api.IntegrationTests;
 
 [Collection("Integration")]
 [IntegrationTest]
@@ -51,7 +51,7 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
             ContactPhone = "555-0000"
         });
 
-        var tenant = await response.Content.ReadFromJsonAsync<TenantResponse>();
+        var tenant = await response.Content.ReadFromJsonAsync<TenantIdResponse>();
         return tenant!.Id;
     }
 
@@ -64,7 +64,7 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
         createRequest.Content = JsonContent.Create(new { Name = "Test Course", TimeZoneId = TestTimeZones.Chicago });
         var createResponse = await this.client.SendAsync(createRequest);
-        var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
+        var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         await this.client.PutAsJsonAsync($"/courses/{course!.Id}/tee-time-settings", new
         {
@@ -95,7 +95,7 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
         createRequest.Content = JsonContent.Create(new { Name = "Test Course", TimeZoneId = TestTimeZones.Chicago });
         var createResponse = await this.client.SendAsync(createRequest);
-        var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
+        var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         await this.client.PutAsJsonAsync($"/courses/{course!.Id}/tee-time-settings", new
         {
@@ -139,7 +139,7 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
         createRequest.Content = JsonContent.Create(new { Name = "Test Course", TimeZoneId = TestTimeZones.Chicago });
         var createResponse = await this.client.SendAsync(createRequest);
-        var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
+        var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         await this.client.PutAsJsonAsync($"/courses/{course!.Id}/tee-time-settings", new
         {
@@ -177,7 +177,7 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
         createRequest.Content = JsonContent.Create(new { Name = "Test Course", TimeZoneId = TestTimeZones.Chicago });
         var createResponse = await this.client.SendAsync(createRequest);
-        var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
+        var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         var response = await this.client.GetAsync($"/tee-sheets?courseId={course!.Id}&date=2026-02-07");
 
@@ -192,7 +192,7 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
         createRequest.Content = JsonContent.Create(new { Name = "Test Course", TimeZoneId = TestTimeZones.Chicago });
         var createResponse = await this.client.SendAsync(createRequest);
-        var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
+        var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         var response = await this.client.GetAsync($"/tee-sheets?courseId={course!.Id}&date=02-07-2026");
 
@@ -223,7 +223,7 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
         createRequest.Content = JsonContent.Create(new { Name = "Test Course", TimeZoneId = TestTimeZones.Chicago });
         var createResponse = await this.client.SendAsync(createRequest);
-        var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
+        var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         await this.client.PutAsJsonAsync($"/courses/{course!.Id}/tee-time-settings", new
         {
@@ -251,7 +251,7 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
         createRequest.Content = JsonContent.Create(new { Name = "Test Course", TimeZoneId = TestTimeZones.Chicago });
         var createResponse = await this.client.SendAsync(createRequest);
-        var course = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
+        var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         await this.client.PutAsJsonAsync($"/courses/{course!.Id}/tee-time-settings", new
         {
@@ -271,29 +271,4 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         Assert.Equal(3, teeSheet!.Slots.Count);
         Assert.All(teeSheet.Slots, slot => Assert.Equal("booked", slot.Status));
     }
-
-    private record CourseResponse(
-        Guid Id,
-        string Name,
-        string? StreetAddress,
-        string? City,
-        string? State,
-        string? ZipCode,
-        string? ContactEmail,
-        string? ContactPhone,
-        DateTimeOffset CreatedAt,
-        DateTimeOffset UpdatedAt);
-
-    private record TenantResponse(Guid Id);
-
-    private record TeeSheetResponse(
-        Guid CourseId,
-        string CourseName,
-        List<TeeSheetSlot> Slots);
-
-    private record TeeSheetSlot(
-        DateTime TeeTime,
-        string Status,
-        string? GolferName,
-        int PlayerCount);
 }

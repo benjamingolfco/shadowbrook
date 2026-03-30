@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
-namespace Shadowbrook.Api.Tests;
+namespace Shadowbrook.Api.IntegrationTests;
 
 [Collection("Integration")]
 [IntegrationTest]
@@ -430,11 +430,6 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IAsyn
         return tenant!.Id;
     }
 
-    private record VerifyCodeResponse(Guid CourseWaitlistId, string CourseName, string ShortCode);
-    private record JoinWaitlistResponse(Guid EntryId, Guid GolferId, string GolferName, int Position, string CourseName);
-    private record DuplicateEntryError(string Error);
-    private record ErrorResponse(string Error);
-    private record CourseIdResponse(Guid Id);
-    private record TenantIdResponse(Guid Id);
+    // Local 2-field version — different from the shared 7-field WaitlistResponse
     private record WalkUpWaitlistResponse(Guid Id, string ShortCode);
 }

@@ -7,7 +7,7 @@ using Shadowbrook.Api.Infrastructure.Dev;
 using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.GolferAggregate;
 
-namespace Shadowbrook.Api.Tests.Features.Dev;
+namespace Shadowbrook.Api.IntegrationTests.Features.Dev;
 
 [Collection("Integration")]
 [IntegrationTest]

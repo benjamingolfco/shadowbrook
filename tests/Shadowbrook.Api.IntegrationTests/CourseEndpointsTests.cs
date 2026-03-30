@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
-namespace Shadowbrook.Api.Tests;
+namespace Shadowbrook.Api.IntegrationTests;
 
 [Collection("Integration")]
 [IntegrationTest]
@@ -51,7 +51,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         Assert.NotNull(courses);
         var course = courses!.First(c => c.Id == created!.Id);
         Assert.NotNull(course.Tenant);
-        Assert.Equal(tenantId, course.Tenant.Id);
+        Assert.Equal(tenantId, course.Tenant!.Id);
         Assert.Equal(tenantName, course.Tenant.OrganizationName);
     }
 
@@ -92,7 +92,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
 
         Assert.NotNull(course);
         Assert.NotNull(course!.Tenant);
-        Assert.Equal(tenantId, course.Tenant.Id);
+        Assert.Equal(tenantId, course.Tenant!.Id);
         Assert.Equal(tenantName, course.Tenant.OrganizationName);
     }
 
@@ -135,7 +135,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         Assert.Equal(TestTimeZones.Chicago, body.TimeZoneId);
         Assert.NotEqual(Guid.Empty, body.Id);
         Assert.NotNull(body.Tenant);
-        Assert.Equal(tenantId, body.Tenant.Id);
+        Assert.Equal(tenantId, body.Tenant!.Id);
         Assert.Equal(tenantName, body.Tenant.OrganizationName);
     }
 
@@ -225,25 +225,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
             ContactPhone = "555-0000"
         });
 
-        var tenant = await response.Content.ReadFromJsonAsync<TenantResponse>();
+        var tenant = await response.Content.ReadFromJsonAsync<TenantIdResponse>();
         return (tenant!.Id, orgName);
     }
-
-    private record CourseResponse(
-        Guid Id,
-        string Name,
-        string? StreetAddress,
-        string? City,
-        string? State,
-        string? ZipCode,
-        string? ContactEmail,
-        string? ContactPhone,
-        string TimeZoneId,
-        DateTimeOffset CreatedAt,
-        DateTimeOffset UpdatedAt,
-        TenantInfo Tenant);
-
-    private record TenantInfo(Guid Id, string OrganizationName);
-
-    private record TenantResponse(Guid Id);
 }

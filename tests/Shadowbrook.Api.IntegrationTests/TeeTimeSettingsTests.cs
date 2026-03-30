@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
-namespace Shadowbrook.Api.Tests;
+namespace Shadowbrook.Api.IntegrationTests;
 
 [Collection("Integration")]
 [IntegrationTest]
@@ -19,7 +19,7 @@ public class TeeTimeSettingsTests(TestWebApplicationFactory factory) : IAsyncLif
         request.Headers.Add("X-Tenant-Id", tenantId.ToString());
         request.Content = JsonContent.Create(new { Name = "Test Course", TimeZoneId = TestTimeZones.Chicago });
         var response = await this.client.SendAsync(request);
-        var course = await response.Content.ReadFromJsonAsync<CourseResponse>();
+        var course = await response.Content.ReadFromJsonAsync<CourseIdResponse>();
         return course!.Id;
     }
 
@@ -33,7 +33,7 @@ public class TeeTimeSettingsTests(TestWebApplicationFactory factory) : IAsyncLif
             ContactPhone = "555-0000"
         });
 
-        var tenant = await response.Content.ReadFromJsonAsync<TenantResponse>();
+        var tenant = await response.Content.ReadFromJsonAsync<TenantIdResponse>();
         return tenant!.Id;
     }
 
@@ -102,13 +102,4 @@ public class TeeTimeSettingsTests(TestWebApplicationFactory factory) : IAsyncLif
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
-
-    private record CourseResponse(Guid Id, string Name);
-
-    private record TenantResponse(Guid Id);
-
-    private record TeeTimeSettingsResponse(
-        int TeeTimeIntervalMinutes,
-        string FirstTeeTime,
-        string LastTeeTime);
 }

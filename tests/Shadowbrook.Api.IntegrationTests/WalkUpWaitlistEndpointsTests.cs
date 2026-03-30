@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Shadowbrook.Api.Infrastructure.Services;
 
-namespace Shadowbrook.Api.Tests;
+namespace Shadowbrook.Api.IntegrationTests;
 
 [Collection("Integration")]
 [IntegrationTest]
@@ -26,7 +26,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var body = await response.Content.ReadFromJsonAsync<WalkUpWaitlistResponse>();
+        var body = await response.Content.ReadFromJsonAsync<WaitlistResponse>();
         Assert.NotNull(body);
         Assert.Equal(courseId, body!.CourseId);
         Assert.Equal("Open", body.Status);
@@ -83,7 +83,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         var (_, courseId) = await CreateTestCourseAsync();
 
         var response = await PostOpenAsync(courseId);
-        var body = await response.Content.ReadFromJsonAsync<WalkUpWaitlistResponse>();
+        var body = await response.Content.ReadFromJsonAsync<WaitlistResponse>();
 
         Assert.NotNull(body);
         Assert.Equal(4, body!.ShortCode.Length);
@@ -102,8 +102,8 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         var r1 = await PostOpenAsync(courseId1);
         var r2 = await PostOpenAsync(courseId2);
 
-        var b1 = await r1.Content.ReadFromJsonAsync<WalkUpWaitlistResponse>();
-        var b2 = await r2.Content.ReadFromJsonAsync<WalkUpWaitlistResponse>();
+        var b1 = await r1.Content.ReadFromJsonAsync<WaitlistResponse>();
+        var b2 = await r2.Content.ReadFromJsonAsync<WaitlistResponse>();
 
         Assert.Equal(HttpStatusCode.Created, r1.StatusCode);
         Assert.Equal(HttpStatusCode.Created, r2.StatusCode);
@@ -125,7 +125,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var body = await response.Content.ReadFromJsonAsync<WalkUpWaitlistResponse>();
+        var body = await response.Content.ReadFromJsonAsync<WaitlistResponse>();
         Assert.NotNull(body);
         Assert.Equal("Closed", body!.Status);
         Assert.NotNull(body.ClosedAt);
@@ -170,7 +170,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var body = await response.Content.ReadFromJsonAsync<WalkUpWaitlistResponse>();
+        var body = await response.Content.ReadFromJsonAsync<WaitlistResponse>();
         Assert.NotNull(body);
         Assert.Equal("Open", body!.Status);
         Assert.Null(body.ClosedAt);
@@ -228,7 +228,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         var response = await GetTodayAsync(courseId);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var body = await response.Content.ReadFromJsonAsync<WalkUpWaitlistTodayResponse>();
+        var body = await response.Content.ReadFromJsonAsync<WaitlistTodayResponse>();
         Assert.NotNull(body);
         Assert.NotNull(body!.Waitlist);
         Assert.Equal("Open", body.Waitlist!.Status);
@@ -250,7 +250,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         var response = await PostAddGolferAsync(courseId, new { FirstName = "Bob", LastName = "B", Phone = "555-111-0002" });
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        var body = await response.Content.ReadFromJsonAsync<AddGolferToWaitlistResponse>();
+        var body = await response.Content.ReadFromJsonAsync<AddGolferResponse>();
         Assert.NotNull(body);
         Assert.Equal("Bob B", body!.GolferName);
     }
@@ -268,7 +268,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var body = await response.Content.ReadFromJsonAsync<WalkUpWaitlistTodayResponse>();
+        var body = await response.Content.ReadFromJsonAsync<WaitlistTodayResponse>();
         Assert.NotNull(body);
         Assert.Null(body!.Waitlist);
         Assert.Empty(body.Entries);
@@ -284,7 +284,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var body = await response.Content.ReadFromJsonAsync<WalkUpWaitlistTodayResponse>();
+        var body = await response.Content.ReadFromJsonAsync<WaitlistTodayResponse>();
         Assert.NotNull(body);
         Assert.NotNull(body!.Waitlist);
         Assert.Equal("Open", body.Waitlist!.Status);
@@ -302,7 +302,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var body = await response.Content.ReadFromJsonAsync<WalkUpWaitlistTodayResponse>();
+        var body = await response.Content.ReadFromJsonAsync<WaitlistTodayResponse>();
         Assert.NotNull(body);
         Assert.NotNull(body!.Waitlist);
         Assert.Equal("Closed", body.Waitlist!.Status);
@@ -326,7 +326,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         var response = await GetTodayAsync(courseId);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var body = await response.Content.ReadFromJsonAsync<WalkUpWaitlistTodayResponse>();
+        var body = await response.Content.ReadFromJsonAsync<WaitlistTodayResponse>();
         Assert.NotNull(body);
         Assert.Single(body!.Entries);
         Assert.Equal("Alice A", body.Entries[0].GolferName);
@@ -361,7 +361,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var body = await response.Content.ReadFromJsonAsync<AddGolferToWaitlistResponse>();
+        var body = await response.Content.ReadFromJsonAsync<AddGolferResponse>();
         Assert.NotNull(body);
         Assert.NotEqual(Guid.Empty, body!.EntryId);
         Assert.Equal("Jane Smith", body.GolferName);
@@ -450,7 +450,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var body = await response.Content.ReadFromJsonAsync<AddGolferToWaitlistResponse>();
+        var body = await response.Content.ReadFromJsonAsync<AddGolferResponse>();
         Assert.NotNull(body);
         Assert.Equal(1, body!.GroupSize);
     }
@@ -490,7 +490,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var body = await response.Content.ReadFromJsonAsync<WalkUpWaitlistTodayResponse>();
+        var body = await response.Content.ReadFromJsonAsync<WaitlistTodayResponse>();
         Assert.NotNull(body);
         Assert.Null(body!.Waitlist);
 
@@ -556,34 +556,4 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         var tenant = await response.Content.ReadFromJsonAsync<TenantIdResponse>();
         return tenant!.Id;
     }
-
-    private record WalkUpWaitlistResponse(
-        Guid Id,
-        Guid CourseId,
-        string ShortCode,
-        string Date,
-        string Status,
-        DateTimeOffset OpenedAt,
-        DateTimeOffset? ClosedAt);
-
-    private record WalkUpWaitlistTodayResponse(
-        WalkUpWaitlistResponse? Waitlist,
-        List<WalkUpWaitlistEntryResponse> Entries);
-
-    private record WalkUpWaitlistEntryResponse(
-        Guid Id,
-        string GolferName,
-        int GroupSize,
-        DateTimeOffset JoinedAt);
-
-    private record AddGolferToWaitlistResponse(
-        Guid EntryId,
-        string GolferName,
-        string GolferPhone,
-        int GroupSize,
-        string CourseName);
-
-    private record ErrorResponse(string Error);
-    private record CourseIdResponse(Guid Id);
-    private record TenantIdResponse(Guid Id);
 }

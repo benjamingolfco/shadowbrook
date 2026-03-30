@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
-namespace Shadowbrook.Api.Tests;
+namespace Shadowbrook.Api.IntegrationTests;
 
 [Collection("Integration")]
 [IntegrationTest]
@@ -167,9 +167,9 @@ public class WalkUpQrEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         return tenant!.Id;
     }
 
+    // Unique to this test class — not in shared DTOs
     private record WalkUpQrStatusResponse(string Status, string CourseName, string Date);
-    private record ErrorResponse(string Error);
-    private record CourseIdResponse(Guid Id);
-    private record TenantIdResponse(Guid Id);
+
+    // Local 2-field version — different from the shared 7-field WaitlistResponse
     private record WalkUpWaitlistResponse(Guid Id, string ShortCode);
 }

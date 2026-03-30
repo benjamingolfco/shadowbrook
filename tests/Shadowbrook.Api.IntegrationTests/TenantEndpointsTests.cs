@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
-namespace Shadowbrook.Api.Tests;
+namespace Shadowbrook.Api.IntegrationTests;
 
 [Collection("Integration")]
 [IntegrationTest]
@@ -178,35 +178,4 @@ public class TenantEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         Assert.Equal("Scottsdale", detail.Courses[0].City);
         Assert.Equal("AZ", detail.Courses[0].State);
     }
-
-    private record TenantResponse(
-        Guid Id,
-        string OrganizationName,
-        string ContactName,
-        string ContactEmail,
-        string ContactPhone,
-        DateTimeOffset CreatedAt,
-        DateTimeOffset UpdatedAt);
-
-    private record TenantListResponse(
-        Guid Id,
-        string OrganizationName,
-        string ContactName,
-        string ContactEmail,
-        string ContactPhone,
-        int CourseCount,
-        DateTimeOffset CreatedAt,
-        DateTimeOffset UpdatedAt);
-
-    private record TenantDetailResponse(
-        Guid Id,
-        string OrganizationName,
-        string ContactName,
-        string ContactEmail,
-        string ContactPhone,
-        List<CourseInfo> Courses,
-        DateTimeOffset CreatedAt,
-        DateTimeOffset UpdatedAt);
-
-    private record CourseInfo(Guid Id, string Name, string? City, string? State);
 }

@@ -7,7 +7,7 @@ using Shadowbrook.Domain.CourseWaitlistAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 
-namespace Shadowbrook.Api.Tests.Repositories;
+namespace Shadowbrook.Api.IntegrationTests.Repositories;
 
 [Collection("Integration")]
 [IntegrationTest]
