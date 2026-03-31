@@ -14,7 +14,10 @@ async function getAuthToken(): Promise<string | null> {
       account: accounts[0],
     });
     return response.accessToken;
-  } catch {
+  } catch (err) {
+    if (err instanceof Error && err.message.includes('uninitialized')) {
+      return null;
+    }
     await msalInstance.acquireTokenRedirect(loginRequest);
     return null;
   }

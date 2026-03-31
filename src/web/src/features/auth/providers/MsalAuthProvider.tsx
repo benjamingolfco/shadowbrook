@@ -1,5 +1,6 @@
 import { type ReactNode, useCallback, useMemo } from 'react';
 import { MsalProvider, useMsal, useIsAuthenticated } from '@azure/msal-react';
+import { InteractionStatus } from '@azure/msal-browser';
 import { msalInstance, loginRequest } from '@/lib/msal-config';
 import { AuthContext, type AuthContextValue } from '../hooks/useAuth';
 import { useMe } from '../hooks/useMe';
@@ -54,10 +55,17 @@ export function DevAuthProvider({ children }: ProviderProps) {
 // Inner component rendered inside MsalProvider so it can call useMsal().
 
 function MsalAuthContent({ children }: ProviderProps) {
-  const { instance } = useMsal();
+  const { instance, inProgress } = useMsal();
   const isMsalAuthenticated = useIsAuthenticated();
+  const isMsalBusy = inProgress !== InteractionStatus.None;
 
-  const { data: me, isLoading } = useMe(isMsalAuthenticated);
+  // `useIsAuthenticated()` may lag behind the MSAL cache after redirect
+  // processing. `msalInstance.getAllAccounts()` is synchronous and already
+  // populated by the time React mounts (initializeMsal ran first in main.tsx).
+  const hasAccounts = msalInstance.getAllAccounts().length > 0;
+  const isEffectivelyAuthenticated = isMsalAuthenticated || hasAccounts;
+
+  const { data: me, isLoading } = useMe(isEffectivelyAuthenticated);
 
   const login = useCallback(() => {
     void instance.loginRedirect(loginRequest);
@@ -90,8 +98,8 @@ function MsalAuthContent({ children }: ProviderProps) {
 
   const value: AuthContextValue = {
     user,
-    isAuthenticated: isMsalAuthenticated && !!user,
-    isLoading: isMsalAuthenticated ? isLoading : false,
+    isAuthenticated: isEffectivelyAuthenticated && !!user,
+    isLoading: isMsalBusy || (isEffectivelyAuthenticated ? isLoading : false),
     permissions: user?.permissions ?? [],
     courses: user?.courses ?? [],
     login,

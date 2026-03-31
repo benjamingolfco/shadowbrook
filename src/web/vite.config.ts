@@ -21,6 +21,7 @@ export default defineConfig({
       '/walkup': 'http://localhost:5221',
       '/waitlist': 'http://localhost:5221',
       '/dev': 'http://localhost:5221',
+      '/auth': 'http://localhost:5221',
     },
   },
 })

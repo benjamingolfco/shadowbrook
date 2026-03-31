@@ -16,7 +16,8 @@ public class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUse
         }
     }
 
-    public string? IdentityId => User?.FindFirst("oid")?.Value;
+    public string? IdentityId => User?.FindFirst("oid")?.Value
+        ?? User?.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value;
 
     public Guid? OrganizationId
     {

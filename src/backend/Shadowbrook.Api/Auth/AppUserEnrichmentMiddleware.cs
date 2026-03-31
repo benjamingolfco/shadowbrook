@@ -12,20 +12,24 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
 
     private readonly RequestDelegate next = next;
 
-    public async Task InvokeAsync(HttpContext context, ApplicationDbContext db, IMemoryCache cache)
+    public async Task InvokeAsync(HttpContext context, ApplicationDbContext db, IMemoryCache cache, IConfiguration configuration)
     {
-        var oid = context.User?.FindFirst("oid")?.Value;
+        var oid = context.User?.FindFirst("oid")?.Value
+            ?? context.User?.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value;
 
         if (context.User?.Identity?.IsAuthenticated == true && oid is not null)
         {
-            await EnrichFromAppUserAsync(context, db, cache, oid);
+            var seedAdminEmails = configuration.GetValue<string>("Auth:SeedAdminEmails")
+                ?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                ?? [];
+            await EnrichFromAppUserAsync(context, db, cache, oid, seedAdminEmails);
         }
 
         await this.next(context);
     }
 
     private static async Task EnrichFromAppUserAsync(
-        HttpContext context, ApplicationDbContext db, IMemoryCache cache, string oid)
+        HttpContext context, ApplicationDbContext db, IMemoryCache cache, string oid, string[] seedAdminEmails)
     {
         var cacheKey = $"appuser:{oid}";
 
@@ -39,10 +43,15 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
             {
                 var email = context.User?.FindFirst("emails")?.Value
                     ?? context.User?.FindFirst("email")?.Value
+                    ?? context.User?.FindFirst("preferred_username")?.Value
                     ?? string.Empty;
                 var name = context.User?.FindFirst("name")?.Value ?? string.Empty;
 
-                appUser = AppUser.Create(oid, email, name, AppUserRole.Staff, organizationId: null);
+                var role = seedAdminEmails.Any(e => e.Equals(email, StringComparison.OrdinalIgnoreCase))
+                    ? AppUserRole.Admin
+                    : AppUserRole.Staff;
+
+                appUser = AppUser.Create(oid, email, name, role, organizationId: null);
                 db.AppUsers.Add(appUser);
             }
 
