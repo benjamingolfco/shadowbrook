@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="System.Net.Http.Json" />
   </ItemGroup>
 
   <ItemGroup>
