@@ -63,7 +63,7 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
 
     private async Task<CourseIdResponse> CreateCourseAsync(Guid tenantId, string name = "Test Course")
     {
-        var response = await this.client.PostAsJsonAsync("/courses", new { Name = name, TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = name, OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         return (await response.Content.ReadFromJsonAsync<CourseIdResponse>())!;
     }
 

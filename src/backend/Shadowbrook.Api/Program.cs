@@ -1,10 +1,8 @@
-using System.Threading.RateLimiting;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using OpenTelemetry.Metrics;
@@ -86,15 +84,6 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
             .AllowCredentials();
     }));
 
-builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.AddFixedWindowLimiter("authenticated", opt =>
-    {
-        opt.PermitLimit = 100;
-        opt.Window = TimeSpan.FromMinutes(1);
-    });
-});
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -221,7 +210,6 @@ app.Use(async (context, next) =>
 });
 
 app.UseCors();
-app.UseRateLimiter();
 app.UseAuthentication();
 app.UseMiddleware<AppUserEnrichmentMiddleware>();
 app.UseAuthorization();

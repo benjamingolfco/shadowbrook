@@ -2,11 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, act } from '@/test/test-utils';
 import CourseSwitcher from '../components/CourseSwitcher';
 import { useCourseContext } from '../context/CourseContext';
-import { useTenantContext } from '../context/TenantContext';
 import { useCourses } from '../hooks/useCourses';
 
 vi.mock('../context/CourseContext');
-vi.mock('../context/TenantContext');
 vi.mock('../hooks/useCourses');
 
 const mockSelectCourse = vi.fn();
@@ -24,13 +22,11 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
 });
 
 const mockUseCourseContext = vi.mocked(useCourseContext);
-const mockUseTenantContext = vi.mocked(useTenantContext);
 const mockUseCourses = vi.mocked(useCourses);
 
 const mockCourse1 = {
   id: 'course-1',
   name: 'Augusta National',
-  tenantId: 'tenant-1',
   timeZoneId: 'America/New_York',
   city: 'Augusta',
   state: 'GA',
@@ -41,7 +37,6 @@ const mockCourse1 = {
 const mockCourse2 = {
   id: 'course-2',
   name: 'Pebble Beach',
-  tenantId: 'tenant-1',
   timeZoneId: 'America/Los_Angeles',
   city: 'Pebble Beach',
   state: 'CA',
@@ -53,12 +48,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockRemoveQueries.mockReset();
   mockRefetch.mockReset();
-
-  mockUseTenantContext.mockReturnValue({
-    tenant: { id: 'tenant-1', organizationName: 'Test Org' },
-    selectTenant: vi.fn(),
-    clearTenant: vi.fn(),
-  });
 
   mockUseCourseContext.mockReturnValue({
     course: { id: 'course-1', name: 'Augusta National', timeZoneId: 'America/New_York' },

@@ -178,7 +178,7 @@ public class RemoveWaitlistEntryTests(TestWebApplicationFactory factory) : IAsyn
     {
         var tenantId = await CreateTestTenantAsync();
 
-        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = $"Test Course {Guid.NewGuid()}", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = $"Test Course {Guid.NewGuid()}", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         return (tenantId, course!.Id);

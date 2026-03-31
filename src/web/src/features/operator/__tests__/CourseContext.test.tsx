@@ -36,9 +36,9 @@ function TestConsumer() {
   );
 }
 
-function renderWithProvider(tenantId = 'tenant-1') {
+function renderWithProvider() {
   return render(
-    <CourseProvider tenantId={tenantId}>
+    <CourseProvider>
       <TestConsumer />
     </CourseProvider>,
   );
@@ -61,13 +61,10 @@ describe('CourseContext', () => {
   });
 
   it('restores course from localStorage on mount', () => {
-    const stored = {
-      course: { id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' },
-      tenantId: 'tenant-1',
-    };
+    const stored = { id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' };
     localStorage.setItem('shadowbrook-dev-course', JSON.stringify(stored));
 
-    renderWithProvider('tenant-1');
+    renderWithProvider();
 
     expect(screen.getByTestId('course-id').textContent).toBe('course-1');
     expect(screen.getByTestId('course-name').textContent).toBe('Pine Valley');
@@ -84,10 +81,9 @@ describe('CourseContext', () => {
     expect(screen.getByTestId('course-name').textContent).toBe('Pine Valley');
 
     const stored = JSON.parse(localStorage.getItem('shadowbrook-dev-course') ?? 'null') as {
-      course: { id: string; name: string; timeZoneId: string };
-      tenantId: string;
+      id: string; name: string; timeZoneId: string;
     };
-    expect(stored.course).toEqual({ id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' });
+    expect(stored).toEqual({ id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' });
   });
 
   it('clearCourse resets state and removes localStorage', () => {
@@ -107,22 +103,6 @@ describe('CourseContext', () => {
     expect(localStorage.getItem('shadowbrook-dev-course')).toBeNull();
   });
 
-  it('clears course when tenantId changes (remount via key)', () => {
-    // Store a course for tenant-1
-    const stored = {
-      course: { id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' },
-      tenantId: 'tenant-1',
-    };
-    localStorage.setItem('shadowbrook-dev-course', JSON.stringify(stored));
-
-    // Render with tenant-2 — stored tenantId (tenant-1) won't match
-    renderWithProvider('tenant-2');
-
-    // Course should be null because tenantId mismatch on init
-    expect(screen.getByTestId('course-id').textContent).toBe('null');
-    expect(localStorage.getItem('shadowbrook-dev-course')).toBeNull();
-  });
-
   it('throws error when used outside CourseProvider', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -138,19 +118,6 @@ describe('CourseContext', () => {
 
     // Should not throw, should return null course
     renderWithProvider();
-
-    expect(screen.getByTestId('course-id').textContent).toBe('null');
-  });
-
-  it('does not restore course when tenantId in storage mismatches current tenant', () => {
-    const stored = {
-      course: { id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' },
-      tenantId: 'tenant-1',
-    };
-    localStorage.setItem('shadowbrook-dev-course', JSON.stringify(stored));
-
-    // Render with a different tenant — course should not restore
-    renderWithProvider('tenant-99');
 
     expect(screen.getByTestId('course-id').textContent).toBe('null');
   });

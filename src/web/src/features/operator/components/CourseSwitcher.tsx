@@ -22,14 +22,12 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useCourseContext } from '../context/CourseContext';
-import { useTenantContext } from '../context/TenantContext';
 import { useCourses } from '../hooks/useCourses';
 
 export default function CourseSwitcher() {
-  const { tenant } = useTenantContext();
   const { course, selectCourse, clearCourse, isDirty } = useCourseContext();
   const queryClient = useQueryClient();
-  const coursesQuery = useCourses(tenant?.id);
+  const coursesQuery = useCourses();
 
   const [pendingCourse, setPendingCourse] = useState<{ id: string; name: string; timeZoneId: string } | null>(null);
 

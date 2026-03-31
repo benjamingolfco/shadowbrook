@@ -3,11 +3,9 @@ import { render, screen, act } from '@/test/test-utils';
 import CoursePortfolio from '../pages/CoursePortfolio';
 import { useCourses } from '@/features/operator/hooks/useCourses';
 import { useCourseContext } from '../context/CourseContext';
-import { useTenantContext } from '../context/TenantContext';
 
 vi.mock('@/features/operator/hooks/useCourses');
 vi.mock('../context/CourseContext');
-vi.mock('../context/TenantContext');
 
 // useNavigate is provided by MemoryRouter in test-utils
 const mockNavigate = vi.fn();
@@ -21,7 +19,6 @@ vi.mock('react-router', async (importOriginal) => {
 
 const mockUseCourses = vi.mocked(useCourses);
 const mockUseCourseContext = vi.mocked(useCourseContext);
-const mockUseTenantContext = vi.mocked(useTenantContext);
 
 const mockSelectCourse = vi.fn();
 const mockRefetch = vi.fn();
@@ -29,12 +26,6 @@ const mockRefetch = vi.fn();
 beforeEach(() => {
   vi.clearAllMocks();
   mockNavigate.mockReset();
-
-  mockUseTenantContext.mockReturnValue({
-    tenant: { id: 'tenant-1', organizationName: 'Pine Valley Golf Club' },
-    selectTenant: vi.fn(),
-    clearTenant: vi.fn(),
-  });
 
   mockUseCourseContext.mockReturnValue({
     course: null,
@@ -118,7 +109,6 @@ describe('CoursePortfolio', () => {
         {
           id: 'course-1',
           name: 'Spyglass Hill',
-          tenantId: 'tenant-1',
           timeZoneId: 'America/Los_Angeles',
           city: 'Pebble Beach',
           state: 'CA',
@@ -143,7 +133,6 @@ describe('CoursePortfolio', () => {
         {
           id: 'course-1',
           name: 'Pine Valley',
-          tenantId: 'tenant-1',
           city: 'Augusta',
           state: 'GA',
           createdAt: '2024-01-01T00:00:00Z',
@@ -152,7 +141,6 @@ describe('CoursePortfolio', () => {
         {
           id: 'course-2',
           name: 'Spyglass Hill',
-          tenantId: 'tenant-1',
           city: 'Pebble Beach',
           state: 'CA',
           createdAt: '2024-01-01T00:00:00Z',
@@ -181,7 +169,6 @@ describe('CoursePortfolio', () => {
         {
           id: 'course-1',
           name: 'Pine Valley',
-          tenantId: 'tenant-1',
           timeZoneId: 'America/New_York',
           city: 'Augusta',
           state: 'GA',
@@ -191,7 +178,6 @@ describe('CoursePortfolio', () => {
         {
           id: 'course-2',
           name: 'Spyglass Hill',
-          tenantId: 'tenant-1',
           timeZoneId: 'America/Los_Angeles',
           city: 'Pebble Beach',
           state: 'CA',
@@ -220,7 +206,6 @@ describe('CoursePortfolio', () => {
         {
           id: 'course-1',
           name: 'Pine Valley',
-          tenantId: 'tenant-1',
           timeZoneId: 'America/New_York',
           city: 'Augusta',
           state: 'GA',
@@ -250,7 +235,6 @@ describe('CoursePortfolio', () => {
         {
           id: 'course-1',
           name: 'Pine Valley',
-          tenantId: 'tenant-1',
           timeZoneId: 'America/New_York',
           city: 'Augusta',
           state: 'GA',
@@ -273,39 +257,6 @@ describe('CoursePortfolio', () => {
     expect(mockSelectCourse).toHaveBeenCalledWith({ id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/New_York' });
   });
 
-  it('shows organization name in subtitle', () => {
-    mockUseCourses.mockReturnValue({
-      isLoading: false,
-      data: [
-        {
-          id: 'course-1',
-          name: 'Pine Valley',
-          tenantId: 'tenant-1',
-          city: 'Augusta',
-          state: 'GA',
-          createdAt: '2024-01-01T00:00:00Z',
-          updatedAt: '2024-01-01T00:00:00Z',
-        },
-        {
-          id: 'course-2',
-          name: 'Spyglass Hill',
-          tenantId: 'tenant-1',
-          city: 'Pebble Beach',
-          state: 'CA',
-          createdAt: '2024-01-01T00:00:00Z',
-          updatedAt: '2024-01-01T00:00:00Z',
-        },
-      ],
-      error: null,
-      isError: false,
-      refetch: mockRefetch,
-    } as unknown as ReturnType<typeof useCourses>);
-
-    render(<CoursePortfolio />);
-
-    expect(screen.getByText('Showing courses for Pine Valley Golf Club.')).toBeInTheDocument();
-  });
-
   it('cards have correct aria-labels including location', () => {
     mockUseCourses.mockReturnValue({
       isLoading: false,
@@ -313,7 +264,6 @@ describe('CoursePortfolio', () => {
         {
           id: 'course-1',
           name: 'Pine Valley',
-          tenantId: 'tenant-1',
           city: 'Augusta',
           state: 'GA',
           createdAt: '2024-01-01T00:00:00Z',
@@ -322,7 +272,6 @@ describe('CoursePortfolio', () => {
         {
           id: 'course-2',
           name: 'Spyglass Hill',
-          tenantId: 'tenant-1',
           city: 'Pebble Beach',
           state: 'CA',
           createdAt: '2024-01-01T00:00:00Z',

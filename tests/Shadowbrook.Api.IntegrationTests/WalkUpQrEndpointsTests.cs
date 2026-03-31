@@ -70,13 +70,13 @@ public class WalkUpQrEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
     [Fact]
     public async Task Status_NoTenantHeader_StillWorks()
     {
-        // Create an open waitlist via normal flow (with tenant header)
+        // Create an open waitlist via normal flow (with authentication)
         var (_, _, shortCode) = await CreateOpenWaitlistAsync();
 
-        // Create a new client with no default headers
+        // Create a new client without authentication
         var publicClient = factory.CreateClient();
 
-        // GET the status endpoint WITHOUT setting X-Tenant-Id header
+        // GET the status endpoint WITHOUT authentication
         var response = await publicClient.GetAsync($"/walkup/status/{shortCode}");
 
         // Should still work since endpoint uses IgnoreQueryFilters
@@ -93,7 +93,7 @@ public class WalkUpQrEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         var tenantId = await CreateTestTenantAsync();
         var expectedName = $"QR Test Course {Guid.NewGuid()}";
 
-        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = expectedName, TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = expectedName, OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         var openResponse = await PostOpenWaitlistAsync(course!.Id);
@@ -144,7 +144,7 @@ public class WalkUpQrEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
     {
         var tenantId = await CreateTestTenantAsync();
 
-        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = $"Test Course {Guid.NewGuid()}", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = $"Test Course {Guid.NewGuid()}", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         var openResponse = await PostOpenWaitlistAsync(course!.Id);

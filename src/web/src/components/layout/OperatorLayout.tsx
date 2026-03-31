@@ -10,13 +10,12 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useTenantContext } from '@/features/operator/context/TenantContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import CourseSwitcher from '@/features/operator/components/CourseSwitcher';
 
 export default function OperatorLayout() {
-  const { tenant, clearTenant } = useTenantContext();
+  const { user } = useAuth();
 
   return (
     <SidebarProvider>
@@ -26,20 +25,15 @@ export default function OperatorLayout() {
             <div className="flex items-center gap-2">
               <h1
                 className="max-w-[180px] truncate text-lg font-semibold font-[family-name:var(--font-heading)]"
-                title={tenant?.organizationName ?? 'Shadowbrook'}
+                title={user?.organization?.name ?? 'Shadowbrook'}
               >
-                {tenant?.organizationName ?? 'Shadowbrook'}
+                {user?.organization?.name ?? 'Shadowbrook'}
               </h1>
               <Badge variant="success" className="text-[10px] px-1.5 py-0">
                 Operator
               </Badge>
             </div>
             <CourseSwitcher />
-            {tenant && (
-              <Button variant="ghost" size="sm" onClick={clearTenant} className="justify-start px-0 text-muted-foreground hover:text-foreground">
-                Change Organization
-              </Button>
-            )}
           </div>
         </SidebarHeader>
         <SidebarContent>

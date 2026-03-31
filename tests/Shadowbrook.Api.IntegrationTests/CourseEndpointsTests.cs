@@ -23,7 +23,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
     public async Task GetAllCourses_ReturnsOk()
     {
         var (tenantId, tenantName) = await CreateTestTenantAsync();
-        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Test Course", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Test Course", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
         var getResponse = await this.client.GetAsync("/courses");
@@ -39,7 +39,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
     public async Task GetAllCourses_IncludesTenantInfo()
     {
         var (tenantId, tenantName) = await CreateTestTenantAsync();
-        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Test Course for Tenant Info", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Test Course for Tenant Info", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var created = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
         var getResponse = await this.client.GetAsync("/courses");
@@ -56,7 +56,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
     public async Task GetCourseById_WhenExists_ReturnsOk()
     {
         var (tenantId, _) = await CreateTestTenantAsync();
-        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Lookup Course", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Lookup Course", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var created = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
         var response = await this.client.GetAsync($"/courses/{created!.Id}");
@@ -71,7 +71,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
     public async Task GetCourseById_IncludesTenantInfo()
     {
         var (tenantId, tenantName) = await CreateTestTenantAsync();
-        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Lookup Course with Tenant Info", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Lookup Course with Tenant Info", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var created = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
         var response = await this.client.GetAsync($"/courses/{created!.Id}");
@@ -99,7 +99,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         var response = await this.client.PostAsJsonAsync("/courses", new
         {
             Name = "Braemar Golf Course",
-            TenantId = tenantId,
+            OrganizationId = tenantId,
             StreetAddress = "6364 John Harris Dr",
             City = "Edina",
             State = "MN",
@@ -126,8 +126,8 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
     {
         var (tenantId, _) = await CreateTestTenantAsync();
 
-        await this.client.PostAsJsonAsync("/courses", new { Name = "Duplicate Course", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
-        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Duplicate Course", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        await this.client.PostAsJsonAsync("/courses", new { Name = "Duplicate Course", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Duplicate Course", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -137,8 +137,8 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
     {
         var (tenantId, _) = await CreateTestTenantAsync();
 
-        await this.client.PostAsJsonAsync("/courses", new { Name = "Pine Valley", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
-        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "PINE VALLEY", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        await this.client.PostAsJsonAsync("/courses", new { Name = "Pine Valley", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "PINE VALLEY", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -150,8 +150,8 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         // positives/negatives. Equality check via == is correct; collation handles case.
         var (tenantId, _) = await CreateTestTenantAsync();
 
-        await this.client.PostAsJsonAsync("/courses", new { Name = "Pine%Valley", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
-        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Pine%Valley", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        await this.client.PostAsJsonAsync("/courses", new { Name = "Pine%Valley", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Pine%Valley", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -162,8 +162,8 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         var (tenantId1, _) = await CreateTestTenantAsync();
         var (tenantId2, _) = await CreateTestTenantAsync();
 
-        await this.client.PostAsJsonAsync("/courses", new { Name = "Shared Name Course", TenantId = tenantId1, TimeZoneId = TestTimeZones.Chicago });
-        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Shared Name Course", TenantId = tenantId2, TimeZoneId = TestTimeZones.Chicago });
+        await this.client.PostAsJsonAsync("/courses", new { Name = "Shared Name Course", OrganizationId = tenantId1, TimeZoneId = TestTimeZones.Chicago });
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Shared Name Course", OrganizationId = tenantId2, TimeZoneId = TestTimeZones.Chicago });
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }

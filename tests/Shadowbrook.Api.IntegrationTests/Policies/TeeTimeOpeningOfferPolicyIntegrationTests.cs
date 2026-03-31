@@ -85,7 +85,7 @@ public class TeeTimeOpeningOfferPolicyIntegrationTests(TestWebApplicationFactory
     {
         var tenantId = await CreateTestTenantAsync();
 
-        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = $"Test Course {Guid.NewGuid()}", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = $"Test Course {Guid.NewGuid()}", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         await this.client.PutAsJsonAsync($"/courses/{course!.Id}/tee-time-settings", new

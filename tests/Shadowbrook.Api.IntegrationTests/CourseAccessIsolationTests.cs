@@ -78,7 +78,7 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
         var courseResponse = await adminClient.PostAsJsonAsync("/courses", new
         {
             Name = "Staff Control Course",
-            TenantId = tenantId,
+            OrganizationId = tenantId,
             TimeZoneId = TestTimeZones.Chicago,
         });
         courseResponse.EnsureSuccessStatusCode();
@@ -118,7 +118,7 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
         var courseResponse = await adminClient.PostAsJsonAsync("/courses", new
         {
             Name = "Admin Visibility Course",
-            TenantId = tenantId,
+            OrganizationId = tenantId,
             TimeZoneId = TestTimeZones.Chicago,
         });
         courseResponse.EnsureSuccessStatusCode();

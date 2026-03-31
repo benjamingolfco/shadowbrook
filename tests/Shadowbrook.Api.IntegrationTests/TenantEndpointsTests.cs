@@ -167,7 +167,7 @@ public class TenantEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         await this.client.PostAsJsonAsync("/courses", new
         {
             Name = "Location Course",
-            TenantId = tenant!.Id,
+            OrganizationId = tenant!.Id,
             City = "Scottsdale",
             State = "AZ",
             TimeZoneId = TestTimeZones.Phoenix

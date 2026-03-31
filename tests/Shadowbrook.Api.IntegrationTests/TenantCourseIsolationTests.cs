@@ -23,7 +23,7 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
     {
         // Arrange - Create course for Tenant A
         var tenantAId = await CreateTestTenantAsync("Tenant A");
-        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Tenant A Course", TenantId = tenantAId, TimeZoneId = TestTimeZones.Chicago });
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Tenant A Course", OrganizationId = tenantAId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         // Act - The Admin user can see all courses, but course lookup via non-existent ID still 404s
@@ -50,9 +50,9 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
         var tenantAId = await CreateTestTenantAsync("Tenant A");
         var tenantBId = await CreateTestTenantAsync("Tenant B");
 
-        await this.client.PostAsJsonAsync("/courses", new { Name = "Tenant A Course 1", TenantId = tenantAId, TimeZoneId = TestTimeZones.Chicago });
-        await this.client.PostAsJsonAsync("/courses", new { Name = "Tenant A Course 2", TenantId = tenantAId, TimeZoneId = TestTimeZones.Chicago });
-        await this.client.PostAsJsonAsync("/courses", new { Name = "Tenant B Course 1", TenantId = tenantBId, TimeZoneId = TestTimeZones.Chicago });
+        await this.client.PostAsJsonAsync("/courses", new { Name = "Tenant A Course 1", OrganizationId = tenantAId, TimeZoneId = TestTimeZones.Chicago });
+        await this.client.PostAsJsonAsync("/courses", new { Name = "Tenant A Course 2", OrganizationId = tenantAId, TimeZoneId = TestTimeZones.Chicago });
+        await this.client.PostAsJsonAsync("/courses", new { Name = "Tenant B Course 1", OrganizationId = tenantBId, TimeZoneId = TestTimeZones.Chicago });
 
         // Act - Admin has no org scope, so all courses are returned
         var response = await this.client.GetAsync("/courses");
@@ -71,8 +71,8 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
         var tenantAId = await CreateTestTenantAsync("Tenant A Admin");
         var tenantBId = await CreateTestTenantAsync("Tenant B Admin");
 
-        await this.client.PostAsJsonAsync("/courses", new { Name = "Admin Tenant A Course", TenantId = tenantAId, TimeZoneId = TestTimeZones.Chicago });
-        await this.client.PostAsJsonAsync("/courses", new { Name = "Admin Tenant B Course", TenantId = tenantBId, TimeZoneId = TestTimeZones.Chicago });
+        await this.client.PostAsJsonAsync("/courses", new { Name = "Admin Tenant A Course", OrganizationId = tenantAId, TimeZoneId = TestTimeZones.Chicago });
+        await this.client.PostAsJsonAsync("/courses", new { Name = "Admin Tenant B Course", OrganizationId = tenantBId, TimeZoneId = TestTimeZones.Chicago });
 
         // Act - Get all courses without tenant header (admin path — no org scope means all courses)
         var response = await this.client.GetAsync("/courses");
@@ -91,7 +91,7 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
         var tenantId = await CreateTestTenantAsync("Body Tenant");
 
         // Act - Create course with TenantId in body
-        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Body Tenant Course", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Body Tenant Course", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -116,7 +116,7 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
     {
         // Arrange - Create course
         var tenantAId = await CreateTestTenantAsync("Tenant A Settings");
-        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Settings Test Course", TenantId = tenantAId, TimeZoneId = TestTimeZones.Chicago });
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Settings Test Course", OrganizationId = tenantAId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         // Act - Admin can update any course
@@ -136,7 +136,7 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
     {
         // Arrange - Create course
         var tenantAId = await CreateTestTenantAsync("Tenant A Pricing");
-        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Pricing Test Course", TenantId = tenantAId, TimeZoneId = TestTimeZones.Chicago });
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Pricing Test Course", OrganizationId = tenantAId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         // Act - Admin can update any course

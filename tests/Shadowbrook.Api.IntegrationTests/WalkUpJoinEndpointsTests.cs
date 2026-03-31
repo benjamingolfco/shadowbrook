@@ -324,7 +324,7 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IAsyn
         var tenantId = await CreateTestTenantAsync();
         var expectedName = $"Specific Course {Guid.NewGuid()}";
 
-        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = expectedName, TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = expectedName, OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         var openResponse = await PostOpenWaitlistAsync(course!.Id);
@@ -343,7 +343,7 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IAsyn
         var tenantId = await CreateTestTenantAsync();
         var courseName = $"Full Flow Course {Guid.NewGuid()}";
 
-        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = courseName, TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = courseName, OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         // Open waitlist
@@ -404,7 +404,7 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IAsyn
     {
         var tenantId = await CreateTestTenantAsync();
 
-        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = $"Test Course {Guid.NewGuid()}", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = $"Test Course {Guid.NewGuid()}", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         var openResponse = await PostOpenWaitlistAsync(course!.Id);

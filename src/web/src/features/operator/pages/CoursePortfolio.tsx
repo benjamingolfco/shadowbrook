@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { useCourses } from '@/features/operator/hooks/useCourses';
 import { useCourseContext } from '../context/CourseContext';
-import { useTenantContext } from '../context/TenantContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardAction } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,9 +15,8 @@ function formatLocation(course: Course): string {
 
 export default function CoursePortfolio() {
   const navigate = useNavigate();
-  const { tenant } = useTenantContext();
   const { selectCourse } = useCourseContext();
-  const coursesQuery = useCourses(tenant?.id);
+  const coursesQuery = useCourses();
   const hasAutoSelected = useRef(false);
 
   useEffect(() => {
@@ -45,7 +43,6 @@ export default function CoursePortfolio() {
       <div className="flex h-full items-center justify-center">
         <div className="w-full max-w-3xl space-y-6 p-8">
           <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Select a Course</h1>
-          <p className="text-muted-foreground">Showing courses for {tenant?.organizationName}.</p>
           <div className="space-y-3" aria-busy="true" aria-label="Loading courses">
             {[1, 2, 3].map((i) => (
               <Card key={i}>
@@ -96,7 +93,6 @@ export default function CoursePortfolio() {
     <div className="flex h-full items-center justify-center">
       <div className="w-full max-w-3xl space-y-6 p-8">
         <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Select a Course</h1>
-        <p className="text-muted-foreground">Showing courses for {tenant?.organizationName}.</p>
         <div className="space-y-3">
           {coursesQuery.data.map((course) => (
             <Card

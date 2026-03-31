@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.AppUserAggregate;
@@ -141,7 +142,8 @@ public static class AuthEndpoints
     public static async Task<IResult> UpdateUser(
         Guid id,
         UpdateUserRequest request,
-        [NotBody] ApplicationDbContext db)
+        [NotBody] ApplicationDbContext db,
+        [NotBody] IMemoryCache cache)
     {
         var appUser = await db.AppUsers
             .Include(u => u.CourseAssignments)
@@ -164,6 +166,8 @@ public static class AuthEndpoints
             }
         }
 
+        cache.Remove($"appuser:{appUser.IdentityId}");
+
         var response = new UserListResponse(
             appUser.Id,
             appUser.Email,
@@ -181,7 +185,8 @@ public static class AuthEndpoints
     public static async Task<IResult> UpdateUserCourses(
         Guid id,
         UpdateUserCoursesRequest request,
-        [NotBody] ApplicationDbContext db)
+        [NotBody] ApplicationDbContext db,
+        [NotBody] IMemoryCache cache)
     {
         var appUser = await db.AppUsers
             .Include(u => u.CourseAssignments)
@@ -210,6 +215,8 @@ public static class AuthEndpoints
                 appUser.AssignCourse(courseId);
             }
         }
+
+        cache.Remove($"appuser:{appUser.IdentityId}");
 
         var response = new UserListResponse(
             appUser.Id,

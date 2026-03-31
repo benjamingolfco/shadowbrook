@@ -4,9 +4,7 @@ import TeeSheet from './pages/TeeSheet';
 import TeeTimeSettings from './pages/TeeTimeSettings';
 import WalkUpWaitlist from './pages/WalkUpWaitlist';
 import CourseRegister from './pages/CourseRegister';
-import OrganizationSelect from './pages/OrganizationSelect';
 import CoursePortfolio from './pages/CoursePortfolio';
-import { TenantProvider, useTenantContext } from './context/TenantContext';
 import { CourseProvider, useCourseContext } from './context/CourseContext';
 import { ThemeProvider } from '@/components/ThemeProvider';
 
@@ -46,26 +44,12 @@ function CourseGate() {
   );
 }
 
-function TenantGate() {
-  const { tenant } = useTenantContext();
-
-  if (!tenant) {
-    return <OrganizationSelect />;
-  }
-
-  return (
-    <CourseProvider key={tenant.id} tenantId={tenant.id}>
-      <CourseGate />
-    </CourseProvider>
-  );
-}
-
 export default function OperatorFeature() {
   return (
     <ThemeProvider>
-      <TenantProvider>
-        <TenantGate />
-      </TenantProvider>
+      <CourseProvider>
+        <CourseGate />
+      </CourseProvider>
     </ThemeProvider>
   );
 }

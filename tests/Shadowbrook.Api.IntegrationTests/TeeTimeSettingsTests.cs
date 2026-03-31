@@ -21,7 +21,7 @@ public class TeeTimeSettingsTests(TestWebApplicationFactory factory) : IAsyncLif
     private async Task<Guid> CreateCourse()
     {
         var tenantId = await CreateTestTenantAsync();
-        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Test Course", TenantId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Test Course", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var course = await response.Content.ReadFromJsonAsync<CourseIdResponse>();
         return course!.Id;
     }

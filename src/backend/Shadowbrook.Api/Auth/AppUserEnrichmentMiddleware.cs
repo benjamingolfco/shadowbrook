@@ -20,18 +20,6 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
         {
             await EnrichFromAppUserAsync(context, db, cache, oid);
         }
-        else if (context.Request.Headers.TryGetValue("X-Tenant-Id", out var tenantIdHeader))
-        {
-            // Temporary bridge: read X-Tenant-Id header to preserve compatibility with
-            // integration tests that set tenant context via header.
-            var tenantIdString = tenantIdHeader.ToString();
-            if (Guid.TryParse(tenantIdString, out var tenantId))
-            {
-                var claims = new[] { new Claim("organization_id", tenantId.ToString()) };
-                var identity = new ClaimsIdentity(claims);
-                context.User!.AddIdentity(identity);
-            }
-        }
 
         await this.next(context);
     }

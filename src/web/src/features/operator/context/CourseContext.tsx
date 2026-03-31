@@ -19,28 +19,16 @@ const CourseContext = createContext<CourseContextValue | undefined>(undefined);
 
 const STORAGE_KEY = 'shadowbrook-dev-course';
 
-interface StoredCourseState {
-  course: SelectedCourse;
-  tenantId: string;
-}
-
 interface CourseProviderProps {
   children: ReactNode;
-  tenantId: string;
 }
 
-export function CourseProvider({ children, tenantId }: CourseProviderProps) {
+export function CourseProvider({ children }: CourseProviderProps) {
   const [course, setCourse] = useState<SelectedCourse | null>(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return null;
     try {
-      const parsed = JSON.parse(stored) as StoredCourseState;
-      // Only restore if stored tenant matches current tenant
-      if (parsed.tenantId !== tenantId) {
-        localStorage.removeItem(STORAGE_KEY);
-        return null;
-      }
-      return parsed.course;
+      return JSON.parse(stored) as SelectedCourse;
     } catch {
       return null;
     }
@@ -65,8 +53,7 @@ export function CourseProvider({ children, tenantId }: CourseProviderProps) {
   const selectCourse = (newCourse: SelectedCourse) => {
     setCourse(newCourse);
     setDirtyForms(new Set());
-    const stored: StoredCourseState = { course: newCourse, tenantId };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newCourse));
   };
 
   const clearCourse = () => {
