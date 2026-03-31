@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@/test/test-utils';
 import { PostTeeTimeForm } from '../components/PostTeeTimeForm';
 import { useCreateTeeTimeOpening } from '../hooks/useWaitlist';
 import { useCourseContext } from '../context/CourseContext';
+import { ApiError } from '@/lib/api-client';
 
 vi.mock('../hooks/useWaitlist');
 vi.mock('../context/CourseContext');
@@ -83,7 +84,7 @@ describe('PostTeeTimeForm', () => {
     expect(screen.getByRole('button', { name: 'Posting...' })).toBeDisabled();
   });
 
-  it('shows error message when mutation fails', () => {
+  it('shows generic error message when mutation fails with non-409 error', () => {
     vi.mocked(useCreateTeeTimeOpening).mockReturnValue({
       mutate: mockMutate,
       isPending: false,
@@ -95,5 +96,52 @@ describe('PostTeeTimeForm', () => {
 
     render(<PostTeeTimeForm courseId="course-1" />);
     expect(screen.getByText(/couldn't post opening/i)).toBeInTheDocument();
+  });
+
+  it('shows amber warning when duplicate opening exists with 4 slots (full)', () => {
+    const duplicateError = new ApiError('Conflict', 409, {
+      error: 'A tee time opening for this time already exists with 4 slots.',
+      existingSlotsAvailable: 4,
+      existingSlotsRemaining: 0,
+      existingOpeningId: 'existing-guid',
+      isFull: true,
+    });
+
+    vi.mocked(useCreateTeeTimeOpening).mockReturnValue({
+      mutate: mockMutate,
+      isPending: false,
+      isError: true,
+      isSuccess: false,
+      error: duplicateError,
+      reset: vi.fn(),
+    } as unknown as ReturnType<typeof useCreateTeeTimeOpening>);
+
+    render(<PostTeeTimeForm courseId="course-1" />);
+    expect(screen.getByText(/already exists with 4 slots/i)).toBeInTheDocument();
+    expect(screen.getByText(/already exists with 4 slots/i)).toHaveClass('text-amber-600');
+  });
+
+  it('shows amber warning with slot count when duplicate opening exists with fewer than 4 slots', () => {
+    const duplicateError = new ApiError('Conflict', 409, {
+      error: 'An opening already exists for this time with 2 slot(s). Would you like to add more slots to it?',
+      existingSlotsAvailable: 2,
+      existingSlotsRemaining: 1,
+      existingOpeningId: 'existing-guid',
+      isFull: false,
+    });
+
+    vi.mocked(useCreateTeeTimeOpening).mockReturnValue({
+      mutate: mockMutate,
+      isPending: false,
+      isError: true,
+      isSuccess: false,
+      error: duplicateError,
+      reset: vi.fn(),
+    } as unknown as ReturnType<typeof useCreateTeeTimeOpening>);
+
+    render(<PostTeeTimeForm courseId="course-1" />);
+    expect(screen.getByText(/an opening already exists for this time with 2 slot\(s\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/would you like to add more slots to it/i)).toBeInTheDocument();
+    expect(screen.getByText(/an opening already exists for this time with 2 slot\(s\)/i)).toHaveClass('text-amber-600');
   });
 });

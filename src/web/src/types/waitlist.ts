@@ -84,6 +84,14 @@ export interface DuplicateEntryError {
   error: string;
 }
 
+export interface DuplicateOpeningError {
+  error: string;
+  existingSlotsAvailable: number;
+  existingSlotsRemaining: number;
+  existingOpeningId: string;
+  isFull: boolean;
+}
+
 // Walk-up offer (golfer claim flow)
 export interface WaitlistOfferResponse {
   token: string;
