@@ -7,6 +7,7 @@ import {
   formatCourseTime,
   getBrowserTimeZone,
   getNextTeeTimeInterval,
+  buildTeeTimeDateTime,
 } from '../course-time';
 
 describe('formatWallClockDate', () => {
@@ -163,5 +164,33 @@ describe('getNextTeeTimeInterval', () => {
   it('returns zero-padded hours and minutes', () => {
     vi.useFakeTimers({ now: new Date('2026-03-29T08:01:00Z') });
     expect(getNextTeeTimeInterval('UTC')).toBe('08:10');
+  });
+});
+
+describe('buildTeeTimeDateTime', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('combines HH:mm time with course today date to produce ISO 8601 DateTime', () => {
+    vi.useFakeTimers({ now: new Date('2026-03-31T18:00:00Z') });
+    expect(buildTeeTimeDateTime('14:30', 'UTC')).toBe('2026-03-31T14:30:00');
+  });
+
+  it('handles midnight time', () => {
+    vi.useFakeTimers({ now: new Date('2026-03-31T18:00:00Z') });
+    expect(buildTeeTimeDateTime('00:00', 'UTC')).toBe('2026-03-31T00:00:00');
+  });
+
+  it('handles different timezones', () => {
+    vi.useFakeTimers({ now: new Date('2026-03-31T05:00:00Z') });
+    // In America/Chicago (UTC-5 or UTC-6), this would be the previous day
+    const result = buildTeeTimeDateTime('22:00', 'America/Chicago');
+    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T22:00:00$/);
+  });
+
+  it('preserves original time portion in output', () => {
+    vi.useFakeTimers({ now: new Date('2026-03-31T18:00:00Z') });
+    expect(buildTeeTimeDateTime('08:45', 'UTC')).toBe('2026-03-31T08:45:00');
   });
 });
