@@ -27,8 +27,8 @@ export class OperatorWaitlistPage {
 
     // No confirmation dialog — button directly fires the mutation.
     // Wait for either the short code (success) or an error message (API failure).
-    const shortCode = this.page.locator('span.font-mono.font-bold');
-    const error = this.page.locator('text=/Error/i');
+    const shortCode = this.page.getByTestId('short-code');
+    const error = this.page.getByRole('alert');
 
     const result = await Promise.race([
       shortCode.waitFor().then(() => 'success' as const),
@@ -42,9 +42,15 @@ export class OperatorWaitlistPage {
   }
 
   async getShortCode(): Promise<string> {
-    const codeElement = this.page.locator('span.font-mono.font-bold');
+    const codeElement = this.page.getByTestId('short-code');
     const spacedCode = await codeElement.textContent();
     return spacedCode?.replace(/\s/g, '') ?? '';
+  }
+
+  async verifyOpeningPosted() {
+    // Scope to the desktop layout row — at 1280px the desktop layout is visible.
+    const desktopRow = this.page.locator('[data-testid="opening-row-desktop"]');
+    await desktopRow.getByText('Waiting for golfers...').waitFor();
   }
 
   async addTeeTimeOpening(time: string, slots: number) {

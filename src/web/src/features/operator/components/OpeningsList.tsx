@@ -74,7 +74,7 @@ export function OpeningsList({ openings, onCancel, cancellingId }: OpeningsListP
                 ${opening.status === 'Filled' ? 'border-l-3 border-l-success' : ''}`}
             >
               {/* Mobile layout — stacked rows, hidden at md+ */}
-              <div className="md:hidden space-y-0.5">
+              <div className="md:hidden space-y-0.5" data-testid="opening-row-mobile">
                 <div className="flex items-center justify-between">
                   <span className="text-base font-semibold">
                     {formatWallClockTime(opening.teeTime)}
@@ -109,7 +109,7 @@ export function OpeningsList({ openings, onCancel, cancellingId }: OpeningsListP
               </div>
 
               {/* Desktop layout — single flex row, hidden below md */}
-              <div className="hidden md:flex md:items-center md:gap-4">
+              <div className="hidden md:flex md:items-center md:gap-4" data-testid="opening-row-desktop">
                 <span className="text-base font-semibold w-[80px] shrink-0">
                   {formatWallClockTime(opening.teeTime)}
                 </span>

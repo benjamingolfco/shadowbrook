@@ -65,9 +65,8 @@ test.describe.serial('Walkup Waitlist Flow', () => {
     const timeStr = `${String(futureTime.getHours()).padStart(2, '0')}:${String(futureTime.getMinutes()).padStart(2, '0')}`;
     await waitlist.addTeeTimeOpening(timeStr, 1);
 
-    // Verify it appears in the openings list
-    await waitlist.selectOpeningsTab();
-    await expect(page.getByText('Open', { exact: true })).toBeVisible();
+    // Verify the opening appears in the list
+    await waitlist.verifyOpeningPosted();
   });
 
   test('golfer receives offer via SMS', async () => {

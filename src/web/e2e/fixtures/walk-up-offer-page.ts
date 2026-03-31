@@ -16,6 +16,7 @@ export class WalkUpOfferPage {
     await this.page.getByRole('button', { name: 'Claim This Tee Time' }).click();
 
     const dialog = this.page.getByRole('alertdialog');
+    await dialog.waitFor();
     await dialog.getByRole('button', { name: 'Confirm' }).click();
   }
 
