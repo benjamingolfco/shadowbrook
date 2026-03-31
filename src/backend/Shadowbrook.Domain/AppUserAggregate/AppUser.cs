@@ -1,3 +1,4 @@
+using Shadowbrook.Domain.AppUserAggregate.Exceptions;
 using Shadowbrook.Domain.Common;
 
 namespace Shadowbrook.Domain.AppUserAggregate;
@@ -45,7 +46,7 @@ public class AppUser : Entity
     {
         if (this.courseAssignments.Any(a => a.CourseId == courseId))
         {
-            throw new InvalidOperationException($"User is already assigned to course {courseId}.");
+            throw new CourseAlreadyAssignedException(courseId);
         }
 
         var assignment = CourseAssignment.Create(Id, courseId);
@@ -56,7 +57,7 @@ public class AppUser : Entity
     public void UnassignCourse(Guid courseId)
     {
         var assignment = this.courseAssignments.FirstOrDefault(a => a.CourseId == courseId)
-            ?? throw new InvalidOperationException($"User is not assigned to course {courseId}.");
+            ?? throw new CourseNotAssignedException(courseId);
         this.courseAssignments.Remove(assignment);
     }
 }

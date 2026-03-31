@@ -1,4 +1,5 @@
 using Shadowbrook.Domain.AppUserAggregate;
+using Shadowbrook.Domain.AppUserAggregate.Exceptions;
 
 namespace Shadowbrook.Domain.Tests.AppUserAggregate;
 
@@ -83,7 +84,7 @@ public class AppUserTests
         var courseId = Guid.CreateVersion7();
         user.AssignCourse(courseId);
 
-        Assert.Throws<InvalidOperationException>(() => user.AssignCourse(courseId));
+        Assert.Throws<CourseAlreadyAssignedException>(() => user.AssignCourse(courseId));
     }
 
     [Fact]

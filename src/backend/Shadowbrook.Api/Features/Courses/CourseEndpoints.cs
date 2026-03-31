@@ -94,14 +94,14 @@ public static class CourseEndpoints
         return Results.Ok(courses);
     }
 
-    [WolverineGet("/courses/{id}")]
-    [Authorize(Policy = "RequireAppAccess")]
-    public static async Task<IResult> GetCourseById(Guid id, ApplicationDbContext db)
+    [WolverineGet("/courses/{courseId}")]
+    [Authorize(Policy = "RequireCourseAccess")]
+    public static async Task<IResult> GetCourseById(Guid courseId, ApplicationDbContext db)
     {
         var course = await (
             from c in db.Courses
             join t in db.Tenants on c.OrganizationId equals t.Id
-            where c.Id == id
+            where c.Id == courseId
             select new CourseResponse(
                 c.Id,
                 c.Name,
@@ -119,14 +119,14 @@ public static class CourseEndpoints
         return course is null ? Results.NotFound() : Results.Ok(course);
     }
 
-    [WolverinePut("/courses/{id}/tee-time-settings")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [WolverinePut("/courses/{courseId}/tee-time-settings")]
+    [Authorize(Policy = "RequireCourseAccess")]
     public static async Task<IResult> UpdateTeeTimeSettings(
-        Guid id,
+        Guid courseId,
         TeeTimeSettingsRequest request,
         ApplicationDbContext db)
     {
-        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
+        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
 
         if (course is null)
         {
@@ -141,11 +141,11 @@ public static class CourseEndpoints
             course.LastTeeTime!.Value));
     }
 
-    [WolverineGet("/courses/{id}/tee-time-settings")]
-    [Authorize(Policy = "RequireAppAccess")]
-    public static async Task<IResult> GetTeeTimeSettings(Guid id, ApplicationDbContext db)
+    [WolverineGet("/courses/{courseId}/tee-time-settings")]
+    [Authorize(Policy = "RequireCourseAccess")]
+    public static async Task<IResult> GetTeeTimeSettings(Guid courseId, ApplicationDbContext db)
     {
-        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
+        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
 
         if (course is null)
         {
@@ -163,14 +163,14 @@ public static class CourseEndpoints
             course.LastTeeTime.Value));
     }
 
-    [WolverinePut("/courses/{id}/pricing")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [WolverinePut("/courses/{courseId}/pricing")]
+    [Authorize(Policy = "RequireCourseAccess")]
     public static async Task<IResult> UpdatePricing(
-        Guid id,
+        Guid courseId,
         PricingRequest request,
         ApplicationDbContext db)
     {
-        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
+        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
 
         if (course is null)
         {
@@ -182,11 +182,11 @@ public static class CourseEndpoints
         return Results.Ok(new PricingResponse(course.FlatRatePrice!.Value));
     }
 
-    [WolverineGet("/courses/{id}/pricing")]
-    [Authorize(Policy = "RequireAppAccess")]
-    public static async Task<IResult> GetPricing(Guid id, ApplicationDbContext db)
+    [WolverineGet("/courses/{courseId}/pricing")]
+    [Authorize(Policy = "RequireCourseAccess")]
+    public static async Task<IResult> GetPricing(Guid courseId, ApplicationDbContext db)
     {
-        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
+        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
 
         if (course is null)
         {
