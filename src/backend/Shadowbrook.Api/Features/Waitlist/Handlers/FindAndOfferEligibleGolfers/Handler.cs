@@ -27,7 +27,7 @@ public static class FindAndOfferEligibleGolfersHandler
         var offersToCreate = Math.Min(eligibleEntries.Count, command.MaxOffers);
         if (offersToCreate == 0)
         {
-            logger.LogWarning(
+            logger.LogInformation(
                 "No eligible golfers found for opening {OpeningId}, skipping offer dispatch",
                 command.OpeningId);
             return;
