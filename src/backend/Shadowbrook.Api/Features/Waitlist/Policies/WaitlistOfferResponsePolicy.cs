@@ -22,7 +22,7 @@ public class WaitlistOfferResponsePolicy : Saga
         };
 
         var buffer = evt.IsWalkUp ? WalkUpBuffer : OnlineBuffer;
-        var timeout = new OfferResponseBufferTimeout(buffer);
+        var timeout = new OfferResponseBufferTimeout(policy.Id, buffer);
 
         return (policy, timeout);
     }
@@ -40,6 +40,6 @@ public class WaitlistOfferResponsePolicy : Saga
         [SagaIdentityFrom("WaitlistOfferId")] WaitlistOfferRejected evt) => MarkCompleted();
 }
 
-public record OfferResponseBufferTimeout(TimeSpan Buffer) : TimeoutMessage(Buffer);
+public record OfferResponseBufferTimeout(Guid Id, TimeSpan Buffer) : TimeoutMessage(Buffer);
 
 public record MarkOfferStale(Guid WaitlistOfferId, Guid OpeningId);

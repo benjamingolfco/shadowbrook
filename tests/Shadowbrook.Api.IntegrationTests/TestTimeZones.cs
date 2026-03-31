@@ -1,4 +1,4 @@
-namespace Shadowbrook.Api.Tests;
+namespace Shadowbrook.Api.IntegrationTests;
 
 public static class TestTimeZones
 {
