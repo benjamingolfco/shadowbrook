@@ -68,7 +68,10 @@ function MsalAuthContent({ children }: ProviderProps) {
   const { data: me, isLoading } = useMe(isEffectivelyAuthenticated);
 
   const login = useCallback(() => {
-    void instance.loginRedirect(loginRequest);
+    void instance.loginRedirect({
+      ...loginRequest,
+      redirectStartPage: window.location.origin,
+    });
   }, [instance]);
 
   const logout = useCallback(() => {
