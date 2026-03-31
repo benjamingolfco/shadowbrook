@@ -18,9 +18,11 @@ function LazyFeature({ children }: { children: React.ReactNode }) {
 }
 
 function RoleRedirect() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
 
   if (isLoading) return null;
+
+  if (isAuthenticated && !user) return null;
 
   if (user?.role === 'Admin') {
     return <Navigate to="/admin/tenants" replace />;
