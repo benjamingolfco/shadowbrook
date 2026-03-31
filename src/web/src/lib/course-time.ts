@@ -127,3 +127,13 @@ export function formatWallClockTime(timeString: string): string {
 
   return `${hours12}:${minutesPadded} ${period}`;
 }
+
+/**
+ * Combines an HH:mm time string with the course's current date to produce an ISO 8601 DateTime.
+ * Used to convert form input times (e.g., "14:30") to full API-compatible DateTime strings
+ * (e.g., "2026-03-31T14:30:00").
+ */
+export function buildTeeTimeDateTime(timeHHmm: string, timeZoneId: string): string {
+  const datePart = getCourseToday(timeZoneId);
+  return `${datePart}T${timeHHmm}:00`;
+}

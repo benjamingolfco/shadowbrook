@@ -62,7 +62,7 @@ describe('PostTeeTimeForm', () => {
       expect(mockMutate).toHaveBeenCalledWith(
         {
           courseId: 'course-1',
-          data: { teeTime: '10:40', slotsAvailable: 2 },
+          data: { teeTime: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T10:40:00$/), slotsAvailable: 2 },
         },
         expect.objectContaining({ onSuccess: expect.any(Function) }),
       );

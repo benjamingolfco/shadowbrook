@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
-import { getCourseNow } from '@/lib/course-time';
+import { getCourseNow, buildTeeTimeDateTime } from '@/lib/course-time';
 import { useCourseContext } from '../context/CourseContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -89,7 +89,7 @@ export function AddTeeTimeOpeningDialog({ open, onOpenChange, courseId }: AddTee
       {
         courseId,
         data: {
-          teeTime: data.teeTime,
+          teeTime: buildTeeTimeDateTime(data.teeTime, timeZoneId),
           slotsAvailable: data.slotsAvailable,
         },
       },
