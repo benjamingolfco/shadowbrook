@@ -35,6 +35,9 @@ Thumbs.db
 # Worktrees
 .worktrees/
 
+# Superpowers scratch state
+.superpowers/
+
 # Env - ignore local overrides, but commit environment-specific configs
 .env.local
 .env.*.local
