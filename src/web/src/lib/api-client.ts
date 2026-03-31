@@ -1,3 +1,4 @@
+import { BrowserAuthError } from '@azure/msal-browser';
 import { msalInstance, loginRequest } from './msal-config';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
@@ -15,7 +16,7 @@ async function getAuthToken(): Promise<string | null> {
     });
     return response.accessToken;
   } catch (err) {
-    if (err instanceof Error && err.message.includes('uninitialized')) {
+    if (err instanceof BrowserAuthError) {
       return null;
     }
     await msalInstance.acquireTokenRedirect(loginRequest);
