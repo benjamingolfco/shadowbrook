@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
@@ -54,7 +55,7 @@ public class AppUserEnrichmentMiddlewareTests
 
         var context = new DefaultHttpContext();
 
-        await middleware.InvokeAsync(context, db, cache);
+        await middleware.InvokeAsync(context, db, cache, new ConfigurationBuilder().Build());
 
         Assert.True(nextCalled);
         Assert.Null(context.User.FindFirst("app_user_id"));
@@ -77,7 +78,7 @@ public class AppUserEnrichmentMiddlewareTests
         var middleware = new AppUserEnrichmentMiddleware(_ => Task.CompletedTask);
         var context = CreateAuthenticatedContext(oid);
 
-        await middleware.InvokeAsync(context, db, cache);
+        await middleware.InvokeAsync(context, db, cache, new ConfigurationBuilder().Build());
 
         Assert.Equal(appUser.Id.ToString(), context.User.FindFirst("app_user_id")?.Value);
         Assert.Equal(org.Id.ToString(), context.User.FindFirst("organization_id")?.Value);
@@ -95,7 +96,7 @@ public class AppUserEnrichmentMiddlewareTests
         var middleware = new AppUserEnrichmentMiddleware(_ => Task.CompletedTask);
         var context = CreateAuthenticatedContext(oid, email: "new@example.com", name: "New User");
 
-        await middleware.InvokeAsync(context, db, cache);
+        await middleware.InvokeAsync(context, db, cache, new ConfigurationBuilder().Build());
 
         var created = await db.AppUsers.FirstOrDefaultAsync(u => u.IdentityId == oid);
         Assert.NotNull(created);
@@ -123,7 +124,7 @@ public class AppUserEnrichmentMiddlewareTests
         var middleware = new AppUserEnrichmentMiddleware(_ => Task.CompletedTask);
         var context = CreateAuthenticatedContext(oid);
 
-        await middleware.InvokeAsync(context, db, cache);
+        await middleware.InvokeAsync(context, db, cache, new ConfigurationBuilder().Build());
 
         Assert.Null(context.User.FindFirst("app_user_id"));
         Assert.Null(context.User.FindFirst("permission"));
