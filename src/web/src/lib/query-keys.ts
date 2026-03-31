@@ -30,5 +30,6 @@ export const queryKeys = {
   },
   features: {
     all: ['features'] as const,
+    byCourse: (courseId: string) => ['features', courseId] as const,
   },
 };
