@@ -99,7 +99,7 @@ function MsalAuthContent({ children }: ProviderProps) {
   const value: AuthContextValue = {
     user,
     isAuthenticated: isEffectivelyAuthenticated && !!user,
-    isLoading: isMsalBusy || (isEffectivelyAuthenticated ? isLoading : false),
+    isLoading: isMsalBusy || (isEffectivelyAuthenticated ? (isLoading || !user) : false),
     permissions: user?.permissions ?? [],
     courses: user?.courses ?? [],
     login,
