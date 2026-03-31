@@ -6,6 +6,7 @@ public static class FeatureKeys
 {
     public const string SmsNotifications = "sms-notifications";
     public const string DynamicPricing = "dynamic-pricing";
+    public const string FullOperatorApp = "full-operator-app";
 
     // Reflection-based: reads all public const string fields from this class
     public static readonly string[] All = typeof(FeatureKeys)

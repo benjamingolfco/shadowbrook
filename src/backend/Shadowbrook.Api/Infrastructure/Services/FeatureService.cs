@@ -14,4 +14,35 @@ public class FeatureService(IConfiguration configuration) : IFeatureService
     }
 
     public Dictionary<string, bool> GetAll() => FeatureKeys.All.ToDictionary(key => key, IsEnabled);
+
+    public Dictionary<string, bool> GetAllForCourse(
+        Dictionary<string, bool>? orgFlags,
+        Dictionary<string, bool>? courseFlags)
+    {
+        var result = GetAll();
+
+        if (orgFlags is not null)
+        {
+            foreach (var (key, value) in orgFlags)
+            {
+                if (result.ContainsKey(key))
+                {
+                    result[key] = value;
+                }
+            }
+        }
+
+        if (courseFlags is not null)
+        {
+            foreach (var (key, value) in courseFlags)
+            {
+                if (result.ContainsKey(key))
+                {
+                    result[key] = value;
+                }
+            }
+        }
+
+        return result;
+    }
 }
