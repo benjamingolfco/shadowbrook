@@ -25,5 +25,7 @@ public class CourseAssignmentConfiguration : IEntityTypeConfiguration<CourseAssi
             .WithMany()
             .HasForeignKey(ca => ca.CourseId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasShadowAuditProperties();
     }
 }

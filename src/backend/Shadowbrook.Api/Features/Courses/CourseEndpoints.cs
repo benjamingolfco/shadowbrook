@@ -100,7 +100,8 @@ public static class CourseEndpoints
     {
         var course = await (
             from c in db.Courses
-            join t in db.Tenants on c.OrganizationId equals t.Id
+            join t in db.Tenants on c.OrganizationId equals t.Id into tenants
+            from t in tenants.DefaultIfEmpty()
             where c.Id == courseId
             select new CourseResponse(
                 c.Id,
@@ -113,7 +114,7 @@ public static class CourseEndpoints
                 c.ContactPhone,
                 c.TimeZoneId,
                 c.CreatedAt,
-                new TenantInfo(t.Id, t.OrganizationName)))
+                t == null ? null : new TenantInfo(t.Id, t.OrganizationName)))
             .FirstOrDefaultAsync();
 
         return course is null ? Results.NotFound() : Results.Ok(course);
@@ -224,7 +225,7 @@ public record CourseResponse(
     string? ContactPhone,
     string TimeZoneId,
     DateTimeOffset CreatedAt,
-    TenantInfo Tenant);
+    TenantInfo? Tenant);
 
 public record TenantInfo(Guid Id, string OrganizationName);
 
