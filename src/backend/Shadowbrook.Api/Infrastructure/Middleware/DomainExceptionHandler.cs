@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Domain.BookingAggregate.Exceptions;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseWaitlistAggregate.Exceptions;
@@ -34,6 +36,14 @@ public static class DomainExceptionHandler
                 };
                 await context.Response.WriteAsJsonAsync(new { error = domainEx.Message });
             }
+            else if (IsUniqueConstraintViolation(ex))
+            {
+                context.Response.StatusCode = StatusCodes.Status409Conflict;
+                await context.Response.WriteAsJsonAsync(new { error = "A duplicate record already exists." });
+            }
         }));
     }
+
+    private static bool IsUniqueConstraintViolation(Exception? ex) =>
+        ex is DbUpdateException { InnerException: SqlException { Number: 2601 or 2627 } };
 }

@@ -7,5 +7,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/Shadowbrook.Domain.Tests/Shadowbrook.Domain.Tests.csproj" />
     <Project Path="tests/Shadowbrook.Api.Tests/Shadowbrook.Api.Tests.csproj" />
+    <Project Path="tests/Shadowbrook.Api.IntegrationTests/Shadowbrook.Api.IntegrationTests.csproj" />
   </Folder>
 </Solution>
