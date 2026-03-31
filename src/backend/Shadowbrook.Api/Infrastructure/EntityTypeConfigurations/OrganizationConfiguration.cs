@@ -14,6 +14,11 @@ public class OrganizationConfiguration : IEntityTypeConfiguration<Organization>
 
         builder.Property(o => o.Name).IsRequired().HasMaxLength(200);
         builder.Property(o => o.CreatedAt);
+        builder.Property(o => o.FeatureFlags)
+            .HasColumnType("nvarchar(max)")
+            .HasConversion(
+                v => v == null ? null : System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                v => v == null ? null : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, bool>>(v, (System.Text.Json.JsonSerializerOptions?)null));
 
         builder.HasIndex(o => o.Name).IsUnique();
 
