@@ -18,9 +18,10 @@ public class MarkOfferStaleHandlerTests
         this.timeProvider.GetCurrentTimestamp().Returns(DateTimeOffset.UtcNow);
     }
 
-    private WaitlistOffer CreatePendingOffer(Guid openingId)
+    private async Task<WaitlistOffer> CreatePendingOfferAsync()
     {
-        var offer = WaitlistOffer.Create(openingId, Guid.NewGuid(), Guid.NewGuid(), 1, true, Guid.NewGuid(), new DateOnly(2026, 3, 25), new TimeOnly(10, 0), this.timeProvider);
+        var opening = WaitlistTestHelpers.CreateOpening(this.timeProvider);
+        var offer = await WaitlistTestHelpers.CreateOfferAsync(this.timeProvider, opening, groupSize: 1);
         offer.ClearDomainEvents();
         return offer;
     }
@@ -28,11 +29,10 @@ public class MarkOfferStaleHandlerTests
     [Fact]
     public async Task Handle_PendingOffer_MarksStaleAndRaisesDomainEvent()
     {
-        var openingId = Guid.NewGuid();
-        var offer = CreatePendingOffer(openingId);
+        var offer = await CreatePendingOfferAsync();
         this.offerRepo.GetByIdAsync(offer.Id).Returns(offer);
 
-        var command = new MarkOfferStale(offer.Id, openingId);
+        var command = new MarkOfferStale(offer.Id, offer.OpeningId);
 
         await MarkOfferStaleHandler.Handle(command, this.offerRepo, NullLogger.Instance);
 
@@ -41,19 +41,18 @@ public class MarkOfferStaleHandlerTests
         var domainEvent = Assert.Single(offer.DomainEvents);
         var stale = Assert.IsType<WaitlistOfferStale>(domainEvent);
         Assert.Equal(offer.Id, stale.WaitlistOfferId);
-        Assert.Equal(openingId, stale.OpeningId);
+        Assert.Equal(offer.OpeningId, stale.OpeningId);
     }
 
     [Fact]
     public async Task Handle_AlreadyRejectedOffer_LogsAndSkips()
     {
-        var openingId = Guid.NewGuid();
-        var offer = CreatePendingOffer(openingId);
+        var offer = await CreatePendingOfferAsync();
         offer.Reject("already handled");
         offer.ClearDomainEvents();
         this.offerRepo.GetByIdAsync(offer.Id).Returns(offer);
 
-        var command = new MarkOfferStale(offer.Id, openingId);
+        var command = new MarkOfferStale(offer.Id, offer.OpeningId);
 
         await MarkOfferStaleHandler.Handle(command, this.offerRepo, NullLogger.Instance);
 

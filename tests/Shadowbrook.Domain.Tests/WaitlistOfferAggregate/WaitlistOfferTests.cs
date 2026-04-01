@@ -1,5 +1,9 @@
 using NSubstitute;
 using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.CourseWaitlistAggregate;
+using Shadowbrook.Domain.GolferAggregate;
+using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
+using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Exceptions;
@@ -8,43 +12,63 @@ namespace Shadowbrook.Domain.Tests.WaitlistOfferAggregate;
 
 public class WaitlistOfferTests
 {
+    private readonly IShortCodeGenerator shortCodeGenerator = Substitute.For<IShortCodeGenerator>();
+    private readonly ICourseWaitlistRepository waitlistRepository = Substitute.For<ICourseWaitlistRepository>();
+    private readonly IGolferWaitlistEntryRepository entryRepository = Substitute.For<IGolferWaitlistEntryRepository>();
     private readonly ITimeProvider timeProvider = Substitute.For<ITimeProvider>();
 
     public WaitlistOfferTests()
     {
+        this.shortCodeGenerator.GenerateAsync(Arg.Any<DateOnly>()).Returns("ABC123");
+        this.entryRepository.GetActiveByWaitlistAndGolferAsync(Arg.Any<Guid>(), Arg.Any<Guid>())
+            .Returns((GolferWaitlistEntry?)null);
         this.timeProvider.GetCurrentTimestamp().Returns(DateTimeOffset.UtcNow);
+        this.timeProvider.GetCurrentTimeByTimeZone(Arg.Any<string>()).Returns(new TimeOnly(10, 0));
+        this.timeProvider.GetCurrentDateByTimeZone(Arg.Any<string>()).Returns(new DateOnly(2026, 3, 25));
     }
 
-    private WaitlistOffer CreateOffer(Guid? openingId = null) =>
-        WaitlistOffer.Create(
-            openingId ?? Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            2,
-            true,
-            Guid.NewGuid(),
-            new DateOnly(2026, 3, 25),
-            new TimeOnly(10, 0),
+    private async Task<GolferWaitlistEntry> CreateEntryAsync(int groupSize = 2)
+    {
+        var waitlist = await WalkUpWaitlist.OpenAsync(
+            Guid.NewGuid(), new DateOnly(2026, 3, 25),
+            this.shortCodeGenerator, this.waitlistRepository, this.timeProvider);
+
+        var golfer = Golfer.Create("+15551234567", "Test", "Golfer");
+        return await waitlist.Join(golfer, this.entryRepository, this.timeProvider, "UTC", groupSize);
+    }
+
+    private TeeTimeOpening CreateOpening(Guid? courseId = null, DateOnly? date = null, TimeOnly? teeTime = null) =>
+        TeeTimeOpening.Create(
+            courseId ?? Guid.NewGuid(),
+            date ?? new DateOnly(2026, 3, 25),
+            teeTime ?? new TimeOnly(10, 0),
+            slotsAvailable: 4,
+            operatorOwned: false,
             this.timeProvider);
 
-    [Fact]
-    public void Create_SetsPropertiesAndGeneratesIds()
+    private async Task<WaitlistOffer> CreateOfferAsync(TeeTimeOpening? opening = null)
     {
-        var openingId = Guid.NewGuid();
-        var entryId = Guid.NewGuid();
-        var golferId = Guid.NewGuid();
+        var entry = await CreateEntryAsync();
+        return entry.CreateOffer(opening ?? CreateOpening(), this.timeProvider);
+    }
+
+    [Fact]
+    public async Task Create_SetsPropertiesAndGeneratesIds()
+    {
         var courseId = Guid.NewGuid();
         var date = new DateOnly(2026, 3, 25);
         var teeTime = new TimeOnly(10, 0);
+        var entry = await CreateEntryAsync(groupSize: 2);
+        var opening = CreateOpening(courseId: courseId, date: date, teeTime: teeTime);
 
-        var offer = WaitlistOffer.Create(openingId, entryId, golferId, 2, true, courseId, date, teeTime, this.timeProvider);
+        var offer = entry.CreateOffer(opening, this.timeProvider);
 
         Assert.NotEqual(Guid.Empty, offer.Id);
         Assert.NotEqual(Guid.Empty, offer.BookingId);
         Assert.NotEqual(Guid.Empty, offer.Token);
-        Assert.Equal(openingId, offer.OpeningId);
-        Assert.Equal(entryId, offer.GolferWaitlistEntryId);
-        Assert.Equal(golferId, offer.GolferId);
+        Assert.Equal(opening.Id, offer.OpeningId);
+        Assert.Equal(entry.Id, offer.GolferWaitlistEntryId);
+        Assert.Equal(entry.GolferId, offer.GolferId);
         Assert.Equal(2, offer.GroupSize);
         Assert.True(offer.IsWalkUp);
         Assert.Equal(OfferStatus.Pending, offer.Status);
@@ -55,24 +79,23 @@ public class WaitlistOfferTests
     }
 
     [Fact]
-    public void Create_RaisesWaitlistOfferCreatedEvent()
+    public async Task Create_RaisesWaitlistOfferCreatedEvent()
     {
-        var openingId = Guid.NewGuid();
-        var entryId = Guid.NewGuid();
-        var golferId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
         var date = new DateOnly(2026, 3, 25);
         var teeTime = new TimeOnly(10, 0);
+        var entry = await CreateEntryAsync(groupSize: 2);
+        var opening = CreateOpening(courseId: courseId, date: date, teeTime: teeTime);
 
-        var offer = WaitlistOffer.Create(openingId, entryId, golferId, 2, true, courseId, date, teeTime, this.timeProvider);
+        var offer = entry.CreateOffer(opening, this.timeProvider);
 
         var domainEvent = Assert.Single(offer.DomainEvents);
         var created = Assert.IsType<WaitlistOfferCreated>(domainEvent);
         Assert.Equal(offer.Id, created.WaitlistOfferId);
         Assert.Equal(offer.BookingId, created.BookingId);
-        Assert.Equal(openingId, created.OpeningId);
-        Assert.Equal(entryId, created.GolferWaitlistEntryId);
-        Assert.Equal(golferId, created.GolferId);
+        Assert.Equal(opening.Id, created.OpeningId);
+        Assert.Equal(entry.Id, created.GolferWaitlistEntryId);
+        Assert.Equal(entry.GolferId, created.GolferId);
         Assert.Equal(2, created.GroupSize);
         Assert.True(created.IsWalkUp);
         Assert.Equal(courseId, created.CourseId);
@@ -81,9 +104,9 @@ public class WaitlistOfferTests
     }
 
     [Fact]
-    public void Reject_PendingOffer_SetsRejectedWithReason()
+    public async Task Reject_PendingOffer_SetsRejectedWithReason()
     {
-        var offer = CreateOffer();
+        var offer = await CreateOfferAsync();
         offer.ClearDomainEvents();
 
         offer.Reject("Tee time has been filled.");
@@ -98,10 +121,10 @@ public class WaitlistOfferTests
     }
 
     [Fact]
-    public void MarkNotified_SetsNotifiedAtAndRaisesEvent()
+    public async Task MarkNotified_SetsNotifiedAtAndRaisesEvent()
     {
-        var openingId = Guid.NewGuid();
-        var offer = CreateOffer(openingId);
+        var opening = CreateOpening();
+        var offer = await CreateOfferAsync(opening);
         offer.ClearDomainEvents();
 
         offer.MarkNotified(this.timeProvider);
@@ -110,30 +133,30 @@ public class WaitlistOfferTests
         var domainEvent = Assert.Single(offer.DomainEvents);
         var sent = Assert.IsType<WaitlistOfferSent>(domainEvent);
         Assert.Equal(offer.Id, sent.WaitlistOfferId);
-        Assert.Equal(openingId, sent.OpeningId);
+        Assert.Equal(opening.Id, sent.OpeningId);
     }
 
     [Fact]
-    public void MarkNotified_AlreadyNotified_Throws()
+    public async Task MarkNotified_AlreadyNotified_Throws()
     {
-        var offer = CreateOffer();
+        var offer = await CreateOfferAsync();
         offer.MarkNotified(this.timeProvider);
 
         Assert.Throws<OfferAlreadyNotifiedException>(() => offer.MarkNotified(this.timeProvider));
     }
 
     [Fact]
-    public void Create_SetsIsStaleToFalse()
+    public async Task Create_SetsIsStaleToFalse()
     {
-        var offer = CreateOffer();
+        var offer = await CreateOfferAsync();
 
         Assert.False(offer.IsStale);
     }
 
     [Fact]
-    public void MarkStale_PendingOffer_SetsIsStaleAndRaisesEvent()
+    public async Task MarkStale_PendingOffer_SetsIsStaleAndRaisesEvent()
     {
-        var offer = CreateOffer();
+        var offer = await CreateOfferAsync();
         offer.ClearDomainEvents();
 
         offer.MarkStale();
@@ -147,9 +170,9 @@ public class WaitlistOfferTests
     }
 
     [Fact]
-    public void MarkStale_AlreadyStale_IsIdempotent()
+    public async Task MarkStale_AlreadyStale_IsIdempotent()
     {
-        var offer = CreateOffer();
+        var offer = await CreateOfferAsync();
         offer.MarkStale();
         offer.ClearDomainEvents();
 
@@ -160,9 +183,9 @@ public class WaitlistOfferTests
     }
 
     [Fact]
-    public void MarkStale_RejectedOffer_IsIdempotent()
+    public async Task MarkStale_RejectedOffer_IsIdempotent()
     {
-        var offer = CreateOffer();
+        var offer = await CreateOfferAsync();
         offer.Reject("taken");
         offer.ClearDomainEvents();
 

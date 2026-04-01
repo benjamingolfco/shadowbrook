@@ -1,5 +1,4 @@
 using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Exceptions;
 
@@ -25,7 +24,7 @@ public class WaitlistOffer : Entity
 
     private WaitlistOffer() { } // EF
 
-    public static WaitlistOffer Create(
+    internal static WaitlistOffer Create(
         Guid openingId,
         Guid golferWaitlistEntryId,
         Guid golferId,

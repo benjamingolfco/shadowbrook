@@ -1,5 +1,8 @@
 using NSubstitute;
 using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.CourseWaitlistAggregate;
+using Shadowbrook.Domain.GolferAggregate;
+using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
@@ -10,26 +13,33 @@ namespace Shadowbrook.Domain.Tests.WaitlistServices;
 
 public class WaitlistOfferClaimServiceTests
 {
+    private readonly IShortCodeGenerator shortCodeGenerator = Substitute.For<IShortCodeGenerator>();
+    private readonly ICourseWaitlistRepository waitlistRepository = Substitute.For<ICourseWaitlistRepository>();
+    private readonly IGolferWaitlistEntryRepository entryRepository = Substitute.For<IGolferWaitlistEntryRepository>();
     private readonly ITimeProvider timeProvider = Substitute.For<ITimeProvider>();
     private readonly WaitlistOfferClaimService sut;
 
     public WaitlistOfferClaimServiceTests()
     {
+        this.shortCodeGenerator.GenerateAsync(Arg.Any<DateOnly>()).Returns("ABC123");
+        this.entryRepository.GetActiveByWaitlistAndGolferAsync(Arg.Any<Guid>(), Arg.Any<Guid>())
+            .Returns((GolferWaitlistEntry?)null);
         this.timeProvider.GetCurrentTimestamp().Returns(new DateTimeOffset(2026, 3, 25, 10, 0, 0, TimeSpan.Zero));
+        this.timeProvider.GetCurrentTimeByTimeZone(Arg.Any<string>()).Returns(new TimeOnly(9, 0));
+        this.timeProvider.GetCurrentDateByTimeZone(Arg.Any<string>()).Returns(new DateOnly(2026, 6, 1));
         this.sut = new WaitlistOfferClaimService(this.timeProvider);
     }
 
-    private WaitlistOffer CreateOffer(Guid openingId, int groupSize = 2) =>
-        WaitlistOffer.Create(
-            openingId,
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            groupSize,
-            isWalkUp: true,
-            Guid.NewGuid(),
-            new DateOnly(2026, 6, 1),
-            new TimeOnly(9, 0),
-            this.timeProvider);
+    private async Task<WaitlistOffer> CreateOfferAsync(TeeTimeOpening opening, int groupSize = 2)
+    {
+        var waitlist = await WalkUpWaitlist.OpenAsync(
+            Guid.NewGuid(), new DateOnly(2026, 6, 1),
+            this.shortCodeGenerator, this.waitlistRepository, this.timeProvider);
+
+        var golfer = Golfer.Create("+15551234567", "Test", "Golfer");
+        var entry = await waitlist.Join(golfer, this.entryRepository, this.timeProvider, "UTC", groupSize);
+        return entry.CreateOffer(opening, this.timeProvider);
+    }
 
     private TeeTimeOpening CreateOpening(int slotsAvailable = 4) =>
         TeeTimeOpening.Create(
@@ -41,10 +51,10 @@ public class WaitlistOfferClaimServiceTests
             timeProvider: this.timeProvider);
 
     [Fact]
-    public void AcceptOffer_WhenClaimSucceeds_ReturnsSuccessResult()
+    public async Task AcceptOffer_WhenClaimSucceeds_ReturnsSuccessResult()
     {
         var opening = CreateOpening(slotsAvailable: 4);
-        var offer = CreateOffer(opening.Id, groupSize: 2);
+        var offer = await CreateOfferAsync(opening, groupSize: 2);
         opening.ClearDomainEvents();
         offer.ClearDomainEvents();
 
@@ -55,10 +65,10 @@ public class WaitlistOfferClaimServiceTests
     }
 
     [Fact]
-    public void AcceptOffer_WhenClaimSucceeds_OfferTransitionsToAccepted()
+    public async Task AcceptOffer_WhenClaimSucceeds_OfferTransitionsToAccepted()
     {
         var opening = CreateOpening(slotsAvailable: 4);
-        var offer = CreateOffer(opening.Id, groupSize: 2);
+        var offer = await CreateOfferAsync(opening, groupSize: 2);
         opening.ClearDomainEvents();
         offer.ClearDomainEvents();
 
@@ -68,10 +78,10 @@ public class WaitlistOfferClaimServiceTests
     }
 
     [Fact]
-    public void AcceptOffer_WhenClaimSucceeds_OfferRaisesWaitlistOfferAcceptedEvent()
+    public async Task AcceptOffer_WhenClaimSucceeds_OfferRaisesWaitlistOfferAcceptedEvent()
     {
         var opening = CreateOpening(slotsAvailable: 4);
-        var offer = CreateOffer(opening.Id, groupSize: 2);
+        var offer = await CreateOfferAsync(opening, groupSize: 2);
         opening.ClearDomainEvents();
         offer.ClearDomainEvents();
 
@@ -81,10 +91,10 @@ public class WaitlistOfferClaimServiceTests
     }
 
     [Fact]
-    public void AcceptOffer_WhenClaimSucceeds_OpeningRaisesSlotsClaimed()
+    public async Task AcceptOffer_WhenClaimSucceeds_OpeningRaisesSlotsClaimed()
     {
         var opening = CreateOpening(slotsAvailable: 4);
-        var offer = CreateOffer(opening.Id, groupSize: 2);
+        var offer = await CreateOfferAsync(opening, groupSize: 2);
         opening.ClearDomainEvents();
         offer.ClearDomainEvents();
 
@@ -94,10 +104,10 @@ public class WaitlistOfferClaimServiceTests
     }
 
     [Fact]
-    public void AcceptOffer_WhenClaimFails_ReturnsFailureResultWithReason()
+    public async Task AcceptOffer_WhenClaimFails_ReturnsFailureResultWithReason()
     {
         var opening = CreateOpening(slotsAvailable: 1);
-        var offer = CreateOffer(opening.Id, groupSize: 2); // group too large
+        var offer = await CreateOfferAsync(opening, groupSize: 2); // group too large
         opening.ClearDomainEvents();
         offer.ClearDomainEvents();
 
@@ -108,10 +118,10 @@ public class WaitlistOfferClaimServiceTests
     }
 
     [Fact]
-    public void AcceptOffer_WhenClaimFails_OfferTransitionsToRejectedWithReason()
+    public async Task AcceptOffer_WhenClaimFails_OfferTransitionsToRejectedWithReason()
     {
         var opening = CreateOpening(slotsAvailable: 1);
-        var offer = CreateOffer(opening.Id, groupSize: 2);
+        var offer = await CreateOfferAsync(opening, groupSize: 2);
         opening.ClearDomainEvents();
         offer.ClearDomainEvents();
 
@@ -122,10 +132,10 @@ public class WaitlistOfferClaimServiceTests
     }
 
     [Fact]
-    public void AcceptOffer_WhenClaimFails_OpeningRaisesClaimRejectedEvent()
+    public async Task AcceptOffer_WhenClaimFails_OpeningRaisesClaimRejectedEvent()
     {
         var opening = CreateOpening(slotsAvailable: 1);
-        var offer = CreateOffer(opening.Id, groupSize: 2);
+        var offer = await CreateOfferAsync(opening, groupSize: 2);
         opening.ClearDomainEvents();
         offer.ClearDomainEvents();
 
@@ -135,11 +145,11 @@ public class WaitlistOfferClaimServiceTests
     }
 
     [Fact]
-    public void AcceptOffer_WhenOpeningNotOpen_ReturnsFailureAndRejectsOffer()
+    public async Task AcceptOffer_WhenOpeningNotOpen_ReturnsFailureAndRejectsOffer()
     {
         var opening = CreateOpening(slotsAvailable: 4);
         opening.Expire(this.timeProvider);
-        var offer = CreateOffer(opening.Id, groupSize: 2);
+        var offer = await CreateOfferAsync(opening, groupSize: 2);
         opening.ClearDomainEvents();
         offer.ClearDomainEvents();
 
@@ -152,10 +162,10 @@ public class WaitlistOfferClaimServiceTests
     }
 
     [Fact]
-    public void AcceptOffer_StaleOffer_WhenClaimSucceeds_ReturnsSuccessAndAccepts()
+    public async Task AcceptOffer_StaleOffer_WhenClaimSucceeds_ReturnsSuccessAndAccepts()
     {
         var opening = CreateOpening(slotsAvailable: 4);
-        var offer = CreateOffer(opening.Id, groupSize: 2);
+        var offer = await CreateOfferAsync(opening, groupSize: 2);
         offer.MarkStale();
         opening.ClearDomainEvents();
         offer.ClearDomainEvents();
@@ -168,10 +178,10 @@ public class WaitlistOfferClaimServiceTests
     }
 
     [Fact]
-    public void AcceptOffer_StaleOffer_WhenClaimFails_ReturnsFailureAndRejects()
+    public async Task AcceptOffer_StaleOffer_WhenClaimFails_ReturnsFailureAndRejects()
     {
         var opening = CreateOpening(slotsAvailable: 1);
-        var offer = CreateOffer(opening.Id, groupSize: 2);
+        var offer = await CreateOfferAsync(opening, groupSize: 2);
         offer.MarkStale();
         opening.ClearDomainEvents();
         offer.ClearDomainEvents();
