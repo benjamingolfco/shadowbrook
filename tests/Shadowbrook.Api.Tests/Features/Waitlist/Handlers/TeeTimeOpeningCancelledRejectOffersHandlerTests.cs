@@ -39,21 +39,21 @@ public class TeeTimeOpeningCancelledRejectOffersHandlerTests
     [Fact]
     public async Task Handle_PendingOffers_RejectsEachWithCancellationReason()
     {
-        var openingId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
         var date = new DateOnly(2026, 3, 26);
         var teeTime = new TimeOnly(10, 0);
-        var offer1 = WaitlistOffer.Create(openingId, Guid.NewGuid(), Guid.NewGuid(), 1, true, courseId, date, teeTime, this.timeProvider);
-        var offer2 = WaitlistOffer.Create(openingId, Guid.NewGuid(), Guid.NewGuid(), 2, true, courseId, date, teeTime, this.timeProvider);
+        var opening = WaitlistTestHelpers.CreateOpening(this.timeProvider, courseId: courseId, date: date, teeTime: teeTime);
+        var offer1 = await WaitlistTestHelpers.CreateOfferAsync(this.timeProvider, opening, groupSize: 1);
+        var offer2 = await WaitlistTestHelpers.CreateOfferAsync(this.timeProvider, opening, groupSize: 2);
         offer1.ClearDomainEvents();
         offer2.ClearDomainEvents();
 
-        this.offerRepo.GetPendingByOpeningAsync(openingId)
+        this.offerRepo.GetPendingByOpeningAsync(opening.Id)
             .Returns(new List<WaitlistOffer> { offer1, offer2 });
 
         var evt = new TeeTimeOpeningCancelled
         {
-            OpeningId = openingId,
+            OpeningId = opening.Id,
             CourseId = courseId,
             Date = date,
             TeeTime = teeTime,

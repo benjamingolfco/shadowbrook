@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { NavLink } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { FlagIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -114,12 +113,7 @@ export default function CourseSwitcher() {
 
   if (coursesQuery.data?.length === 0) {
     return (
-      <div className="space-y-1">
-        <p className="text-sm text-muted-foreground">No courses available</p>
-        <Button variant="link" size="sm" asChild>
-          <NavLink to="/operator/register-course">Register Course</NavLink>
-        </Button>
-      </div>
+      <p className="text-sm text-muted-foreground">No courses available</p>
     );
   }
 

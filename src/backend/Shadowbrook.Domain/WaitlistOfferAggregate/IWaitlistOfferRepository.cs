@@ -1,8 +1,9 @@
+using Shadowbrook.Domain.Common;
+
 namespace Shadowbrook.Domain.WaitlistOfferAggregate;
 
-public interface IWaitlistOfferRepository
+public interface IWaitlistOfferRepository : IRepository<WaitlistOffer>
 {
-    Task<WaitlistOffer?> GetByIdAsync(Guid id);
     Task<WaitlistOffer?> GetByTokenAsync(Guid token);
     Task<List<WaitlistOffer>> GetPendingByOpeningAsync(Guid openingId);
     void Add(WaitlistOffer offer);

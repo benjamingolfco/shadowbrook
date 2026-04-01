@@ -29,6 +29,18 @@ public class TeeTimeOpeningRepository(ApplicationDbContext db) : ITeeTimeOpening
                 && o.TeeTime.Value == teeTime.Value);
     }
 
+    public async Task<List<TeeTimeOpening>> FindActiveOpeningsForCourseDateAsync(
+        Guid courseId, DateOnly date, CancellationToken ct = default)
+    {
+        var dayStart = date.ToDateTime(TimeOnly.MinValue);
+        var dayEnd = date.AddDays(1).ToDateTime(TimeOnly.MinValue);
+        return await db.TeeTimeOpenings
+            .Where(o => o.CourseId == courseId
+                && o.TeeTime.Value >= dayStart && o.TeeTime.Value < dayEnd
+                && o.Status == TeeTimeOpeningStatus.Open)
+            .ToListAsync(ct);
+    }
+
     public void Add(TeeTimeOpening opening) =>
         db.TeeTimeOpenings.Add(opening);
 }

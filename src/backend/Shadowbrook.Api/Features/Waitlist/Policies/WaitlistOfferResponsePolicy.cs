@@ -1,4 +1,4 @@
-using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Shadowbrook.Api.Features.Waitlist.Handlers;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 using Wolverine;
 using Wolverine.Persistence.Sagas;
@@ -41,5 +41,3 @@ public class WaitlistOfferResponsePolicy : Saga
 }
 
 public record OfferResponseBufferTimeout(Guid Id, TimeSpan Buffer) : TimeoutMessage(Buffer);
-
-public record MarkOfferStale(Guid WaitlistOfferId, Guid OpeningId);
