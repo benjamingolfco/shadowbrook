@@ -1,6 +1,8 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.AppUserAggregate;
 
@@ -12,7 +14,7 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
 
     private readonly RequestDelegate next = next;
 
-    public async Task InvokeAsync(HttpContext context, ApplicationDbContext db, IMemoryCache cache, IConfiguration configuration)
+    public async Task InvokeAsync(HttpContext context, ApplicationDbContext db, IMemoryCache cache, IConfiguration configuration, ILogger<AppUserEnrichmentMiddleware> logger)
     {
         var oid = context.User?.FindFirst("oid")?.Value
             ?? context.User?.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value;
@@ -22,13 +24,20 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
             var seedAdminEmails = configuration.GetValue<string>("Auth:SeedAdminEmails")
                 ?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 ?? [];
-            await EnrichFromAppUserAsync(context, db, cache, oid, seedAdminEmails);
+            var shouldProceed = await EnrichFromAppUserAsync(context, db, cache, oid, seedAdminEmails);
+
+            if (!shouldProceed)
+            {
+                logger.LogWarning("Inactive user {Oid} denied access", oid);
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                return;
+            }
         }
 
         await this.next(context);
     }
 
-    private static async Task EnrichFromAppUserAsync(
+    private static async Task<bool> EnrichFromAppUserAsync(
         HttpContext context, ApplicationDbContext db, IMemoryCache cache, string oid, string[] seedAdminEmails)
     {
         var cacheKey = $"appuser:{oid}";
@@ -57,7 +66,7 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
             if (!appUser.IsActive)
             {
                 await db.SaveChangesAsync();
-                return;
+                return false;
             }
 
             appUser.RecordLogin();
@@ -74,7 +83,7 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
 
         if (enrichmentData is null)
         {
-            return;
+            return false;
         }
 
         var claimsList = new List<Claim>
@@ -95,6 +104,7 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
         }
 
         context.User!.AddIdentity(new ClaimsIdentity(claimsList));
+        return true;
     }
 
     private sealed record EnrichmentData(
