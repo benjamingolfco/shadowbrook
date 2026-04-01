@@ -39,4 +39,42 @@ public static class FeatureEndpoints
 
         return Results.Ok(featureService.GetAllForCourse(orgFlags, courseFlags));
     }
+
+    [WolverinePut("/organizations/{id}/features")]
+    [Authorize(Policy = "RequireUsersManage")]
+    public static async Task<IResult> SetOrgFeatures(
+        Guid id,
+        SetFeaturesRequest request,
+        [NotBody] ApplicationDbContext db)
+    {
+        var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == id);
+        if (org is null)
+        {
+            return Results.NotFound();
+        }
+
+        org.SetFeatureFlags(request.Flags);
+        return Results.Ok(request.Flags);
+    }
+
+    [WolverinePut("/courses/{courseId}/features")]
+    [Authorize(Policy = "RequireUsersManage")]
+    public static async Task<IResult> SetCourseFeatures(
+        Guid courseId,
+        SetFeaturesRequest request,
+        [NotBody] ApplicationDbContext db)
+    {
+        var course = await db.Courses
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(c => c.Id == courseId);
+        if (course is null)
+        {
+            return Results.NotFound();
+        }
+
+        course.SetFeatureFlags(request.Flags);
+        return Results.Ok(request.Flags);
+    }
 }
+
+public sealed record SetFeaturesRequest(Dictionary<string, bool> Flags);
