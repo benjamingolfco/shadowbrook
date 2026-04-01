@@ -120,6 +120,40 @@ public static class CourseEndpoints
         return course is null ? Results.NotFound() : Results.Ok(course);
     }
 
+    [WolverinePut("/courses/{courseId}")]
+    [Authorize(Policy = "RequireUsersManage")]
+    public static async Task<IResult> UpdateCourse(
+        Guid courseId,
+        UpdateCourseRequest request,
+        [NotBody] ApplicationDbContext db)
+    {
+        var course = await db.Courses
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(c => c.Id == courseId);
+
+        if (course is null)
+        {
+            return Results.NotFound();
+        }
+
+        course.UpdateDetails(request.Name, request.TimeZoneId);
+
+        var tenant = await db.Tenants.FirstOrDefaultAsync(t => t.Id == course.OrganizationId);
+
+        return Results.Ok(new CourseResponse(
+            course.Id,
+            course.Name,
+            course.StreetAddress,
+            course.City,
+            course.State,
+            course.ZipCode,
+            course.ContactEmail,
+            course.ContactPhone,
+            course.TimeZoneId,
+            course.CreatedAt,
+            tenant is null ? null : new TenantInfo(tenant.Id, tenant.OrganizationName)));
+    }
+
     [WolverinePut("/courses/{courseId}/tee-time-settings")]
     [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> UpdateTeeTimeSettings(
@@ -228,6 +262,8 @@ public record CourseResponse(
     TenantInfo? Tenant);
 
 public record TenantInfo(Guid Id, string OrganizationName);
+
+public sealed record UpdateCourseRequest(string Name, string TimeZoneId);
 
 public record TeeTimeSettingsRequest(
     int TeeTimeIntervalMinutes,
