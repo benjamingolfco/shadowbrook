@@ -33,16 +33,16 @@ public class TeeTimeOpeningFilledRejectOffersHandlerTests
     [Fact]
     public async Task Handle_PendingOffers_RejectsEach()
     {
-        var openingId = Guid.NewGuid();
-        var offer1 = WaitlistOffer.Create(openingId, Guid.NewGuid(), Guid.NewGuid(), 1, true, Guid.NewGuid(), new DateOnly(2026, 3, 25), new TimeOnly(10, 0), this.timeProvider);
-        var offer2 = WaitlistOffer.Create(openingId, Guid.NewGuid(), Guid.NewGuid(), 2, true, Guid.NewGuid(), new DateOnly(2026, 3, 25), new TimeOnly(10, 0), this.timeProvider);
+        var opening = WaitlistTestHelpers.CreateOpening(this.timeProvider);
+        var offer1 = await WaitlistTestHelpers.CreateOfferAsync(this.timeProvider, opening, groupSize: 1);
+        var offer2 = await WaitlistTestHelpers.CreateOfferAsync(this.timeProvider, opening, groupSize: 2);
         offer1.ClearDomainEvents();
         offer2.ClearDomainEvents();
 
-        this.offerRepo.GetPendingByOpeningAsync(openingId)
+        this.offerRepo.GetPendingByOpeningAsync(opening.Id)
             .Returns(new List<WaitlistOffer> { offer1, offer2 });
 
-        var evt = new TeeTimeOpeningFilled { OpeningId = openingId };
+        var evt = new TeeTimeOpeningFilled { OpeningId = opening.Id };
 
         await TeeTimeOpeningFilledRejectOffersHandler.Handle(evt, this.offerRepo);
 

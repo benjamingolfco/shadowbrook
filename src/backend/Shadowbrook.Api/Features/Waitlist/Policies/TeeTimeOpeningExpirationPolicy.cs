@@ -1,3 +1,4 @@
+using Shadowbrook.Api.Features.Waitlist.Handlers;
 using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
@@ -46,5 +47,3 @@ public class TeeTimeOpeningExpirationPolicy : Saga
 }
 
 public record TeeTimeOpeningExpirationTimeout(Guid Id, TimeSpan Delay) : TimeoutMessage(Delay);
-
-public record ExpireTeeTimeOpening(Guid OpeningId);

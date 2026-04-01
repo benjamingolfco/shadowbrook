@@ -6,6 +6,7 @@ using OpenTelemetry.Trace;
 using Serilog;
 using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Features.Dev;
+using Shadowbrook.Api.Infrastructure.Configuration;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Middleware;
 using Shadowbrook.Api.Infrastructure.Observability;
@@ -62,6 +63,8 @@ if (!string.IsNullOrEmpty(appInsightsConnectionString))
         .WithLogging()
         .UseAzureMonitor(o => o.ConnectionString = appInsightsConnectionString);
 }
+
+builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("App"));
 
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>();

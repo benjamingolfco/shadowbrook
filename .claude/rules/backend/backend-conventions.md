@@ -97,6 +97,32 @@ Shadowbrook.Api/
 - Validators live in the same file as their request record DTOs (inline pattern), or in a separate file if complex
 - Endpoints can trust that the request body is valid — no need for manual validation of fields that have validator rules
 
+## Configuration (IOptions Pattern)
+
+- Always use strongly-typed options classes — never read `IConfiguration["key"]` directly in application code
+- Options classes live in `Infrastructure/Configuration/`
+- Register with `builder.Services.Configure<T>(builder.Configuration.GetSection("SectionName"))` near the top of service registrations in `Program.cs`
+- Inject `IOptions<T>` (singleton-lifetime config) — not `IOptionsSnapshot` or `IOptionsMonitor` unless reload-on-change is explicitly needed
+- Access the value via the `.Value` property
+- Keep options classes simple POCOs with `{ get; init; }` properties and sensible defaults
+
+```csharp
+// Infrastructure/Configuration/AppSettings.cs
+public class AppSettings
+{
+    public string FrontendUrl { get; init; } = string.Empty;
+}
+
+// Program.cs
+builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("App"));
+
+// Handler
+public static async Task Handle(IOptions<AppSettings> appSettings, ...)
+{
+    var baseUrl = appSettings.Value.FrontendUrl;
+}
+```
+
 ## Identifiers
 
 - Use `Guid.CreateVersion7()` when generating new GUIDs for database identifiers — it produces time-ordered UUIDs (UUIDv7) that sort chronologically, avoiding index fragmentation in SQL Server
@@ -147,6 +173,18 @@ The project uses [WolverineFx](https://wolverinefx.net) for message handling. Se
 - Method signature: `public async Task Handle(EventType domainEvent, CancellationToken ct)`
 - Handlers that need to publish follow-on events inject `IMessageBus` and call `bus.PublishAsync()`
 - `MultipleHandlerBehavior.Separated` — multiple handlers for the same event type run independently
+
+### Command Colocation
+
+Command and message records MUST be defined in the same file as their handler. This keeps the
+message contract and its processing logic together — if you're reading a handler, you can see
+exactly what shape of message it expects without navigating elsewhere.
+
+- Commands handled by a standalone handler class → define the record in the handler file
+- Timeout messages consumed by a policy → define the record in the policy file
+- Wake-up/trigger commands consumed by a policy → define the record in the policy file
+
+The rule is: **the record lives with the code that has the `Handle` method for it.**
 
 **No silent returns — hard rule:**
 - Every early return in a handler MUST either throw or log a warning before returning. Silent failures in event handlers are invisible in production.
