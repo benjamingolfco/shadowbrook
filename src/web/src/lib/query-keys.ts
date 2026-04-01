@@ -9,6 +9,21 @@ export const queryKeys = {
     all: ['tenants'] as const,
     detail: (id: string) => ['tenants', id] as const,
   },
+  organizations: {
+    all: ['organizations'] as const,
+    detail: (id: string) => ['organizations', id] as const,
+  },
+  users: {
+    all: ['users'] as const,
+    detail: (id: string) => ['users', id] as const,
+  },
+  analytics: {
+    summary: ['analytics', 'summary'] as const,
+    fillRates: (courseId?: string) => ['analytics', 'fill-rates', courseId] as const,
+    bookings: (courseId?: string) => ['analytics', 'bookings', courseId] as const,
+    popularTimes: (courseId?: string) => ['analytics', 'popular-times', courseId] as const,
+    waitlist: (courseId?: string) => ['analytics', 'waitlist', courseId] as const,
+  },
   teeSheets: {
     byDate: (courseId: string, date: string) => ['tee-sheets', courseId, date] as const,
   },

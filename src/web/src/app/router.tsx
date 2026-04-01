@@ -23,7 +23,7 @@ function RoleRedirect() {
   if (isLoading || !isAuthenticated || !user) return null;
 
   if (user.role === 'Admin') {
-    return <Navigate to="/admin/tenants" replace />;
+    return <Navigate to="/admin" replace />;
   }
 
   return <Navigate to="/operator" replace />;
@@ -32,7 +32,11 @@ function RoleRedirect() {
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <RoleRedirect />,
+    element: (
+      <AuthGuard>
+        <RoleRedirect />
+      </AuthGuard>
+    ),
   },
   {
     path: '/admin/*',

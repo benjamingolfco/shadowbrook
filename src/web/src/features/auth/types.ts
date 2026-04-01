@@ -1,4 +1,4 @@
-export type AppUserRole = 'Admin' | 'Owner' | 'Staff';
+export type AppUserRole = 'Admin' | 'Operator';
 
 export interface MeResponse {
   id: string;
