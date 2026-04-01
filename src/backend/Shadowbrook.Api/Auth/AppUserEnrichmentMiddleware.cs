@@ -67,8 +67,7 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
                 AppUserId: appUser.Id,
                 OrganizationId: appUser.OrganizationId,
                 Role: appUser.Role,
-                Permissions: Permissions.GetForRole(appUser.Role),
-                CourseIds: []);
+                Permissions: Permissions.GetForRole(appUser.Role));
 
             cache.Set(cacheKey, enrichmentData, CacheTtl);
         }
@@ -95,11 +94,6 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
             claimsList.Add(new Claim("permission", permission));
         }
 
-        foreach (var courseId in enrichmentData.CourseIds)
-        {
-            claimsList.Add(new Claim("course_id", courseId.ToString()));
-        }
-
         context.User!.AddIdentity(new ClaimsIdentity(claimsList));
     }
 
@@ -107,6 +101,5 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
         Guid AppUserId,
         Guid? OrganizationId,
         AppUserRole Role,
-        IReadOnlyList<string> Permissions,
-        IReadOnlyList<Guid> CourseIds);
+        IReadOnlyList<string> Permissions);
 }

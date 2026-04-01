@@ -158,12 +158,9 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("RequireAppAccess", policy =>
         policy.AddRequirements(new PermissionRequirement(Permissions.AppAccess)))
     .AddPolicy("RequireUsersManage", policy =>
-        policy.AddRequirements(new PermissionRequirement(Permissions.UsersManage)))
-    .AddPolicy("RequireCourseAccess", policy =>
-        policy.AddRequirements(new CourseAccessRequirement()));
+        policy.AddRequirements(new PermissionRequirement(Permissions.UsersManage)));
 
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
-builder.Services.AddScoped<IAuthorizationHandler, CourseAccessAuthorizationHandler>();
 
 builder.Services.AddWolverineHttp();
 

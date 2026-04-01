@@ -28,7 +28,7 @@ public class DevAuthHandler(
             return AuthenticateResult.NoResult();
         }
 
-        var claims = new List<Claim> { new Claim("oid", devIdentityId) };
+        var claims = new List<Claim> { new("oid", devIdentityId) };
 
         // Look up the user in the database to add app_user_id, organization_id, and permission claims
         using var scope = serviceProvider.CreateAsyncScope();
@@ -37,7 +37,7 @@ public class DevAuthHandler(
 
         if (user is not null)
         {
-            claims.Add(new Claim("app_user_id", user.AppUserId.ToString()));
+            claims.Add(new Claim("app_user_id", user.Id.ToString()));
 
             if (user.OrganizationId.HasValue)
             {
