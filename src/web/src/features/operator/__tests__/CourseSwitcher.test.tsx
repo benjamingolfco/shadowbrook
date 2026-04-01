@@ -126,7 +126,7 @@ describe('CourseSwitcher', () => {
     expect(mockRefetch).toHaveBeenCalled();
   });
 
-  it('shows no courses state with register link', () => {
+  it('shows no courses available message', () => {
     mockUseCourses.mockReturnValue({
       isLoading: false,
       isError: false,
@@ -138,7 +138,7 @@ describe('CourseSwitcher', () => {
     render(<CourseSwitcher />);
 
     expect(screen.getByText('No courses available')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Register Course' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Register Course' })).not.toBeInTheDocument();
   });
 
   it('auto-selects single course when no course is selected', () => {
