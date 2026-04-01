@@ -33,9 +33,18 @@ export default function AdminLayout() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <NavLink to="/admin/tenants">
+                <NavLink to="/admin" end>
                   {({ isActive }) => (
-                    <span className={isActive ? 'font-semibold' : ''}>Tenants</span>
+                    <span className={isActive ? 'font-semibold' : ''}>Dashboard</span>
+                  )}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <NavLink to="/admin/organizations">
+                  {({ isActive }) => (
+                    <span className={isActive ? 'font-semibold' : ''}>Organizations</span>
                   )}
                 </NavLink>
               </SidebarMenuButton>
@@ -45,6 +54,24 @@ export default function AdminLayout() {
                 <NavLink to="/admin/courses">
                   {({ isActive }) => (
                     <span className={isActive ? 'font-semibold' : ''}>Courses</span>
+                  )}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <NavLink to="/admin/users">
+                  {({ isActive }) => (
+                    <span className={isActive ? 'font-semibold' : ''}>Users</span>
+                  )}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <NavLink to="/admin/feature-flags">
+                  {({ isActive }) => (
+                    <span className={isActive ? 'font-semibold' : ''}>Feature Flags</span>
                   )}
                 </NavLink>
               </SidebarMenuButton>
