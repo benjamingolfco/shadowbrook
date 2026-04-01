@@ -7,7 +7,7 @@ vi.mock('../hooks/useOrganizations');
 
 import { useOrganizations } from '../hooks/useOrganizations';
 
-const mockUseTenants = vi.mocked(useOrganizations);
+const mockUseOrganizations = vi.mocked(useOrganizations);
 const mockNavigate = vi.fn();
 
 vi.mock('react-router', async () => {
@@ -23,46 +23,46 @@ describe('CourseCreate', () => {
     vi.clearAllMocks();
   });
 
-  it('shows loading state for tenant dropdown', () => {
-    mockUseTenants.mockReturnValue({
+  it('shows loading state for organization dropdown', () => {
+    mockUseOrganizations.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
     } as unknown as ReturnType<typeof useOrganizations>);
 
     render(<CourseCreate />);
-    expect(screen.getByText('Loading tenants...')).toBeInTheDocument();
+    expect(screen.getByText('Loading organizations...')).toBeInTheDocument();
   });
 
-  it('shows error message when tenants fail to load', () => {
-    mockUseTenants.mockReturnValue({
+  it('shows error message when organizations fail to load', () => {
+    mockUseOrganizations.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: new Error('Network error'),
     } as unknown as ReturnType<typeof useOrganizations>);
 
     render(<CourseCreate />);
-    expect(screen.getByText(/Error loading tenants/)).toBeInTheDocument();
+    expect(screen.getByText(/Error loading organizations/)).toBeInTheDocument();
     expect(screen.getByText(/Network error/)).toBeInTheDocument();
   });
 
-  it('shows empty state with link to create tenant', () => {
-    mockUseTenants.mockReturnValue({
+  it('shows empty state with link to create organization', () => {
+    mockUseOrganizations.mockReturnValue({
       data: [],
       isLoading: false,
       error: null,
     } as unknown as ReturnType<typeof useOrganizations>);
 
     render(<CourseCreate />);
-    expect(screen.getByText('No tenants available')).toBeInTheDocument();
-    expect(screen.getByText(/No tenants found/)).toBeInTheDocument();
+    expect(screen.getByText('No organizations available')).toBeInTheDocument();
+    expect(screen.getByText(/No organizations found/)).toBeInTheDocument();
 
-    const createTenantLink = screen.getByRole('link', { name: 'Create a tenant' });
-    expect(createTenantLink).toHaveAttribute('href', '/admin/tenants/new');
+    const createOrgLink = screen.getByRole('link', { name: 'Create an organization' });
+    expect(createOrgLink).toHaveAttribute('href', '/admin/organizations/new');
   });
 
-  it('renders tenant dropdown with sorted tenants', () => {
-    mockUseTenants.mockReturnValue({
+  it('renders organization dropdown with sorted organizations', () => {
+    mockUseOrganizations.mockReturnValue({
       data: [
         {
           id: '2',
@@ -85,15 +85,15 @@ describe('CourseCreate', () => {
 
     render(<CourseCreate />);
 
-    const tenantLabel = screen.getByText('Assign to Tenant *');
-    expect(tenantLabel).toBeInTheDocument();
-    expect(screen.getByText('Select a tenant')).toBeInTheDocument();
+    const orgLabel = screen.getByText('Assign to Organization *');
+    expect(orgLabel).toBeInTheDocument();
+    expect(screen.getByText('Select an organization')).toBeInTheDocument();
   });
 
-  it('shows validation error when tenant is not selected', async () => {
+  it('shows validation error when organization is not selected', async () => {
     const user = userEvent.setup();
 
-    mockUseTenants.mockReturnValue({
+    mockUseOrganizations.mockReturnValue({
       data: [
         {
           id: '1',
@@ -116,12 +116,12 @@ describe('CourseCreate', () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Tenant assignment is required')).toBeInTheDocument();
+      expect(screen.getByText('Organization is required')).toBeInTheDocument();
     });
   });
 
-  it('has correct tab order: tenant before course name', () => {
-    mockUseTenants.mockReturnValue({
+  it('has correct tab order: organization before course name', () => {
+    mockUseOrganizations.mockReturnValue({
       data: [
         {
           id: '1',
@@ -137,7 +137,7 @@ describe('CourseCreate', () => {
 
     const { container } = render(<CourseCreate />);
 
-    const tenantTrigger = screen.getByRole('combobox', { name: 'Assign to Tenant *' });
+    const tenantTrigger = screen.getByRole('combobox', { name: 'Assign to Organization *' });
     const courseNameInput = screen.getByLabelText('Course Name *');
 
     expect(tenantTrigger).toBeInTheDocument();
