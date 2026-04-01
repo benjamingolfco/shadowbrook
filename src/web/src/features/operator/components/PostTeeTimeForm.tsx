@@ -2,7 +2,7 @@ import { useRef, useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
-import { getNextTeeTimeInterval } from '@/lib/course-time';
+import { getNextTeeTimeInterval, buildTeeTimeDateTime } from '@/lib/course-time';
 import { useCourseContext } from '../context/CourseContext';
 import { useCreateTeeTimeOpening } from '../hooks/useWaitlist';
 import { Card, CardContent } from '@/components/ui/card';
@@ -53,7 +53,10 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
     createMutation.mutate(
       {
         courseId,
-        data: { teeTime: data.teeTime, slotsAvailable: data.slotsAvailable },
+        data: {
+          teeTime: buildTeeTimeDateTime(data.teeTime, timeZoneId),
+          slotsAvailable: data.slotsAvailable,
+        },
       },
       {
         onSuccess: () => {

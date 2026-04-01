@@ -54,7 +54,7 @@ export interface WaitlistOpeningEntry {
 }
 
 export interface CreateTeeTimeOpeningRequest {
-  teeTime: string;
+  teeTime: string; // ISO 8601 DateTime format: "yyyy-MM-ddTHH:mm:ss"
   slotsAvailable: number;
 }
 

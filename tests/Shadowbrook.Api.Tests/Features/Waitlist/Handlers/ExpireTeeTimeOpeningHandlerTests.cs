@@ -1,6 +1,5 @@
 using NSubstitute;
 using Shadowbrook.Api.Features.Waitlist.Handlers;
-using Shadowbrook.Api.Features.Waitlist.Policies;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;

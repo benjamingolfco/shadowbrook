@@ -219,14 +219,43 @@ jobs:
         run: pnpm --dir src/web build
 
   # ============================================================
+  # CI — Web: Unit Tests (only after lint & build passes)
+  # ============================================================
+  unit-test-web:
+    name: Unit Test Web
+    needs: [detect-changes, lint-web]
+    if: needs.detect-changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: pnpm --dir src/web install --frozen-lockfile
+
+      - name: Unit Tests
+        run: pnpm --dir src/web test --run
+
+  # ============================================================
   # Deploy frontend SWA preview (after CI passes)
   # ============================================================
   deploy-web:
-    needs: [detect-changes, lint-web]
+    needs: [detect-changes, lint-web, unit-test-web]
     if: |
       !cancelled() &&
       needs.detect-changes.outputs.web == 'true' &&
-      needs.lint-web.result == 'success'
+      needs.lint-web.result == 'success' &&
+      needs.unit-test-web.result == 'success'
     uses: ./.github/workflows/deploy-web.yml
     with:
       environment: test

@@ -1,5 +1,8 @@
 using NSubstitute;
 using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.CourseWaitlistAggregate;
+using Shadowbrook.Domain.GolferAggregate;
+using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Exceptions;
@@ -346,5 +349,92 @@ public class TeeTimeOpeningTests
         Assert.Equal(TeeTimeOpeningStatus.Cancelled, opening.Status);
         Assert.Null(opening.ExpiredAt);
         Assert.Empty(opening.DomainEvents);
+    }
+
+    // IsInGolferWindow tests
+    // Opening tee time: 2026-06-01 09:00
+
+    // joinTime controls WindowStart; WindowEnd = joinTime + 30 min (set by WalkUpWaitlist.Join)
+    private async Task<GolferWaitlistEntry> CreateEntryWithJoinTimeAsync(DateTime joinTime)
+    {
+        var shortCodeGenerator = Substitute.For<IShortCodeGenerator>();
+        shortCodeGenerator.GenerateAsync(Arg.Any<DateOnly>()).Returns("ABC");
+
+        var waitlistRepo = Substitute.For<ICourseWaitlistRepository>();
+        var entryRepo = Substitute.For<IGolferWaitlistEntryRepository>();
+        entryRepo.GetActiveByWaitlistAndGolferAsync(Arg.Any<Guid>(), Arg.Any<Guid>())
+            .Returns((GolferWaitlistEntry?)null);
+
+        var joinProvider = Substitute.For<ITimeProvider>();
+        joinProvider.GetCurrentTimestamp().Returns(new DateTimeOffset(joinTime, TimeSpan.Zero));
+        joinProvider.GetCurrentDateByTimeZone(Arg.Any<string>()).Returns(DateOnly.FromDateTime(joinTime));
+        joinProvider.GetCurrentTimeByTimeZone(Arg.Any<string>()).Returns(TimeOnly.FromDateTime(joinTime));
+
+        var waitlist = await WalkUpWaitlist.OpenAsync(
+            Guid.NewGuid(), new DateOnly(2026, 6, 1), shortCodeGenerator, waitlistRepo, joinProvider);
+
+        var golfer = Golfer.Create("+15551234567", "Test", "Golfer");
+        return await waitlist.Join(golfer, entryRepo, joinProvider, "UTC", groupSize: 1);
+    }
+
+    [Fact]
+    public async Task IsInGolferWindow_WhenTeeTimeWithinWindow_ReturnsTrue()
+    {
+        // Opening tee time: 2026-06-01 09:00
+        // Window: 08:45 - 09:15 (golfer joined at 08:45, +30 min = 09:15)
+        var opening = CreateOpening(); // 09:00
+        var joinTime = new DateTime(2026, 6, 1, 8, 45, 0);
+        var entry = await CreateEntryWithJoinTimeAsync(joinTime);
+
+        Assert.True(opening.IsInGolferWindow(entry));
+    }
+
+    [Fact]
+    public async Task IsInGolferWindow_WhenTeeTimeBeforeWindow_ReturnsFalse()
+    {
+        // Opening tee time: 2026-06-01 09:00
+        // Window: 09:15 - 09:45 (golfer joined at 09:15, after the tee time)
+        var opening = CreateOpening(); // 09:00
+        var joinTime = new DateTime(2026, 6, 1, 9, 15, 0);
+        var entry = await CreateEntryWithJoinTimeAsync(joinTime);
+
+        Assert.False(opening.IsInGolferWindow(entry));
+    }
+
+    [Fact]
+    public async Task IsInGolferWindow_WhenTeeTimeAfterWindow_ReturnsFalse()
+    {
+        // Opening tee time: 2026-06-01 09:00
+        // Window: 07:00 - 07:30 (golfer's window expired before tee time)
+        var opening = CreateOpening(); // 09:00
+        var joinTime = new DateTime(2026, 6, 1, 7, 0, 0);
+        var entry = await CreateEntryWithJoinTimeAsync(joinTime);
+
+        Assert.False(opening.IsInGolferWindow(entry));
+    }
+
+    [Fact]
+    public async Task IsInGolferWindow_WhenTeeTimeAtWindowStart_ReturnsTrue()
+    {
+        // Opening tee time: 2026-06-01 09:00
+        // Window: 09:00 - 09:30 (inclusive lower boundary)
+        var opening = CreateOpening(); // 09:00
+        var joinTime = new DateTime(2026, 6, 1, 9, 0, 0);
+        var entry = await CreateEntryWithJoinTimeAsync(joinTime);
+
+        Assert.True(opening.IsInGolferWindow(entry));
+    }
+
+    [Fact]
+    public async Task IsInGolferWindow_WhenTeeTimeAtWindowEnd_ReturnsTrue()
+    {
+        // Opening tee time: 2026-06-01 09:00
+        // Window: 08:30 - 09:00 (inclusive upper boundary)
+        // Join at 08:30 → window end = 09:00
+        var opening = CreateOpening(); // 09:00
+        var joinTime = new DateTime(2026, 6, 1, 8, 30, 0);
+        var entry = await CreateEntryWithJoinTimeAsync(joinTime);
+
+        Assert.True(opening.IsInGolferWindow(entry));
     }
 }

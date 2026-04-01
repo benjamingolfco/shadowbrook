@@ -9,15 +9,6 @@ vi.mock('@/features/operator/hooks/useCourses');
 vi.mock('../context/CourseContext');
 vi.mock('../context/TenantContext');
 
-// useNavigate is provided by MemoryRouter in test-utils
-const mockNavigate = vi.fn();
-vi.mock('react-router', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react-router')>();
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
 
 const mockUseCourses = vi.mocked(useCourses);
 const mockUseCourseContext = vi.mocked(useCourseContext);
@@ -28,7 +19,6 @@ const mockRefetch = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockNavigate.mockReset();
 
   mockUseTenantContext.mockReturnValue({
     tenant: { id: 'tenant-1', organizationName: 'Pine Valley Golf Club' },
@@ -78,7 +68,7 @@ describe('CoursePortfolio', () => {
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
   });
 
-  it('shows CTA when no courses registered', () => {
+  it('shows admin contact message when no courses registered', () => {
     mockUseCourses.mockReturnValue({
       isLoading: false,
       data: [],
@@ -89,26 +79,9 @@ describe('CoursePortfolio', () => {
 
     render(<CoursePortfolio />);
 
-    expect(screen.getByText('Get started by adding your first course')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Register a Course' })).toBeInTheDocument();
-  });
-
-  it('navigates to register-course when Register a Course is clicked', () => {
-    mockUseCourses.mockReturnValue({
-      isLoading: false,
-      data: [],
-      error: null,
-      isError: false,
-      refetch: mockRefetch,
-    } as unknown as ReturnType<typeof useCourses>);
-
-    render(<CoursePortfolio />);
-
-    act(() => {
-      screen.getByRole('button', { name: 'Register a Course' }).click();
-    });
-
-    expect(mockNavigate).toHaveBeenCalledWith('/operator/register-course');
+    expect(screen.getByText('No courses available')).toBeInTheDocument();
+    expect(screen.getByText('Contact your administrator to add a course.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Register a Course' })).not.toBeInTheDocument();
   });
 
   it('auto-selects single course', () => {

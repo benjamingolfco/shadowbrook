@@ -1,4 +1,5 @@
 using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Exceptions;
 
@@ -12,6 +13,7 @@ public class TeeTimeOpening : Entity
     public int SlotsRemaining { get; private set; }
     public bool OperatorOwned { get; private set; }
     public TeeTimeOpeningStatus Status { get; private set; }
+    public bool IsOpen => Status == TeeTimeOpeningStatus.Open;
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? FilledAt { get; private set; }
     public DateTimeOffset? ExpiredAt { get; private set; }
@@ -133,6 +135,12 @@ public class TeeTimeOpening : Entity
             Date = TeeTime.Date,
             TeeTime = TeeTime.Time,
         });
+    }
+
+    public bool IsInGolferWindow(GolferWaitlistEntry entry)
+    {
+        var teeDateTime = TeeTime.Date.ToDateTime(TeeTime.Time);
+        return teeDateTime >= entry.WindowStart && teeDateTime <= entry.WindowEnd;
     }
 
     public void Expire(ITimeProvider timeProvider)

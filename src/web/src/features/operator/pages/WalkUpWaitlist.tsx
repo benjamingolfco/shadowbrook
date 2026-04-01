@@ -185,7 +185,7 @@ export default function WalkUpWaitlist() {
             </p>
           )}
           {openMutation.isError && !is409 && (
-            <p className="text-sm text-destructive">
+            <p className="text-sm text-destructive" role="alert">
               Couldn't open waitlist. Try again.
             </p>
           )}
@@ -249,7 +249,7 @@ export default function WalkUpWaitlist() {
           </h1>
           <Badge variant="success">Open</Badge>
           <span className="inline-flex items-center gap-1 whitespace-nowrap">
-            <span className="font-mono font-bold text-base md:text-lg tracking-[0.15em] md:tracking-[0.25em]">
+            <span data-testid="short-code" className="font-mono font-bold text-base md:text-lg tracking-[0.15em] md:tracking-[0.25em]">
               {waitlist.shortCode.split('').join(' ')}
             </span>
             <button

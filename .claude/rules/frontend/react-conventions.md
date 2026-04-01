@@ -118,3 +118,42 @@ Vitest + React Testing Library.
 - Hooks are named exports in `features/{feature}/hooks/`
 - Loading/error/empty states are handled in the page component, not the hook
 - Use shadcn `Table` for tabular data, `Form` for forms, `Button` for actions
+
+## E2E Test Locators
+
+Playwright E2E tests live in `e2e/` with page object fixtures in `e2e/fixtures/`.
+
+### Locator Priority
+
+1. **Semantic roles/labels** (`getByRole`, `getByLabel`) — preferred for interactive elements (buttons, inputs, headings, dialogs)
+2. **`data-testid`** — for non-semantic elements, structural containers, or dual-render disambiguation
+3. **Text matchers** (`getByText`) — only for asserting dynamic content appeared, never for interaction targets
+4. **Never use** CSS class selectors, XPath, or `page.locator('text=...')`
+
+### When to add `data-testid`
+
+- Element has no accessible role (status displays, code readouts, statistics)
+- Same content renders in both mobile and desktop layouts (dual-render pattern)
+- Need to scope child queries within a container
+- Do NOT add `data-testid` to buttons, form fields, or headings — use roles/labels instead
+
+### `data-testid` naming
+
+- Kebab-case, lowercase: `short-code`, `opening-status`, `opening-row-desktop`
+- No element type encoding: `short-code` not `short-code-span`
+- Feature prefix only when shared across pages
+- Dynamic items use ID suffix: `data-testid={`opening-row-${id}`}`
+- Test IDs live on the component that renders the element, not passed as props
+
+### Dual-render (mobile/desktop) pattern
+
+Components that render both mobile and desktop layouts (via `md:hidden` / `hidden md:flex`) must place `data-testid` on **both variants** with a `-mobile` / `-desktop` suffix. E2E tests scope to the desktop variant since Playwright runs at 1280x720 (above the 768px `md:` breakpoint). Example:
+
+```tsx
+<div className="md:hidden" data-testid="opening-row-mobile">...</div>
+<div className="hidden md:flex" data-testid="opening-row-desktop">...</div>
+```
+
+### Page object pattern
+
+All E2E locators live in page object fixtures (`e2e/fixtures/`), never as raw locators in spec files. Specs should read like user stories; fixtures encapsulate the how.

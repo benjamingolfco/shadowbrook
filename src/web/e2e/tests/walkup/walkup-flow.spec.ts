@@ -1,5 +1,5 @@
 import { test, expect } from '../../fixtures/auth';
-import { OperatorRegisterPage } from '../../fixtures/operator-register-page';
+import { AdminRegisterPage } from '../../fixtures/admin-register-page';
 import { OperatorWaitlistPage } from '../../fixtures/operator-waitlist-page';
 import { WalkupPage } from '../../fixtures/walkup-page';
 import { WalkUpOfferPage } from '../../fixtures/walk-up-offer-page';
@@ -11,13 +11,12 @@ let walkupCode: string;
 let offerPath: string;
 
 test.describe.serial('Walkup Waitlist Flow', () => {
-  test('operator registers a new course', async ({ page, asOperator }) => {
-    await asOperator();
-    const register = new OperatorRegisterPage(page);
+  test('admin registers a new course', async ({ page, asAdmin }) => {
+    await asAdmin();
+    const register = new AdminRegisterPage(page);
 
     await register.goto();
-    await register.selectTenant(TEST_TENANT_NAME);
-    await register.registerCourse(courseName);
+    await register.registerCourse(courseName, TEST_TENANT_NAME);
   });
 
   test('operator opens a walkup waitlist', async ({ page, asOperator }) => {
@@ -65,9 +64,8 @@ test.describe.serial('Walkup Waitlist Flow', () => {
     const timeStr = `${String(futureTime.getHours()).padStart(2, '0')}:${String(futureTime.getMinutes()).padStart(2, '0')}`;
     await waitlist.addTeeTimeOpening(timeStr, 1);
 
-    // Verify it appears in the Tee Time Openings tab
-    await waitlist.selectOpeningsTab();
-    await expect(page.getByRole('cell', { name: 'Open', exact: true })).toBeVisible();
+    // Verify the opening appears in the list
+    await waitlist.verifyOpeningPosted();
   });
 
   test('golfer receives offer via SMS', async () => {

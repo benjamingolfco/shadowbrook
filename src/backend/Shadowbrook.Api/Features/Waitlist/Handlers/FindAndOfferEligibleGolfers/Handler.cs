@@ -22,10 +22,15 @@ public static class FindAndOfferEligibleGolfersHandler
     {
         var opening = await openingRepository.GetRequiredByIdAsync(command.OpeningId);
 
+        if (!opening.IsOpen)
+        {
+            logger.LogWarning("Opening {OpeningId} is not open (status: {Status}), skipping offer matching", command.OpeningId, opening.Status);
+            return;
+        }
+
         var eligibleEntries = await matchingService.FindEligibleEntriesAsync(opening, ct);
 
-        var offersToCreate = Math.Min(eligibleEntries.Count, command.MaxOffers);
-        if (offersToCreate == 0)
+        if (eligibleEntries.Count == 0)
         {
             logger.LogWarning(
                 "No eligible golfers found for opening {OpeningId}, skipping offer dispatch",
@@ -33,9 +38,8 @@ public static class FindAndOfferEligibleGolfersHandler
             return;
         }
 
-        for (var i = 0; i < offersToCreate; i++)
+        foreach (var entry in eligibleEntries.Take(command.MaxOffers))
         {
-            var entry = eligibleEntries[i];
             var offer = entry.CreateOffer(opening, timeProvider);
             offerRepository.Add(offer);
         }

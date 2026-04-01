@@ -1,8 +1,10 @@
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Shadowbrook.Api.Features.Waitlist.Policies;
-using Shadowbrook.Api.Infrastructure.Data;
+using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.CourseWaitlistAggregate;
 using Shadowbrook.Domain.CourseWaitlistAggregate.Events;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
+using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
+using Shadowbrook.Domain.WaitlistServices;
 
 namespace Shadowbrook.Api.Features.Waitlist.Handlers;
 
@@ -10,27 +12,29 @@ public static class GolferJoinedWaitlistWakeUpHandler
 {
     public static async Task<WakeUpOfferPolicy?> Handle(
         GolferJoinedWaitlist evt,
-        ApplicationDbContext db)
+        ICourseWaitlistRepository waitlistRepository,
+        IGolferWaitlistEntryRepository entryRepository,
+        WaitlistMatchingService matchingService,
+        ILogger logger,
+        CancellationToken ct)
     {
-        // Find the waitlist to get courseId and date
-        var waitlist = await db.CourseWaitlists
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(w => w.Id == evt.CourseWaitlistId)
-            ?? throw new InvalidOperationException($"CourseWaitlist {evt.CourseWaitlistId} not found for event {nameof(GolferJoinedWaitlist)}.");
+        var waitlist = await waitlistRepository.GetRequiredByIdAsync(evt.CourseWaitlistId);
 
-        // Find any active opening for this course/date
-        var dayStart = waitlist.Date.ToDateTime(TimeOnly.MinValue);
-        var dayEnd = waitlist.Date.AddDays(1).ToDateTime(TimeOnly.MinValue);
-        var activeOpening = await db.TeeTimeOpenings
-            .FirstOrDefaultAsync(o => o.CourseId == waitlist.CourseId
-                && o.TeeTime.Value >= dayStart && o.TeeTime.Value < dayEnd
-                && o.Status == TeeTimeOpeningStatus.Open);
+        var entry = await entryRepository.GetByIdAsync(evt.GolferWaitlistEntryId);
+        if (entry is null)
+        {
+            logger.LogWarning(
+                "GolferWaitlistEntry {GolferWaitlistEntryId} not found, skipping WakeUpOfferPolicy",
+                evt.GolferWaitlistEntryId);
+            return null;
+        }
 
-        if (activeOpening is null)
+        var opening = await matchingService.FindOpeningForGolferAsync(entry, waitlist.CourseId, waitlist.Date, ct);
+        if (opening is null)
         {
             return null;
         }
 
-        return new WakeUpOfferPolicy(activeOpening.Id);
+        return new WakeUpOfferPolicy(opening.Id);
     }
 }

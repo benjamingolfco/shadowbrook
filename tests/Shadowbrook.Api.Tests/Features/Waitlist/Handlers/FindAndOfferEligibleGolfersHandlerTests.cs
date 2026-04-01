@@ -29,7 +29,7 @@ public class FindAndOfferEligibleGolfersHandlerTests
         this.timeProvider.GetCurrentDate().Returns(new DateOnly(2026, 3, 25));
         this.timeProvider.GetCurrentDateByTimeZone(Arg.Any<string>()).Returns(new DateOnly(2026, 3, 25));
         this.shortCodeGen.GenerateAsync(Arg.Any<DateOnly>()).Returns("1234");
-        this.matchingService = new WaitlistMatchingService(this.entryRepo);
+        this.matchingService = new WaitlistMatchingService(this.entryRepo, this.openingRepo);
     }
 
     private async Task<WalkUpGolferWaitlistEntry> CreateEntryAsync(Golfer golfer, int groupSize = 1)
@@ -52,6 +52,24 @@ public class FindAndOfferEligibleGolfersHandlerTests
                 new FindAndOfferEligibleGolfers(openingId, 3),
                 this.openingRepo, this.matchingService, this.offerRepo,
                 this.timeProvider, NullLogger.Instance, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Handle_OpeningNotOpen_LogsAndReturnsWithoutCallingMatchingService()
+    {
+        var opening = TeeTimeOpening.Create(
+            Guid.NewGuid(), new DateOnly(2026, 3, 25), new TimeOnly(14, 30), 3, true, this.timeProvider);
+        opening.Expire(this.timeProvider);
+        this.openingRepo.GetByIdAsync(opening.Id).Returns(opening);
+
+        await FindAndOfferEligibleGolfersHandler.Handle(
+            new FindAndOfferEligibleGolfers(opening.Id, 3),
+            this.openingRepo, this.matchingService, this.offerRepo,
+            this.timeProvider, NullLogger.Instance, CancellationToken.None);
+
+        await this.entryRepo.DidNotReceive().FindEligibleEntriesAsync(
+            Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<TimeOnly>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+        this.offerRepo.DidNotReceive().Add(Arg.Any<WaitlistOffer>());
     }
 
     [Fact]

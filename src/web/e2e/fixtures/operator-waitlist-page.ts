@@ -4,7 +4,7 @@ export class OperatorWaitlistPage {
   private readonly openWaitlistButton: Locator;
 
   constructor(private readonly page: Page) {
-    this.openWaitlistButton = page.getByRole('button', { name: 'Open Waitlist' });
+    this.openWaitlistButton = page.getByRole('button', { name: 'Open Waitlist for Today' });
   }
 
   async goto() {
@@ -24,13 +24,11 @@ export class OperatorWaitlistPage {
 
   async openWaitlist() {
     await this.openWaitlistButton.click();
-    const dialog = this.page.getByRole('alertdialog');
-    await dialog.getByRole('button', { name: 'Open Waitlist' }).click();
 
+    // No confirmation dialog — button directly fires the mutation.
     // Wait for either the short code (success) or an error message (API failure).
-    // Racing these avoids a silent 30s timeout when the API returns an error.
-    const shortCode = this.page.locator('span.font-mono.font-bold.tracking-widest');
-    const error = this.page.locator('text=/Error/i');
+    const shortCode = this.page.getByTestId('short-code');
+    const error = this.page.getByRole('alert');
 
     const result = await Promise.race([
       shortCode.waitFor().then(() => 'success' as const),
@@ -44,27 +42,33 @@ export class OperatorWaitlistPage {
   }
 
   async getShortCode(): Promise<string> {
-    const codeElement = this.page.locator('span.font-mono.font-bold.tracking-widest');
+    const codeElement = this.page.getByTestId('short-code');
     const spacedCode = await codeElement.textContent();
     return spacedCode?.replace(/\s/g, '') ?? '';
   }
 
-  async addTeeTimeOpening(time: string, slots: number) {
-    await this.page.getByRole('button', { name: 'Add Tee Time Opening' }).click();
-
-    const dialog = this.page.getByRole('dialog');
-    await dialog.getByLabel('Tee Time').fill(time);
-
-    if (slots !== 1) {
-      await dialog.getByRole('combobox').click();
-      await this.page.getByRole('option', { name: String(slots) }).click();
-    }
-
-    await dialog.getByRole('button', { name: 'Add Opening' }).click();
-    await dialog.waitFor({ state: 'hidden' });
+  async verifyOpeningPosted() {
+    // Scope to the desktop layout row — at 1280px the desktop layout is visible.
+    const desktopRow = this.page.locator('[data-testid="opening-row-desktop"]');
+    await desktopRow.getByText('Waiting for golfers...').waitFor();
   }
 
+  async addTeeTimeOpening(time: string, slots: number) {
+    // Inline PostTeeTimeForm — fill time input and select slots via radio group
+    await this.page.getByLabel('Time').fill(time);
+
+    if (slots !== 1) {
+      await this.page.getByRole('radio', { name: String(slots) }).click();
+    }
+
+    await this.page.getByRole('button', { name: 'Post Tee Time' }).click();
+
+    // Wait for success feedback
+    await this.page.getByRole('button', { name: 'Posted!' }).waitFor();
+  }
+
+  /** Openings are now rendered inline — no tab to select. This is a no-op for backward compat. */
   async selectOpeningsTab() {
-    await this.page.getByRole('tab', { name: 'Tee Time Openings' }).click();
+    // Openings list is always visible on the active waitlist page — no tab needed.
   }
 }

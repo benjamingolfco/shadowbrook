@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@/test/test-utils';
 import { AddTeeTimeOpeningDialog } from '../components/AddTeeTimeOpeningDialog';
 import { useCourseContext } from '../context/CourseContext';
@@ -41,6 +41,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   defaultCourseContext();
   defaultCreateTeeTimeOpening();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe('AddTeeTimeOpeningDialog', () => {
@@ -200,6 +204,39 @@ describe('AddTeeTimeOpeningDialog', () => {
     // Wait for required error to appear
     await waitFor(() => {
       expect(screen.getByText('Tee time is required')).toBeInTheDocument();
+    });
+  });
+
+  it('sends teeTime in ISO 8601 DateTime format to mutation', async () => {
+    vi.spyOn(courseTime, 'getCourseNow').mockReturnValue('14:00');
+
+    render(
+      <AddTeeTimeOpeningDialog
+        open={true}
+        onOpenChange={vi.fn()}
+        courseId="course-1"
+      />
+    );
+
+    // Enter a tee time and submit
+    const teeTimeInput = screen.getByLabelText('Tee Time');
+    fireEvent.change(teeTimeInput, { target: { value: '15:30' } });
+
+    const submitButton = screen.getByRole('button', { name: 'Add Opening' });
+    fireEvent.click(submitButton);
+
+    // Verify mutation was called with ISO 8601 DateTime format
+    await waitFor(() => {
+      expect(mockCreateMutate).toHaveBeenCalledWith(
+        {
+          courseId: 'course-1',
+          data: {
+            teeTime: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T15:30:00$/),
+            slotsAvailable: 1,
+          },
+        },
+        expect.objectContaining({ onSuccess: expect.any(Function) }),
+      );
     });
   });
 });
