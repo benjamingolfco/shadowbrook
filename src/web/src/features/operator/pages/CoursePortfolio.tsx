@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router';
 import { useCourses } from '@/features/operator/hooks/useCourses';
 import { useCourseContext } from '../context/CourseContext';
 import { useTenantContext } from '../context/TenantContext';
@@ -15,7 +14,6 @@ function formatLocation(course: Course): string {
 }
 
 export default function CoursePortfolio() {
-  const navigate = useNavigate();
   const { tenant } = useTenantContext();
   const { selectCourse } = useCourseContext();
   const coursesQuery = useCourses(tenant?.id);
@@ -80,13 +78,10 @@ export default function CoursePortfolio() {
       <div className="flex h-full items-center justify-center">
         <div className="w-full max-w-3xl space-y-6 p-8 text-center">
           <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Select a Course</h1>
-          <p className="text-base font-medium font-[family-name:var(--font-heading)]">Get started by adding your first course</p>
+          <p className="text-base font-medium font-[family-name:var(--font-heading)]">No courses available</p>
           <p className="text-sm text-muted-foreground">
-            Once a course is registered, you can manage tee sheets, settings, and bookings.
+            Contact your administrator to add a course.
           </p>
-          <Button autoFocus onClick={() => navigate('/operator/register-course')}>
-            Register a Course
-          </Button>
         </div>
       </div>
     );
