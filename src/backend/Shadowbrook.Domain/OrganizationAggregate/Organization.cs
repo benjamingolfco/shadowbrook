@@ -6,6 +6,7 @@ public class Organization : Entity
 {
     public string Name { get; private set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; private set; }
+    public Dictionary<string, bool>? FeatureFlags { get; private set; }
 
     private Organization() { } // EF
 

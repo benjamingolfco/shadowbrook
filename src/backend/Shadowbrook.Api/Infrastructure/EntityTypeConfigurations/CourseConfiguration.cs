@@ -22,6 +22,12 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course>
         builder.Property(c => c.ContactEmail).HasMaxLength(200);
         builder.Property(c => c.ContactPhone).HasMaxLength(20);
         builder.Property(c => c.FlatRatePrice).HasPrecision(18, 2);
+        builder.Property(c => c.FeatureFlags)
+            .HasColumnType("nvarchar(max)")
+            .HasConversion(
+                v => v == null ? null : System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                v => v == null ? null : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, bool>>(v, (System.Text.Json.JsonSerializerOptions?)null));
+        builder.Property(c => c.WaitlistEnabled);
 
         builder.HasOne<Organization>()
             .WithMany()

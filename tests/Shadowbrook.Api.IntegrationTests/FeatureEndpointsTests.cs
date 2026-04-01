@@ -26,7 +26,9 @@ public class FeatureEndpointsTests(TestWebApplicationFactory factory) : IAsyncLi
         Assert.NotNull(result);
         Assert.Contains("sms-notifications", result.Keys);
         Assert.Contains("dynamic-pricing", result.Keys);
+        Assert.Contains("full-operator-app", result.Keys);
         Assert.True(result["sms-notifications"]);
         Assert.True(result["dynamic-pricing"]);
+        Assert.False(result["full-operator-app"]);
     }
 }
