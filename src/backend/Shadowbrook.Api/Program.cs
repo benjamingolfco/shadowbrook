@@ -195,6 +195,7 @@ if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testi
 
 app.UseDomainExceptionHandler();
 
+var cspAuthDomain = new Uri(builder.Configuration["AzureAd:Instance"]!).Host;
 app.Use(async (context, next) =>
 {
     context.Response.Headers.Append(
@@ -203,8 +204,8 @@ app.Use(async (context, next) =>
         "script-src 'self'; " +
         "style-src 'self' 'unsafe-inline'; " +
         "img-src 'self' data:; " +
-        "connect-src 'self' https://*.ciamlogin.com; " +
-        "frame-src https://*.ciamlogin.com;");
+        $"connect-src 'self' https://{cspAuthDomain}; " +
+        $"frame-src https://{cspAuthDomain};");
     await next();
 });
 
