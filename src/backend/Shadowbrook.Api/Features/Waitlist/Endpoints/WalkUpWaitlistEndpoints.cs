@@ -158,7 +158,19 @@ public static class WalkUpWaitlistEndpoints
 
         if (existing is not null)
         {
-            return Results.Conflict(new { error = "An active tee time opening already exists for this time." });
+            var isFull = existing.SlotsAvailable >= 4;
+            var errorMessage = isFull
+                ? $"A tee time opening for this time already exists with {existing.SlotsAvailable} slots."
+                : $"An opening already exists for this time with {existing.SlotsAvailable} slot(s). Would you like to add more slots to it?";
+
+            return Results.Conflict(new
+            {
+                error = errorMessage,
+                existingSlotsAvailable = existing.SlotsAvailable,
+                existingSlotsRemaining = existing.SlotsRemaining,
+                existingOpeningId = existing.Id,
+                isFull
+            });
         }
 
         var opening = TeeTimeOpening.Create(courseId, date, time, request.SlotsAvailable, operatorOwned: true, timeProvider);
