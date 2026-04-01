@@ -86,7 +86,7 @@ describe('CourseList', () => {
     );
   });
 
-  it('shows tenant column as second column', () => {
+  it('shows organization column as second column', () => {
     mockUseCourses.mockReturnValue({
       data: [
         {
@@ -109,7 +109,7 @@ describe('CourseList', () => {
 
     const headers = screen.getAllByRole('columnheader');
     expect(headers[0]).toHaveTextContent('Name');
-    expect(headers[1]).toHaveTextContent('Tenant');
+    expect(headers[1]).toHaveTextContent('Organization');
     expect(headers[2]).toHaveTextContent('Location');
     expect(headers[3]).toHaveTextContent('Contact');
     expect(headers[4]).toHaveTextContent('Registered');
