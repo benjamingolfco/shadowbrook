@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Shadowbrook.Domain.AppUserAggregate.Exceptions;
 using Shadowbrook.Domain.BookingAggregate.Exceptions;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseWaitlistAggregate.Exceptions;
@@ -32,6 +33,7 @@ public static class DomainExceptionHandler
                     EntityNotFoundException => StatusCodes.Status404NotFound,
                     InvalidSlotsAvailableException => StatusCodes.Status422UnprocessableEntity,
                     InvalidGroupSizeException => StatusCodes.Status422UnprocessableEntity,
+                    EmptyOrganizationIdException => StatusCodes.Status422UnprocessableEntity,
                     _ => StatusCodes.Status400BadRequest
                 };
                 await context.Response.WriteAsJsonAsync(new { error = domainEx.Message });

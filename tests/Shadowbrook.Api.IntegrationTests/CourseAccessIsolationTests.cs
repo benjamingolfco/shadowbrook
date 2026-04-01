@@ -89,7 +89,7 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
         var orgB = Organization.Create($"Org-B-{operatorIdentityId}");
         var courseA = Course.Create(orgA.Id, $"Course-A-{operatorIdentityId}", TestTimeZones.Chicago);
         var courseB = Course.Create(orgB.Id, $"Course-B-{operatorIdentityId}", TestTimeZones.Chicago);
-        var operatorA = AppUser.Create(operatorIdentityId, "operator@orga.com", "Operator A", AppUserRole.Operator, orgA.Id);
+        var operatorA = AppUser.CreateOperator(operatorIdentityId, "operator@orga.com", "Operator A", orgA.Id);
 
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

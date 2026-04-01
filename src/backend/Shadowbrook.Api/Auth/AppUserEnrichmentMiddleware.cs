@@ -43,13 +43,15 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
                     ?? context.User?.FindFirst("email")?.Value
                     ?? context.User?.FindFirst("preferred_username")?.Value
                     ?? string.Empty;
+
+                if (!seedAdminEmails.Any(e => e.Equals(email, StringComparison.OrdinalIgnoreCase)))
+                {
+                    // User not in system and not a seed admin — skip enrichment, auth pipeline will deny
+                    return;
+                }
+
                 var name = context.User?.FindFirst("name")?.Value ?? string.Empty;
-
-                var role = seedAdminEmails.Any(e => e.Equals(email, StringComparison.OrdinalIgnoreCase))
-                    ? AppUserRole.Admin
-                    : AppUserRole.Operator;
-
-                appUser = AppUser.Create(oid, email, name, role, organizationId: null);
+                appUser = AppUser.CreateAdmin(oid, email, name);
                 db.AppUsers.Add(appUser);
             }
 
@@ -61,7 +63,7 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
             // This SaveChangesAsync is intentionally outside the Wolverine pipeline.
             // The middleware must persist the AppUser (auto-provision or login timestamp)
             // before endpoint handlers run, so Wolverine's transactional middleware
-            // cannot manage this save. This is safe because neither AppUser.Create()
+            // cannot manage this save. This is safe because neither AppUser.CreateAdmin()
             // nor RecordLogin() raise domain events — no events will be silently lost.
             await db.SaveChangesAsync();
 

@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -104,17 +105,11 @@ public static class AuthEndpoints
             return Results.Conflict(new { error = "A user with this identity ID already exists." });
         }
 
-        if (!Enum.TryParse<AppUserRole>(request.Role, ignoreCase: true, out var role))
-        {
-            return Results.BadRequest(new { error = $"Invalid role: {request.Role}." });
-        }
+        var role = Enum.Parse<AppUserRole>(request.Role, ignoreCase: true);
 
-        var appUser = AppUser.Create(
-            request.IdentityId,
-            request.Email,
-            request.DisplayName,
-            role,
-            request.OrganizationId);
+        var appUser = role == AppUserRole.Admin
+            ? AppUser.CreateAdmin(request.IdentityId, request.Email, request.DisplayName)
+            : AppUser.CreateOperator(request.IdentityId, request.Email, request.DisplayName, request.OrganizationId!.Value);
 
         db.AppUsers.Add(appUser);
 
@@ -159,11 +154,16 @@ public static class AuthEndpoints
 
         if (request.Role is not null)
         {
-            if (!Enum.TryParse<AppUserRole>(request.Role, ignoreCase: true, out var newRole))
+            var newRole = Enum.Parse<AppUserRole>(request.Role, ignoreCase: true);
+
+            if (newRole == AppUserRole.Admin)
             {
-                return Results.BadRequest(new { error = $"Invalid role: {request.Role}." });
+                appUser.MakeAdmin();
             }
-            appUser.UpdateRole(newRole, request.OrganizationId);
+            else
+            {
+                appUser.AssignToOrganization(request.OrganizationId!.Value);
+            }
         }
 
         cache.Remove($"appuser:{appUser.IdentityId}");
@@ -210,3 +210,50 @@ public sealed record CreateUserRequest(
     Guid? OrganizationId);
 
 public sealed record UpdateUserRequest(bool? IsActive, string? Role, Guid? OrganizationId);
+
+public sealed class CreateUserRequestValidator : AbstractValidator<CreateUserRequest>
+{
+    public CreateUserRequestValidator()
+    {
+        RuleFor(x => x.IdentityId).NotEmpty();
+        RuleFor(x => x.Email).NotEmpty().EmailAddress();
+        RuleFor(x => x.DisplayName).NotEmpty();
+        RuleFor(x => x.Role)
+            .NotEmpty()
+            .Must(r => Enum.TryParse<AppUserRole>(r, ignoreCase: true, out _))
+            .WithMessage("Invalid role. Must be Admin or Operator.");
+        RuleFor(x => x.OrganizationId)
+            .NotNull()
+            .When(x => string.Equals(x.Role, "Operator", StringComparison.OrdinalIgnoreCase))
+            .WithMessage("OrganizationId is required for Operator role.");
+        RuleFor(x => x.OrganizationId)
+            .Null()
+            .When(x => string.Equals(x.Role, "Admin", StringComparison.OrdinalIgnoreCase))
+            .WithMessage("Admin users must not have an OrganizationId.");
+        RuleFor(x => x.OrganizationId)
+            .NotEqual(Guid.Empty)
+            .When(x => x.OrganizationId is not null);
+    }
+}
+
+public sealed class UpdateUserRequestValidator : AbstractValidator<UpdateUserRequest>
+{
+    public UpdateUserRequestValidator()
+    {
+        RuleFor(x => x.Role)
+            .Must(r => Enum.TryParse<AppUserRole>(r!, ignoreCase: true, out _))
+            .When(x => x.Role is not null)
+            .WithMessage("Invalid role. Must be Admin or Operator.");
+        RuleFor(x => x.OrganizationId)
+            .NotNull()
+            .When(x => string.Equals(x.Role, "Operator", StringComparison.OrdinalIgnoreCase))
+            .WithMessage("OrganizationId is required for Operator role.");
+        RuleFor(x => x.OrganizationId)
+            .Null()
+            .When(x => string.Equals(x.Role, "Admin", StringComparison.OrdinalIgnoreCase))
+            .WithMessage("Admin users must not have an OrganizationId.");
+        RuleFor(x => x.OrganizationId)
+            .NotEqual(Guid.Empty)
+            .When(x => x.OrganizationId is not null);
+    }
+}

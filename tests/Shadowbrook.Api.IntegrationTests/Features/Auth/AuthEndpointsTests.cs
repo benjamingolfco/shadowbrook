@@ -29,7 +29,7 @@ public class AuthEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifet
         db.Courses.Add(course);
 
         var identityId = Guid.NewGuid().ToString();
-        var appUser = AppUser.Create(identityId, "operator@example.com", "Jane Smith", AppUserRole.Operator, org.Id);
+        var appUser = AppUser.CreateOperator(identityId, "operator@example.com", "Jane Smith", org.Id);
         db.AppUsers.Add(appUser);
 
         await db.SaveChangesAsync();

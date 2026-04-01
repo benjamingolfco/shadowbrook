@@ -70,7 +70,7 @@ public class AppUserEnrichmentMiddlewareTests
         var oid = Guid.NewGuid().ToString();
         var org = Shadowbrook.Domain.OrganizationAggregate.Organization.Create("Acme Golf");
         db.Organizations.Add(org);
-        var appUser = AppUser.Create(oid, "op@example.com", "Op User", AppUserRole.Operator, org.Id);
+        var appUser = AppUser.CreateOperator(oid, "op@example.com", "Op User", org.Id);
         db.AppUsers.Add(appUser);
         await db.SaveChangesAsync();
 
@@ -86,26 +86,51 @@ public class AppUserEnrichmentMiddlewareTests
     }
 
     [Fact]
-    public async Task AuthenticatedUser_NoAppUserRow_AutoProvisionedAsOperator()
+    public async Task AuthenticatedUser_NoAppUserRow_SeedAdminEmail_AutoProvisionedAsAdmin()
     {
         await using var db = CreateInMemoryDbContext();
         using var cache = CreateMemoryCache();
 
         var oid = Guid.NewGuid().ToString();
         var middleware = new AppUserEnrichmentMiddleware(_ => Task.CompletedTask);
-        var context = CreateAuthenticatedContext(oid, email: "new@example.com", name: "New User");
+        var context = CreateAuthenticatedContext(oid, email: "seed-admin@shadowbrook.com", name: "Seed Admin");
+        var authSettings = new AuthSettings { SeedAdminEmails = "seed-admin@shadowbrook.com" };
 
-        await middleware.InvokeAsync(context, db, cache, Options.Create(new AuthSettings()));
+        await middleware.InvokeAsync(context, db, cache, Options.Create(authSettings));
 
         var created = await db.AppUsers.FirstOrDefaultAsync(u => u.IdentityId == oid);
         Assert.NotNull(created);
-        Assert.Equal(AppUserRole.Operator, created!.Role);
+        Assert.Equal(AppUserRole.Admin, created!.Role);
         Assert.Null(created.OrganizationId);
         Assert.True(created.IsActive);
 
         Assert.Equal(created.Id.ToString(), context.User.FindFirst("app_user_id")?.Value);
-        Assert.Equal("Operator", context.User.FindFirst("role")?.Value);
+        Assert.Equal("Admin", context.User.FindFirst("role")?.Value);
         Assert.Contains(context.User.FindAll("permission"), c => c.Value == Permissions.AppAccess);
+    }
+
+    [Fact]
+    public async Task AuthenticatedUser_NoAppUserRow_NonSeedEmail_SkipsEnrichment()
+    {
+        await using var db = CreateInMemoryDbContext();
+        using var cache = CreateMemoryCache();
+
+        var oid = Guid.NewGuid().ToString();
+        var nextCalled = false;
+        var middleware = new AppUserEnrichmentMiddleware(_ =>
+        {
+            nextCalled = true;
+            return Task.CompletedTask;
+        });
+        var context = CreateAuthenticatedContext(oid, email: "unknown@example.com", name: "Unknown User");
+
+        await middleware.InvokeAsync(context, db, cache, Options.Create(new AuthSettings()));
+
+        Assert.True(nextCalled);
+        var created = await db.AppUsers.FirstOrDefaultAsync(u => u.IdentityId == oid);
+        Assert.Null(created);
+        Assert.Null(context.User.FindFirst("app_user_id"));
+        Assert.Null(context.User.FindFirst("permission"));
     }
 
     [Fact]
@@ -115,7 +140,7 @@ public class AppUserEnrichmentMiddlewareTests
         using var cache = CreateMemoryCache();
 
         var oid = Guid.NewGuid().ToString();
-        var appUser = AppUser.Create(oid, "inactive@example.com", "Inactive User", AppUserRole.Operator, null);
+        var appUser = AppUser.CreateAdmin(oid, "inactive@example.com", "Inactive User");
         appUser.Deactivate();
         db.AppUsers.Add(appUser);
         await db.SaveChangesAsync();
@@ -143,7 +168,7 @@ public class AppUserEnrichmentMiddlewareTests
         using var cache = CreateMemoryCache();
 
         var oid = Guid.NewGuid().ToString();
-        var appUser = AppUser.Create(oid, "inactive@example.com", "Inactive User", AppUserRole.Operator, null);
+        var appUser = AppUser.CreateAdmin(oid, "inactive@example.com", "Inactive User");
         appUser.RecordLogin();
         var loginBefore = appUser.LastLoginAt;
         appUser.Deactivate();

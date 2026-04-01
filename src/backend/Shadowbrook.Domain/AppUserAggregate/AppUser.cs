@@ -1,3 +1,4 @@
+using Shadowbrook.Domain.AppUserAggregate.Exceptions;
 using Shadowbrook.Domain.Common;
 
 namespace Shadowbrook.Domain.AppUserAggregate;
@@ -15,9 +16,7 @@ public class AppUser : Entity
 
     private AppUser() { } // EF
 
-    public static AppUser Create(
-        string identityId, string email, string displayName,
-        AppUserRole role, Guid? organizationId)
+    public static AppUser CreateAdmin(string identityId, string email, string displayName)
     {
         return new AppUser
         {
@@ -25,16 +24,47 @@ public class AppUser : Entity
             IdentityId = identityId,
             Email = email.Trim(),
             DisplayName = displayName.Trim(),
-            Role = role,
+            Role = AppUserRole.Admin,
+            OrganizationId = null,
+            IsActive = true,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
+    public static AppUser CreateOperator(string identityId, string email, string displayName, Guid organizationId)
+    {
+        if (organizationId == Guid.Empty)
+        {
+            throw new EmptyOrganizationIdException();
+        }
+
+        return new AppUser
+        {
+            Id = Guid.CreateVersion7(),
+            IdentityId = identityId,
+            Email = email.Trim(),
+            DisplayName = displayName.Trim(),
+            Role = AppUserRole.Operator,
             OrganizationId = organizationId,
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow,
         };
     }
 
-    public void UpdateRole(AppUserRole role, Guid? organizationId)
+    public void MakeAdmin()
     {
-        Role = role;
+        Role = AppUserRole.Admin;
+        OrganizationId = null;
+    }
+
+    public void AssignToOrganization(Guid organizationId)
+    {
+        if (organizationId == Guid.Empty)
+        {
+            throw new EmptyOrganizationIdException();
+        }
+
+        Role = AppUserRole.Operator;
         OrganizationId = organizationId;
     }
 

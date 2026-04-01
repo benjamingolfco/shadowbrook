@@ -42,7 +42,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
         if (!await db.AppUsers.AnyAsync(u => u.IdentityId == identityId))
         {
-            var admin = AppUser.Create(identityId, "admin@test.com", "Test Admin", AppUserRole.Admin, null);
+            var admin = AppUser.CreateAdmin(identityId, "admin@test.com", "Test Admin");
             db.AppUsers.Add(admin);
             await db.SaveChangesAsync();
         }
