@@ -17,6 +17,38 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
+    public async Task Operator_CanGetCourse_InOwnOrganization()
+    {
+        // Arrange: create a tenant + course via admin, then seed an operator in the same org
+        await factory.SeedTestAdminAsync();
+        var adminClient = factory.CreateAuthenticatedClient();
+        var tenantId = await TestSetup.CreateTenantAsync(adminClient);
+        var courseResponse = await adminClient.PostAsJsonAsync("/courses", new
+        {
+            Name = "Operator Own Course",
+            OrganizationId = tenantId,
+            TimeZoneId = TestTimeZones.Chicago,
+        });
+        courseResponse.EnsureSuccessStatusCode();
+        var courseId = (await courseResponse.Content.ReadFromJsonAsync<CourseIdResponse>())!.Id;
+
+        // Seed operator in the same org
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var operatorUser = AppUser.CreateOperator("operator-own-org", "op@own.com", "Op Own", tenantId);
+        db.AppUsers.Add(operatorUser);
+        await db.SaveChangesAsync();
+
+        var opClient = factory.CreateAuthenticatedClient("operator-own-org");
+
+        // Act
+        var response = await opClient.GetAsync($"/courses/{courseId}");
+
+        // Assert: Operator can see their own org's course
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Operator_CannotGetCourse_InDifferentOrganization()
     {
         // Arrange: Org A has Course A, Org B has Course B. Operator user belongs to Org A.
