@@ -1,8 +1,9 @@
+using Shadowbrook.Domain.Common;
+
 namespace Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 
-public interface IGolferWaitlistEntryRepository
+public interface IGolferWaitlistEntryRepository : IRepository<GolferWaitlistEntry>
 {
-    Task<GolferWaitlistEntry?> GetByIdAsync(Guid id);
     Task<GolferWaitlistEntry?> GetActiveByWaitlistAndGolferAsync(Guid courseWaitlistId, Guid golferId);
     Task<List<GolferWaitlistEntry>> GetActiveByWaitlistAsync(Guid courseWaitlistId);
     void Add(GolferWaitlistEntry entry);

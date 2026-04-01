@@ -1,8 +1,9 @@
+using Shadowbrook.Domain.Common;
+
 namespace Shadowbrook.Domain.GolferAggregate;
 
-public interface IGolferRepository
+public interface IGolferRepository : IRepository<Golfer>
 {
-    Task<Golfer?> GetByIdAsync(Guid id);
     Task<Golfer?> GetByPhoneAsync(string phone);
     void Add(Golfer golfer);
 }
