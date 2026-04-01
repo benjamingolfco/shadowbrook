@@ -55,6 +55,24 @@ public class FindAndOfferEligibleGolfersHandlerTests
     }
 
     [Fact]
+    public async Task Handle_OpeningNotOpen_LogsAndReturnsWithoutCallingMatchingService()
+    {
+        var opening = TeeTimeOpening.Create(
+            Guid.NewGuid(), new DateOnly(2026, 3, 25), new TimeOnly(14, 30), 3, true, this.timeProvider);
+        opening.Expire(this.timeProvider);
+        this.openingRepo.GetByIdAsync(opening.Id).Returns(opening);
+
+        await FindAndOfferEligibleGolfersHandler.Handle(
+            new FindAndOfferEligibleGolfers(opening.Id, 3),
+            this.openingRepo, this.matchingService, this.offerRepo,
+            this.timeProvider, NullLogger.Instance, CancellationToken.None);
+
+        await this.entryRepo.DidNotReceive().FindEligibleEntriesAsync(
+            Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<TimeOnly>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+        this.offerRepo.DidNotReceive().Add(Arg.Any<WaitlistOffer>());
+    }
+
+    [Fact]
     public async Task Handle_NoEligibleEntries_DoesNothing()
     {
         var opening = TeeTimeOpening.Create(

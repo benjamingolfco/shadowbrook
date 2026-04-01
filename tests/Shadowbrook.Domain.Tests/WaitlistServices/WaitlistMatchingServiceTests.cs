@@ -4,7 +4,6 @@ using Shadowbrook.Domain.CourseWaitlistAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate.Exceptions;
 using Shadowbrook.Domain.WaitlistServices;
 
 namespace Shadowbrook.Domain.Tests.WaitlistServices;
@@ -85,15 +84,4 @@ public class WaitlistMatchingServiceTests
         Assert.Same(expected, result);
     }
 
-    [Fact]
-    public async Task FindEligibleEntries_WhenOpeningNotOpen_ThrowsOpeningNotAvailable()
-    {
-        var opening = TeeTimeOpening.Create(
-            Guid.NewGuid(), new DateOnly(2026, 6, 15), new TimeOnly(8, 0),
-            slotsAvailable: 2, operatorOwned: true, timeProvider: this.timeProvider);
-        opening.Expire(this.timeProvider);
-
-        await Assert.ThrowsAsync<OpeningNotAvailableException>(
-            () => this.sut.FindEligibleEntriesAsync(opening));
-    }
 }

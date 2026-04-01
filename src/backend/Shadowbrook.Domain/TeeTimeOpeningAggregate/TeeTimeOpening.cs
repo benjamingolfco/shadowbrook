@@ -12,6 +12,7 @@ public class TeeTimeOpening : Entity
     public int SlotsRemaining { get; private set; }
     public bool OperatorOwned { get; private set; }
     public TeeTimeOpeningStatus Status { get; private set; }
+    public bool IsOpen => Status == TeeTimeOpeningStatus.Open;
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? FilledAt { get; private set; }
     public DateTimeOffset? ExpiredAt { get; private set; }
