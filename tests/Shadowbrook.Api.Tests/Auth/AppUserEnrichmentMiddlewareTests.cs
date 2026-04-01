@@ -111,7 +111,7 @@ public class AppUserEnrichmentMiddlewareTests
     }
 
     [Fact]
-    public async Task InactiveUser_IsNotEnriched()
+    public async Task InactiveUser_Returns403AndShortCircuits()
     {
         await using var db = CreateInMemoryDbContext();
         using var cache = CreateMemoryCache();
@@ -136,5 +136,27 @@ public class AppUserEnrichmentMiddlewareTests
         Assert.Equal(StatusCodes.Status403Forbidden, context.Response.StatusCode);
         Assert.Null(context.User.FindFirst("app_user_id"));
         Assert.Null(context.User.FindFirst("permission"));
+    }
+
+    [Fact]
+    public async Task InactiveUser_DoesNotRecordLogin()
+    {
+        await using var db = CreateInMemoryDbContext();
+        using var cache = CreateMemoryCache();
+
+        var oid = Guid.NewGuid().ToString();
+        var appUser = AppUser.Create(oid, "inactive@example.com", "Inactive User", AppUserRole.Operator, null);
+        appUser.RecordLogin();
+        var loginBefore = appUser.LastLoginAt;
+        appUser.Deactivate();
+        db.AppUsers.Add(appUser);
+        await db.SaveChangesAsync();
+
+        var middleware = new AppUserEnrichmentMiddleware(_ => Task.CompletedTask);
+        var context = CreateAuthenticatedContext(oid);
+
+        await middleware.InvokeAsync(context, db, cache, new ConfigurationBuilder().Build(), NullLogger<AppUserEnrichmentMiddleware>.Instance);
+
+        Assert.Equal(loginBefore, appUser.LastLoginAt);
     }
 }

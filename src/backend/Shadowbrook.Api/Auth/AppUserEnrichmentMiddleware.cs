@@ -63,20 +63,30 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
                 db.AppUsers.Add(appUser);
             }
 
+            if (appUser.IsActive)
+            {
+                appUser.RecordLogin();
+            }
+
+            // This SaveChangesAsync is intentionally outside the Wolverine pipeline.
+            // The middleware must persist the AppUser (auto-provision or login timestamp)
+            // before endpoint handlers run, so Wolverine's transactional middleware
+            // cannot manage this save. This is safe because neither AppUser.Create()
+            // nor RecordLogin() raise domain events — no events will be silently lost.
+            await db.SaveChangesAsync();
+
             if (!appUser.IsActive)
             {
-                await db.SaveChangesAsync();
                 return false;
             }
 
-            appUser.RecordLogin();
-            await db.SaveChangesAsync();
+            var permissions = Permissions.GetForRole(appUser.Role);
 
             enrichmentData = new EnrichmentData(
                 AppUserId: appUser.Id,
                 OrganizationId: appUser.OrganizationId,
                 Role: appUser.Role,
-                Permissions: Permissions.GetForRole(appUser.Role));
+                Permissions: permissions);
 
             cache.Set(cacheKey, enrichmentData, CacheTtl);
         }
