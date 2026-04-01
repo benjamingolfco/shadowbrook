@@ -297,6 +297,24 @@ public class CreateCourseRequestValidator : AbstractValidator<CreateCourseReques
     }
 }
 
+public class UpdateCourseRequestValidator : AbstractValidator<UpdateCourseRequest>
+{
+    public UpdateCourseRequestValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty();
+        RuleFor(x => x.TimeZoneId)
+            .NotEmpty().WithMessage("TimeZoneId is required.");
+        RuleFor(x => x.TimeZoneId)
+            .Must(id =>
+            {
+                try { TimeZoneInfo.FindSystemTimeZoneById(id); return true; }
+                catch { return false; }
+            })
+            .When(x => !string.IsNullOrEmpty(x.TimeZoneId))
+            .WithMessage("TimeZoneId is not a valid IANA timezone.");
+    }
+}
+
 public class PricingRequestValidator : AbstractValidator<PricingRequest>
 {
     public PricingRequestValidator()
