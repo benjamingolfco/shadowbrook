@@ -229,7 +229,7 @@ This reduces three branches to two, and neither branch checks the role enum. The
 
 - **`Permissions` system**: unchanged. `PermissionAuthorizationHandler` already works purely from claims.
 - **`role` claim**: still enriched. Frontend needs it for UI layout/routing decisions. The distinction is that *authorization handlers* no longer read it.
-- **`organization_id` claim**: still enriched. Used by `ApplicationDbContext` query filter for multi-tenant scoping, `TenantIdEnricher` for Serilog, and `CourseEndpoints.CreateCourse` for defaulting the org. None of these are authorization decisions.
+- **`organization_id` claim**: still enriched. Used by `ApplicationDbContext` query filter for multi-tenant scoping, `OrganizationIdEnricher` for Serilog, and `CourseEndpoints.CreateCourse` for defaulting the org. None of these are authorization decisions.
 - **Frontend role check in `router.tsx`**: stays. This is a UX routing decision (which default page to show), not an access control decision.
 - **`DevAuthHandler`**: unchanged.
 - **`ScopeAuthorizationHandler`**: unchanged.

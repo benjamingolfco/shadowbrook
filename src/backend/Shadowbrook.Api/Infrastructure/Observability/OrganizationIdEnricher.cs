@@ -3,7 +3,7 @@ using Serilog.Events;
 
 namespace Shadowbrook.Api.Infrastructure.Observability;
 
-public class TenantIdEnricher(IHttpContextAccessor httpContextAccessor) : ILogEventEnricher
+public class OrganizationIdEnricher(IHttpContextAccessor httpContextAccessor) : ILogEventEnricher
 {
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {

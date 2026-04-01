@@ -41,12 +41,12 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
     .Enrich.FromLogContext()
     .Enrich.WithMachineName()
     .Enrich.WithEnvironmentName()
-    .Enrich.With(services.GetRequiredService<TenantIdEnricher>())
+    .Enrich.With(services.GetRequiredService<OrganizationIdEnricher>())
     .WriteTo.Console(outputTemplate:
         "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}"),
     writeToProviders: true);
 
-builder.Services.AddSingleton<TenantIdEnricher>();
+builder.Services.AddSingleton<OrganizationIdEnricher>();
 
 var appInsightsConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
 if (!string.IsNullOrEmpty(appInsightsConnectionString))
