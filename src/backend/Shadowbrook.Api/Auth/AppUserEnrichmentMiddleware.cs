@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.AppUserAggregate;
 
@@ -14,16 +15,14 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
 
     private readonly RequestDelegate next = next;
 
-    public async Task InvokeAsync(HttpContext context, ApplicationDbContext db, IMemoryCache cache, IConfiguration configuration, ILogger<AppUserEnrichmentMiddleware> logger)
+    public async Task InvokeAsync(HttpContext context, ApplicationDbContext db, IMemoryCache cache, IOptions<AuthSettings> authOptions, ILogger<AppUserEnrichmentMiddleware> logger)
     {
         var oid = context.User?.FindFirst("oid")?.Value
             ?? context.User?.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value;
 
         if (context.User?.Identity?.IsAuthenticated == true && oid is not null)
         {
-            var seedAdminEmails = configuration.GetValue<string>("Auth:SeedAdminEmails")
-                ?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                ?? [];
+            var seedAdminEmails = authOptions.Value.GetSeedAdminEmailsList();
             var shouldProceed = await EnrichFromAppUserAsync(context, db, cache, oid, seedAdminEmails);
 
             if (!shouldProceed)

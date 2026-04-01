@@ -141,7 +141,9 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // Authentication
-var useDevAuth = builder.Configuration.GetValue<bool>("Auth:UseDevAuth");
+builder.Services.Configure<AuthSettings>(builder.Configuration.GetSection(AuthSettings.SectionName));
+var authSettings = builder.Configuration.GetSection(AuthSettings.SectionName).Get<AuthSettings>()!;
+var useDevAuth = authSettings.UseDevAuth;
 if (useDevAuth)
 {
     builder.Services.AddAuthentication("DevAuth")

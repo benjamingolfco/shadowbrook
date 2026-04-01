@@ -2,7 +2,6 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Shadowbrook.Api.Auth;
@@ -56,7 +55,7 @@ public class AppUserEnrichmentMiddlewareTests
 
         var context = new DefaultHttpContext();
 
-        await middleware.InvokeAsync(context, db, cache, new ConfigurationBuilder().Build(), NullLogger<AppUserEnrichmentMiddleware>.Instance);
+        await middleware.InvokeAsync(context, db, cache, Options.Create(new AuthSettings()), NullLogger<AppUserEnrichmentMiddleware>.Instance);
 
         Assert.True(nextCalled);
         Assert.Null(context.User.FindFirst("app_user_id"));
@@ -79,7 +78,7 @@ public class AppUserEnrichmentMiddlewareTests
         var middleware = new AppUserEnrichmentMiddleware(_ => Task.CompletedTask);
         var context = CreateAuthenticatedContext(oid);
 
-        await middleware.InvokeAsync(context, db, cache, new ConfigurationBuilder().Build(), NullLogger<AppUserEnrichmentMiddleware>.Instance);
+        await middleware.InvokeAsync(context, db, cache, Options.Create(new AuthSettings()), NullLogger<AppUserEnrichmentMiddleware>.Instance);
 
         Assert.Equal(appUser.Id.ToString(), context.User.FindFirst("app_user_id")?.Value);
         Assert.Equal(org.Id.ToString(), context.User.FindFirst("organization_id")?.Value);
@@ -97,7 +96,7 @@ public class AppUserEnrichmentMiddlewareTests
         var middleware = new AppUserEnrichmentMiddleware(_ => Task.CompletedTask);
         var context = CreateAuthenticatedContext(oid, email: "new@example.com", name: "New User");
 
-        await middleware.InvokeAsync(context, db, cache, new ConfigurationBuilder().Build(), NullLogger<AppUserEnrichmentMiddleware>.Instance);
+        await middleware.InvokeAsync(context, db, cache, Options.Create(new AuthSettings()), NullLogger<AppUserEnrichmentMiddleware>.Instance);
 
         var created = await db.AppUsers.FirstOrDefaultAsync(u => u.IdentityId == oid);
         Assert.NotNull(created);
@@ -130,7 +129,7 @@ public class AppUserEnrichmentMiddlewareTests
         });
         var context = CreateAuthenticatedContext(oid);
 
-        await middleware.InvokeAsync(context, db, cache, new ConfigurationBuilder().Build(), NullLogger<AppUserEnrichmentMiddleware>.Instance);
+        await middleware.InvokeAsync(context, db, cache, Options.Create(new AuthSettings()), NullLogger<AppUserEnrichmentMiddleware>.Instance);
 
         Assert.False(nextCalled);
         Assert.Equal(StatusCodes.Status403Forbidden, context.Response.StatusCode);
@@ -155,7 +154,7 @@ public class AppUserEnrichmentMiddlewareTests
         var middleware = new AppUserEnrichmentMiddleware(_ => Task.CompletedTask);
         var context = CreateAuthenticatedContext(oid);
 
-        await middleware.InvokeAsync(context, db, cache, new ConfigurationBuilder().Build(), NullLogger<AppUserEnrichmentMiddleware>.Instance);
+        await middleware.InvokeAsync(context, db, cache, Options.Create(new AuthSettings()), NullLogger<AppUserEnrichmentMiddleware>.Instance);
 
         Assert.Equal(loginBefore, appUser.LastLoginAt);
     }
