@@ -120,7 +120,7 @@ export default function Dashboard() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis unit="%" domain={[0, 100]} />
-              <Tooltip formatter={(v: number) => `${v}%`} />
+              <Tooltip formatter={(v) => (v != null ? `${v}%` : '—')} />
               <Line
                 type="monotone"
                 dataKey="fillPercentage"
