@@ -157,6 +157,15 @@ public static class AuthEndpoints
             }
         }
 
+        if (request.Role is not null)
+        {
+            if (!Enum.TryParse<AppUserRole>(request.Role, ignoreCase: true, out var newRole))
+            {
+                return Results.BadRequest(new { error = $"Invalid role: {request.Role}." });
+            }
+            appUser.UpdateRole(newRole, request.OrganizationId);
+        }
+
         cache.Remove($"appuser:{appUser.IdentityId}");
 
         var response = new UserListResponse(
@@ -200,4 +209,4 @@ public sealed record CreateUserRequest(
     string Role,
     Guid? OrganizationId);
 
-public sealed record UpdateUserRequest(bool? IsActive);
+public sealed record UpdateUserRequest(bool? IsActive, string? Role, Guid? OrganizationId);
