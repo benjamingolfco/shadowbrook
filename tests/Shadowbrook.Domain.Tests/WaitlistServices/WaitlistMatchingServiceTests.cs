@@ -13,6 +13,9 @@ public class WaitlistMatchingServiceTests
     private readonly IGolferWaitlistEntryRepository entryRepository =
         Substitute.For<IGolferWaitlistEntryRepository>();
 
+    private readonly ITeeTimeOpeningRepository openingRepository =
+        Substitute.For<ITeeTimeOpeningRepository>();
+
     private readonly IShortCodeGenerator shortCodeGenerator = Substitute.For<IShortCodeGenerator>();
     private readonly ICourseWaitlistRepository waitlistRepository = Substitute.For<ICourseWaitlistRepository>();
     private readonly ITimeProvider timeProvider = Substitute.For<ITimeProvider>();
@@ -27,7 +30,7 @@ public class WaitlistMatchingServiceTests
         this.shortCodeGenerator.GenerateAsync(Arg.Any<DateOnly>()).Returns("ABC123");
         this.entryRepository.GetActiveByWaitlistAndGolferAsync(Arg.Any<Guid>(), Arg.Any<Guid>())
             .Returns((GolferWaitlistEntry?)null);
-        this.sut = new WaitlistMatchingService(this.entryRepository);
+        this.sut = new WaitlistMatchingService(this.entryRepository, this.openingRepository);
     }
 
     private async Task<GolferWaitlistEntry> CreateRealEntryAsync()
@@ -82,6 +85,103 @@ public class WaitlistMatchingServiceTests
         var result = await this.sut.FindEligibleEntriesAsync(opening);
 
         Assert.Same(expected, result);
+    }
+
+    // FindOpeningForGolferAsync tests
+    // Entry window is set from join time (timeProvider at 10:00) + 30 min = [10:00, 10:30].
+
+    private async Task<GolferWaitlistEntry> CreateEntryWithWindowAsync(TimeOnly joinTime, DateOnly date)
+    {
+        var joinProvider = Substitute.For<ITimeProvider>();
+        joinProvider.GetCurrentTimestamp().Returns(new DateTimeOffset(date.ToDateTime(joinTime), TimeSpan.Zero));
+        joinProvider.GetCurrentDateByTimeZone(Arg.Any<string>()).Returns(date);
+        joinProvider.GetCurrentTimeByTimeZone(Arg.Any<string>()).Returns(joinTime);
+
+        var waitlist = await WalkUpWaitlist.OpenAsync(
+            Guid.NewGuid(), date, this.shortCodeGenerator, this.waitlistRepository, joinProvider);
+
+        var golfer = Golfer.Create("+15559990000", "Test", "Golfer");
+        return await waitlist.Join(golfer, this.entryRepository, joinProvider, "UTC");
+    }
+
+    [Fact]
+    public async Task FindOpeningForGolfer_NoActiveOpenings_ReturnsNull()
+    {
+        var courseId = Guid.NewGuid();
+        var date = new DateOnly(2026, 6, 1);
+        var entry = await CreateEntryWithWindowAsync(new TimeOnly(9, 0), date);
+
+        this.openingRepository
+            .FindActiveOpeningsForCourseDateAsync(Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(new List<TeeTimeOpening>());
+
+        var result = await this.sut.FindOpeningForGolferAsync(entry, courseId, date);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task FindOpeningForGolfer_OpeningOutsideWindow_ReturnsNull()
+    {
+        var courseId = Guid.NewGuid();
+        var date = new DateOnly(2026, 6, 1);
+
+        // Entry window: 09:00 - 09:30
+        var entry = await CreateEntryWithWindowAsync(new TimeOnly(9, 0), date);
+
+        // Opening at 10:00 — outside golfer's window
+        var opening = TeeTimeOpening.Create(courseId, date, new TimeOnly(10, 0), 2, false, this.timeProvider);
+        this.openingRepository
+            .FindActiveOpeningsForCourseDateAsync(courseId, date, Arg.Any<CancellationToken>())
+            .Returns(new List<TeeTimeOpening> { opening });
+
+        var result = await this.sut.FindOpeningForGolferAsync(entry, courseId, date);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task FindOpeningForGolfer_OpeningInsideWindow_ReturnsOpening()
+    {
+        var courseId = Guid.NewGuid();
+        var date = new DateOnly(2026, 6, 1);
+
+        // Entry window: 09:00 - 09:30
+        var entry = await CreateEntryWithWindowAsync(new TimeOnly(9, 0), date);
+
+        // Opening at 09:15 — inside golfer's window
+        var opening = TeeTimeOpening.Create(courseId, date, new TimeOnly(9, 15), 2, false, this.timeProvider);
+        this.openingRepository
+            .FindActiveOpeningsForCourseDateAsync(courseId, date, Arg.Any<CancellationToken>())
+            .Returns(new List<TeeTimeOpening> { opening });
+
+        var result = await this.sut.FindOpeningForGolferAsync(entry, courseId, date);
+
+        Assert.NotNull(result);
+        Assert.Equal(opening.Id, result.Id);
+    }
+
+    [Fact]
+    public async Task FindOpeningForGolfer_MultipleOpenings_ReturnsFirstMatchingWindow()
+    {
+        var courseId = Guid.NewGuid();
+        var date = new DateOnly(2026, 6, 1);
+
+        // Entry window: 09:00 - 09:30
+        var entry = await CreateEntryWithWindowAsync(new TimeOnly(9, 0), date);
+
+        // Opening at 08:00 — before window; opening at 09:10 — inside window
+        var outsideOpening = TeeTimeOpening.Create(courseId, date, new TimeOnly(8, 0), 2, false, this.timeProvider);
+        var insideOpening = TeeTimeOpening.Create(courseId, date, new TimeOnly(9, 10), 2, false, this.timeProvider);
+
+        this.openingRepository
+            .FindActiveOpeningsForCourseDateAsync(courseId, date, Arg.Any<CancellationToken>())
+            .Returns(new List<TeeTimeOpening> { outsideOpening, insideOpening });
+
+        var result = await this.sut.FindOpeningForGolferAsync(entry, courseId, date);
+
+        Assert.NotNull(result);
+        Assert.Equal(insideOpening.Id, result.Id);
     }
 
 }

@@ -29,7 +29,7 @@ public class FindAndOfferEligibleGolfersHandlerTests
         this.timeProvider.GetCurrentDate().Returns(new DateOnly(2026, 3, 25));
         this.timeProvider.GetCurrentDateByTimeZone(Arg.Any<string>()).Returns(new DateOnly(2026, 3, 25));
         this.shortCodeGen.GenerateAsync(Arg.Any<DateOnly>()).Returns("1234");
-        this.matchingService = new WaitlistMatchingService(this.entryRepo);
+        this.matchingService = new WaitlistMatchingService(this.entryRepo, this.openingRepo);
     }
 
     private async Task<WalkUpGolferWaitlistEntry> CreateEntryAsync(Golfer golfer, int groupSize = 1)
