@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useTenants } from '../hooks/useTenants';
+import { useOrganizations } from '../hooks/useOrganizations';
 
 const courseSchema = z.object({
   tenantId: z.string().min(1, 'Tenant assignment is required'),
@@ -42,7 +42,7 @@ type CourseFormData = z.infer<typeof courseSchema>;
 export default function CourseCreate() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { data: tenants, isLoading: isLoadingTenants, error: tenantsError } = useTenants();
+  const { data: tenants, isLoading: isLoadingTenants, error: tenantsError } = useOrganizations();
 
   const form = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
@@ -98,10 +98,11 @@ export default function CourseCreate() {
                   </FormControl>
                   <SelectContent>
                     {tenants && tenants
-                      .sort((a, b) => a.organizationName.localeCompare(b.organizationName))
-                      .map((tenant) => (
-                        <SelectItem key={tenant.id} value={tenant.id}>
-                          {tenant.organizationName}
+                      .slice()
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((org) => (
+                        <SelectItem key={org.id} value={org.id}>
+                          {org.name}
                         </SelectItem>
                       ))}
                   </SelectContent>

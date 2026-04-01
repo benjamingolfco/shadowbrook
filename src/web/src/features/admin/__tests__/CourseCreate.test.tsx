@@ -3,11 +3,11 @@ import { render, screen, waitFor } from '@/test/test-utils';
 import { userEvent } from '@testing-library/user-event';
 import CourseCreate from '../pages/CourseCreate';
 
-vi.mock('../hooks/useTenants');
+vi.mock('../hooks/useOrganizations');
 
-import { useTenants } from '../hooks/useTenants';
+import { useOrganizations } from '../hooks/useOrganizations';
 
-const mockUseTenants = vi.mocked(useTenants);
+const mockUseTenants = vi.mocked(useOrganizations);
 const mockNavigate = vi.fn();
 
 vi.mock('react-router', async () => {
@@ -28,7 +28,7 @@ describe('CourseCreate', () => {
       data: undefined,
       isLoading: true,
       error: null,
-    } as unknown as ReturnType<typeof useTenants>);
+    } as unknown as ReturnType<typeof useOrganizations>);
 
     render(<CourseCreate />);
     expect(screen.getByText('Loading tenants...')).toBeInTheDocument();
@@ -39,7 +39,7 @@ describe('CourseCreate', () => {
       data: undefined,
       isLoading: false,
       error: new Error('Network error'),
-    } as unknown as ReturnType<typeof useTenants>);
+    } as unknown as ReturnType<typeof useOrganizations>);
 
     render(<CourseCreate />);
     expect(screen.getByText(/Error loading tenants/)).toBeInTheDocument();
@@ -51,7 +51,7 @@ describe('CourseCreate', () => {
       data: [],
       isLoading: false,
       error: null,
-    } as unknown as ReturnType<typeof useTenants>);
+    } as unknown as ReturnType<typeof useOrganizations>);
 
     render(<CourseCreate />);
     expect(screen.getByText('No tenants available')).toBeInTheDocument();
@@ -66,26 +66,22 @@ describe('CourseCreate', () => {
       data: [
         {
           id: '2',
-          organizationName: 'Zenith Golf Club',
-          contactName: 'Jane Doe',
-          contactEmail: 'jane@zenith.com',
-          contactPhone: '555-0102',
+          name: 'Zenith Golf Club',
+          courseCount: 1,
+          userCount: 2,
           createdAt: '2024-01-15T00:00:00Z',
-          updatedAt: '2024-01-15T00:00:00Z',
         },
         {
           id: '1',
-          organizationName: 'Alpine Golf Course',
-          contactName: 'John Doe',
-          contactEmail: 'john@alpine.com',
-          contactPhone: '555-0101',
+          name: 'Alpine Golf Course',
+          courseCount: 1,
+          userCount: 2,
           createdAt: '2024-01-15T00:00:00Z',
-          updatedAt: '2024-01-15T00:00:00Z',
         },
       ],
       isLoading: false,
       error: null,
-    } as unknown as ReturnType<typeof useTenants>);
+    } as unknown as ReturnType<typeof useOrganizations>);
 
     render(<CourseCreate />);
 
@@ -101,17 +97,15 @@ describe('CourseCreate', () => {
       data: [
         {
           id: '1',
-          organizationName: 'Alpine Golf Course',
-          contactName: 'John Doe',
-          contactEmail: 'john@alpine.com',
-          contactPhone: '555-0101',
+          name: 'Alpine Golf Course',
+          courseCount: 1,
+          userCount: 2,
           createdAt: '2024-01-15T00:00:00Z',
-          updatedAt: '2024-01-15T00:00:00Z',
         },
       ],
       isLoading: false,
       error: null,
-    } as unknown as ReturnType<typeof useTenants>);
+    } as unknown as ReturnType<typeof useOrganizations>);
 
     render(<CourseCreate />);
 
@@ -131,17 +125,15 @@ describe('CourseCreate', () => {
       data: [
         {
           id: '1',
-          organizationName: 'Alpine Golf Course',
-          contactName: 'John Doe',
-          contactEmail: 'john@alpine.com',
-          contactPhone: '555-0101',
+          name: 'Alpine Golf Course',
+          courseCount: 1,
+          userCount: 2,
           createdAt: '2024-01-15T00:00:00Z',
-          updatedAt: '2024-01-15T00:00:00Z',
         },
       ],
       isLoading: false,
       error: null,
-    } as unknown as ReturnType<typeof useTenants>);
+    } as unknown as ReturnType<typeof useOrganizations>);
 
     const { container } = render(<CourseCreate />);
 
