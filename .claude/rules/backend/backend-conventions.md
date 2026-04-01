@@ -148,6 +148,18 @@ The project uses [WolverineFx](https://wolverinefx.net) for message handling. Se
 - Handlers that need to publish follow-on events inject `IMessageBus` and call `bus.PublishAsync()`
 - `MultipleHandlerBehavior.Separated` — multiple handlers for the same event type run independently
 
+### Command Colocation
+
+Command and message records MUST be defined in the same file as their handler. This keeps the
+message contract and its processing logic together — if you're reading a handler, you can see
+exactly what shape of message it expects without navigating elsewhere.
+
+- Commands handled by a standalone handler class → define the record in the handler file
+- Timeout messages consumed by a policy → define the record in the policy file
+- Wake-up/trigger commands consumed by a policy → define the record in the policy file
+
+The rule is: **the record lives with the code that has the `Handle` method for it.**
+
 **No silent returns — hard rule:**
 - Every early return in a handler MUST either throw or log a warning before returning. Silent failures in event handlers are invisible in production.
 - **ID lookups throw:** When looking up an entity by an ID from an event/command, use `GetRequiredByIdAsync(id)` — it throws `EntityNotFoundException` if not found. Extension methods for all repositories are in `Shadowbrook.Domain.Common.RepositoryExtensions`. Never write `GetByIdAsync(...) ?? throw` inline — always use `GetRequiredByIdAsync`.

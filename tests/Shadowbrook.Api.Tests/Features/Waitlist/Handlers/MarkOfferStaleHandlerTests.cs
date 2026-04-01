@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Shadowbrook.Api.Features.Waitlist.Handlers;
-using Shadowbrook.Api.Features.Waitlist.Policies;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;

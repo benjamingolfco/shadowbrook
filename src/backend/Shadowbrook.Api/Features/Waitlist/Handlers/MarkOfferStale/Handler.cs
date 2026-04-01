@@ -1,9 +1,10 @@
 using Microsoft.Extensions.Logging;
-using Shadowbrook.Api.Features.Waitlist.Policies;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 
 namespace Shadowbrook.Api.Features.Waitlist.Handlers;
+
+public record MarkOfferStale(Guid WaitlistOfferId, Guid OpeningId);
 
 public static class MarkOfferStaleHandler
 {

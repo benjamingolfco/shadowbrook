@@ -1,8 +1,9 @@
-using Shadowbrook.Api.Features.Waitlist.Policies;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 
 namespace Shadowbrook.Api.Features.Waitlist.Handlers;
+
+public record ExpireTeeTimeOpening(Guid OpeningId);
 
 public static class ExpireTeeTimeOpeningHandler
 {
