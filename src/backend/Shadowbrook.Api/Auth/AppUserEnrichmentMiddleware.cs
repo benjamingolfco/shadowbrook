@@ -36,7 +36,6 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
         if (!cache.TryGetValue(cacheKey, out EnrichmentData? enrichmentData))
         {
             var appUser = await db.AppUsers
-                .Include(u => u.CourseAssignments)
                 .FirstOrDefaultAsync(u => u.IdentityId == oid);
 
             if (appUser is null)
@@ -49,7 +48,7 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
 
                 var role = seedAdminEmails.Any(e => e.Equals(email, StringComparison.OrdinalIgnoreCase))
                     ? AppUserRole.Admin
-                    : AppUserRole.Staff;
+                    : AppUserRole.Operator;
 
                 appUser = AppUser.Create(oid, email, name, role, organizationId: null);
                 db.AppUsers.Add(appUser);
@@ -69,7 +68,7 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
                 OrganizationId: appUser.OrganizationId,
                 Role: appUser.Role,
                 Permissions: Permissions.GetForRole(appUser.Role),
-                CourseIds: appUser.CourseAssignments.Select(a => a.CourseId).ToList());
+                CourseIds: []);
 
             cache.Set(cacheKey, enrichmentData, CacheTtl);
         }

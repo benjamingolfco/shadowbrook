@@ -28,10 +28,10 @@ public static class FeatureEndpoints
                 .FirstOrDefaultAsync();
         }
 
-        if (courseId.HasValue)
+        if (courseId is { } cId)
         {
             courseFlags = await db.Courses
-                .Where(c => c.Id == courseId.Value)
+                .Where(c => c.Id == cId)
                 .Select(c => c.FeatureFlags)
                 .FirstOrDefaultAsync();
         }

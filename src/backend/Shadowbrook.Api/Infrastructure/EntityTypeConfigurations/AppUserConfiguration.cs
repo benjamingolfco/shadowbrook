@@ -27,8 +27,6 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
             .HasForeignKey(u => u.OrganizationId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.Navigation(u => u.CourseAssignments).AutoInclude();
-
         builder.HasShadowAuditProperties();
     }
 }

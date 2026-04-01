@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Domain.AppUserAggregate.Exceptions;
 using Shadowbrook.Domain.BookingAggregate.Exceptions;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseWaitlistAggregate.Exceptions;
@@ -22,7 +21,6 @@ public static class DomainExceptionHandler
             {
                 context.Response.StatusCode = domainEx switch
                 {
-                    CourseAlreadyAssignedException => StatusCodes.Status409Conflict,
                     GolferAlreadyOnWaitlistException => StatusCodes.Status409Conflict,
                     WaitlistAlreadyExistsException => StatusCodes.Status409Conflict,
                     WaitlistNotClosedException => StatusCodes.Status409Conflict,
@@ -31,7 +29,6 @@ public static class DomainExceptionHandler
                     BookingNotPendingException => StatusCodes.Status409Conflict,
                     BookingNotCancellableException => StatusCodes.Status409Conflict,
                     CannotExtendRemovedEntryException => StatusCodes.Status409Conflict,
-                    CourseNotAssignedException => StatusCodes.Status404NotFound,
                     EntityNotFoundException => StatusCodes.Status404NotFound,
                     InvalidSlotsAvailableException => StatusCodes.Status422UnprocessableEntity,
                     InvalidGroupSizeException => StatusCodes.Status422UnprocessableEntity,

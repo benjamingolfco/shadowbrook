@@ -41,7 +41,7 @@ public class CourseAccessAuthorizationHandler(ApplicationDbContext db)
                 context.Succeed(requirement);
                 return;
 
-            case AppUserRole.Owner:
+            case AppUserRole.Operator:
                 var orgIdClaim = context.User.FindFirst("organization_id")?.Value;
                 if (orgIdClaim is not null && Guid.TryParse(orgIdClaim, out var orgId))
                 {
@@ -52,19 +52,6 @@ public class CourseAccessAuthorizationHandler(ApplicationDbContext db)
                     {
                         context.Succeed(requirement);
                     }
-                }
-
-                return;
-
-            case AppUserRole.Staff:
-                var courseIds = context.User.FindAll("course_id")
-                    .Select(c => Guid.TryParse(c.Value, out var id) ? id : (Guid?)null)
-                    .Where(id => id.HasValue)
-                    .Select(id => id!.Value)
-                    .ToHashSet();
-                if (courseIds.Contains(courseId))
-                {
-                    context.Succeed(requirement);
                 }
 
                 return;

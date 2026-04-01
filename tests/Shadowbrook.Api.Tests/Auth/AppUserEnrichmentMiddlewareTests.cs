@@ -71,7 +71,7 @@ public class AppUserEnrichmentMiddlewareTests
         var oid = Guid.NewGuid().ToString();
         var org = Shadowbrook.Domain.OrganizationAggregate.Organization.Create("Acme Golf");
         db.Organizations.Add(org);
-        var appUser = AppUser.Create(oid, "op@example.com", "Op User", AppUserRole.Owner, org.Id);
+        var appUser = AppUser.Create(oid, "op@example.com", "Op User", AppUserRole.Operator, org.Id);
         db.AppUsers.Add(appUser);
         await db.SaveChangesAsync();
 
@@ -82,12 +82,12 @@ public class AppUserEnrichmentMiddlewareTests
 
         Assert.Equal(appUser.Id.ToString(), context.User.FindFirst("app_user_id")?.Value);
         Assert.Equal(org.Id.ToString(), context.User.FindFirst("organization_id")?.Value);
-        Assert.Equal("Owner", context.User.FindFirst("role")?.Value);
+        Assert.Equal("Operator", context.User.FindFirst("role")?.Value);
         Assert.Contains(context.User.FindAll("permission"), c => c.Value == Permissions.AppAccess);
     }
 
     [Fact]
-    public async Task AuthenticatedUser_NoAppUserRow_AutoProvisionedAsStaff()
+    public async Task AuthenticatedUser_NoAppUserRow_AutoProvisionedAsOperator()
     {
         await using var db = CreateInMemoryDbContext();
         using var cache = CreateMemoryCache();
@@ -100,12 +100,12 @@ public class AppUserEnrichmentMiddlewareTests
 
         var created = await db.AppUsers.FirstOrDefaultAsync(u => u.IdentityId == oid);
         Assert.NotNull(created);
-        Assert.Equal(AppUserRole.Staff, created!.Role);
+        Assert.Equal(AppUserRole.Operator, created!.Role);
         Assert.Null(created.OrganizationId);
         Assert.True(created.IsActive);
 
         Assert.Equal(created.Id.ToString(), context.User.FindFirst("app_user_id")?.Value);
-        Assert.Equal("Staff", context.User.FindFirst("role")?.Value);
+        Assert.Equal("Operator", context.User.FindFirst("role")?.Value);
         Assert.Contains(context.User.FindAll("permission"), c => c.Value == Permissions.AppAccess);
     }
 
@@ -116,7 +116,7 @@ public class AppUserEnrichmentMiddlewareTests
         using var cache = CreateMemoryCache();
 
         var oid = Guid.NewGuid().ToString();
-        var appUser = AppUser.Create(oid, "inactive@example.com", "Inactive User", AppUserRole.Staff, null);
+        var appUser = AppUser.Create(oid, "inactive@example.com", "Inactive User", AppUserRole.Operator, null);
         appUser.Deactivate();
         db.AppUsers.Add(appUser);
         await db.SaveChangesAsync();

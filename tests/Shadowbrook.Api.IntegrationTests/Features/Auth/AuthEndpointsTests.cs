@@ -16,7 +16,7 @@ public class AuthEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifet
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
-    public async Task GetMe_AuthenticatedOwner_ReturnsProfileWithOrgAndCourses()
+    public async Task GetMe_AuthenticatedOperator_ReturnsProfileWithOrgAndCourses()
     {
         // Seed org, course, and app user
         await using var scope = factory.Services.CreateAsyncScope();
@@ -29,7 +29,7 @@ public class AuthEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifet
         db.Courses.Add(course);
 
         var identityId = Guid.NewGuid().ToString();
-        var appUser = AppUser.Create(identityId, "operator@example.com", "Jane Smith", AppUserRole.Owner, org.Id);
+        var appUser = AppUser.Create(identityId, "operator@example.com", "Jane Smith", AppUserRole.Operator, org.Id);
         db.AppUsers.Add(appUser);
 
         await db.SaveChangesAsync();
@@ -47,7 +47,7 @@ public class AuthEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifet
         Assert.Equal(appUser.Id, body!.Id);
         Assert.Equal("operator@example.com", body.Email);
         Assert.Equal("Jane Smith", body.DisplayName);
-        Assert.Equal("Owner", body.Role);
+        Assert.Equal("Operator", body.Role);
         Assert.NotNull(body.Organization);
         Assert.Equal(org.Id, body.Organization!.Id);
         Assert.Equal("Benjamin Golf Co", body.Organization.Name);

@@ -30,7 +30,6 @@ public class ApplicationDbContext(
 
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<AppUser> AppUsers => Set<AppUser>();
-    public DbSet<CourseAssignment> CourseAssignments => Set<CourseAssignment>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<Booking> Bookings => Set<Booking>();
@@ -83,7 +82,6 @@ public class ApplicationDbContext(
         // Apply domain entity configurations
         modelBuilder.ApplyConfiguration(new OrganizationConfiguration());
         modelBuilder.ApplyConfiguration(new AppUserConfiguration());
-        modelBuilder.ApplyConfiguration(new CourseAssignmentConfiguration());
         modelBuilder.ApplyConfiguration(new CourseConfiguration());
         modelBuilder.ApplyConfiguration(new TenantConfiguration());
         modelBuilder.ApplyConfiguration(new BookingConfiguration());

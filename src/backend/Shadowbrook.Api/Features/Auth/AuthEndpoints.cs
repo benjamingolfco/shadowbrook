@@ -49,7 +49,7 @@ public static class AuthEndpoints
                 .Select(c => new CourseResponse(c.Id, c.Name))
                 .ToListAsync();
         }
-        else if (appUser.Role == AppUserRole.Owner && appUser.OrganizationId.HasValue)
+        else if (appUser.Role == AppUserRole.Operator && appUser.OrganizationId.HasValue)
         {
             var orgId = appUser.OrganizationId.Value;
             courses = await db.Courses
@@ -60,12 +60,7 @@ public static class AuthEndpoints
         }
         else
         {
-            var courseIds = appUser.CourseAssignments.Select(a => a.CourseId).ToList();
-            courses = await db.Courses
-                .IgnoreQueryFilters()
-                .Where(c => courseIds.Contains(c.Id))
-                .Select(c => new CourseResponse(c.Id, c.Name))
-                .ToListAsync();
+            courses = [];
         }
 
         var response = new MeResponse(
@@ -85,15 +80,13 @@ public static class AuthEndpoints
     public static async Task<IResult> GetUsers([NotBody] ApplicationDbContext db)
     {
         var users = await db.AppUsers
-            .Include(u => u.CourseAssignments)
             .Select(u => new UserListResponse(
                 u.Id,
                 u.Email,
                 u.DisplayName,
                 u.Role.ToString(),
                 u.OrganizationId,
-                u.IsActive,
-                u.CourseAssignments.Select(a => a.CourseId).ToList()))
+                u.IsActive))
             .ToListAsync();
 
         return Results.Ok(users);
@@ -131,8 +124,7 @@ public static class AuthEndpoints
             appUser.DisplayName,
             appUser.Role.ToString(),
             appUser.OrganizationId,
-            appUser.IsActive,
-            []);
+            appUser.IsActive);
 
         return Results.Created($"/auth/users/{appUser.Id}", response);
     }
@@ -146,7 +138,6 @@ public static class AuthEndpoints
         [NotBody] IMemoryCache cache)
     {
         var appUser = await db.AppUsers
-            .Include(u => u.CourseAssignments)
             .FirstOrDefaultAsync(u => u.Id == id);
 
         if (appUser is null)
@@ -174,61 +165,11 @@ public static class AuthEndpoints
             appUser.DisplayName,
             appUser.Role.ToString(),
             appUser.OrganizationId,
-            appUser.IsActive,
-            appUser.CourseAssignments.Select(a => a.CourseId).ToList());
+            appUser.IsActive);
 
         return Results.Ok(response);
     }
 
-    [WolverinePut("/auth/users/{id}/courses")]
-    [Authorize(Policy = "RequireUsersManage")]
-    public static async Task<IResult> UpdateUserCourses(
-        Guid id,
-        UpdateUserCoursesRequest request,
-        [NotBody] ApplicationDbContext db,
-        [NotBody] IMemoryCache cache)
-    {
-        var appUser = await db.AppUsers
-            .Include(u => u.CourseAssignments)
-            .FirstOrDefaultAsync(u => u.Id == id);
-
-        if (appUser is null)
-        {
-            return Results.NotFound();
-        }
-
-        // Unassign courses not in the new list
-        var toRemove = appUser.CourseAssignments
-            .Where(a => !request.CourseIds.Contains(a.CourseId))
-            .ToList();
-
-        foreach (var assignment in toRemove)
-        {
-            appUser.UnassignCourse(assignment.CourseId);
-        }
-
-        // Assign courses not already assigned
-        foreach (var courseId in request.CourseIds)
-        {
-            if (!appUser.CourseAssignments.Any(a => a.CourseId == courseId))
-            {
-                appUser.AssignCourse(courseId);
-            }
-        }
-
-        cache.Remove($"appuser:{appUser.IdentityId}");
-
-        var response = new UserListResponse(
-            appUser.Id,
-            appUser.Email,
-            appUser.DisplayName,
-            appUser.Role.ToString(),
-            appUser.OrganizationId,
-            appUser.IsActive,
-            appUser.CourseAssignments.Select(a => a.CourseId).ToList());
-
-        return Results.Ok(response);
-    }
 }
 
 public sealed record MeResponse(
@@ -250,8 +191,7 @@ public sealed record UserListResponse(
     string DisplayName,
     string Role,
     Guid? OrganizationId,
-    bool IsActive,
-    List<Guid> CourseIds);
+    bool IsActive);
 
 public sealed record CreateUserRequest(
     string IdentityId,
@@ -261,5 +201,3 @@ public sealed record CreateUserRequest(
     Guid? OrganizationId);
 
 public sealed record UpdateUserRequest(bool? IsActive);
-
-public sealed record UpdateUserCoursesRequest(List<Guid> CourseIds);

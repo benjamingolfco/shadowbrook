@@ -1,4 +1,3 @@
-using Shadowbrook.Domain.AppUserAggregate.Exceptions;
 using Shadowbrook.Domain.Common;
 
 namespace Shadowbrook.Domain.AppUserAggregate;
@@ -13,9 +12,6 @@ public class AppUser : Entity
     public bool IsActive { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? LastLoginAt { get; private set; }
-
-    private readonly List<CourseAssignment> courseAssignments = [];
-    public IReadOnlyCollection<CourseAssignment> CourseAssignments => this.courseAssignments.AsReadOnly();
 
     private AppUser() { } // EF
 
@@ -36,28 +32,15 @@ public class AppUser : Entity
         };
     }
 
+    public void UpdateRole(AppUserRole role, Guid? organizationId)
+    {
+        Role = role;
+        OrganizationId = organizationId;
+    }
+
     public void RecordLogin() => LastLoginAt = DateTimeOffset.UtcNow;
 
     public void Deactivate() => IsActive = false;
 
     public void Activate() => IsActive = true;
-
-    public CourseAssignment AssignCourse(Guid courseId)
-    {
-        if (this.courseAssignments.Any(a => a.CourseId == courseId))
-        {
-            throw new CourseAlreadyAssignedException(courseId);
-        }
-
-        var assignment = CourseAssignment.Create(Id, courseId);
-        this.courseAssignments.Add(assignment);
-        return assignment;
-    }
-
-    public void UnassignCourse(Guid courseId)
-    {
-        var assignment = this.courseAssignments.FirstOrDefault(a => a.CourseId == courseId)
-            ?? throw new CourseNotAssignedException(courseId);
-        this.courseAssignments.Remove(assignment);
-    }
 }

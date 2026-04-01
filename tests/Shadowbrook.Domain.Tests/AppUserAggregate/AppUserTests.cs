@@ -1,5 +1,4 @@
 using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.AppUserAggregate.Exceptions;
 
 namespace Shadowbrook.Domain.Tests.AppUserAggregate;
 
@@ -9,17 +8,27 @@ public class AppUserTests
     public void Create_SetsProperties()
     {
         var orgId = Guid.CreateVersion7();
-        var user = AppUser.Create("entra-oid-123", "jane@example.com", "Jane Smith", AppUserRole.Owner, orgId);
+        var user = AppUser.Create("entra-oid-123", "jane@example.com", "Jane Smith", AppUserRole.Operator, orgId);
 
         Assert.NotEqual(Guid.Empty, user.Id);
         Assert.Equal("entra-oid-123", user.IdentityId);
         Assert.Equal("jane@example.com", user.Email);
         Assert.Equal("Jane Smith", user.DisplayName);
-        Assert.Equal(AppUserRole.Owner, user.Role);
+        Assert.Equal(AppUserRole.Operator, user.Role);
         Assert.Equal(orgId, user.OrganizationId);
         Assert.True(user.IsActive);
         Assert.True(user.CreatedAt >= DateTimeOffset.UtcNow.AddSeconds(-2));
         Assert.Null(user.LastLoginAt);
+    }
+
+    [Fact]
+    public void Create_WithOperatorRole_SetsOrganizationId()
+    {
+        var orgId = Guid.CreateVersion7();
+        var user = AppUser.Create("oid-1", "op@test.com", "Operator", AppUserRole.Operator, orgId);
+
+        Assert.Equal(AppUserRole.Operator, user.Role);
+        Assert.Equal(orgId, user.OrganizationId);
     }
 
     [Fact]
@@ -34,7 +43,7 @@ public class AppUserTests
     [Fact]
     public void RecordLogin_UpdatesLastLoginAt()
     {
-        var user = AppUser.Create("oid", "e@e.com", "Test", AppUserRole.Staff, Guid.CreateVersion7());
+        var user = AppUser.Create("oid", "e@e.com", "Test", AppUserRole.Operator, Guid.CreateVersion7());
 
         user.RecordLogin();
 
@@ -45,7 +54,7 @@ public class AppUserTests
     [Fact]
     public void Deactivate_SetsIsActiveFalse()
     {
-        var user = AppUser.Create("oid", "e@e.com", "Test", AppUserRole.Staff, Guid.CreateVersion7());
+        var user = AppUser.Create("oid", "e@e.com", "Test", AppUserRole.Operator, Guid.CreateVersion7());
 
         user.Deactivate();
 
@@ -55,7 +64,7 @@ public class AppUserTests
     [Fact]
     public void Activate_SetsIsActiveTrue()
     {
-        var user = AppUser.Create("oid", "e@e.com", "Test", AppUserRole.Staff, Guid.CreateVersion7());
+        var user = AppUser.Create("oid", "e@e.com", "Test", AppUserRole.Operator, Guid.CreateVersion7());
         user.Deactivate();
 
         user.Activate();
@@ -64,38 +73,14 @@ public class AppUserTests
     }
 
     [Fact]
-    public void AssignCourse_CreatesCourseAssignment()
+    public void UpdateRole_UpdatesRoleAndOrganizationId()
     {
-        var user = AppUser.Create("oid", "e@e.com", "Test", AppUserRole.Staff, Guid.CreateVersion7());
-        var courseId = Guid.CreateVersion7();
+        var user = AppUser.Create("oid", "e@e.com", "Test", AppUserRole.Operator, Guid.CreateVersion7());
+        var newOrgId = Guid.CreateVersion7();
 
-        var assignment = user.AssignCourse(courseId);
+        user.UpdateRole(AppUserRole.Admin, newOrgId);
 
-        Assert.Equal(user.Id, assignment.AppUserId);
-        Assert.Equal(courseId, assignment.CourseId);
-        Assert.True(assignment.AssignedAt >= DateTimeOffset.UtcNow.AddSeconds(-2));
-        Assert.Contains(assignment, user.CourseAssignments);
-    }
-
-    [Fact]
-    public void AssignCourse_DuplicateThrows()
-    {
-        var user = AppUser.Create("oid", "e@e.com", "Test", AppUserRole.Staff, Guid.CreateVersion7());
-        var courseId = Guid.CreateVersion7();
-        user.AssignCourse(courseId);
-
-        Assert.Throws<CourseAlreadyAssignedException>(() => user.AssignCourse(courseId));
-    }
-
-    [Fact]
-    public void UnassignCourse_RemovesAssignment()
-    {
-        var user = AppUser.Create("oid", "e@e.com", "Test", AppUserRole.Staff, Guid.CreateVersion7());
-        var courseId = Guid.CreateVersion7();
-        user.AssignCourse(courseId);
-
-        user.UnassignCourse(courseId);
-
-        Assert.Empty(user.CourseAssignments);
+        Assert.Equal(AppUserRole.Admin, user.Role);
+        Assert.Equal(newOrgId, user.OrganizationId);
     }
 }

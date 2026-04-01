@@ -34,7 +34,6 @@ public class CourseAccessAuthorizationHandlerTests
     private static ClaimsPrincipal BuildUser(
         AppUserRole role,
         Guid? organizationId = null,
-        IEnumerable<Guid>? courseIds = null,
         bool hasAppAccess = true)
     {
         var claims = new List<Claim>
@@ -50,11 +49,6 @@ public class CourseAccessAuthorizationHandlerTests
         if (organizationId.HasValue)
         {
             claims.Add(new Claim("organization_id", organizationId.Value.ToString()));
-        }
-
-        foreach (var id in courseIds ?? [])
-        {
-            claims.Add(new Claim("course_id", id.ToString()));
         }
 
         return new ClaimsPrincipal(new ClaimsIdentity(claims, authenticationType: "test"));
@@ -81,7 +75,7 @@ public class CourseAccessAuthorizationHandlerTests
     }
 
     [Fact]
-    public async Task Owner_CourseInTheirOrg_Succeeds()
+    public async Task Operator_CourseInTheirOrg_Succeeds()
     {
         await using var db = CreateInMemoryDbContext();
 
@@ -92,7 +86,7 @@ public class CourseAccessAuthorizationHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new CourseAccessAuthorizationHandler(db);
-        var user = BuildUser(AppUserRole.Owner, organizationId: org.Id);
+        var user = BuildUser(AppUserRole.Operator, organizationId: org.Id);
         var httpContext = CreateHttpContextWithCourseId(course.Id);
         var context = CreateContext(user, httpContext);
 
@@ -102,7 +96,7 @@ public class CourseAccessAuthorizationHandlerTests
     }
 
     [Fact]
-    public async Task Owner_CourseInDifferentOrg_DoesNotSucceed()
+    public async Task Operator_CourseInDifferentOrg_DoesNotSucceed()
     {
         await using var db = CreateInMemoryDbContext();
 
@@ -114,41 +108,8 @@ public class CourseAccessAuthorizationHandlerTests
 
         var handler = new CourseAccessAuthorizationHandler(db);
         var differentOrgId = Guid.NewGuid();
-        var user = BuildUser(AppUserRole.Owner, organizationId: differentOrgId);
+        var user = BuildUser(AppUserRole.Operator, organizationId: differentOrgId);
         var httpContext = CreateHttpContextWithCourseId(course.Id);
-        var context = CreateContext(user, httpContext);
-
-        await handler.HandleAsync(context);
-
-        Assert.False(context.HasSucceeded);
-    }
-
-    [Fact]
-    public async Task Staff_AssignedToCourse_Succeeds()
-    {
-        await using var db = CreateInMemoryDbContext();
-        var handler = new CourseAccessAuthorizationHandler(db);
-
-        var courseId = Guid.NewGuid();
-        var user = BuildUser(AppUserRole.Staff, courseIds: [courseId]);
-        var httpContext = CreateHttpContextWithCourseId(courseId);
-        var context = CreateContext(user, httpContext);
-
-        await handler.HandleAsync(context);
-
-        Assert.True(context.HasSucceeded);
-    }
-
-    [Fact]
-    public async Task Staff_NotAssignedToCourse_DoesNotSucceed()
-    {
-        await using var db = CreateInMemoryDbContext();
-        var handler = new CourseAccessAuthorizationHandler(db);
-
-        var courseId = Guid.NewGuid();
-        var otherCourseId = Guid.NewGuid();
-        var user = BuildUser(AppUserRole.Staff, courseIds: [otherCourseId]);
-        var httpContext = CreateHttpContextWithCourseId(courseId);
         var context = CreateContext(user, httpContext);
 
         await handler.HandleAsync(context);
