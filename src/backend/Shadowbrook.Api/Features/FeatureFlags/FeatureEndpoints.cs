@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Auth;
+using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Services;
 using Wolverine.Http;
@@ -12,10 +12,10 @@ public static class FeatureEndpoints
     [WolverineGet("/features")]
     [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> GetFeatures(
+        Guid? courseId,
         [NotBody] IFeatureService featureService,
         [NotBody] ApplicationDbContext db,
-        [NotBody] ICurrentUser currentUser,
-        [NotBody] Guid? courseId = null)
+        [NotBody] ICurrentUser currentUser)
     {
         Dictionary<string, bool>? orgFlags = null;
         Dictionary<string, bool>? courseFlags = null;

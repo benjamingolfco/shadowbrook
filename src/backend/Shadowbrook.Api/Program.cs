@@ -1,15 +1,11 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using FluentValidation;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Web;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Serilog;
-using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Features.Dev;
+using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Middleware;
 using Shadowbrook.Api.Infrastructure.Observability;
@@ -140,30 +136,7 @@ builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-// Authentication
-var useDevAuth = builder.Configuration.GetValue<bool>("Auth:UseDevAuth");
-if (useDevAuth)
-{
-    builder.Services.AddAuthentication("DevAuth")
-        .AddScheme<AuthenticationSchemeOptions, DevAuthHandler>("DevAuth", null);
-}
-else
-{
-    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
-}
-
-// Authorization
-builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("RequireAppAccess", policy =>
-        policy.AddRequirements(new PermissionRequirement(Permissions.AppAccess)))
-    .AddPolicy("RequireUsersManage", policy =>
-        policy.AddRequirements(new PermissionRequirement(Permissions.UsersManage)))
-    .AddPolicy("RequireCourseAccess", policy =>
-        policy.AddRequirements(new CourseAccessRequirement()));
-
-builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
-builder.Services.AddScoped<IAuthorizationHandler, CourseAccessAuthorizationHandler>();
+builder.Services.AddShadowbrookAuth(builder.Configuration);
 
 builder.Services.AddWolverineHttp();
 
@@ -198,14 +171,15 @@ app.UseDomainExceptionHandler();
 
 app.Use(async (context, next) =>
 {
+    var authInstance = app.Configuration["AzureAd:Instance"]?.TrimEnd('/') ?? "https://login.microsoftonline.com";
     context.Response.Headers.Append(
         "Content-Security-Policy",
         "default-src 'self'; " +
         "script-src 'self'; " +
         "style-src 'self' 'unsafe-inline'; " +
         "img-src 'self' data:; " +
-        "connect-src 'self' https://*.ciamlogin.com; " +
-        "frame-src https://*.ciamlogin.com;");
+        $"connect-src 'self' {authInstance}; " +
+        $"frame-src {authInstance};");
     await next();
 });
 

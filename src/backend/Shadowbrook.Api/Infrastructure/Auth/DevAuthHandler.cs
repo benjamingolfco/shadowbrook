@@ -3,7 +3,7 @@ using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 
-namespace Shadowbrook.Api.Auth;
+namespace Shadowbrook.Api.Infrastructure.Auth;
 
 public class DevAuthHandler(
     IOptionsMonitor<AuthenticationSchemeOptions> options,

@@ -1,4 +1,4 @@
-namespace Shadowbrook.Api.Auth;
+namespace Shadowbrook.Api.Infrastructure.Auth;
 
 public interface ICurrentUser
 {
@@ -8,4 +8,7 @@ public interface ICurrentUser
     IReadOnlyList<string> Permissions { get; }
     IReadOnlyList<Guid> CourseIds { get; }
     bool IsAuthenticated { get; }
+    bool HasUniversalCourseAccess { get; }
+
+    bool CanAccessCourse(Guid courseId);
 }

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Shadowbrook.Api.Auth;
+using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.AppUserAggregate;
 using Wolverine.Http;
@@ -42,25 +42,16 @@ public static class AuthEndpoints
 
         List<CourseResponse> courses;
 
-        if (appUser.Role == AppUserRole.Admin)
+        if (currentUser.HasUniversalCourseAccess)
         {
             courses = await db.Courses
                 .IgnoreQueryFilters()
-                .Select(c => new CourseResponse(c.Id, c.Name))
-                .ToListAsync();
-        }
-        else if (appUser.Role == AppUserRole.Owner && appUser.OrganizationId.HasValue)
-        {
-            var orgId = appUser.OrganizationId.Value;
-            courses = await db.Courses
-                .IgnoreQueryFilters()
-                .Where(c => c.OrganizationId == orgId)
                 .Select(c => new CourseResponse(c.Id, c.Name))
                 .ToListAsync();
         }
         else
         {
-            var courseIds = appUser.CourseAssignments.Select(a => a.CourseId).ToList();
+            var courseIds = currentUser.CourseIds;
             courses = await db.Courses
                 .IgnoreQueryFilters()
                 .Where(c => courseIds.Contains(c.Id))
@@ -166,7 +157,7 @@ public static class AuthEndpoints
             }
         }
 
-        cache.Remove($"appuser:{appUser.IdentityId}");
+        cache.Remove(AppUserEnrichmentMiddleware.CacheKey(appUser.IdentityId));
 
         var response = new UserListResponse(
             appUser.Id,
@@ -216,7 +207,7 @@ public static class AuthEndpoints
             }
         }
 
-        cache.Remove($"appuser:{appUser.IdentityId}");
+        cache.Remove(AppUserEnrichmentMiddleware.CacheKey(appUser.IdentityId));
 
         var response = new UserListResponse(
             appUser.Id,

@@ -1,4 +1,4 @@
-using Shadowbrook.Api.Auth;
+using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Domain.AppUserAggregate;
 
 namespace Shadowbrook.Api.Tests.Auth;

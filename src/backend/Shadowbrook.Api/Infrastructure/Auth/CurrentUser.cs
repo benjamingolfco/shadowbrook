@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace Shadowbrook.Api.Auth;
+namespace Shadowbrook.Api.Infrastructure.Auth;
 
 public class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUser
 {
@@ -39,4 +39,10 @@ public class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUse
             .ToList() ?? [];
 
     public bool IsAuthenticated => User?.Identity?.IsAuthenticated ?? false;
+
+    public bool HasUniversalCourseAccess =>
+        User?.FindAll("course_access").Any(c => c.Value == "all") ?? false;
+
+    public bool CanAccessCourse(Guid courseId) =>
+        HasUniversalCourseAccess || CourseIds.Contains(courseId);
 }

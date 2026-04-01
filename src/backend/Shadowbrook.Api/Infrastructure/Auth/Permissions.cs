@@ -1,6 +1,6 @@
 using Shadowbrook.Domain.AppUserAggregate;
 
-namespace Shadowbrook.Api.Auth;
+namespace Shadowbrook.Api.Infrastructure.Auth;
 
 public static class Permissions
 {

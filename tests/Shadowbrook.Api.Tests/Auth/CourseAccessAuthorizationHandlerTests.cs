@@ -2,25 +2,12 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Auth;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.CourseAggregate;
-using Shadowbrook.Domain.OrganizationAggregate;
+using Shadowbrook.Api.Infrastructure.Auth;
 
 namespace Shadowbrook.Api.Tests.Auth;
 
 public class CourseAccessAuthorizationHandlerTests
 {
-    private static ApplicationDbContext CreateInMemoryDbContext()
-    {
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
-        return new ApplicationDbContext(options);
-    }
-
     private static HttpContext CreateHttpContextWithCourseId(Guid courseId)
     {
         var httpContext = new DefaultHttpContext();
@@ -32,24 +19,20 @@ public class CourseAccessAuthorizationHandlerTests
     }
 
     private static ClaimsPrincipal BuildUser(
-        AppUserRole role,
-        Guid? organizationId = null,
+        bool hasUniversalAccess = false,
         IEnumerable<Guid>? courseIds = null,
         bool hasAppAccess = true)
     {
-        var claims = new List<Claim>
-        {
-            new("role", role.ToString()),
-        };
+        var claims = new List<Claim>();
 
         if (hasAppAccess)
         {
             claims.Add(new Claim("permission", Permissions.AppAccess));
         }
 
-        if (organizationId.HasValue)
+        if (hasUniversalAccess)
         {
-            claims.Add(new Claim("organization_id", organizationId.Value.ToString()));
+            claims.Add(new Claim("course_access", "all"));
         }
 
         foreach (var id in courseIds ?? [])
@@ -65,13 +48,12 @@ public class CourseAccessAuthorizationHandlerTests
         new([new CourseAccessRequirement()], user, resource: httpContext);
 
     [Fact]
-    public async Task Admin_AlwaysSucceeds()
+    public async Task Admin_UniversalAccess_AlwaysSucceeds()
     {
-        await using var db = CreateInMemoryDbContext();
-        var handler = new CourseAccessAuthorizationHandler(db);
+        var handler = new CourseAccessAuthorizationHandler();
 
         var courseId = Guid.NewGuid();
-        var user = BuildUser(AppUserRole.Admin);
+        var user = BuildUser(hasUniversalAccess: true);
         var httpContext = CreateHttpContextWithCourseId(courseId);
         var context = CreateContext(user, httpContext);
 
@@ -81,19 +63,13 @@ public class CourseAccessAuthorizationHandlerTests
     }
 
     [Fact]
-    public async Task Owner_CourseInTheirOrg_Succeeds()
+    public async Task Owner_CourseIdInClaims_Succeeds()
     {
-        await using var db = CreateInMemoryDbContext();
+        var handler = new CourseAccessAuthorizationHandler();
 
-        var org = Organization.Create("Pine Valley Golf");
-        db.Organizations.Add(org);
-        var course = Course.Create(org.Id, "Pine Valley", "America/New_York");
-        db.Courses.Add(course);
-        await db.SaveChangesAsync();
-
-        var handler = new CourseAccessAuthorizationHandler(db);
-        var user = BuildUser(AppUserRole.Owner, organizationId: org.Id);
-        var httpContext = CreateHttpContextWithCourseId(course.Id);
+        var courseId = Guid.NewGuid();
+        var user = BuildUser(courseIds: [courseId]);
+        var httpContext = CreateHttpContextWithCourseId(courseId);
         var context = CreateContext(user, httpContext);
 
         await handler.HandleAsync(context);
@@ -102,20 +78,14 @@ public class CourseAccessAuthorizationHandlerTests
     }
 
     [Fact]
-    public async Task Owner_CourseInDifferentOrg_DoesNotSucceed()
+    public async Task Owner_CourseIdNotInClaims_DoesNotSucceed()
     {
-        await using var db = CreateInMemoryDbContext();
+        var handler = new CourseAccessAuthorizationHandler();
 
-        var org = Organization.Create("Pine Valley Golf");
-        db.Organizations.Add(org);
-        var course = Course.Create(org.Id, "Pine Valley", "America/New_York");
-        db.Courses.Add(course);
-        await db.SaveChangesAsync();
-
-        var handler = new CourseAccessAuthorizationHandler(db);
-        var differentOrgId = Guid.NewGuid();
-        var user = BuildUser(AppUserRole.Owner, organizationId: differentOrgId);
-        var httpContext = CreateHttpContextWithCourseId(course.Id);
+        var courseId = Guid.NewGuid();
+        var otherCourseId = Guid.NewGuid();
+        var user = BuildUser(courseIds: [otherCourseId]);
+        var httpContext = CreateHttpContextWithCourseId(courseId);
         var context = CreateContext(user, httpContext);
 
         await handler.HandleAsync(context);
@@ -126,11 +96,10 @@ public class CourseAccessAuthorizationHandlerTests
     [Fact]
     public async Task Staff_AssignedToCourse_Succeeds()
     {
-        await using var db = CreateInMemoryDbContext();
-        var handler = new CourseAccessAuthorizationHandler(db);
+        var handler = new CourseAccessAuthorizationHandler();
 
         var courseId = Guid.NewGuid();
-        var user = BuildUser(AppUserRole.Staff, courseIds: [courseId]);
+        var user = BuildUser(courseIds: [courseId]);
         var httpContext = CreateHttpContextWithCourseId(courseId);
         var context = CreateContext(user, httpContext);
 
@@ -142,12 +111,26 @@ public class CourseAccessAuthorizationHandlerTests
     [Fact]
     public async Task Staff_NotAssignedToCourse_DoesNotSucceed()
     {
-        await using var db = CreateInMemoryDbContext();
-        var handler = new CourseAccessAuthorizationHandler(db);
+        var handler = new CourseAccessAuthorizationHandler();
 
         var courseId = Guid.NewGuid();
         var otherCourseId = Guid.NewGuid();
-        var user = BuildUser(AppUserRole.Staff, courseIds: [otherCourseId]);
+        var user = BuildUser(courseIds: [otherCourseId]);
+        var httpContext = CreateHttpContextWithCourseId(courseId);
+        var context = CreateContext(user, httpContext);
+
+        await handler.HandleAsync(context);
+
+        Assert.False(context.HasSucceeded);
+    }
+
+    [Fact]
+    public async Task NoAppAccessPermission_DoesNotSucceed()
+    {
+        var handler = new CourseAccessAuthorizationHandler();
+
+        var courseId = Guid.NewGuid();
+        var user = BuildUser(hasUniversalAccess: true, hasAppAccess: false);
         var httpContext = CreateHttpContextWithCourseId(courseId);
         var context = CreateContext(user, httpContext);
 

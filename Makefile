@@ -36,6 +36,11 @@ clean: ## Clean build artifacts
 	dotnet clean shadowbrook.slnx
 	rm -rf src/web/dist
 
+clean-hard: ## Nuke all bin/obj dirs (fixes permission issues from Docker/sandbox)
+	rm -rf src/backend/*/obj/ src/backend/*/bin/
+	rm -rf tests/*/obj/ tests/*/bin/
+	rm -rf src/web/dist
+
 down: ## Stop Docker containers
 	docker compose down
 

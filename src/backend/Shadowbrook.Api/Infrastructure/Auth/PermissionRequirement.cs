@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 
-namespace Shadowbrook.Api.Auth;
+namespace Shadowbrook.Api.Infrastructure.Auth;
 
 public class PermissionRequirement(string permission) : IAuthorizationRequirement
 {
