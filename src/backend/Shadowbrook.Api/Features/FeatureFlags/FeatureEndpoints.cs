@@ -15,7 +15,7 @@ public static class FeatureEndpoints
         [NotBody] IFeatureService featureService,
         [NotBody] ApplicationDbContext db,
         [NotBody] ICurrentUser currentUser,
-        [NotBody] Guid? courseId = null)
+        [NotBody] HttpContext httpContext)
     {
         Dictionary<string, bool>? orgFlags = null;
         Dictionary<string, bool>? courseFlags = null;
@@ -28,7 +28,8 @@ public static class FeatureEndpoints
                 .FirstOrDefaultAsync();
         }
 
-        if (courseId is { } cId)
+        if (httpContext.Request.Query.TryGetValue("courseId", out var courseIdStr)
+            && Guid.TryParse(courseIdStr, out var cId))
         {
             courseFlags = await db.Courses
                 .Where(c => c.Id == cId)

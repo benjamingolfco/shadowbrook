@@ -27,8 +27,8 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
         // Act
         var response = await client.GetAsync($"/courses/{courseBId}");
 
-        // Assert: Operator A is forbidden from Course B (different org)
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        // Assert: Operator A cannot see Course B (different org) — EF query filter makes it invisible
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
@@ -47,8 +47,8 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
             LastTeeTime = "18:00"
         });
 
-        // Assert: Operator A is forbidden from modifying Course B (different org)
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        // Assert: Operator A cannot see Course B (different org) — EF query filter + CourseExistsMiddleware returns 404
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
