@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.AppUserAggregate;
 
@@ -12,16 +13,14 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
 
     private readonly RequestDelegate next = next;
 
-    public async Task InvokeAsync(HttpContext context, ApplicationDbContext db, IMemoryCache cache, IConfiguration configuration)
+    public async Task InvokeAsync(HttpContext context, ApplicationDbContext db, IMemoryCache cache, IOptions<AuthSettings> authOptions)
     {
         var oid = context.User?.FindFirst("oid")?.Value
             ?? context.User?.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value;
 
         if (context.User?.Identity?.IsAuthenticated == true && oid is not null)
         {
-            var seedAdminEmails = configuration.GetValue<string>("Auth:SeedAdminEmails")
-                ?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                ?? [];
+            var seedAdminEmails = authOptions.Value.GetSeedAdminEmailsList();
             await EnrichFromAppUserAsync(context, db, cache, oid, seedAdminEmails);
         }
 
@@ -54,32 +53,34 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
                 db.AppUsers.Add(appUser);
             }
 
-            if (!appUser.IsActive)
+            if (appUser.IsActive)
             {
-                await db.SaveChangesAsync();
-                return;
+                appUser.RecordLogin();
             }
 
-            appUser.RecordLogin();
+            // This SaveChangesAsync is intentionally outside the Wolverine pipeline.
+            // The middleware must persist the AppUser (auto-provision or login timestamp)
+            // before endpoint handlers run, so Wolverine's transactional middleware
+            // cannot manage this save. This is safe because neither AppUser.Create()
+            // nor RecordLogin() raise domain events — no events will be silently lost.
             await db.SaveChangesAsync();
+
+            var permissions = appUser.IsActive
+                ? Permissions.GetForRole(appUser.Role)
+                : [];
 
             enrichmentData = new EnrichmentData(
                 AppUserId: appUser.Id,
                 OrganizationId: appUser.OrganizationId,
                 Role: appUser.Role,
-                Permissions: Permissions.GetForRole(appUser.Role));
+                Permissions: permissions);
 
             cache.Set(cacheKey, enrichmentData, CacheTtl);
         }
 
-        if (enrichmentData is null)
-        {
-            return;
-        }
-
         var claimsList = new List<Claim>
         {
-            new("app_user_id", enrichmentData.AppUserId.ToString()),
+            new("app_user_id", enrichmentData!.AppUserId.ToString()),
         };
 
         if (enrichmentData.OrganizationId.HasValue)
