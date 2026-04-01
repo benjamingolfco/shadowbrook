@@ -13,10 +13,11 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
         builder.HasKey(u => u.Id);
         builder.Property(u => u.Id).ValueGeneratedNever();
 
-        builder.HasIndex(u => u.IdentityId).IsUnique();
-        builder.Property(u => u.IdentityId).IsRequired().HasMaxLength(100);
+        builder.HasIndex(u => u.IdentityId).IsUnique().HasFilter("[IdentityId] IS NOT NULL");
+        builder.Property(u => u.IdentityId).IsRequired(false).HasMaxLength(100);
         builder.Property(u => u.Email).IsRequired().HasMaxLength(320);
-        builder.Property(u => u.DisplayName).IsRequired().HasMaxLength(200);
+        builder.Property(u => u.FirstName).IsRequired(false).HasMaxLength(100);
+        builder.Property(u => u.LastName).IsRequired(false).HasMaxLength(100);
         builder.Property(u => u.Role).HasConversion<string>().HasMaxLength(20);
         builder.Property(u => u.IsActive);
         builder.Property(u => u.CreatedAt);

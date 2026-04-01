@@ -1,3 +1,4 @@
+using Shadowbrook.Domain.AppUserAggregate.Events;
 using Shadowbrook.Domain.AppUserAggregate.Exceptions;
 using Shadowbrook.Domain.Common;
 
@@ -5,9 +6,10 @@ namespace Shadowbrook.Domain.AppUserAggregate;
 
 public class AppUser : Entity
 {
-    public string IdentityId { get; private set; } = string.Empty;
+    public string? IdentityId { get; private set; }
     public string Email { get; private set; } = string.Empty;
-    public string DisplayName { get; private set; } = string.Empty;
+    public string? FirstName { get; private set; }
+    public string? LastName { get; private set; }
     public AppUserRole Role { get; private set; }
     public Guid? OrganizationId { get; private set; }
     public bool IsActive { get; private set; }
@@ -16,45 +18,83 @@ public class AppUser : Entity
 
     private AppUser() { } // EF
 
-    public static AppUser CreateAdmin(string identityId, string email, string displayName)
+    public static AppUser CreateAdmin(string email)
     {
-        return new AppUser
+        var user = new AppUser
         {
             Id = Guid.CreateVersion7(),
-            IdentityId = identityId,
             Email = email.Trim(),
-            DisplayName = displayName.Trim(),
             Role = AppUserRole.Admin,
             OrganizationId = null,
-            IsActive = true,
+            IsActive = false,
             CreatedAt = DateTimeOffset.UtcNow,
         };
+
+        user.AddDomainEvent(new AppUserCreated
+        {
+            AppUserId = user.Id,
+            Email = user.Email,
+            Role = user.Role,
+        });
+
+        return user;
     }
 
-    public static AppUser CreateOperator(string identityId, string email, string displayName, Guid organizationId)
+    public static AppUser CreateOperator(string email, Guid organizationId)
     {
         if (organizationId == Guid.Empty)
         {
             throw new EmptyOrganizationIdException();
         }
 
-        return new AppUser
+        var user = new AppUser
         {
             Id = Guid.CreateVersion7(),
-            IdentityId = identityId,
             Email = email.Trim(),
-            DisplayName = displayName.Trim(),
             Role = AppUserRole.Operator,
             OrganizationId = organizationId,
-            IsActive = true,
+            IsActive = false,
             CreatedAt = DateTimeOffset.UtcNow,
         };
+
+        user.AddDomainEvent(new AppUserCreated
+        {
+            AppUserId = user.Id,
+            Email = user.Email,
+            Role = user.Role,
+        });
+
+        return user;
+    }
+
+    public void CompleteIdentitySetup(string identityId, string firstName, string lastName)
+    {
+        if (this.IdentityId is not null && this.IdentityId == identityId)
+        {
+            return; // Idempotent — already linked to this identity
+        }
+
+        if (this.IdentityId is not null)
+        {
+            throw new IdentityAlreadyLinkedException();
+        }
+
+        this.IdentityId = identityId;
+        this.FirstName = firstName;
+        this.LastName = lastName;
+        this.IsActive = true;
+
+        AddDomainEvent(new AppUserSetupCompleted
+        {
+            AppUserId = this.Id,
+            Email = this.Email,
+        });
     }
 
     public void MakeAdmin()
     {
-        Role = AppUserRole.Admin;
-        OrganizationId = null;
+        this.Role = AppUserRole.Admin;
+        this.OrganizationId = null;
     }
 
     public void AssignToOrganization(Guid organizationId)
@@ -64,13 +104,13 @@ public class AppUser : Entity
             throw new EmptyOrganizationIdException();
         }
 
-        Role = AppUserRole.Operator;
-        OrganizationId = organizationId;
+        this.Role = AppUserRole.Operator;
+        this.OrganizationId = organizationId;
     }
 
-    public void RecordLogin() => LastLoginAt = DateTimeOffset.UtcNow;
+    public void RecordLogin() => this.LastLoginAt = DateTimeOffset.UtcNow;
 
-    public void Deactivate() => IsActive = false;
+    public void Deactivate() => this.IsActive = false;
 
-    public void Activate() => IsActive = true;
+    public void Activate() => this.IsActive = true;
 }

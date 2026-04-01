@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -16,6 +17,7 @@ using Shadowbrook.Api.Infrastructure.Middleware;
 using Shadowbrook.Api.Infrastructure.Observability;
 using Shadowbrook.Api.Infrastructure.Repositories;
 using Shadowbrook.Api.Infrastructure.Services;
+using Shadowbrook.Domain.AppUserAggregate;
 using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseAggregate;
@@ -235,5 +237,27 @@ app.MapWolverineEndpoints(opts =>
     opts.AddMiddleware(typeof(CourseExistsMiddleware),
         chain => chain.RoutePattern?.RawText?.Contains("{courseId}") == true);
 });
+
+// Seed admin accounts from configuration
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var seedAuthSettings = scope.ServiceProvider.GetRequiredService<IOptions<AuthSettings>>().Value;
+    var seedEmails = seedAuthSettings.GetSeedAdminEmailsList();
+    if (seedEmails.Length > 0)
+    {
+        var seedDb = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        foreach (var email in seedEmails)
+        {
+            var exists = await seedDb.AppUsers.AnyAsync(u => u.Email == email);
+            if (!exists)
+            {
+                var admin = AppUser.CreateAdmin(email);
+                seedDb.AppUsers.Add(admin);
+            }
+        }
+
+        await seedDb.SaveChangesAsync();
+    }
+}
 
 app.Run();

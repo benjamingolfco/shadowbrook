@@ -1,4 +1,5 @@
 using Shadowbrook.Domain.AppUserAggregate;
+using Shadowbrook.Domain.AppUserAggregate.Events;
 using Shadowbrook.Domain.AppUserAggregate.Exceptions;
 
 namespace Shadowbrook.Domain.Tests.AppUserAggregate;
@@ -8,40 +9,44 @@ public class AppUserTests
     [Fact]
     public void CreateAdmin_SetsAdminRoleAndNullOrganizationId()
     {
-        var user = AppUser.CreateAdmin("entra-oid-admin", "admin@shadowbrook.com", "Admin");
+        var user = AppUser.CreateAdmin("admin@shadowbrook.com");
 
         Assert.NotEqual(Guid.Empty, user.Id);
-        Assert.Equal("entra-oid-admin", user.IdentityId);
+        Assert.Null(user.IdentityId);
         Assert.Equal("admin@shadowbrook.com", user.Email);
-        Assert.Equal("Admin", user.DisplayName);
+        Assert.Null(user.FirstName);
+        Assert.Null(user.LastName);
         Assert.Equal(AppUserRole.Admin, user.Role);
         Assert.Null(user.OrganizationId);
-        Assert.True(user.IsActive);
+        Assert.False(user.IsActive);
         Assert.True(user.CreatedAt >= DateTimeOffset.UtcNow.AddSeconds(-2));
         Assert.Null(user.LastLoginAt);
+        Assert.Contains(user.DomainEvents, e => e is AppUserCreated);
     }
 
     [Fact]
     public void CreateOperator_SetsOperatorRoleAndOrganizationId()
     {
         var orgId = Guid.CreateVersion7();
-        var user = AppUser.CreateOperator("entra-oid-123", "jane@example.com", "Jane Smith", orgId);
+        var user = AppUser.CreateOperator("jane@example.com", orgId);
 
         Assert.NotEqual(Guid.Empty, user.Id);
-        Assert.Equal("entra-oid-123", user.IdentityId);
+        Assert.Null(user.IdentityId);
         Assert.Equal("jane@example.com", user.Email);
-        Assert.Equal("Jane Smith", user.DisplayName);
+        Assert.Null(user.FirstName);
+        Assert.Null(user.LastName);
         Assert.Equal(AppUserRole.Operator, user.Role);
         Assert.Equal(orgId, user.OrganizationId);
-        Assert.True(user.IsActive);
+        Assert.False(user.IsActive);
         Assert.True(user.CreatedAt >= DateTimeOffset.UtcNow.AddSeconds(-2));
         Assert.Null(user.LastLoginAt);
+        Assert.Contains(user.DomainEvents, e => e is AppUserCreated);
     }
 
     [Fact]
     public void RecordLogin_UpdatesLastLoginAt()
     {
-        var user = AppUser.CreateOperator("oid", "e@e.com", "Test", Guid.CreateVersion7());
+        var user = AppUser.CreateOperator("e@e.com", Guid.CreateVersion7());
 
         user.RecordLogin();
 
@@ -52,7 +57,8 @@ public class AppUserTests
     [Fact]
     public void Deactivate_SetsIsActiveFalse()
     {
-        var user = AppUser.CreateOperator("oid", "e@e.com", "Test", Guid.CreateVersion7());
+        var user = AppUser.CreateOperator("e@e.com", Guid.CreateVersion7());
+        user.CompleteIdentitySetup("oid", "Test", "User");
 
         user.Deactivate();
 
@@ -62,7 +68,8 @@ public class AppUserTests
     [Fact]
     public void Activate_SetsIsActiveTrue()
     {
-        var user = AppUser.CreateOperator("oid", "e@e.com", "Test", Guid.CreateVersion7());
+        var user = AppUser.CreateOperator("e@e.com", Guid.CreateVersion7());
+        user.CompleteIdentitySetup("oid", "Test", "User");
         user.Deactivate();
 
         user.Activate();
@@ -74,7 +81,7 @@ public class AppUserTests
     public void MakeAdmin_SetsAdminRoleAndClearsOrganizationId()
     {
         var orgId = Guid.CreateVersion7();
-        var user = AppUser.CreateOperator("oid", "e@e.com", "Test", orgId);
+        var user = AppUser.CreateOperator("e@e.com", orgId);
 
         user.MakeAdmin();
 
@@ -85,7 +92,7 @@ public class AppUserTests
     [Fact]
     public void AssignToOrganization_SetsOperatorRoleAndOrganizationId()
     {
-        var user = AppUser.CreateAdmin("oid", "e@e.com", "Test");
+        var user = AppUser.CreateAdmin("e@e.com");
         var newOrgId = Guid.CreateVersion7();
 
         user.AssignToOrganization(newOrgId);
@@ -97,13 +104,51 @@ public class AppUserTests
     [Fact]
     public void CreateOperator_WithEmptyGuid_Throws() =>
         Assert.Throws<EmptyOrganizationIdException>(() =>
-            AppUser.CreateOperator("oid", "e@e.com", "Test", Guid.Empty));
+            AppUser.CreateOperator("e@e.com", Guid.Empty));
 
     [Fact]
     public void AssignToOrganization_WithEmptyGuid_Throws()
     {
-        var user = AppUser.CreateAdmin("oid", "e@e.com", "Test");
+        var user = AppUser.CreateAdmin("e@e.com");
 
         Assert.Throws<EmptyOrganizationIdException>(() => user.AssignToOrganization(Guid.Empty));
+    }
+
+    [Fact]
+    public void CompleteIdentitySetup_SetsIdentityAndActivates()
+    {
+        var user = AppUser.CreateAdmin("admin@example.com");
+        user.ClearDomainEvents();
+
+        user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
+
+        Assert.Equal("entra-oid-123", user.IdentityId);
+        Assert.Equal("Jane", user.FirstName);
+        Assert.Equal("Smith", user.LastName);
+        Assert.True(user.IsActive);
+        Assert.Contains(user.DomainEvents, e => e is AppUserSetupCompleted);
+    }
+
+    [Fact]
+    public void CompleteIdentitySetup_SameOid_IsIdempotent()
+    {
+        var user = AppUser.CreateAdmin("admin@example.com");
+        user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
+        user.ClearDomainEvents();
+
+        user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
+
+        Assert.Empty(user.DomainEvents);
+        Assert.Equal("entra-oid-123", user.IdentityId);
+    }
+
+    [Fact]
+    public void CompleteIdentitySetup_DifferentOid_Throws()
+    {
+        var user = AppUser.CreateAdmin("admin@example.com");
+        user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
+
+        Assert.Throws<IdentityAlreadyLinkedException>(
+            () => user.CompleteIdentitySetup("different-oid", "Jane", "Smith"));
     }
 }

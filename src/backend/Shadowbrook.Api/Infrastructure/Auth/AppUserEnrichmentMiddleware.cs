@@ -1,9 +1,10 @@
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
+using Shadowbrook.Api.Features.Auth.Handlers;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.AppUserAggregate;
+using Wolverine;
 
 namespace Shadowbrook.Api.Infrastructure.Auth;
 
@@ -16,22 +17,26 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next, ILoggerFactory lo
     private readonly RequestDelegate next = next;
     private readonly ILogger<AppUserEnrichmentMiddleware> logger = loggerFactory.CreateLogger<AppUserEnrichmentMiddleware>();
 
-    public async Task InvokeAsync(HttpContext context, ApplicationDbContext db, IMemoryCache cache, IOptions<AuthSettings> authOptions)
+    public async Task InvokeAsync(HttpContext context, ApplicationDbContext db, IMemoryCache cache, IMessageBus bus)
     {
         var oid = context.User?.FindFirst("oid")?.Value
             ?? context.User?.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value;
 
         if (context.User?.Identity?.IsAuthenticated == true && oid is not null)
         {
-            var seedAdminEmails = authOptions.Value.GetSeedAdminEmailsList();
-            await EnrichFromAppUserAsync(context, db, cache, this.logger, oid, seedAdminEmails);
+            var result = await EnrichFromAppUserAsync(context, db, cache, bus, this.logger, oid);
+            if (!result)
+            {
+                return; // 403 already written
+            }
         }
 
         await this.next(context);
     }
 
-    private static async Task EnrichFromAppUserAsync(
-        HttpContext context, ApplicationDbContext db, IMemoryCache cache, ILogger<AppUserEnrichmentMiddleware> logger, string oid, string[] seedAdminEmails)
+    private static async Task<bool> EnrichFromAppUserAsync(
+        HttpContext context, ApplicationDbContext db, IMemoryCache cache, IMessageBus bus,
+        ILogger<AppUserEnrichmentMiddleware> logger, string oid)
     {
         var cacheKey = CacheKey(oid);
 
@@ -42,25 +47,29 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next, ILoggerFactory lo
 
             if (appUser is null)
             {
-                var email = context.User?.FindFirst("emails")?.Value
-                    ?? context.User?.FindFirst("email")?.Value
-                    ?? context.User?.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
-                    ?? context.User?.FindFirst("preferred_username")?.Value
-                    ?? string.Empty;
+                var email = ExtractEmail(context);
 
-                logger.LogWarning("No AppUser for oid {Oid}. Email resolved to: {Email}. SeedAdminEmails: {SeedAdmins}. All claims: {Claims}",
-                    oid, email, string.Join(", ", seedAdminEmails),
-                    string.Join(", ", context.User?.Claims.Select(c => $"{c.Type}={c.Value}") ?? []));
-
-                if (!seedAdminEmails.Any(e => e.Equals(email, StringComparison.OrdinalIgnoreCase)))
+                if (string.IsNullOrEmpty(email))
                 {
-                    // User not in system and not a seed admin — skip enrichment, auth pipeline will deny
-                    return;
+                    logger.LogWarning("No AppUser for oid {Oid} and no email claim found", oid);
+                    return await WriteNoAccountResponse(context);
                 }
 
-                var name = context.User?.FindFirst("name")?.Value ?? string.Empty;
-                appUser = AppUser.CreateAdmin(oid, email, name);
-                db.AppUsers.Add(appUser);
+                appUser = await db.AppUsers
+                    .FirstOrDefaultAsync(u => u.Email == email && u.IdentityId == null);
+
+                if (appUser is null)
+                {
+                    logger.LogWarning("No AppUser for oid {Oid} or email {Email}", oid, email);
+                    return await WriteNoAccountResponse(context);
+                }
+
+                var firstName = context.User?.FindFirst("given_name")?.Value ?? string.Empty;
+                var lastName = context.User?.FindFirst("family_name")?.Value ?? string.Empty;
+
+                await bus.InvokeAsync(new CompleteIdentitySetupCommand(appUser.Id, oid, firstName, lastName));
+
+                await db.Entry(appUser).ReloadAsync();
             }
 
             if (appUser.IsActive)
@@ -68,11 +77,6 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next, ILoggerFactory lo
                 appUser.RecordLogin();
             }
 
-            // This SaveChangesAsync is intentionally outside the Wolverine pipeline.
-            // The middleware must persist the AppUser (auto-provision or login timestamp)
-            // before endpoint handlers run, so Wolverine's transactional middleware
-            // cannot manage this save. This is safe because neither AppUser.CreateAdmin()
-            // nor RecordLogin() raise domain events — no events will be silently lost.
             await db.SaveChangesAsync();
 
             var permissions = appUser.IsActive
@@ -106,6 +110,21 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next, ILoggerFactory lo
         }
 
         context.User!.AddIdentity(new ClaimsIdentity(claimsList));
+        return true;
+    }
+
+    private static string ExtractEmail(HttpContext context) =>
+        context.User?.FindFirst("emails")?.Value
+        ?? context.User?.FindFirst("email")?.Value
+        ?? context.User?.FindFirst(ClaimTypes.Email)?.Value
+        ?? context.User?.FindFirst("preferred_username")?.Value
+        ?? string.Empty;
+
+    private static async Task<bool> WriteNoAccountResponse(HttpContext context)
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        await context.Response.WriteAsJsonAsync(new { reason = "no_account" });
+        return false;
     }
 
     private sealed record EnrichmentData(

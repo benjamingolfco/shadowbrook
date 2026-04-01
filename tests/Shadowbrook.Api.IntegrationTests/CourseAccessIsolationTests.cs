@@ -35,7 +35,8 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
         // Seed operator in the same org
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var operatorUser = AppUser.CreateOperator("operator-own-org", "op@own.com", "Op Own", tenantId);
+        var operatorUser = AppUser.CreateOperator("op@own.com", tenantId);
+        operatorUser.CompleteIdentitySetup("operator-own-org", "Op", "Own");
         db.AppUsers.Add(operatorUser);
         await db.SaveChangesAsync();
 
@@ -121,7 +122,8 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
         var orgB = Organization.Create($"Org-B-{operatorIdentityId}");
         var courseA = Course.Create(orgA.Id, $"Course-A-{operatorIdentityId}", TestTimeZones.Chicago);
         var courseB = Course.Create(orgB.Id, $"Course-B-{operatorIdentityId}", TestTimeZones.Chicago);
-        var operatorA = AppUser.CreateOperator(operatorIdentityId, "operator@orga.com", "Operator A", orgA.Id);
+        var operatorA = AppUser.CreateOperator("operator@orga.com", orgA.Id);
+        operatorA.CompleteIdentitySetup(operatorIdentityId, "Operator", "A");
 
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

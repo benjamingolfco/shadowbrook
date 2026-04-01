@@ -67,7 +67,8 @@ public static class AuthEndpoints
         var response = new MeResponse(
             appUser.Id,
             appUser.Email,
-            appUser.DisplayName,
+            appUser.FirstName,
+            appUser.LastName,
             appUser.Role.ToString(),
             org,
             courses,
@@ -84,7 +85,8 @@ public static class AuthEndpoints
             .Select(u => new UserListResponse(
                 u.Id,
                 u.Email,
-                u.DisplayName,
+                u.FirstName,
+                u.LastName,
                 u.Role.ToString(),
                 u.OrganizationId,
                 u.IsActive))
@@ -99,24 +101,25 @@ public static class AuthEndpoints
         CreateUserRequest request,
         [NotBody] ApplicationDbContext db)
     {
-        var exists = await db.AppUsers.AnyAsync(u => u.IdentityId == request.IdentityId);
+        var exists = await db.AppUsers.AnyAsync(u => u.Email == request.Email);
         if (exists)
         {
-            return Results.Conflict(new { error = "A user with this identity ID already exists." });
+            return Results.Conflict(new { error = "A user with this email already exists." });
         }
 
         var role = Enum.Parse<AppUserRole>(request.Role, ignoreCase: true);
 
         var appUser = role == AppUserRole.Admin
-            ? AppUser.CreateAdmin(request.IdentityId, request.Email, request.DisplayName)
-            : AppUser.CreateOperator(request.IdentityId, request.Email, request.DisplayName, request.OrganizationId!.Value);
+            ? AppUser.CreateAdmin(request.Email)
+            : AppUser.CreateOperator(request.Email, request.OrganizationId!.Value);
 
         db.AppUsers.Add(appUser);
 
         var response = new UserListResponse(
             appUser.Id,
             appUser.Email,
-            appUser.DisplayName,
+            appUser.FirstName,
+            appUser.LastName,
             appUser.Role.ToString(),
             appUser.OrganizationId,
             appUser.IsActive);
@@ -166,12 +169,16 @@ public static class AuthEndpoints
             }
         }
 
-        cache.Remove(AppUserEnrichmentMiddleware.CacheKey(appUser.IdentityId));
+        if (appUser.IdentityId is not null)
+        {
+            cache.Remove(AppUserEnrichmentMiddleware.CacheKey(appUser.IdentityId));
+        }
 
         var response = new UserListResponse(
             appUser.Id,
             appUser.Email,
-            appUser.DisplayName,
+            appUser.FirstName,
+            appUser.LastName,
             appUser.Role.ToString(),
             appUser.OrganizationId,
             appUser.IsActive);
@@ -184,7 +191,8 @@ public static class AuthEndpoints
 public sealed record MeResponse(
     Guid Id,
     string Email,
-    string DisplayName,
+    string? FirstName,
+    string? LastName,
     string Role,
     OrgResponse? Organization,
     List<CourseResponse> Courses,
@@ -197,15 +205,14 @@ public sealed record CourseResponse(Guid Id, string Name);
 public sealed record UserListResponse(
     Guid Id,
     string Email,
-    string DisplayName,
+    string? FirstName,
+    string? LastName,
     string Role,
     Guid? OrganizationId,
     bool IsActive);
 
 public sealed record CreateUserRequest(
-    string IdentityId,
     string Email,
-    string DisplayName,
     string Role,
     Guid? OrganizationId);
 
@@ -215,9 +222,7 @@ public sealed class CreateUserRequestValidator : AbstractValidator<CreateUserReq
 {
     public CreateUserRequestValidator()
     {
-        RuleFor(x => x.IdentityId).NotEmpty();
         RuleFor(x => x.Email).NotEmpty().EmailAddress();
-        RuleFor(x => x.DisplayName).NotEmpty();
         RuleFor(x => x.Role)
             .NotEmpty()
             .Must(r => Enum.TryParse<AppUserRole>(r, ignoreCase: true, out _))

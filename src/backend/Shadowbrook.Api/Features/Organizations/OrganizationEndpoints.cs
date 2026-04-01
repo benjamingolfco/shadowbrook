@@ -43,7 +43,7 @@ public static class OrganizationEndpoints
 
         var users = await db.AppUsers
             .Where(u => u.OrganizationId == id)
-            .Select(u => new { u.Id, u.Email, u.DisplayName, Role = u.Role.ToString(), u.IsActive })
+            .Select(u => new { u.Id, u.Email, u.FirstName, u.LastName, Role = u.Role.ToString(), u.IsActive })
             .ToListAsync();
 
         return Results.Ok(new { org.Id, org.Name, org.CreatedAt, Courses = courses, Users = users });

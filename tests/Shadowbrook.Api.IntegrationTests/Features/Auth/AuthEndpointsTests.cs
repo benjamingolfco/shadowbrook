@@ -29,7 +29,8 @@ public class AuthEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifet
         db.Courses.Add(course);
 
         var identityId = Guid.NewGuid().ToString();
-        var appUser = AppUser.CreateOperator(identityId, "operator@example.com", "Jane Smith", org.Id);
+        var appUser = AppUser.CreateOperator("operator@example.com", org.Id);
+        appUser.CompleteIdentitySetup(identityId, "Jane", "Smith");
         db.AppUsers.Add(appUser);
 
         await db.SaveChangesAsync();
@@ -46,7 +47,8 @@ public class AuthEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifet
         Assert.NotNull(body);
         Assert.Equal(appUser.Id, body!.Id);
         Assert.Equal("operator@example.com", body.Email);
-        Assert.Equal("Jane Smith", body.DisplayName);
+        Assert.Equal("Jane", body.FirstName);
+        Assert.Equal("Smith", body.LastName);
         Assert.Equal("Operator", body.Role);
         Assert.NotNull(body.Organization);
         Assert.Equal(org.Id, body.Organization!.Id);
@@ -70,7 +72,8 @@ public class AuthEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifet
     private sealed record MeResponse(
         Guid Id,
         string Email,
-        string DisplayName,
+        string? FirstName,
+        string? LastName,
         string Role,
         OrgResponse? Organization,
         List<CourseResponse> Courses,
