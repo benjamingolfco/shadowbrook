@@ -95,7 +95,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses/{courseId}")]
-    [Authorize(Policy = "RequireCourseAccess")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> GetCourseById(Guid courseId, ApplicationDbContext db)
     {
         var course = await (
@@ -121,7 +121,7 @@ public static class CourseEndpoints
     }
 
     [WolverinePut("/courses/{courseId}/tee-time-settings")]
-    [Authorize(Policy = "RequireCourseAccess")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> UpdateTeeTimeSettings(
         Guid courseId,
         TeeTimeSettingsRequest request,
@@ -143,7 +143,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses/{courseId}/tee-time-settings")]
-    [Authorize(Policy = "RequireCourseAccess")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> GetTeeTimeSettings(Guid courseId, ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
@@ -165,7 +165,7 @@ public static class CourseEndpoints
     }
 
     [WolverinePut("/courses/{courseId}/pricing")]
-    [Authorize(Policy = "RequireCourseAccess")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> UpdatePricing(
         Guid courseId,
         PricingRequest request,
@@ -184,7 +184,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses/{courseId}/pricing")]
-    [Authorize(Policy = "RequireCourseAccess")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> GetPricing(Guid courseId, ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);

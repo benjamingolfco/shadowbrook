@@ -10,7 +10,7 @@ namespace Shadowbrook.Api.Features.Waitlist.Endpoints;
 public static class RemoveWaitlistEntryEndpoint
 {
     [WolverineDelete("/courses/{courseId}/walkup-waitlist/entries/{entryId}")]
-    [Authorize(Policy = "RequireCourseAccess")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> RemoveEntry(
         Guid courseId,
         Guid entryId,
