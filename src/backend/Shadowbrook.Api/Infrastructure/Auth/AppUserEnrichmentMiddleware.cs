@@ -7,13 +7,14 @@ using Shadowbrook.Domain.AppUserAggregate;
 
 namespace Shadowbrook.Api.Infrastructure.Auth;
 
-public class AppUserEnrichmentMiddleware(RequestDelegate next)
+public class AppUserEnrichmentMiddleware(RequestDelegate next, ILoggerFactory loggerFactory)
 {
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
 
     public static string CacheKey(string oid) => $"appuser:{oid}";
 
     private readonly RequestDelegate next = next;
+    private readonly ILogger<AppUserEnrichmentMiddleware> logger = loggerFactory.CreateLogger<AppUserEnrichmentMiddleware>();
 
     public async Task InvokeAsync(HttpContext context, ApplicationDbContext db, IMemoryCache cache, IOptions<AuthSettings> authOptions)
     {
@@ -23,14 +24,14 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
         if (context.User?.Identity?.IsAuthenticated == true && oid is not null)
         {
             var seedAdminEmails = authOptions.Value.GetSeedAdminEmailsList();
-            await EnrichFromAppUserAsync(context, db, cache, oid, seedAdminEmails);
+            await EnrichFromAppUserAsync(context, db, cache, this.logger, oid, seedAdminEmails);
         }
 
         await this.next(context);
     }
 
     private static async Task EnrichFromAppUserAsync(
-        HttpContext context, ApplicationDbContext db, IMemoryCache cache, string oid, string[] seedAdminEmails)
+        HttpContext context, ApplicationDbContext db, IMemoryCache cache, ILogger<AppUserEnrichmentMiddleware> logger, string oid, string[] seedAdminEmails)
     {
         var cacheKey = CacheKey(oid);
 
@@ -43,8 +44,13 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
             {
                 var email = context.User?.FindFirst("emails")?.Value
                     ?? context.User?.FindFirst("email")?.Value
+                    ?? context.User?.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
                     ?? context.User?.FindFirst("preferred_username")?.Value
                     ?? string.Empty;
+
+                logger.LogWarning("No AppUser for oid {Oid}. Email resolved to: {Email}. SeedAdminEmails: {SeedAdmins}. All claims: {Claims}",
+                    oid, email, string.Join(", ", seedAdminEmails),
+                    string.Join(", ", context.User?.Claims.Select(c => $"{c.Type}={c.Value}") ?? []));
 
                 if (!seedAdminEmails.Any(e => e.Equals(email, StringComparison.OrdinalIgnoreCase)))
                 {

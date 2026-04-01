@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
@@ -21,6 +22,9 @@ public class AppUserEnrichmentMiddlewareTests
 
     private static IMemoryCache CreateMemoryCache() =>
         new MemoryCache(Options.Create(new MemoryCacheOptions()));
+
+    private static AppUserEnrichmentMiddleware CreateMiddleware(RequestDelegate next) =>
+        new(next, NullLoggerFactory.Instance);
 
     private static DefaultHttpContext CreateAuthenticatedContext(string oid, string? email = null, string? name = null)
     {
@@ -46,7 +50,7 @@ public class AppUserEnrichmentMiddlewareTests
         await using var db = CreateInMemoryDbContext();
         using var cache = CreateMemoryCache();
         var nextCalled = false;
-        var middleware = new AppUserEnrichmentMiddleware(_ =>
+        var middleware = CreateMiddleware(_ =>
         {
             nextCalled = true;
             return Task.CompletedTask;
@@ -74,7 +78,7 @@ public class AppUserEnrichmentMiddlewareTests
         db.AppUsers.Add(appUser);
         await db.SaveChangesAsync();
 
-        var middleware = new AppUserEnrichmentMiddleware(_ => Task.CompletedTask);
+        var middleware = CreateMiddleware(_ => Task.CompletedTask);
         var context = CreateAuthenticatedContext(oid);
 
         await middleware.InvokeAsync(context, db, cache, Options.Create(new AuthSettings()));
@@ -92,7 +96,7 @@ public class AppUserEnrichmentMiddlewareTests
         using var cache = CreateMemoryCache();
 
         var oid = Guid.NewGuid().ToString();
-        var middleware = new AppUserEnrichmentMiddleware(_ => Task.CompletedTask);
+        var middleware = CreateMiddleware(_ => Task.CompletedTask);
         var context = CreateAuthenticatedContext(oid, email: "seed-admin@shadowbrook.com", name: "Seed Admin");
         var authSettings = new AuthSettings { SeedAdminEmails = "seed-admin@shadowbrook.com" };
 
@@ -117,7 +121,7 @@ public class AppUserEnrichmentMiddlewareTests
 
         var oid = Guid.NewGuid().ToString();
         var nextCalled = false;
-        var middleware = new AppUserEnrichmentMiddleware(_ =>
+        var middleware = CreateMiddleware(_ =>
         {
             nextCalled = true;
             return Task.CompletedTask;
@@ -146,7 +150,7 @@ public class AppUserEnrichmentMiddlewareTests
         await db.SaveChangesAsync();
 
         var nextCalled = false;
-        var middleware = new AppUserEnrichmentMiddleware(_ =>
+        var middleware = CreateMiddleware(_ =>
         {
             nextCalled = true;
             return Task.CompletedTask;
@@ -175,7 +179,7 @@ public class AppUserEnrichmentMiddlewareTests
         db.AppUsers.Add(appUser);
         await db.SaveChangesAsync();
 
-        var middleware = new AppUserEnrichmentMiddleware(_ => Task.CompletedTask);
+        var middleware = CreateMiddleware(_ => Task.CompletedTask);
         var context = CreateAuthenticatedContext(oid);
 
         await middleware.InvokeAsync(context, db, cache, Options.Create(new AuthSettings()));
