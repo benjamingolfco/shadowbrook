@@ -50,6 +50,12 @@ public class Course : Entity
         };
     }
 
+    public void UpdateDetails(string name, string timeZoneId)
+    {
+        Name = name.Trim();
+        TimeZoneId = timeZoneId;
+    }
+
     public void UpdateTeeTimeSettings(int intervalMinutes, TimeOnly firstTeeTime, TimeOnly lastTeeTime)
     {
         TeeTimeIntervalMinutes = intervalMinutes;
@@ -58,4 +64,6 @@ public class Course : Entity
     }
 
     public void UpdatePricing(decimal flatRatePrice) => FlatRatePrice = flatRatePrice;
+
+    public void SetFeatureFlags(Dictionary<string, bool> flags) => FeatureFlags = flags;
 }

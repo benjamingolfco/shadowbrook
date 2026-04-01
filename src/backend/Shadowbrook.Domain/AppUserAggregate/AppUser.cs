@@ -14,14 +14,9 @@ public class AppUser : Entity
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? LastLoginAt { get; private set; }
 
-    private readonly List<CourseAssignment> courseAssignments = [];
-    public IReadOnlyCollection<CourseAssignment> CourseAssignments => this.courseAssignments.AsReadOnly();
-
     private AppUser() { } // EF
 
-    public static AppUser Create(
-        string identityId, string email, string displayName,
-        AppUserRole role, Guid? organizationId)
+    public static AppUser CreateAdmin(string identityId, string email, string displayName)
     {
         return new AppUser
         {
@@ -29,11 +24,48 @@ public class AppUser : Entity
             IdentityId = identityId,
             Email = email.Trim(),
             DisplayName = displayName.Trim(),
-            Role = role,
+            Role = AppUserRole.Admin,
+            OrganizationId = null,
+            IsActive = true,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
+    public static AppUser CreateOperator(string identityId, string email, string displayName, Guid organizationId)
+    {
+        if (organizationId == Guid.Empty)
+        {
+            throw new EmptyOrganizationIdException();
+        }
+
+        return new AppUser
+        {
+            Id = Guid.CreateVersion7(),
+            IdentityId = identityId,
+            Email = email.Trim(),
+            DisplayName = displayName.Trim(),
+            Role = AppUserRole.Operator,
             OrganizationId = organizationId,
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow,
         };
+    }
+
+    public void MakeAdmin()
+    {
+        Role = AppUserRole.Admin;
+        OrganizationId = null;
+    }
+
+    public void AssignToOrganization(Guid organizationId)
+    {
+        if (organizationId == Guid.Empty)
+        {
+            throw new EmptyOrganizationIdException();
+        }
+
+        Role = AppUserRole.Operator;
+        OrganizationId = organizationId;
     }
 
     public void RecordLogin() => LastLoginAt = DateTimeOffset.UtcNow;
@@ -41,23 +73,4 @@ public class AppUser : Entity
     public void Deactivate() => IsActive = false;
 
     public void Activate() => IsActive = true;
-
-    public CourseAssignment AssignCourse(Guid courseId)
-    {
-        if (this.courseAssignments.Any(a => a.CourseId == courseId))
-        {
-            throw new CourseAlreadyAssignedException(courseId);
-        }
-
-        var assignment = CourseAssignment.Create(Id, courseId);
-        this.courseAssignments.Add(assignment);
-        return assignment;
-    }
-
-    public void UnassignCourse(Guid courseId)
-    {
-        var assignment = this.courseAssignments.FirstOrDefault(a => a.CourseId == courseId)
-            ?? throw new CourseNotAssignedException(courseId);
-        this.courseAssignments.Remove(assignment);
-    }
 }

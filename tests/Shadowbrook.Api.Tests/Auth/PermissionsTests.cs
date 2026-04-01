@@ -14,17 +14,9 @@ public class PermissionsTests
     }
 
     [Fact]
-    public void GetPermissions_Owner_ReturnsAppAccess()
+    public void GetPermissions_Operator_ReturnsAppAccess()
     {
-        var permissions = Permissions.GetForRole(AppUserRole.Owner);
-        Assert.Contains(Permissions.AppAccess, permissions);
-        Assert.DoesNotContain(Permissions.UsersManage, permissions);
-    }
-
-    [Fact]
-    public void GetPermissions_Staff_ReturnsAppAccess()
-    {
-        var permissions = Permissions.GetForRole(AppUserRole.Staff);
+        var permissions = Permissions.GetForRole(AppUserRole.Operator);
         Assert.Contains(Permissions.AppAccess, permissions);
         Assert.DoesNotContain(Permissions.UsersManage, permissions);
     }

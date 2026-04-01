@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -42,21 +43,25 @@ public static class AuthEndpoints
 
         List<CourseResponse> courses;
 
-        if (currentUser.HasUniversalCourseAccess)
+        if (appUser.Role == AppUserRole.Admin)
         {
             courses = await db.Courses
                 .IgnoreQueryFilters()
                 .Select(c => new CourseResponse(c.Id, c.Name))
                 .ToListAsync();
         }
-        else
+        else if (appUser.Role == AppUserRole.Operator && appUser.OrganizationId.HasValue)
         {
-            var courseIds = currentUser.CourseIds;
+            var orgId = appUser.OrganizationId.Value;
             courses = await db.Courses
                 .IgnoreQueryFilters()
-                .Where(c => courseIds.Contains(c.Id))
+                .Where(c => c.OrganizationId == orgId)
                 .Select(c => new CourseResponse(c.Id, c.Name))
                 .ToListAsync();
+        }
+        else
+        {
+            courses = [];
         }
 
         var response = new MeResponse(
@@ -76,15 +81,13 @@ public static class AuthEndpoints
     public static async Task<IResult> GetUsers([NotBody] ApplicationDbContext db)
     {
         var users = await db.AppUsers
-            .Include(u => u.CourseAssignments)
             .Select(u => new UserListResponse(
                 u.Id,
                 u.Email,
                 u.DisplayName,
                 u.Role.ToString(),
                 u.OrganizationId,
-                u.IsActive,
-                u.CourseAssignments.Select(a => a.CourseId).ToList()))
+                u.IsActive))
             .ToListAsync();
 
         return Results.Ok(users);
@@ -102,17 +105,11 @@ public static class AuthEndpoints
             return Results.Conflict(new { error = "A user with this identity ID already exists." });
         }
 
-        if (!Enum.TryParse<AppUserRole>(request.Role, ignoreCase: true, out var role))
-        {
-            return Results.BadRequest(new { error = $"Invalid role: {request.Role}." });
-        }
+        var role = Enum.Parse<AppUserRole>(request.Role, ignoreCase: true);
 
-        var appUser = AppUser.Create(
-            request.IdentityId,
-            request.Email,
-            request.DisplayName,
-            role,
-            request.OrganizationId);
+        var appUser = role == AppUserRole.Admin
+            ? AppUser.CreateAdmin(request.IdentityId, request.Email, request.DisplayName)
+            : AppUser.CreateOperator(request.IdentityId, request.Email, request.DisplayName, request.OrganizationId!.Value);
 
         db.AppUsers.Add(appUser);
 
@@ -122,8 +119,7 @@ public static class AuthEndpoints
             appUser.DisplayName,
             appUser.Role.ToString(),
             appUser.OrganizationId,
-            appUser.IsActive,
-            []);
+            appUser.IsActive);
 
         return Results.Created($"/auth/users/{appUser.Id}", response);
     }
@@ -137,7 +133,6 @@ public static class AuthEndpoints
         [NotBody] IMemoryCache cache)
     {
         var appUser = await db.AppUsers
-            .Include(u => u.CourseAssignments)
             .FirstOrDefaultAsync(u => u.Id == id);
 
         if (appUser is null)
@@ -157,53 +152,17 @@ public static class AuthEndpoints
             }
         }
 
-        cache.Remove(AppUserEnrichmentMiddleware.CacheKey(appUser.IdentityId));
-
-        var response = new UserListResponse(
-            appUser.Id,
-            appUser.Email,
-            appUser.DisplayName,
-            appUser.Role.ToString(),
-            appUser.OrganizationId,
-            appUser.IsActive,
-            appUser.CourseAssignments.Select(a => a.CourseId).ToList());
-
-        return Results.Ok(response);
-    }
-
-    [WolverinePut("/auth/users/{id}/courses")]
-    [Authorize(Policy = "RequireUsersManage")]
-    public static async Task<IResult> UpdateUserCourses(
-        Guid id,
-        UpdateUserCoursesRequest request,
-        [NotBody] ApplicationDbContext db,
-        [NotBody] IMemoryCache cache)
-    {
-        var appUser = await db.AppUsers
-            .Include(u => u.CourseAssignments)
-            .FirstOrDefaultAsync(u => u.Id == id);
-
-        if (appUser is null)
+        if (request.Role is not null)
         {
-            return Results.NotFound();
-        }
+            var newRole = Enum.Parse<AppUserRole>(request.Role, ignoreCase: true);
 
-        // Unassign courses not in the new list
-        var toRemove = appUser.CourseAssignments
-            .Where(a => !request.CourseIds.Contains(a.CourseId))
-            .ToList();
-
-        foreach (var assignment in toRemove)
-        {
-            appUser.UnassignCourse(assignment.CourseId);
-        }
-
-        // Assign courses not already assigned
-        foreach (var courseId in request.CourseIds)
-        {
-            if (!appUser.CourseAssignments.Any(a => a.CourseId == courseId))
+            if (newRole == AppUserRole.Admin)
             {
-                appUser.AssignCourse(courseId);
+                appUser.MakeAdmin();
+            }
+            else
+            {
+                appUser.AssignToOrganization(request.OrganizationId!.Value);
             }
         }
 
@@ -215,11 +174,11 @@ public static class AuthEndpoints
             appUser.DisplayName,
             appUser.Role.ToString(),
             appUser.OrganizationId,
-            appUser.IsActive,
-            appUser.CourseAssignments.Select(a => a.CourseId).ToList());
+            appUser.IsActive);
 
         return Results.Ok(response);
     }
+
 }
 
 public sealed record MeResponse(
@@ -241,8 +200,7 @@ public sealed record UserListResponse(
     string DisplayName,
     string Role,
     Guid? OrganizationId,
-    bool IsActive,
-    List<Guid> CourseIds);
+    bool IsActive);
 
 public sealed record CreateUserRequest(
     string IdentityId,
@@ -251,6 +209,51 @@ public sealed record CreateUserRequest(
     string Role,
     Guid? OrganizationId);
 
-public sealed record UpdateUserRequest(bool? IsActive);
+public sealed record UpdateUserRequest(bool? IsActive, string? Role, Guid? OrganizationId);
 
-public sealed record UpdateUserCoursesRequest(List<Guid> CourseIds);
+public sealed class CreateUserRequestValidator : AbstractValidator<CreateUserRequest>
+{
+    public CreateUserRequestValidator()
+    {
+        RuleFor(x => x.IdentityId).NotEmpty();
+        RuleFor(x => x.Email).NotEmpty().EmailAddress();
+        RuleFor(x => x.DisplayName).NotEmpty();
+        RuleFor(x => x.Role)
+            .NotEmpty()
+            .Must(r => Enum.TryParse<AppUserRole>(r, ignoreCase: true, out _))
+            .WithMessage("Invalid role. Must be Admin or Operator.");
+        RuleFor(x => x.OrganizationId)
+            .NotNull()
+            .When(x => string.Equals(x.Role, "Operator", StringComparison.OrdinalIgnoreCase))
+            .WithMessage("OrganizationId is required for Operator role.");
+        RuleFor(x => x.OrganizationId)
+            .Null()
+            .When(x => string.Equals(x.Role, "Admin", StringComparison.OrdinalIgnoreCase))
+            .WithMessage("Admin users must not have an OrganizationId.");
+        RuleFor(x => x.OrganizationId)
+            .NotEqual(Guid.Empty)
+            .When(x => x.OrganizationId is not null);
+    }
+}
+
+public sealed class UpdateUserRequestValidator : AbstractValidator<UpdateUserRequest>
+{
+    public UpdateUserRequestValidator()
+    {
+        RuleFor(x => x.Role)
+            .Must(r => Enum.TryParse<AppUserRole>(r!, ignoreCase: true, out _))
+            .When(x => x.Role is not null)
+            .WithMessage("Invalid role. Must be Admin or Operator.");
+        RuleFor(x => x.OrganizationId)
+            .NotNull()
+            .When(x => string.Equals(x.Role, "Operator", StringComparison.OrdinalIgnoreCase))
+            .WithMessage("OrganizationId is required for Operator role.");
+        RuleFor(x => x.OrganizationId)
+            .Null()
+            .When(x => string.Equals(x.Role, "Admin", StringComparison.OrdinalIgnoreCase))
+            .WithMessage("Admin users must not have an OrganizationId.");
+        RuleFor(x => x.OrganizationId)
+            .NotEqual(Guid.Empty)
+            .When(x => x.OrganizationId is not null);
+    }
+}

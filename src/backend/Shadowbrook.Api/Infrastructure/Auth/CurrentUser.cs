@@ -31,18 +31,5 @@ public class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUse
     public IReadOnlyList<string> Permissions =>
         User?.FindAll("permission").Select(c => c.Value).ToList() ?? [];
 
-    public IReadOnlyList<Guid> CourseIds =>
-        User?.FindAll("course_id")
-            .Select(c => Guid.TryParse(c.Value, out var id) ? id : (Guid?)null)
-            .Where(id => id.HasValue)
-            .Select(id => id!.Value)
-            .ToList() ?? [];
-
     public bool IsAuthenticated => User?.Identity?.IsAuthenticated ?? false;
-
-    public bool HasUniversalCourseAccess =>
-        User?.FindAll("course_access").Any(c => c.Value == "all") ?? false;
-
-    public bool CanAccessCourse(Guid courseId) =>
-        HasUniversalCourseAccess || CourseIds.Contains(courseId);
 }

@@ -8,11 +8,26 @@ interface AuthGuardProps {
   children: ReactNode;
 }
 
-export default function AuthGuard({ children }: AuthGuardProps) {
+const useDevAuth = import.meta.env.VITE_USE_DEV_AUTH === 'true';
+
+function MsalAuthGuard({ children }: AuthGuardProps) {
   useMsalAuthentication(InteractionType.Redirect, loginRequest);
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading || !isAuthenticated) return null;
 
   return <>{children}</>;
+}
+
+function DevAuthGuard({ children }: AuthGuardProps) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading || !isAuthenticated) return null;
+
+  return <>{children}</>;
+}
+
+export default function AuthGuard(props: AuthGuardProps) {
+  if (useDevAuth) return <DevAuthGuard {...props} />;
+  return <MsalAuthGuard {...props} />;
 }

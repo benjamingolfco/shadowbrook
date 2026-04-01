@@ -34,4 +34,8 @@ public class Organization : Entity
             CreatedAt = DateTimeOffset.UtcNow,
         };
     }
+
+    public void UpdateName(string name) => Name = name.Trim();
+
+    public void SetFeatureFlags(Dictionary<string, bool> flags) => FeatureFlags = flags;
 }

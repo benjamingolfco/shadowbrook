@@ -95,7 +95,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses/{courseId}")]
-    [Authorize(Policy = "RequireCourseAccess")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> GetCourseById(Guid courseId, ApplicationDbContext db)
     {
         var course = await (
@@ -120,8 +120,42 @@ public static class CourseEndpoints
         return course is null ? Results.NotFound() : Results.Ok(course);
     }
 
+    [WolverinePut("/courses/{courseId}")]
+    [Authorize(Policy = "RequireUsersManage")]
+    public static async Task<IResult> UpdateCourse(
+        Guid courseId,
+        UpdateCourseRequest request,
+        [NotBody] ApplicationDbContext db)
+    {
+        var course = await db.Courses
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(c => c.Id == courseId);
+
+        if (course is null)
+        {
+            return Results.NotFound();
+        }
+
+        course.UpdateDetails(request.Name, request.TimeZoneId);
+
+        var tenant = await db.Tenants.FirstOrDefaultAsync(t => t.Id == course.OrganizationId);
+
+        return Results.Ok(new CourseResponse(
+            course.Id,
+            course.Name,
+            course.StreetAddress,
+            course.City,
+            course.State,
+            course.ZipCode,
+            course.ContactEmail,
+            course.ContactPhone,
+            course.TimeZoneId,
+            course.CreatedAt,
+            tenant is null ? null : new TenantInfo(tenant.Id, tenant.OrganizationName)));
+    }
+
     [WolverinePut("/courses/{courseId}/tee-time-settings")]
-    [Authorize(Policy = "RequireCourseAccess")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> UpdateTeeTimeSettings(
         Guid courseId,
         TeeTimeSettingsRequest request,
@@ -143,7 +177,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses/{courseId}/tee-time-settings")]
-    [Authorize(Policy = "RequireCourseAccess")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> GetTeeTimeSettings(Guid courseId, ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
@@ -165,7 +199,7 @@ public static class CourseEndpoints
     }
 
     [WolverinePut("/courses/{courseId}/pricing")]
-    [Authorize(Policy = "RequireCourseAccess")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> UpdatePricing(
         Guid courseId,
         PricingRequest request,
@@ -184,7 +218,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses/{courseId}/pricing")]
-    [Authorize(Policy = "RequireCourseAccess")]
+    [Authorize(Policy = "RequireAppAccess")]
     public static async Task<IResult> GetPricing(Guid courseId, ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
@@ -229,6 +263,8 @@ public record CourseResponse(
 
 public record TenantInfo(Guid Id, string OrganizationName);
 
+public sealed record UpdateCourseRequest(string Name, string TimeZoneId);
+
 public record TeeTimeSettingsRequest(
     int TeeTimeIntervalMinutes,
     TimeOnly FirstTeeTime,
@@ -246,6 +282,24 @@ public record PricingResponse(decimal FlatRatePrice);
 public class CreateCourseRequestValidator : AbstractValidator<CreateCourseRequest>
 {
     public CreateCourseRequestValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty();
+        RuleFor(x => x.TimeZoneId)
+            .NotEmpty().WithMessage("TimeZoneId is required.");
+        RuleFor(x => x.TimeZoneId)
+            .Must(id =>
+            {
+                try { TimeZoneInfo.FindSystemTimeZoneById(id); return true; }
+                catch { return false; }
+            })
+            .When(x => !string.IsNullOrEmpty(x.TimeZoneId))
+            .WithMessage("TimeZoneId is not a valid IANA timezone.");
+    }
+}
+
+public class UpdateCourseRequestValidator : AbstractValidator<UpdateCourseRequest>
+{
+    public UpdateCourseRequestValidator()
     {
         RuleFor(x => x.Name).NotEmpty();
         RuleFor(x => x.TimeZoneId)

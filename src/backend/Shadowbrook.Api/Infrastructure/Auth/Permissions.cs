@@ -10,8 +10,7 @@ public static class Permissions
     private static readonly Dictionary<AppUserRole, string[]> RolePermissions = new()
     {
         [AppUserRole.Admin] = [AppAccess, UsersManage],
-        [AppUserRole.Owner] = [AppAccess],
-        [AppUserRole.Staff] = [AppAccess],
+        [AppUserRole.Operator] = [AppAccess],
     };
 
     public static IReadOnlyList<string> GetForRole(AppUserRole role) =>

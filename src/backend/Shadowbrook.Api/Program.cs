@@ -1,6 +1,10 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Web;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Serilog;
@@ -139,7 +143,29 @@ builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-builder.Services.AddShadowbrookAuth(builder.Configuration);
+// Authentication
+builder.Services.Configure<AuthSettings>(builder.Configuration.GetSection(AuthSettings.SectionName));
+var authSettings = builder.Configuration.GetSection(AuthSettings.SectionName).Get<AuthSettings>()!;
+var useDevAuth = authSettings.UseDevAuth;
+if (useDevAuth)
+{
+    builder.Services.AddAuthentication("DevAuth")
+        .AddScheme<AuthenticationSchemeOptions, DevAuthHandler>("DevAuth", null);
+}
+else
+{
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+}
+
+// Authorization
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("RequireAppAccess", policy =>
+        policy.AddRequirements(new PermissionRequirement(Permissions.AppAccess)))
+    .AddPolicy("RequireUsersManage", policy =>
+        policy.AddRequirements(new PermissionRequirement(Permissions.UsersManage)));
+
+builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
 builder.Services.AddWolverineHttp();
 
@@ -172,17 +198,17 @@ if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testi
 
 app.UseDomainExceptionHandler();
 
+var cspAuthDomain = new Uri(builder.Configuration["AzureAd:Instance"]!).Host;
 app.Use(async (context, next) =>
 {
-    var authInstance = app.Configuration["AzureAd:Instance"]?.TrimEnd('/') ?? "https://login.microsoftonline.com";
     context.Response.Headers.Append(
         "Content-Security-Policy",
         "default-src 'self'; " +
         "script-src 'self'; " +
         "style-src 'self' 'unsafe-inline'; " +
         "img-src 'self' data:; " +
-        $"connect-src 'self' {authInstance}; " +
-        $"frame-src {authInstance};");
+        $"connect-src 'self' https://{cspAuthDomain}; " +
+        $"frame-src https://{cspAuthDomain};");
     await next();
 });
 

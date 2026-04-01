@@ -22,7 +22,6 @@ public static class DomainExceptionHandler
             {
                 context.Response.StatusCode = domainEx switch
                 {
-                    CourseAlreadyAssignedException => StatusCodes.Status409Conflict,
                     GolferAlreadyOnWaitlistException => StatusCodes.Status409Conflict,
                     WaitlistAlreadyExistsException => StatusCodes.Status409Conflict,
                     WaitlistNotClosedException => StatusCodes.Status409Conflict,
@@ -31,10 +30,10 @@ public static class DomainExceptionHandler
                     BookingNotPendingException => StatusCodes.Status409Conflict,
                     BookingNotCancellableException => StatusCodes.Status409Conflict,
                     CannotExtendRemovedEntryException => StatusCodes.Status409Conflict,
-                    CourseNotAssignedException => StatusCodes.Status404NotFound,
                     EntityNotFoundException => StatusCodes.Status404NotFound,
                     InvalidSlotsAvailableException => StatusCodes.Status422UnprocessableEntity,
                     InvalidGroupSizeException => StatusCodes.Status422UnprocessableEntity,
+                    EmptyOrganizationIdException => StatusCodes.Status422UnprocessableEntity,
                     _ => StatusCodes.Status400BadRequest
                 };
                 await context.Response.WriteAsJsonAsync(new { error = domainEx.Message });
