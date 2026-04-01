@@ -11,6 +11,9 @@ public partial class UpdateAppUserRole : Migration
     /// <inheritdoc />
     protected override void Up(MigrationBuilder migrationBuilder)
     {
+        migrationBuilder.Sql("UPDATE [AppUsers] SET [Role] = 'Operator' WHERE [Role] = 'Owner'");
+        migrationBuilder.Sql("UPDATE [AppUsers] SET [Role] = 'Operator' WHERE [Role] = 'Staff'");
+
         migrationBuilder.DropTable(
             name: "CourseAssignments");
     }
