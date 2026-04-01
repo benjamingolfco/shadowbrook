@@ -9,6 +9,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { ApiError } from '@/lib/api-client';
+import type { DuplicateOpeningError } from '@/types/waitlist';
 
 const schema = z.object({
   teeTime: z.string().min(1, 'Time is required'),
@@ -136,11 +138,22 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
           </Button>
         </form>
 
-        {createMutation.isError && (
-          <p className="text-sm text-destructive mt-3">
-            Couldn&apos;t post opening. Try again.
-          </p>
-        )}
+        {createMutation.isError && (() => {
+          const error = createMutation.error;
+          if (error instanceof ApiError && error.status === 409) {
+            const duplicateError = error.data as DuplicateOpeningError;
+            return (
+              <p className="text-sm text-amber-600 mt-3">
+                {duplicateError.error}
+              </p>
+            );
+          }
+          return (
+            <p className="text-sm text-destructive mt-3">
+              Couldn&apos;t post opening. Try again.
+            </p>
+          );
+        })()}
       </CardContent>
     </Card>
   );

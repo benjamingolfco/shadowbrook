@@ -504,13 +504,40 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         var (_, courseId) = await CreateTestCourseAsync();
         var teeTime = DateTime.Today.AddHours(10);
 
-        await PostCreateOpeningAsync(courseId, new { TeeTime = teeTime, SlotsAvailable = 4 });
+        var firstResponse = await PostCreateOpeningAsync(courseId, new { TeeTime = teeTime, SlotsAvailable = 4 });
+        var firstBody = await firstResponse.Content.ReadFromJsonAsync<TeeTimeOpeningResponse>();
         var response = await PostCreateOpeningAsync(courseId, new { TeeTime = teeTime, SlotsAvailable = 2 });
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
 
-        var body = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.Equal("An active tee time opening already exists for this time.", body!.Error);
+        var body = await response.Content.ReadFromJsonAsync<DuplicateOpeningResponse>();
+        Assert.NotNull(body);
+        Assert.Equal("A tee time opening for this time already exists with 4 slots.", body!.Error);
+        Assert.Equal(4, body.ExistingSlotsAvailable);
+        Assert.Equal(4, body.ExistingSlotsRemaining);
+        Assert.Equal(firstBody!.Id, body.ExistingOpeningId);
+        Assert.True(body.IsFull);
+    }
+
+    [Fact]
+    public async Task CreateOpening_DuplicateTime_PartialSlots_Returns409WithContext()
+    {
+        var (_, courseId) = await CreateTestCourseAsync();
+        var teeTime = DateTime.Today.AddHours(10);
+
+        var firstResponse = await PostCreateOpeningAsync(courseId, new { TeeTime = teeTime, SlotsAvailable = 2 });
+        var firstBody = await firstResponse.Content.ReadFromJsonAsync<TeeTimeOpeningResponse>();
+        var response = await PostCreateOpeningAsync(courseId, new { TeeTime = teeTime, SlotsAvailable = 2 });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<DuplicateOpeningResponse>();
+        Assert.NotNull(body);
+        Assert.Equal("An opening already exists for this time with 2 slot(s). Would you like to add more slots to it?", body!.Error);
+        Assert.Equal(2, body.ExistingSlotsAvailable);
+        Assert.Equal(2, body.ExistingSlotsRemaining);
+        Assert.Equal(firstBody!.Id, body.ExistingOpeningId);
+        Assert.False(body.IsFull);
     }
 
     [Fact]
@@ -646,4 +673,5 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     }
 
     private record TeeTimeOpeningResponse(Guid Id, int SlotsAvailable, int SlotsRemaining, string Status);
+    private record DuplicateOpeningResponse(string Error, int ExistingSlotsAvailable, int ExistingSlotsRemaining, Guid ExistingOpeningId, bool IsFull);
 }
