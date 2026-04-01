@@ -5,6 +5,7 @@ import { z } from 'zod/v4';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCourses } from '../hooks/useCourses';
 import { api } from '@/lib/api-client';
+import { queryKeys } from '@/lib/query-keys';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -48,7 +49,7 @@ export default function CourseDetail() {
     mutationFn: (data: FormValues) =>
       api.put<Course>(`/courses/${id ?? ''}`, data),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['courses', 'admin'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.courses.all });
     },
   });
 

@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router';
 import { useUsers } from '../hooks/useUsers';
+import { useOrganizations } from '../hooks/useOrganizations';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -13,6 +14,8 @@ import {
 
 export default function UserList() {
   const { data: users, isLoading, error } = useUsers();
+  const { data: orgs } = useOrganizations();
+  const orgMap = new Map(orgs?.map(o => [o.id, o.name]) ?? []);
   const navigate = useNavigate();
 
   if (isLoading) {
@@ -57,7 +60,6 @@ export default function UserList() {
                 <TableHead>Role</TableHead>
                 <TableHead className="hidden md:table-cell">Organization</TableHead>
                 <TableHead>Active</TableHead>
-                <TableHead className="hidden md:table-cell">Created</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -71,7 +73,7 @@ export default function UserList() {
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.role}</TableCell>
                   <TableCell className="hidden md:table-cell">
-                    {user.organizationId ?? '—'}
+                    {(user.organizationId && orgMap.get(user.organizationId)) ?? '—'}
                   </TableCell>
                   <TableCell>
                     {user.isActive ? (
@@ -79,9 +81,6 @@ export default function UserList() {
                     ) : (
                       <Badge variant="secondary">Inactive</Badge>
                     )}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                    —
                   </TableCell>
                 </TableRow>
               ))}

@@ -8,7 +8,7 @@ export function useSetOrgFeatures() {
     mutationFn: ({ orgId, flags }: { orgId: string; flags: Record<string, boolean> }) =>
       api.put<Record<string, boolean>>(`/organizations/${orgId}/features`, { flags }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['features'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.organizations.all });
     },
   });
 }
@@ -19,7 +19,6 @@ export function useSetCourseFeatures() {
     mutationFn: ({ courseId, flags }: { courseId: string; flags: Record<string, boolean> }) =>
       api.put<Record<string, boolean>>(`/courses/${courseId}/features`, { flags }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['features'] });
       void queryClient.invalidateQueries({ queryKey: queryKeys.features.all });
     },
   });
