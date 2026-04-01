@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useCourses } from '../hooks/useCourses';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,6 +12,7 @@ import {
 import type { Course } from '@/types/course';
 
 export default function CourseList() {
+  const navigate = useNavigate();
   const { data: courses, isLoading, error } = useCourses();
 
   if (isLoading) {
@@ -52,7 +53,7 @@ export default function CourseList() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Tenant</TableHead>
+                <TableHead>Organization</TableHead>
                 <TableHead className="hidden md:table-cell">Location</TableHead>
                 <TableHead className="hidden md:table-cell">Contact</TableHead>
                 <TableHead className="hidden md:table-cell">Registered</TableHead>
@@ -60,7 +61,11 @@ export default function CourseList() {
             </TableHeader>
             <TableBody>
               {courses.map((course: Course) => (
-                <TableRow key={course.id}>
+                <TableRow
+                  key={course.id}
+                  className="cursor-pointer"
+                  onClick={() => void navigate(`/admin/courses/${course.id}`)}
+                >
                   <TableCell>
                     <div className="font-semibold">{course.name}</div>
                     <div className="md:hidden text-sm text-muted-foreground">
