@@ -1,98 +1,108 @@
-# Entra External ID Setup Guide
+# Entra ID Setup Guide
 
-This guide walks through the Azure portal configuration required to set up authentication for Shadowbrook using Microsoft Entra External ID (CIAM).
+This guide walks through the Azure portal configuration required to set up authentication for Shadowbrook using Microsoft Entra ID.
+
+## Architecture
+
+Shadowbrook uses two types of Entra tenants for different audiences:
+
+| Tenant | Type | Audience | Purpose |
+|--------|------|----------|---------|
+| Benjamin Golf Co (`benjamingolfco.onmicrosoft.com`) | Workforce | Developers, operators | Non-prod and operator-facing auth. Invite-only. |
+| *(future)* Production CIAM | External ID (CIAM) | Golfers, public | Customer self-service sign-up for production. |
+
+The workforce tenant is for controlled access — only users you explicitly invite can sign in. The CIAM tenant (future) is for consumer-facing sign-up where golfers register themselves.
 
 ## Prerequisites
 
 - An Azure subscription
-- Permissions to create tenants and app registrations
+- Permissions to create tenants and app registrations (Application Developer role or higher)
 
 ---
 
-## Step 1: Create an External ID Tenant
+## Step 1: Create a Workforce Tenant
 
-1. Sign in to the [Azure portal](https://portal.azure.com).
-2. Search for **Microsoft Entra ID** and open it.
-3. Select **Manage tenants** from the top menu, then click **Create**.
-4. Choose **Customer** as the tenant type and click **Next: Configuration**.
-5. Fill in the tenant details:
-   - **Organization name:** Shadowbrook Auth (or your preferred name)
-   - **Initial domain name:** `shadowbrookauth` (this becomes `shadowbrookauth.onmicrosoft.com`)
+> Skip this step if you already have a workforce tenant.
+
+1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com).
+2. Navigate to **Entra ID** > **Manage tenants** > **Create**.
+3. Choose **Workforce** as the tenant type.
+4. Fill in the tenant details:
+   - **Organization name:** Benjamin Golf Co
+   - **Initial domain name:** `benjamingolfco` (becomes `benjamingolfco.onmicrosoft.com`)
    - **Location:** Select your region
-6. Click **Review + Create**, then **Create**.
-7. Wait for provisioning to complete, then navigate to the new tenant.
-8. Note the **Tenant ID** from the tenant's Overview page — you will need it later.
+5. Click **Review + Create**, then **Create**.
+6. Note the **Tenant ID** from the Overview page.
+7. If the tenant creator's `mail` property is null (common for personal Microsoft accounts), set it via Graph API:
+   ```bash
+   TOKEN=$(az account get-access-token --tenant <tenant-id> --resource https://graph.microsoft.com --query accessToken -o tsv)
+   curl -X PATCH -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+     -d '{"mail": "your-email@example.com"}' \
+     "https://graph.microsoft.com/v1.0/users/<user-object-id>"
+   ```
 
 ---
 
-## Step 2: Create the API App Registration
+## Step 2: Register the API App
 
-This registration represents the backend API.
+1. In the [Entra admin center](https://entra.microsoft.com), switch to the workforce tenant via **Settings** icon > **Directories + subscriptions**.
+2. Navigate to **Entra ID** > **App registrations** > **New registration**.
+3. Fill in the details:
+   - **Name:** `Shadowbrook API (Non-Prod)`
+   - **Supported account types:** Accounts in this organizational directory only
+4. Leave Redirect URI blank — APIs don't need one.
+5. Click **Register**.
+6. Note the **Application (client) ID**.
+7. Under **Manage** > **Owners** > **Add owners** — add yourself (required for the API to appear under "My APIs" when configuring the SPA).
 
-1. Inside the External ID tenant, navigate to **App registrations** and click **New registration**.
+### Expose an API Scope
+
+1. In the API app registration, navigate to **Manage** > **Expose an API**.
+2. Next to **Application ID URI**, click **Add**, accept the default (`api://<client-id>`), and click **Save**.
+3. Click **Add a scope** and fill in:
+   - **Scope name:** `access_as_user`
+   - **Who can consent:** Admins and users
+   - **Admin consent display name:** `Access Shadowbrook API`
+   - **Admin consent description:** `Allow the application to access Shadowbrook API on behalf of the signed-in user.`
+   - **State:** Enabled
+4. Click **Add scope**.
+
+---
+
+## Step 3: Register the SPA App
+
+1. Navigate to **Entra ID** > **App registrations** > **New registration**.
 2. Fill in the details:
-   - **Name:** `Shadowbrook API`
+   - **Name:** `Shadowbrook SPA (Non-Prod)`
    - **Supported account types:** Accounts in this organizational directory only
 3. Click **Register**.
-4. Note the **Application (client) ID** — this is `<api-client-id>`.
-5. Expose an API scope:
-   - Navigate to **Expose an API** in the left menu.
-   - Click **Add a scope**.
-   - If prompted to set an Application ID URI, accept the default (`api://<api-client-id>`) and click **Save and continue**.
-   - Fill in the scope:
-     - **Scope name:** `access_as_user`
-     - **Admin consent display name:** `Access Shadowbrook API as user`
-     - **Admin consent description:** `Allows the app to access the Shadowbrook API on behalf of the signed-in user.`
-     - **State:** Enabled
-   - Click **Add scope**.
+4. Note the **Application (client) ID**.
+5. Configure the platform:
+   - Navigate to **Manage** > **Authentication** > **Add a platform**.
+   - Select **Single-page application**.
+   - Redirect URI: `http://localhost:3000`
+   - Click **Configure**.
+6. Add production redirect URIs as needed (e.g., `https://app.shadowbrook.golf`).
+
+### Grant API Permission
+
+1. In the SPA app registration, navigate to **Manage** > **API permissions** > **Add a permission**.
+2. Select the **My APIs** tab and choose **Shadowbrook API (Non-Prod)**.
+3. Select **Delegated permissions**, check `access_as_user`, and click **Add permissions**.
+4. Click **Grant admin consent for Benjamin Golf Co** and confirm.
+
+### Pre-authorize the SPA (Optional)
+
+This suppresses the consent prompt so users don't see a "this app wants to access..." dialog.
+
+1. Go to the **API** app registration > **Expose an API**.
+2. Under **Authorized client applications**, click **Add a client application**.
+3. Enter the SPA's Application (client) ID.
+4. Check the `access_as_user` scope and click **Add application**.
 
 ---
 
-## Step 3: Create the SPA App Registration
-
-This registration represents the React frontend.
-
-1. Navigate to **App registrations** and click **New registration**.
-2. Fill in the details:
-   - **Name:** `Shadowbrook SPA`
-   - **Supported account types:** Accounts in this organizational directory only
-3. Under **Redirect URI**, select **Single-page application (SPA)** as the platform and enter `http://localhost:3000`.
-4. Click **Register**.
-5. Note the **Application (client) ID** — this is `<spa-client-id>`.
-6. Add the production redirect URI:
-   - Navigate to **Authentication** in the left menu.
-   - Under **Single-page application**, click **Add URI** and enter your production URL (e.g., `https://app.shadowbrook.golf`).
-   - Click **Save**.
-7. Grant the API permission:
-   - Navigate to **API permissions** and click **Add a permission**.
-   - Select **My APIs** and choose **Shadowbrook API**.
-   - Select **Delegated permissions**, check `access_as_user`, and click **Add permissions**.
-   - Click **Grant admin consent for [tenant name]** and confirm.
-
-> The SPA uses the implicit/PKCE flow and does not require a client secret.
-
----
-
-## Step 4: Create the Sign-Up / Sign-In User Flow
-
-1. In the External ID tenant, navigate to **User flows** (under **Identities** or **External Identities**).
-2. Click **New user flow**.
-3. Select **Sign up and sign in** and choose the **Recommended** version.
-4. Configure the user flow:
-   - **Name:** `signupsignin` (the full name will be `B2C_1_signupsignin`)
-   - **Identity providers:** Email with password
-5. Under **User attributes**, select the attributes to collect during sign-up:
-   - Email address
-   - Display name
-6. Under **Token claims**, ensure the following claims are returned in the token:
-   - `oid` (Object ID)
-   - `email`
-   - `displayName`
-7. Click **Create**.
-
----
-
-## Step 5: Configure the Shadowbrook Application
+## Step 4: Configure the Shadowbrook Application
 
 ### Backend (`appsettings.json` or environment variables)
 
@@ -100,33 +110,29 @@ Update `src/backend/Shadowbrook.Api/appsettings.json`:
 
 ```json
 "AzureAd": {
-  "Instance": "https://shadowbrookauth.ciamlogin.com",
+  "Instance": "https://login.microsoftonline.com/",
   "TenantId": "<tenant-id>",
   "ClientId": "<api-client-id>"
 }
 ```
 
-For production, set these as environment variables or Azure Container Apps secrets rather than committing real values:
+For production, set these as environment variables or Azure Container Apps secrets:
 
 ```
-AzureAd__Instance=https://shadowbrookauth.ciamlogin.com
+AzureAd__Instance=https://login.microsoftonline.com/
 AzureAd__TenantId=<tenant-id>
 AzureAd__ClientId=<api-client-id>
 ```
 
-### Frontend (`.env.local` for dev, environment config for production)
-
-Create `src/web/.env.local`:
+### Frontend (`.env.development` for dev, environment config for production)
 
 ```
-VITE_ENTRA_AUTHORITY=https://shadowbrookauth.ciamlogin.com/
+VITE_ENTRA_AUTHORITY=https://login.microsoftonline.com/<tenant-id>
 VITE_ENTRA_CLIENT_ID=<spa-client-id>
 VITE_API_SCOPE=api://<api-client-id>/access_as_user
 ```
 
 ### Disable Dev Auth in Production
-
-The API ships with a development authentication bypass (`Auth:UseDevAuth`). Ensure this is `false` in production:
 
 ```json
 "Auth": {
@@ -134,11 +140,29 @@ The API ships with a development authentication bypass (`Auth:UseDevAuth`). Ensu
 }
 ```
 
-Or as an environment variable:
+---
 
-```
-Auth__UseDevAuth=false
-```
+## Step 5: Invite Users
+
+Shadowbrook uses invite-only access. Users must be explicitly added to the tenant.
+
+### Invite an Operator or Developer
+
+1. In the Entra admin center, navigate to **Users** > **Invite external user**.
+2. Enter the user's email address and an optional invitation message.
+3. Click **Review and invite** > **Invite**.
+4. The user receives an email, clicks **Accept invitation**, and authenticates with their existing account (Microsoft, Google via email OTP, etc.).
+5. A guest user object is created in your directory.
+
+### Lock Down Access (Recommended)
+
+For maximum control, enable **user assignment** on the enterprise app:
+
+1. Navigate to **Entra ID** > **Enterprise apps** > find your SPA app.
+2. Under **Manage** > **Properties**, set **Assignment required?** to **Yes**.
+3. Under **Users and groups** > **Add user/group**, assign specific users to the app.
+
+Only assigned users can sign in. This provides defense-in-depth beyond the single-tenant restriction.
 
 ---
 
@@ -146,21 +170,23 @@ Auth__UseDevAuth=false
 
 Shadowbrook auto-provisions users on first login with the `Staff` role. To elevate an account to `Admin`:
 
-1. Start the app and navigate to `http://localhost:3000` (or your production URL).
-2. Sign up using the Entra login page — this creates the user in both Entra and the `AppUsers` table with the `Staff` role.
+1. Start the app and navigate to `http://localhost:3000`.
+2. Sign in via the Entra login page — this creates the user in the `AppUsers` table with the `Staff` role.
 3. Promote the user to `Admin` directly in the database:
 
    ```sql
    UPDATE AppUsers SET Role = 'Admin' WHERE Email = 'your-email@example.com';
    ```
 
-   Alternatively, if you know the user's Entra Object ID, update by `IdentityId`:
+   Alternatively, configure seed admin emails in `appsettings.json`:
 
-   ```sql
-   UPDATE AppUsers SET Role = 'Admin' WHERE IdentityId = '<object-id>';
+   ```json
+   "Auth": {
+     "SeedAdminEmails": "your-email@example.com"
+   }
    ```
 
-   The Object ID is visible in the Azure portal under **Users** in the External ID tenant.
+   Users whose email matches a seed admin email are automatically assigned the `Admin` role on first login.
 
 ---
 
@@ -168,8 +194,8 @@ Shadowbrook auto-provisions users on first login with the `Staff` role. To eleva
 
 1. Run `make dev` to start the API and frontend.
 2. Navigate to `http://localhost:3000`.
-3. The app should redirect to the Entra External ID login page.
-4. Sign in with the admin account created in Step 6.
+3. The app should redirect to the Microsoft login page (`login.microsoftonline.com`).
+4. Sign in with an account that exists in the workforce tenant.
 5. After successful login, you should land on the operator dashboard.
 
 If login succeeds but the dashboard is inaccessible, confirm the `Role` column in `AppUsers` is set to `Admin` for the logged-in user.

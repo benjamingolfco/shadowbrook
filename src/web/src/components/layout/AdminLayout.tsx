@@ -2,7 +2,6 @@ import { NavLink, Outlet } from 'react-router';
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
@@ -12,12 +11,9 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/features/auth';
+import UserMenu from '@/components/layout/UserMenu';
 
 export default function AdminLayout() {
-  const { user, logout } = useAuth();
-
   return (
     <SidebarProvider>
       <Sidebar>
@@ -66,22 +62,13 @@ export default function AdminLayout() {
             )}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter>
-          <div className="flex flex-col gap-1 py-2">
-            {user && (
-              <p className="text-sm text-muted-foreground truncate">
-                {user.displayName || user.email}
-              </p>
-            )}
-            <Button variant="ghost" size="sm" onClick={logout} className="justify-start px-0 text-muted-foreground hover:text-foreground">
-              Sign out
-            </Button>
-          </div>
-        </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-12 items-center gap-2 border-b px-4 md:hidden">
-          <SidebarTrigger />
+        <header className="flex h-12 items-center border-b px-4">
+          <SidebarTrigger className="md:hidden" />
+          <div className="ml-auto">
+            <UserMenu />
+          </div>
         </header>
         <Outlet />
       </SidebarInset>

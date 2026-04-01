@@ -20,11 +20,9 @@ function LazyFeature({ children }: { children: React.ReactNode }) {
 function RoleRedirect() {
   const { user, isLoading, isAuthenticated } = useAuth();
 
-  if (isLoading) return null;
+  if (isLoading || !isAuthenticated || !user) return null;
 
-  if (isAuthenticated && !user) return null;
-
-  if (user?.role === 'Admin') {
+  if (user.role === 'Admin') {
     return <Navigate to="/admin/tenants" replace />;
   }
 
@@ -40,7 +38,7 @@ export const router = createBrowserRouter([
     path: '/admin/*',
     element: (
       <AuthGuard>
-        <PermissionGuard permission="users:manage">
+        <PermissionGuard permission="users:manage" fallback="/operator">
           <LazyFeature><AdminFeature /></LazyFeature>
         </PermissionGuard>
       </AuthGuard>
