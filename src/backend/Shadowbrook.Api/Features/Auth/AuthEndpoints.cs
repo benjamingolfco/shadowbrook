@@ -166,7 +166,7 @@ public static class AuthEndpoints
             }
         }
 
-        cache.Remove($"appuser:{appUser.IdentityId}");
+        cache.Remove(AppUserEnrichmentMiddleware.CacheKey(appUser.IdentityId));
 
         var response = new UserListResponse(
             appUser.Id,

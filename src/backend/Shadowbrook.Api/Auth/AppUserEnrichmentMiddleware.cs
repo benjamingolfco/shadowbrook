@@ -11,6 +11,8 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
 {
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
 
+    public static string CacheKey(string oid) => $"appuser:{oid}";
+
     private readonly RequestDelegate next = next;
 
     public async Task InvokeAsync(HttpContext context, ApplicationDbContext db, IMemoryCache cache, IOptions<AuthSettings> authOptions)
@@ -30,7 +32,7 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
     private static async Task EnrichFromAppUserAsync(
         HttpContext context, ApplicationDbContext db, IMemoryCache cache, string oid, string[] seedAdminEmails)
     {
-        var cacheKey = $"appuser:{oid}";
+        var cacheKey = CacheKey(oid);
 
         if (!cache.TryGetValue(cacheKey, out EnrichmentData? enrichmentData))
         {
