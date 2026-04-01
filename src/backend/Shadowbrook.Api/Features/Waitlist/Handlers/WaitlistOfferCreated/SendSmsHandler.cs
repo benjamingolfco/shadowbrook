@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Options;
+using Shadowbrook.Api.Infrastructure.Configuration;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseAggregate;
 using Shadowbrook.Domain.GolferAggregate;
@@ -16,7 +18,7 @@ public static class WaitlistOfferCreatedSendSmsHandler
         IGolferRepository golferRepository,
         ICourseRepository courseRepository,
         ITextMessageService textMessageService,
-        IConfiguration configuration,
+        IOptions<AppSettings> appSettings,
         ITimeProvider timeProvider,
         CancellationToken ct)
     {
@@ -27,7 +29,7 @@ public static class WaitlistOfferCreatedSendSmsHandler
         var course = await courseRepository.GetByIdAsync(opening.CourseId);
         var courseName = course?.Name ?? "Course";
 
-        var baseUrl = configuration["App:FrontendUrl"];
+        var baseUrl = appSettings.Value.FrontendUrl;
         if (string.IsNullOrEmpty(baseUrl))
         {
             throw new InvalidOperationException(

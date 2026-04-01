@@ -97,6 +97,32 @@ Shadowbrook.Api/
 - Validators live in the same file as their request record DTOs (inline pattern), or in a separate file if complex
 - Endpoints can trust that the request body is valid — no need for manual validation of fields that have validator rules
 
+## Configuration (IOptions Pattern)
+
+- Always use strongly-typed options classes — never read `IConfiguration["key"]` directly in application code
+- Options classes live in `Infrastructure/Configuration/`
+- Register with `builder.Services.Configure<T>(builder.Configuration.GetSection("SectionName"))` near the top of service registrations in `Program.cs`
+- Inject `IOptions<T>` (singleton-lifetime config) — not `IOptionsSnapshot` or `IOptionsMonitor` unless reload-on-change is explicitly needed
+- Access the value via the `.Value` property
+- Keep options classes simple POCOs with `{ get; init; }` properties and sensible defaults
+
+```csharp
+// Infrastructure/Configuration/AppSettings.cs
+public class AppSettings
+{
+    public string FrontendUrl { get; init; } = string.Empty;
+}
+
+// Program.cs
+builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("App"));
+
+// Handler
+public static async Task Handle(IOptions<AppSettings> appSettings, ...)
+{
+    var baseUrl = appSettings.Value.FrontendUrl;
+}
+```
+
 ## Identifiers
 
 - Use `Guid.CreateVersion7()` when generating new GUIDs for database identifiers — it produces time-ordered UUIDs (UUIDv7) that sort chronologically, avoiding index fragmentation in SQL Server
