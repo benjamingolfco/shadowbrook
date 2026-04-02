@@ -1,6 +1,7 @@
 using Shadowbrook.Domain.AppUserAggregate.Events;
 using Shadowbrook.Domain.AppUserAggregate.Exceptions;
 using Shadowbrook.Domain.Common;
+using Shadowbrook.Domain.Services;
 
 namespace Shadowbrook.Domain.AppUserAggregate;
 
@@ -14,6 +15,7 @@ public class AppUser : Entity
     public Guid? OrganizationId { get; private set; }
     public bool IsActive { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
+    public DateTimeOffset? InviteSentAt { get; private set; }
 
     private AppUser() { } // EF
 
@@ -105,6 +107,25 @@ public class AppUser : Entity
 
         Role = AppUserRole.Operator;
         OrganizationId = organizationId;
+    }
+
+    public async Task Invite(IAppUserInvitationService invitationService, CancellationToken ct)
+    {
+        if (IdentityId is not null || InviteSentAt is not null)
+        {
+            return;
+        }
+
+        var identityId = await invitationService.SendInvitationAsync(Email, ct);
+        IdentityId = identityId;
+        InviteSentAt = DateTimeOffset.UtcNow;
+
+        AddDomainEvent(new AppUserInvited
+        {
+            AppUserId = Id,
+            Email = Email,
+            EntraObjectId = identityId,
+        });
     }
 
     public void Deactivate() => IsActive = false;
