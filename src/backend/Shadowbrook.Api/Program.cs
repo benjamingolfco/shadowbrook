@@ -1,6 +1,9 @@
+using Azure.Core;
+using Azure.Identity;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Graph;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Serilog;
@@ -22,6 +25,7 @@ using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.TenantAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Shadowbrook.Domain.Services;
 using Shadowbrook.Domain.WaitlistServices;
 using Wolverine;
 using Wolverine.EntityFrameworkCore;
@@ -70,6 +74,7 @@ if (!string.IsNullOrEmpty(appInsightsConnectionString))
 }
 
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("App"));
+builder.Services.Configure<GraphSettings>(builder.Configuration.GetSection(GraphSettings.SectionName));
 
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>();
@@ -137,6 +142,21 @@ builder.Services.AddScoped<IWaitlistOfferRepository, WaitlistOfferRepository>();
 builder.Services.AddScoped<IGolferWaitlistEntryRepository, GolferWaitlistEntryRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
+
+var graphSettings = builder.Configuration.GetSection(GraphSettings.SectionName).Get<GraphSettings>();
+if (!string.IsNullOrEmpty(graphSettings?.ClientId))
+{
+    TokenCredential credential = string.IsNullOrEmpty(graphSettings.ClientSecret)
+        ? new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = graphSettings.TenantId })
+        : new ClientSecretCredential(graphSettings.TenantId, graphSettings.ClientId, graphSettings.ClientSecret);
+
+    builder.Services.AddSingleton(_ => new GraphServiceClient(credential));
+    builder.Services.AddScoped<IAppUserInvitationService, GraphAppUserInvitationService>();
+}
+else
+{
+    builder.Services.AddScoped<IAppUserInvitationService, NoOpAppUserInvitationService>();
+}
 builder.Services.AddScoped<IAppUserClaimsProvider, AppUserClaimsProvider>();
 builder.Services.AddScoped<ICourseTimeZoneProvider, CourseTimeZoneProvider>();
 builder.Services.AddScoped<ITimeProvider, Shadowbrook.Api.Infrastructure.Services.TimeZoneProvider>();
