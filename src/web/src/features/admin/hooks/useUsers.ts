@@ -5,7 +5,8 @@ import { queryKeys } from '@/lib/query-keys';
 export interface UserListItem {
   id: string;
   email: string;
-  displayName: string;
+  firstName: string | null;
+  lastName: string | null;
   role: string;
   organizationId: string | null;
   isActive: boolean;
@@ -22,9 +23,7 @@ export function useCreateUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: {
-      identityId: string;
       email: string;
-      displayName: string;
       role: string;
       organizationId: string | null;
     }) => api.post<UserListItem>('/auth/users', data),

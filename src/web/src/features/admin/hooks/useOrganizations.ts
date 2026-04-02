@@ -44,5 +44,5 @@ interface OrganizationDetail {
   name: string;
   createdAt: string;
   courses: { id: string; name: string }[];
-  users: { id: string; email: string; displayName: string; role: string; isActive: boolean }[];
+  users: { id: string; email: string; firstName: string | null; lastName: string | null; role: string; isActive: boolean }[];
 }

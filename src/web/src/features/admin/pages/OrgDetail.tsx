@@ -190,7 +190,7 @@ export default function OrgDetail() {
               <TableBody>
                 {org.users.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.displayName}</TableCell>
+                    <TableCell className="font-medium">{[user.firstName, user.lastName].filter(Boolean).join(' ') || user.email}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{user.email}</TableCell>
                     <TableCell className="text-sm">{user.role}</TableCell>
                     <TableCell>

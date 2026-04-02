@@ -55,7 +55,7 @@ export default function UserList() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Display Name</TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead className="hidden md:table-cell">Organization</TableHead>
@@ -69,7 +69,7 @@ export default function UserList() {
                   className="cursor-pointer"
                   onClick={() => void navigate(`/admin/users/${user.id}`)}
                 >
-                  <TableCell className="font-medium">{user.displayName}</TableCell>
+                  <TableCell className="font-medium">{[user.firstName, user.lastName].filter(Boolean).join(' ') || user.email}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.role}</TableCell>
                   <TableCell className="hidden md:table-cell">

@@ -30,9 +30,7 @@ import {
 
 const userSchema = z
   .object({
-    identityId: z.string().min(1, 'Identity ID is required'),
     email: z.string().email('Invalid email address'),
-    displayName: z.string().min(1, 'Display name is required'),
     role: z.enum(['Admin', 'Operator']),
     organizationId: z.string().optional(),
   })
@@ -57,9 +55,7 @@ export default function UserCreate() {
   const form = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
     defaultValues: {
-      identityId: '',
       email: '',
-      displayName: '',
       role: 'Operator',
       organizationId: '',
     },
@@ -70,9 +66,7 @@ export default function UserCreate() {
   function onSubmit(data: UserFormData) {
     createUser.mutate(
       {
-        identityId: data.identityId,
         email: data.email,
-        displayName: data.displayName,
         role: data.role,
         organizationId: data.organizationId ?? null,
       },
@@ -102,40 +96,12 @@ export default function UserCreate() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
-                name="identityId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Identity ID *</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Azure AD Object ID" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email *</FormLabel>
                     <FormControl>
                       <Input type="email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="displayName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Display Name *</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

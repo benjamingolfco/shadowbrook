@@ -90,7 +90,7 @@ export default function UserDetail() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>{user.displayName}</span>
+            <span>{[user.firstName, user.lastName].filter(Boolean).join(' ') || user.email}</span>
             {user.isActive ? (
               <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>
             ) : (
@@ -101,8 +101,8 @@ export default function UserDetail() {
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 gap-4">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Display Name</p>
-              <p className="mt-1">{user.displayName}</p>
+              <p className="text-sm font-medium text-muted-foreground">Name</p>
+              <p className="mt-1">{[user.firstName, user.lastName].filter(Boolean).join(' ') || '—'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Email</p>
