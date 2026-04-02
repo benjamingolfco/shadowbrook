@@ -1,4 +1,3 @@
-using Azure.Core;
 using Azure.Identity;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using FluentValidation;
@@ -74,7 +73,6 @@ if (!string.IsNullOrEmpty(appInsightsConnectionString))
 }
 
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("App"));
-builder.Services.Configure<GraphSettings>(builder.Configuration.GetSection(GraphSettings.SectionName));
 
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>();
@@ -143,19 +141,15 @@ builder.Services.AddScoped<IGolferWaitlistEntryRepository, GolferWaitlistEntryRe
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
 
-var graphSettings = builder.Configuration.GetSection(GraphSettings.SectionName).Get<GraphSettings>();
-if (!string.IsNullOrEmpty(graphSettings?.ClientId))
+var useDevAuth = builder.Configuration.GetSection(AuthSettings.SectionName).Get<AuthSettings>()?.UseDevAuth ?? false;
+if (useDevAuth)
 {
-    TokenCredential credential = string.IsNullOrEmpty(graphSettings.ClientSecret)
-        ? new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = graphSettings.TenantId })
-        : new ClientSecretCredential(graphSettings.TenantId, graphSettings.ClientId, graphSettings.ClientSecret);
-
-    builder.Services.AddSingleton(_ => new GraphServiceClient(credential));
-    builder.Services.AddScoped<IAppUserInvitationService, GraphAppUserInvitationService>();
+    builder.Services.AddScoped<IAppUserInvitationService, NoOpAppUserInvitationService>();
 }
 else
 {
-    builder.Services.AddScoped<IAppUserInvitationService, NoOpAppUserInvitationService>();
+    builder.Services.AddSingleton(_ => new GraphServiceClient(new DefaultAzureCredential()));
+    builder.Services.AddScoped<IAppUserInvitationService, GraphAppUserInvitationService>();
 }
 builder.Services.AddScoped<IAppUserClaimsProvider, AppUserClaimsProvider>();
 builder.Services.AddScoped<ICourseTimeZoneProvider, CourseTimeZoneProvider>();
