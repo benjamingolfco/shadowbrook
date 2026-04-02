@@ -27,25 +27,32 @@ public static class CourseEndpoints
             return Results.BadRequest(new { error = "OrganizationId is required." });
         }
 
-        var tenant = await tenantRepository.GetByIdAsync(organizationId.Value);
-        if (tenant is null)
+        // Look up Organization first (admin-created orgs only exist here).
+        // Fall back to Tenant for legacy tenants — create an Organization row if one is missing.
+        var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == organizationId.Value);
+        string orgName;
+
+        if (org is not null)
         {
-            return Results.BadRequest(new { error = "Tenant does not exist." });
+            orgName = org.Name;
+        }
+        else
+        {
+            var tenant = await tenantRepository.GetByIdAsync(organizationId.Value);
+            if (tenant is null)
+            {
+                return Results.BadRequest(new { error = "Organization does not exist." });
+            }
+
+            orgName = tenant.OrganizationName;
+            var bridgeOrg = Organization.CreateWithId(organizationId.Value, orgName);
+            db.Organizations.Add(bridgeOrg);
         }
 
         var duplicateExists = await courseRepository.ExistsByNameAsync(organizationId.Value, request.Name);
         if (duplicateExists)
         {
             return Results.Conflict(new { error = "A course with this name already exists for this tenant." });
-        }
-
-        // Transitional bridge: ensure an Organization row exists with the same ID as the tenant.
-        // Courses must reference Organizations. This will be replaced when the full org/auth flow lands.
-        var organizationExists = await db.Organizations.AnyAsync(o => o.Id == organizationId.Value);
-        if (!organizationExists)
-        {
-            var organization = Organization.CreateWithId(organizationId.Value, tenant.OrganizationName);
-            db.Organizations.Add(organization);
         }
 
         var course = Course.Create(organizationId.Value, request.Name, request.TimeZoneId,
@@ -65,7 +72,7 @@ public static class CourseEndpoints
             course.ContactPhone,
             course.TimeZoneId,
             course.CreatedAt,
-            new TenantInfo(tenant.Id, tenant.OrganizationName));
+            new TenantInfo(organizationId.Value, orgName));
 
         return Results.Created($"/courses/{course.Id}", response);
     }
@@ -76,7 +83,8 @@ public static class CourseEndpoints
     {
         var courses = await (
             from c in db.Courses
-            join t in db.Tenants on c.OrganizationId equals t.Id
+            join o in db.Organizations on c.OrganizationId equals o.Id into orgs
+            from o in orgs.DefaultIfEmpty()
             select new CourseResponse(
                 c.Id,
                 c.Name,
@@ -88,7 +96,7 @@ public static class CourseEndpoints
                 c.ContactPhone,
                 c.TimeZoneId,
                 c.CreatedAt,
-                new TenantInfo(t.Id, t.OrganizationName)))
+                o == null ? null : new TenantInfo(o.Id, o.Name)))
             .ToListAsync();
 
         return Results.Ok(courses);
@@ -100,8 +108,8 @@ public static class CourseEndpoints
     {
         var course = await (
             from c in db.Courses
-            join t in db.Tenants on c.OrganizationId equals t.Id into tenants
-            from t in tenants.DefaultIfEmpty()
+            join o in db.Organizations on c.OrganizationId equals o.Id into orgs
+            from o in orgs.DefaultIfEmpty()
             where c.Id == courseId
             select new CourseResponse(
                 c.Id,
@@ -114,7 +122,7 @@ public static class CourseEndpoints
                 c.ContactPhone,
                 c.TimeZoneId,
                 c.CreatedAt,
-                t == null ? null : new TenantInfo(t.Id, t.OrganizationName)))
+                o == null ? null : new TenantInfo(o.Id, o.Name)))
             .FirstOrDefaultAsync();
 
         return course is null ? Results.NotFound() : Results.Ok(course);
@@ -138,7 +146,7 @@ public static class CourseEndpoints
 
         course.UpdateDetails(request.Name, request.TimeZoneId);
 
-        var tenant = await db.Tenants.FirstOrDefaultAsync(t => t.Id == course.OrganizationId);
+        var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == course.OrganizationId);
 
         return Results.Ok(new CourseResponse(
             course.Id,
@@ -151,7 +159,7 @@ public static class CourseEndpoints
             course.ContactPhone,
             course.TimeZoneId,
             course.CreatedAt,
-            tenant is null ? null : new TenantInfo(tenant.Id, tenant.OrganizationName)));
+            org is null ? null : new TenantInfo(org.Id, org.Name)));
     }
 
     [WolverinePut("/courses/{courseId}/tee-time-settings")]

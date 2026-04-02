@@ -168,6 +168,57 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
+    [Fact]
+    public async Task PostCourse_WithOrganizationOnly_ReturnsCreated()
+    {
+        var orgName = $"Admin Org {Guid.NewGuid()}";
+        var orgResponse = await this.client.PostAsJsonAsync("/organizations", new { Name = orgName });
+        Assert.Equal(HttpStatusCode.Created, orgResponse.StatusCode);
+        var org = await orgResponse.Content.ReadFromJsonAsync<OrganizationResponse>();
+
+        var response = await this.client.PostAsJsonAsync("/courses", new
+        {
+            Name = "Org-Only Course",
+            OrganizationId = org!.Id,
+            TimeZoneId = TestTimeZones.Chicago
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<CourseResponse>();
+        Assert.NotNull(body);
+        Assert.Equal("Org-Only Course", body!.Name);
+        Assert.NotNull(body.Tenant);
+        Assert.Equal(org.Id, body.Tenant!.Id);
+        Assert.Equal(orgName, body.Tenant.OrganizationName);
+    }
+
+    [Fact]
+    public async Task GetAllCourses_IncludesCoursesCreatedViaOrganization()
+    {
+        var orgName = $"Admin Org {Guid.NewGuid()}";
+        var orgResponse = await this.client.PostAsJsonAsync("/organizations", new { Name = orgName });
+        Assert.Equal(HttpStatusCode.Created, orgResponse.StatusCode);
+        var org = await orgResponse.Content.ReadFromJsonAsync<OrganizationResponse>();
+
+        await this.client.PostAsJsonAsync("/courses", new
+        {
+            Name = "Org Course For List",
+            OrganizationId = org!.Id,
+            TimeZoneId = TestTimeZones.Chicago
+        });
+
+        var getResponse = await this.client.GetAsync("/courses");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+
+        var courses = await getResponse.Content.ReadFromJsonAsync<List<CourseResponse>>();
+        Assert.NotNull(courses);
+        var course = courses!.FirstOrDefault(c => c.Name == "Org Course For List");
+        Assert.NotNull(course);
+        Assert.NotNull(course!.Tenant);
+        Assert.Equal(org.Id, course.Tenant!.Id);
+        Assert.Equal(orgName, course.Tenant.OrganizationName);
+    }
+
     private async Task<(Guid Id, string OrganizationName)> CreateTestTenantAsync()
     {
         var orgName = $"Test Tenant {Guid.NewGuid()}";

@@ -105,3 +105,5 @@ public record VerifyCodeResponse(Guid CourseWaitlistId, string CourseName, strin
 public record JoinWaitlistResponse(Guid EntryId, Guid GolferId, string GolferName, int Position, string CourseName);
 
 public record CurrentUserResponse(Guid? OrganizationId);
+
+public record OrganizationResponse(Guid Id, string Name);
