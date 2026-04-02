@@ -27,8 +27,8 @@ public static class AnalyticsEndpoints
     [Authorize(Policy = "RequireUsersManage")]
     public static async Task<IResult> GetFillRates(
         [NotBody] ApplicationDbContext db,
-        [NotBody] Guid? courseId = null,
-        [NotBody] int days = 7)
+        Guid? courseId = null,
+        int days = 7)
     {
         var results = courseId.HasValue
             ? await db.Database.SqlQuery<FillRateResult>(
@@ -70,8 +70,8 @@ public static class AnalyticsEndpoints
     [Authorize(Policy = "RequireUsersManage")]
     public static async Task<IResult> GetBookingTrends(
         [NotBody] ApplicationDbContext db,
-        [NotBody] Guid? courseId = null,
-        [NotBody] int days = 30)
+        Guid? courseId = null,
+        int days = 30)
     {
         var results = courseId.HasValue
             ? await db.Database.SqlQuery<BookingTrendResult>(
@@ -105,8 +105,8 @@ public static class AnalyticsEndpoints
     [Authorize(Policy = "RequireUsersManage")]
     public static async Task<IResult> GetPopularTimes(
         [NotBody] ApplicationDbContext db,
-        [NotBody] Guid? courseId = null,
-        [NotBody] int days = 30)
+        Guid? courseId = null,
+        int days = 30)
     {
         var results = courseId.HasValue
             ? await db.Database.SqlQuery<PopularTimeResult>(
@@ -142,7 +142,7 @@ public static class AnalyticsEndpoints
     [Authorize(Policy = "RequireUsersManage")]
     public static async Task<IResult> GetWaitlistStats(
         [NotBody] ApplicationDbContext db,
-        [NotBody] Guid? courseId = null)
+        Guid? courseId = null)
     {
         var result = courseId.HasValue
             ? await db.Database.SqlQuery<WaitlistStatsResult>(
