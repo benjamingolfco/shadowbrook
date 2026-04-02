@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -27,6 +26,7 @@ using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.TenantAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Shadowbrook.Domain.WaitlistServices;
 using Wolverine;
 using Wolverine.EntityFrameworkCore;
 using Wolverine.ErrorHandling;
@@ -89,7 +89,6 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
             .AllowCredentials();
     }));
 
-
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
@@ -134,8 +133,8 @@ builder.Services.AddScoped<ITenantRepository, TenantRepository>();
 builder.Services.AddScoped<IGolferRepository, GolferRepository>();
 builder.Services.AddScoped<ICourseWaitlistRepository, CourseWaitlistRepository>();
 builder.Services.AddScoped<ITeeTimeOpeningRepository, TeeTimeOpeningRepository>();
-builder.Services.AddScoped<Shadowbrook.Domain.WaitlistServices.WaitlistMatchingService>();
-builder.Services.AddScoped<Shadowbrook.Domain.WaitlistServices.WaitlistOfferClaimService>();
+builder.Services.AddScoped<WaitlistMatchingService>();
+builder.Services.AddScoped<WaitlistOfferClaimService>();
 builder.Services.AddScoped<IWaitlistOfferRepository, WaitlistOfferRepository>();
 builder.Services.AddScoped<IGolferWaitlistEntryRepository, GolferWaitlistEntryRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
@@ -147,10 +146,10 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // Authentication
-builder.Services.Configure<AuthSettings>(builder.Configuration.GetSection(AuthSettings.SectionName));
-var authSettings = builder.Configuration.GetSection(AuthSettings.SectionName).Get<AuthSettings>()!;
-var useDevAuth = authSettings.UseDevAuth;
-if (useDevAuth)
+var authSection = builder.Configuration.GetSection(AuthSettings.SectionName);
+builder.Services.Configure<AuthSettings>(authSection);
+var authSettings = authSection.Get<AuthSettings>()!;
+if (authSettings.UseDevAuth)
 {
     builder.Services.AddAuthentication("DevAuth")
         .AddScheme<AuthenticationSchemeOptions, DevAuthHandler>("DevAuth", null);
@@ -185,10 +184,7 @@ if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testi
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.SetCommandTimeout(TimeSpan.FromSeconds(120));
     db.Database.Migrate();
-}
 
-if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testing")
-{
     try
     {
         await E2ESeedData.EnsureAsync(app.Services);
@@ -206,12 +202,9 @@ app.Use(async (context, next) =>
 {
     context.Response.Headers.Append(
         "Content-Security-Policy",
-        "default-src 'self'; " +
-        "script-src 'self'; " +
-        "style-src 'self' 'unsafe-inline'; " +
-        "img-src 'self' data:; " +
-        $"connect-src 'self' https://{cspAuthDomain}; " +
-        $"frame-src https://{cspAuthDomain};");
+        $"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+        + $"img-src 'self' data:; connect-src 'self' https://{cspAuthDomain}; "
+        + $"frame-src https://{cspAuthDomain};");
     await next();
 });
 
@@ -240,25 +233,21 @@ app.MapWolverineEndpoints(opts =>
 });
 
 // Seed admin accounts from configuration
-await using (var scope = app.Services.CreateAsyncScope())
+var seedEmails = authSettings.GetSeedAdminEmailsList();
+if (seedEmails.Length > 0)
 {
-    var seedAuthSettings = scope.ServiceProvider.GetRequiredService<IOptions<AuthSettings>>().Value;
-    var seedEmails = seedAuthSettings.GetSeedAdminEmailsList();
-    if (seedEmails.Length > 0)
+    await using var scope = app.Services.CreateAsyncScope();
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    foreach (var email in seedEmails)
     {
-        var seedDb = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        foreach (var email in seedEmails)
+        var exists = await db.AppUsers.AnyAsync(u => u.Email == email);
+        if (!exists)
         {
-            var exists = await seedDb.AppUsers.AnyAsync(u => u.Email == email);
-            if (!exists)
-            {
-                var admin = AppUser.CreateAdmin(email);
-                seedDb.AppUsers.Add(admin);
-            }
+            db.AppUsers.Add(AppUser.CreateAdmin(email));
         }
-
-        await seedDb.SaveChangesAsync();
     }
+
+    await db.SaveChangesAsync();
 }
 
 app.Run();
