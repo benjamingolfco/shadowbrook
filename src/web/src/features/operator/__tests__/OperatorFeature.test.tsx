@@ -10,6 +10,7 @@ vi.mock('@/features/auth/hooks/useAuth', () => ({
   useAuth: vi.fn(() => ({
     user: { displayName: 'Test User', email: 'test@test.com', organization: { name: 'Test Org' } },
     logout: vi.fn(),
+    courses: [{ id: 'course-1', name: 'Test Course' }],
   })),
 }));
 
