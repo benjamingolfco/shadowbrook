@@ -5,6 +5,7 @@ export interface AuthContextValue {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  unauthorized: boolean;
   permissions: string[];
   courses: { id: string; name: string }[];
   login: () => void;

@@ -3,6 +3,7 @@ import { InteractionType } from '@azure/msal-browser';
 import { useMsalAuthentication } from '@azure/msal-react';
 import { loginRequest } from '@/lib/msal-config';
 import { useAuth } from '../hooks/useAuth';
+import UnauthorizedPage from './UnauthorizedPage';
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -20,16 +21,18 @@ function MsalAuthGuard({ children }: AuthGuardProps) {
     return loginRequest;
   }, []);
   useMsalAuthentication(InteractionType.Redirect, authRequest);
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, unauthorized } = useAuth();
 
+  if (unauthorized) return <UnauthorizedPage />;
   if (isLoading || !isAuthenticated) return null;
 
   return <>{children}</>;
 }
 
 function DevAuthGuard({ children }: AuthGuardProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, unauthorized } = useAuth();
 
+  if (unauthorized) return <UnauthorizedPage />;
   if (isLoading || !isAuthenticated) return null;
 
   return <>{children}</>;

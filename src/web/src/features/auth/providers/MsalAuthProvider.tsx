@@ -4,6 +4,7 @@ import { InteractionStatus } from '@azure/msal-browser';
 import { msalInstance, loginRequest } from '@/lib/msal-config';
 import { AuthContext, type AuthContextValue } from '../hooks/useAuth';
 import { useMe } from '../hooks/useMe';
+import { ApiError } from '@/lib/api-client';
 import type { User } from '@/types/user';
 
 interface ProviderProps {
@@ -14,7 +15,9 @@ interface ProviderProps {
 // Used when VITE_USE_DEV_AUTH=true. Always authenticated via the dev identity.
 
 export function DevAuthProvider({ children }: ProviderProps) {
-  const { data: me, isLoading } = useMe(true);
+  const { data: me, isLoading, error } = useMe(true);
+
+  const unauthorized = error instanceof ApiError && error.status === 403;
 
   const user: User | null = useMemo(
     () =>
@@ -40,7 +43,8 @@ export function DevAuthProvider({ children }: ProviderProps) {
   const value: AuthContextValue = {
     user,
     isAuthenticated: !!user,
-    isLoading,
+    isLoading: unauthorized ? false : isLoading,
+    unauthorized,
     permissions: user?.permissions ?? [],
     courses: user?.courses ?? [],
     login: () => {},
@@ -65,7 +69,9 @@ function MsalAuthContent({ children }: ProviderProps) {
   const hasAccounts = msalInstance.getAllAccounts().length > 0;
   const isEffectivelyAuthenticated = isMsalAuthenticated || hasAccounts;
 
-  const { data: me, isLoading } = useMe(isEffectivelyAuthenticated);
+  const { data: me, isLoading, error } = useMe(isEffectivelyAuthenticated);
+
+  const unauthorized = error instanceof ApiError && error.status === 403;
 
   const login = useCallback(() => {
     void instance.loginRedirect({
@@ -104,7 +110,8 @@ function MsalAuthContent({ children }: ProviderProps) {
   const value: AuthContextValue = {
     user,
     isAuthenticated: isEffectivelyAuthenticated && !!user,
-    isLoading: isMsalBusy || (isEffectivelyAuthenticated ? (isLoading || !user) : false),
+    isLoading: unauthorized ? false : isMsalBusy || (isEffectivelyAuthenticated ? (isLoading || !user) : false),
+    unauthorized,
     permissions: user?.permissions ?? [],
     courses: user?.courses ?? [],
     login,
