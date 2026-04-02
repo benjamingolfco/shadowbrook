@@ -1,10 +1,6 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using FluentValidation;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Web;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Serilog;
@@ -76,8 +72,7 @@ builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>();
 builder.Services.AddOpenApi();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddMemoryCache();
-builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+builder.Services.AddScoped<IUserContext, UserContext>();
 
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
     {
@@ -139,35 +134,16 @@ builder.Services.AddScoped<IWaitlistOfferRepository, WaitlistOfferRepository>();
 builder.Services.AddScoped<IGolferWaitlistEntryRepository, GolferWaitlistEntryRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
+builder.Services.AddScoped<IAppUserClaimsProvider, AppUserClaimsProvider>();
 builder.Services.AddScoped<ICourseTimeZoneProvider, CourseTimeZoneProvider>();
 builder.Services.AddScoped<ITimeProvider, Shadowbrook.Api.Infrastructure.Services.TimeZoneProvider>();
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-// Authentication
-var authSection = builder.Configuration.GetSection(AuthSettings.SectionName);
-builder.Services.Configure<AuthSettings>(authSection);
-var authSettings = authSection.Get<AuthSettings>()!;
-if (authSettings.UseDevAuth)
-{
-    builder.Services.AddAuthentication("DevAuth")
-        .AddScheme<AuthenticationSchemeOptions, DevAuthHandler>("DevAuth", null);
-}
-else
-{
-    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
-}
+builder.Services.AddShadowbrookAuth(builder.Configuration);
 
-// Authorization
-builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("RequireAppAccess", policy =>
-        policy.AddRequirements(new PermissionRequirement(Permissions.AppAccess)))
-    .AddPolicy("RequireUsersManage", policy =>
-        policy.AddRequirements(new PermissionRequirement(Permissions.UsersManage)));
-
-builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+var authSettings = builder.Configuration.GetSection(AuthSettings.SectionName).Get<AuthSettings>()!;
 
 builder.Services.AddWolverineHttp();
 
@@ -210,7 +186,6 @@ app.Use(async (context, next) =>
 
 app.UseCors();
 app.UseAuthentication();
-app.UseMiddleware<AppUserEnrichmentMiddleware>();
 app.UseAuthorization();
 
 app.MapHealthChecks("/health");
@@ -222,7 +197,7 @@ if (!app.Environment.IsProduction())
 
 if (app.Environment.EnvironmentName == "Testing")
 {
-    app.MapGet("/debug/current-user", (ICurrentUser currentUser) => Results.Ok(new { currentUser.OrganizationId }));
+    app.MapGet("/debug/current-user", (IUserContext userContext) => Results.Ok(new { userContext.OrganizationId }));
 }
 
 app.MapWolverineEndpoints(opts =>

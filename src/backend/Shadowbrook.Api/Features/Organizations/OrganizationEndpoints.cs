@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.OrganizationAggregate;
 using Wolverine.Http;
@@ -10,7 +11,7 @@ namespace Shadowbrook.Api.Features.Organizations;
 public static class OrganizationEndpoints
 {
     [WolverineGet("/organizations")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> GetOrganizations([NotBody] ApplicationDbContext db)
     {
         var orgs = await db.Organizations
@@ -26,7 +27,7 @@ public static class OrganizationEndpoints
     }
 
     [WolverineGet("/organizations/{id}")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> GetOrganization(Guid id, [NotBody] ApplicationDbContext db)
     {
         var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == id);
@@ -50,7 +51,7 @@ public static class OrganizationEndpoints
     }
 
     [WolverinePost("/organizations")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> CreateOrganization(
         CreateOrganizationRequest request,
         [NotBody] ApplicationDbContext db)
@@ -61,7 +62,7 @@ public static class OrganizationEndpoints
     }
 
     [WolverinePut("/organizations/{id}")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> UpdateOrganization(
         Guid id,
         UpdateOrganizationRequest request,

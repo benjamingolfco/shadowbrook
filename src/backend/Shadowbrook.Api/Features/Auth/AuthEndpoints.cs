@@ -1,7 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.AppUserAggregate;
@@ -12,18 +11,18 @@ namespace Shadowbrook.Api.Features.Auth;
 public static class AuthEndpoints
 {
     [WolverineGet("/auth/me")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> GetMe(
-        [NotBody] ICurrentUser currentUser,
+        [NotBody] IUserContext userContext,
         [NotBody] ApplicationDbContext db)
     {
-        if (currentUser.AppUserId is null)
+        if (userContext.AppUserId is null)
         {
             return Results.Unauthorized();
         }
 
         var appUser = await db.AppUsers
-            .FirstOrDefaultAsync(u => u.Id == currentUser.AppUserId.Value);
+            .FirstOrDefaultAsync(u => u.Id == userContext.AppUserId.Value);
 
         if (appUser is null)
         {
@@ -72,13 +71,13 @@ public static class AuthEndpoints
             appUser.Role.ToString(),
             org,
             courses,
-            currentUser.Permissions.ToList());
+            userContext.Permissions.ToList());
 
         return Results.Ok(response);
     }
 
     [WolverineGet("/auth/users")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> GetUsers([NotBody] ApplicationDbContext db)
     {
         var users = await db.AppUsers
@@ -96,7 +95,7 @@ public static class AuthEndpoints
     }
 
     [WolverinePost("/auth/users")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> CreateUser(
         CreateUserRequest request,
         [NotBody] ApplicationDbContext db)
@@ -128,12 +127,11 @@ public static class AuthEndpoints
     }
 
     [WolverinePut("/auth/users/{id}")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> UpdateUser(
         Guid id,
         UpdateUserRequest request,
-        [NotBody] ApplicationDbContext db,
-        [NotBody] IMemoryCache cache)
+        [NotBody] ApplicationDbContext db)
     {
         var appUser = await db.AppUsers
             .FirstOrDefaultAsync(u => u.Id == id);
@@ -167,11 +165,6 @@ public static class AuthEndpoints
             {
                 appUser.AssignToOrganization(request.OrganizationId!.Value);
             }
-        }
-
-        if (appUser.IdentityId is not null)
-        {
-            cache.Remove(AppUserEnrichmentMiddleware.CacheKey(appUser.IdentityId));
         }
 
         var response = new UserListResponse(

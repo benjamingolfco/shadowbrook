@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Services;
 
@@ -8,7 +9,7 @@ public static class DevSmsEndpoints
 {
     public static IEndpointRouteBuilder MapDevSmsEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/dev/sms").WithTags("Dev SMS").RequireAuthorization("RequireAppAccess");
+        var group = app.MapGroup("/dev/sms").WithTags("Dev SMS").RequireAuthorization(AuthorizationPolicies.RequireAppAccess);
 
         group.MapGet("/", async (ApplicationDbContext db) =>
         {

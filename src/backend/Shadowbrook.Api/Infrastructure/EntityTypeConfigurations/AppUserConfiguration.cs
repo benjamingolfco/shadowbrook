@@ -21,7 +21,6 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
         builder.Property(u => u.Role).HasConversion<string>().HasMaxLength(20);
         builder.Property(u => u.IsActive);
         builder.Property(u => u.CreatedAt);
-        builder.Property(u => u.LastLoginAt);
 
         builder.HasOne<Organization>()
             .WithMany()

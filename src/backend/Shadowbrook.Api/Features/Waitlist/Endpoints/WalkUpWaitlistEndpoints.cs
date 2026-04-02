@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.Common;
@@ -15,7 +16,7 @@ namespace Shadowbrook.Api.Features.Waitlist.Endpoints;
 public static class WalkUpWaitlistEndpoints
 {
     [WolverinePost("/courses/{courseId}/walkup-waitlist/open")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> OpenWaitlist(
         Guid courseId,
         ICourseTimeZoneProvider timeZoneProvider,
@@ -37,7 +38,7 @@ public static class WalkUpWaitlistEndpoints
     }
 
     [WolverinePost("/courses/{courseId}/walkup-waitlist/close")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> CloseWaitlist(
         Guid courseId,
         ICourseTimeZoneProvider timeZoneProvider,
@@ -61,7 +62,7 @@ public static class WalkUpWaitlistEndpoints
     }
 
     [WolverinePost("/courses/{courseId}/walkup-waitlist/reopen")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> ReopenWaitlist(
         Guid courseId,
         ICourseTimeZoneProvider timeZoneProvider,
@@ -84,7 +85,7 @@ public static class WalkUpWaitlistEndpoints
     }
 
     [WolverineGet("/courses/{courseId}/walkup-waitlist/today")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> GetToday(
         Guid courseId,
         ApplicationDbContext db,
@@ -149,7 +150,7 @@ public static class WalkUpWaitlistEndpoints
     }
 
     [WolverinePost("/courses/{courseId}/tee-time-openings")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> CreateOpening(
         Guid courseId,
         CreateTeeTimeOpeningRequest request,
@@ -188,7 +189,7 @@ public static class WalkUpWaitlistEndpoints
     }
 
     [WolverinePost("/courses/{courseId}/tee-time-openings/{openingId}/cancel")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> CancelOpening(
         Guid courseId,
         Guid openingId,
@@ -219,7 +220,7 @@ public static class WalkUpWaitlistEndpoints
     }
 
     [WolverinePost("/courses/{courseId}/walkup-waitlist/entries")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> AddGolferToWaitlist(
         Guid courseId,
         AddGolferToWaitlistRequest request,

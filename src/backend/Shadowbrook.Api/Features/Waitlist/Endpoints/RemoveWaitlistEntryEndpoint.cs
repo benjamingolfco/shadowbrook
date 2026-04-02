@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
@@ -10,7 +11,7 @@ namespace Shadowbrook.Api.Features.Waitlist.Endpoints;
 public static class RemoveWaitlistEntryEndpoint
 {
     [WolverineDelete("/courses/{courseId}/walkup-waitlist/entries/{entryId}")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> RemoveEntry(
         Guid courseId,
         Guid entryId,

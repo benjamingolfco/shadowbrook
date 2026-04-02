@@ -2,7 +2,7 @@ using System.Security.Claims;
 
 namespace Shadowbrook.Api.Infrastructure.Auth;
 
-public class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUser
+public class UserContext(IHttpContextAccessor httpContextAccessor) : IUserContext
 {
     private readonly IHttpContextAccessor httpContextAccessor = httpContextAccessor;
     private ClaimsPrincipal? User => this.httpContextAccessor.HttpContext?.User;
@@ -32,4 +32,6 @@ public class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUse
         User?.FindAll("permission").Select(c => c.Value).ToList() ?? [];
 
     public bool IsAuthenticated => User?.Identity?.IsAuthenticated ?? false;
+
+    public bool HasPermission(string permission) => Permissions.Contains(permission);
 }

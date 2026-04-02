@@ -14,7 +14,6 @@ public class AppUser : Entity
     public Guid? OrganizationId { get; private set; }
     public bool IsActive { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
-    public DateTimeOffset? LastLoginAt { get; private set; }
 
     private AppUser() { } // EF
 
@@ -69,32 +68,32 @@ public class AppUser : Entity
 
     public void CompleteIdentitySetup(string identityId, string firstName, string lastName)
     {
-        if (this.IdentityId is not null && this.IdentityId == identityId)
+        if (IdentityId is not null && IdentityId == identityId)
         {
             return; // Idempotent — already linked to this identity
         }
 
-        if (this.IdentityId is not null)
+        if (IdentityId is not null)
         {
             throw new IdentityAlreadyLinkedException();
         }
 
-        this.IdentityId = identityId;
-        this.FirstName = firstName;
-        this.LastName = lastName;
-        this.IsActive = true;
+        IdentityId = identityId;
+        FirstName = firstName;
+        LastName = lastName;
+        IsActive = true;
 
         AddDomainEvent(new AppUserSetupCompleted
         {
-            AppUserId = this.Id,
-            Email = this.Email,
+            AppUserId = Id,
+            Email = Email,
         });
     }
 
     public void MakeAdmin()
     {
-        this.Role = AppUserRole.Admin;
-        this.OrganizationId = null;
+        Role = AppUserRole.Admin;
+        OrganizationId = null;
     }
 
     public void AssignToOrganization(Guid organizationId)
@@ -104,13 +103,11 @@ public class AppUser : Entity
             throw new EmptyOrganizationIdException();
         }
 
-        this.Role = AppUserRole.Operator;
-        this.OrganizationId = organizationId;
+        Role = AppUserRole.Operator;
+        OrganizationId = organizationId;
     }
 
-    public void RecordLogin() => this.LastLoginAt = DateTimeOffset.UtcNow;
+    public void Deactivate() => IsActive = false;
 
-    public void Deactivate() => this.IsActive = false;
-
-    public void Activate() => this.IsActive = true;
+    public void Activate() => IsActive = true;
 }

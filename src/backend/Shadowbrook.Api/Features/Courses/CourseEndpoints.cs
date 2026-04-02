@@ -13,15 +13,15 @@ namespace Shadowbrook.Api.Features.Courses;
 public static class CourseEndpoints
 {
     [WolverinePost("/courses")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> CreateCourse(
         CreateCourseRequest request,
         [NotBody] ICourseRepository courseRepository,
         [NotBody] ITenantRepository tenantRepository,
         [NotBody] ApplicationDbContext db,
-        [NotBody] ICurrentUser currentUser)
+        [NotBody] IUserContext userContext)
     {
-        var organizationId = currentUser.OrganizationId ?? request.OrganizationId;
+        var organizationId = userContext.OrganizationId ?? request.OrganizationId;
         if (organizationId is null)
         {
             return Results.BadRequest(new { error = "OrganizationId is required." });
@@ -78,7 +78,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> GetAllCourses(ApplicationDbContext db)
     {
         var courses = await (
@@ -103,7 +103,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses/{courseId}")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> GetCourseById(Guid courseId, ApplicationDbContext db)
     {
         var course = await (
@@ -129,7 +129,7 @@ public static class CourseEndpoints
     }
 
     [WolverinePut("/courses/{courseId}")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> UpdateCourse(
         Guid courseId,
         UpdateCourseRequest request,
@@ -163,7 +163,7 @@ public static class CourseEndpoints
     }
 
     [WolverinePut("/courses/{courseId}/tee-time-settings")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> UpdateTeeTimeSettings(
         Guid courseId,
         TeeTimeSettingsRequest request,
@@ -185,7 +185,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses/{courseId}/tee-time-settings")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> GetTeeTimeSettings(Guid courseId, ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
@@ -207,7 +207,7 @@ public static class CourseEndpoints
     }
 
     [WolverinePut("/courses/{courseId}/pricing")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> UpdatePricing(
         Guid courseId,
         PricingRequest request,
@@ -226,7 +226,7 @@ public static class CourseEndpoints
     }
 
     [WolverineGet("/courses/{courseId}/pricing")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> GetPricing(Guid courseId, ApplicationDbContext db)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);

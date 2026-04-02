@@ -20,7 +20,6 @@ public class AppUserTests
         Assert.Null(user.OrganizationId);
         Assert.False(user.IsActive);
         Assert.True(user.CreatedAt >= DateTimeOffset.UtcNow.AddSeconds(-2));
-        Assert.Null(user.LastLoginAt);
         Assert.Contains(user.DomainEvents, e => e is AppUserCreated);
     }
 
@@ -39,19 +38,7 @@ public class AppUserTests
         Assert.Equal(orgId, user.OrganizationId);
         Assert.False(user.IsActive);
         Assert.True(user.CreatedAt >= DateTimeOffset.UtcNow.AddSeconds(-2));
-        Assert.Null(user.LastLoginAt);
         Assert.Contains(user.DomainEvents, e => e is AppUserCreated);
-    }
-
-    [Fact]
-    public void RecordLogin_UpdatesLastLoginAt()
-    {
-        var user = AppUser.CreateOperator("e@e.com", Guid.CreateVersion7());
-
-        user.RecordLogin();
-
-        Assert.NotNull(user.LastLoginAt);
-        Assert.True(user.LastLoginAt >= DateTimeOffset.UtcNow.AddSeconds(-2));
     }
 
     [Fact]

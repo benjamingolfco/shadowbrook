@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
 using Wolverine.Http;
 
@@ -8,7 +9,7 @@ namespace Shadowbrook.Api.Features.Analytics;
 public static class AnalyticsEndpoints
 {
     [WolverineGet("/admin/analytics/summary")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> GetSummary([NotBody] ApplicationDbContext db)
     {
         var summary = await db.Database.SqlQuery<PlatformSummary>(
@@ -24,7 +25,7 @@ public static class AnalyticsEndpoints
     }
 
     [WolverineGet("/admin/analytics/fill-rates")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> GetFillRates(
         [NotBody] ApplicationDbContext db,
         Guid? courseId = null,
@@ -67,7 +68,7 @@ public static class AnalyticsEndpoints
     }
 
     [WolverineGet("/admin/analytics/bookings")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> GetBookingTrends(
         [NotBody] ApplicationDbContext db,
         Guid? courseId = null,
@@ -102,7 +103,7 @@ public static class AnalyticsEndpoints
     }
 
     [WolverineGet("/admin/analytics/popular-times")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> GetPopularTimes(
         [NotBody] ApplicationDbContext db,
         Guid? courseId = null,
@@ -139,7 +140,7 @@ public static class AnalyticsEndpoints
     }
 
     [WolverineGet("/admin/analytics/waitlist")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> GetWaitlistStats(
         [NotBody] ApplicationDbContext db,
         Guid? courseId = null)

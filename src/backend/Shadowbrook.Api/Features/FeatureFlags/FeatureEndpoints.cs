@@ -10,18 +10,18 @@ namespace Shadowbrook.Api.Features.FeatureFlags;
 public static class FeatureEndpoints
 {
     [WolverineGet("/features")]
-    [Authorize(Policy = "RequireAppAccess")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> GetFeatures(
         Guid? courseId,
         [NotBody] IFeatureService featureService,
         [NotBody] ApplicationDbContext db,
-        [NotBody] ICurrentUser currentUser,
+        [NotBody] IUserContext userContext,
         [NotBody] HttpContext httpContext)
     {
         Dictionary<string, bool>? orgFlags = null;
         Dictionary<string, bool>? courseFlags = null;
 
-        if (currentUser.OrganizationId is { } orgId)
+        if (userContext.OrganizationId is { } orgId)
         {
             orgFlags = await db.Organizations
                 .Where(o => o.Id == orgId)
@@ -42,7 +42,7 @@ public static class FeatureEndpoints
     }
 
     [WolverinePut("/organizations/{id}/features")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> SetOrgFeatures(
         Guid id,
         SetFeaturesRequest request,
@@ -59,7 +59,7 @@ public static class FeatureEndpoints
     }
 
     [WolverinePut("/courses/{courseId}/features")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> SetCourseFeatures(
         Guid courseId,
         SetFeaturesRequest request,

@@ -21,12 +21,12 @@ namespace Shadowbrook.Api.Infrastructure.Data;
 
 public class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,
-    ICurrentUser? currentUser = null) : DbContext(options)
+    IUserContext? userContext = null) : DbContext(options)
 {
     // Snapshot OrganizationId at DbContext construction time so the query filter sees the correct
     // organization for this request. EF Core evaluates query filters referencing 'this' against the
     // specific DbContext instance executing the query, so a new instance per request is required.
-    public Guid? CurrentOrganizationId { get; } = currentUser?.OrganizationId;
+    public Guid? CurrentOrganizationId { get; } = userContext?.OrganizationId;
 
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<AppUser> AppUsers => Set<AppUser>();
@@ -46,7 +46,7 @@ public class ApplicationDbContext(
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
-        var userId = currentUser?.AppUserId?.ToString();
+        var userId = userContext?.AppUserId?.ToString();
 
         foreach (var entry in ChangeTracker.Entries<Entity>()
             .Where(e => e.State is EntityState.Added or EntityState.Modified))

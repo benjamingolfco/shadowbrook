@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.CourseAggregate;
 using Shadowbrook.Domain.TenantAggregate;
@@ -11,7 +12,7 @@ namespace Shadowbrook.Api.Features.Tenants;
 public static class TenantEndpoints
 {
     [WolverinePost("/tenants")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> CreateTenant(
         CreateTenantRequest request,
         [NotBody] ITenantRepository tenantRepository)
@@ -37,7 +38,7 @@ public static class TenantEndpoints
     }
 
     [WolverineGet("/tenants")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> GetAllTenants(ApplicationDbContext db)
     {
         var tenants = await db.Tenants
@@ -55,7 +56,7 @@ public static class TenantEndpoints
     }
 
     [WolverineGet("/tenants/{id}")]
-    [Authorize(Policy = "RequireUsersManage")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> GetTenantById(
         Guid id,
         [NotBody] ITenantRepository tenantRepository,
