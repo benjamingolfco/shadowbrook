@@ -37,10 +37,6 @@ vi.mock('../pages/TeeSheet', () => ({
   default: () => <div data-testid="tee-sheet-page">Tee Sheet</div>,
 }));
 
-vi.mock('../components/CourseSwitcher', () => ({
-  default: () => <div data-testid="course-switcher">Switcher</div>,
-}));
-
 // Mock the Sidebar-heavy OperatorLayout with a simple pass-through
 vi.mock('@/components/layout/OperatorLayout', () => ({
   default: () => <div data-testid="operator-layout" />,

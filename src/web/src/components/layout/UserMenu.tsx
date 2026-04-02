@@ -17,7 +17,11 @@ function getInitials(displayName: string): string {
   return ((first[0] ?? '') + (last[0] ?? '')).toUpperCase();
 }
 
-export default function UserMenu() {
+interface UserMenuProps {
+  onSwitchCourse?: () => void;
+}
+
+export default function UserMenu({ onSwitchCourse }: UserMenuProps = {}) {
   const { user, logout } = useAuth();
 
   if (!user) return null;
@@ -46,6 +50,11 @@ export default function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {onSwitchCourse && (
+          <DropdownMenuItem onSelect={onSwitchCourse}>
+            Switch course
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           variant="destructive"
           onSelect={logout}

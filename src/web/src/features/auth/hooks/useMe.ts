@@ -9,5 +9,6 @@ export function useMe(enabled: boolean) {
     enabled,
     refetchOnWindowFocus: true,
     staleTime: 5 * 60 * 1000,
+    throwOnError: false,
   });
 }

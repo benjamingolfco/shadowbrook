@@ -4,6 +4,7 @@ import { createBrowserRouter, Navigate } from 'react-router';
 import { useAuth } from '@/features/auth';
 import AuthGuard from '@/features/auth/components/AuthGuard';
 import PermissionGuard from '@/features/auth/components/PermissionGuard';
+import RootErrorBoundary from '@/features/error/pages/RootErrorBoundary';
 
 const AdminFeature = lazy(() => import('@/features/admin'));
 const OperatorFeature = lazy(() => import('@/features/operator'));
@@ -32,58 +33,64 @@ function RoleRedirect() {
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: (
-      <AuthGuard>
-        <RoleRedirect />
-      </AuthGuard>
-    ),
+    ErrorBoundary: RootErrorBoundary,
+    children: [
+      {
+        index: true,
+        element: (
+          <AuthGuard>
+            <RoleRedirect />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/*',
+        element: (
+          <AuthGuard>
+            <PermissionGuard permission="users:manage" fallback="/operator">
+              <LazyFeature><AdminFeature /></LazyFeature>
+            </PermissionGuard>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'operator/*',
+        element: (
+          <AuthGuard>
+            <LazyFeature><OperatorFeature /></LazyFeature>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'golfer/*',
+        element: (
+          <LazyFeature><GolferFeature /></LazyFeature>
+        ),
+      },
+      {
+        path: 'join/*',
+        element: (
+          <LazyFeature><WalkupFeature /></LazyFeature>
+        ),
+      },
+      {
+        path: 'book/walkup/*',
+        element: (
+          <LazyFeature><WalkUpOfferFeature /></LazyFeature>
+        ),
+      },
+      {
+        path: 'w/*',
+        element: (
+          <LazyFeature><WalkUpQrFeature /></LazyFeature>
+        ),
+      },
+      ...((import.meta.env.DEV || import.meta.env.VITE_SHOW_DEV_TOOLS === 'true') ? [{
+        path: 'dev/sms/golfer/:golferId',
+        element: (
+          <LazyFeature><DevGolferSmsPage /></LazyFeature>
+        ),
+      }] : []),
+    ],
   },
-  {
-    path: '/admin/*',
-    element: (
-      <AuthGuard>
-        <PermissionGuard permission="users:manage" fallback="/operator">
-          <LazyFeature><AdminFeature /></LazyFeature>
-        </PermissionGuard>
-      </AuthGuard>
-    ),
-  },
-  {
-    path: '/operator/*',
-    element: (
-      <AuthGuard>
-        <LazyFeature><OperatorFeature /></LazyFeature>
-      </AuthGuard>
-    ),
-  },
-  {
-    path: '/golfer/*',
-    element: (
-      <LazyFeature><GolferFeature /></LazyFeature>
-    ),
-  },
-  {
-    path: '/join/*',
-    element: (
-      <LazyFeature><WalkupFeature /></LazyFeature>
-    ),
-  },
-  {
-    path: '/book/walkup/*',
-    element: (
-      <LazyFeature><WalkUpOfferFeature /></LazyFeature>
-    ),
-  },
-  {
-    path: '/w/*',
-    element: (
-      <LazyFeature><WalkUpQrFeature /></LazyFeature>
-    ),
-  },
-  ...((import.meta.env.DEV || import.meta.env.VITE_SHOW_DEV_TOOLS === 'true') ? [{
-    path: '/dev/sms/golfer/:golferId',
-    element: (
-      <LazyFeature><DevGolferSmsPage /></LazyFeature>
-    ),
-  }] : []),
 ]);

@@ -97,6 +97,7 @@ public class AppUserClaimsTransformation(
         principal.FindFirst("emails")?.Value
         ?? principal.FindFirst("email")?.Value
         ?? principal.FindFirst(ClaimTypes.Email)?.Value
-        ?? principal.FindFirst("preferred_username")?.Value
+        ?? principal.FindFirst(ClaimTypes.Name)?.Value
+        ?? principal.FindFirst("upn")?.Value
         ?? string.Empty;
 }

@@ -22,7 +22,7 @@ export function QueueDrawer({
   const count = entries.length;
 
   return (
-    <div>
+    <div className="relative">
       <button
         type="button"
         className="flex items-center gap-1.5 hover:text-foreground transition-colors"
@@ -38,7 +38,7 @@ export function QueueDrawer({
       </button>
 
       {expanded && (
-        <div className="mt-3 border rounded-lg max-h-[320px] overflow-y-auto">
+        <div className="absolute top-full left-0 mt-2 z-10 w-72 border rounded-lg bg-background shadow-lg max-h-[320px] overflow-y-auto">
           {entries.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">Queue is empty</p>
           ) : (

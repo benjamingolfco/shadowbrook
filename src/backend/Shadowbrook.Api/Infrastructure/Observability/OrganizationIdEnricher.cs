@@ -9,7 +9,7 @@ public class OrganizationIdEnricher(IHttpContextAccessor httpContextAccessor) : 
 {
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
-        var userContext = httpContextAccessor.HttpContext?.RequestServices.GetService<IUserContext>();
+        var userContext = httpContextAccessor.HttpContext?.RequestServices?.GetService<IUserContext>();
         if (userContext?.OrganizationId is { } organizationId)
         {
             logEvent.AddPropertyIfAbsent(

@@ -2,17 +2,25 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@/test/test-utils';
 import OperatorLayout from '@/components/layout/OperatorLayout';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useCourseContext } from '@/features/operator/context/CourseContext';
 
 vi.mock('@/features/auth/hooks/useAuth');
-vi.mock('@/features/operator/components/CourseSwitcher', () => ({
-  default: () => <div data-testid="course-switcher">CourseSwitcher Mock</div>,
-}));
+vi.mock('@/features/operator/context/CourseContext');
 
 const mockUseAuth = vi.mocked(useAuth);
+const mockUseCourseContext = vi.mocked(useCourseContext);
 
 describe('OperatorLayout', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseCourseContext.mockReturnValue({
+      course: null,
+      selectCourse: vi.fn(),
+      clearCourse: vi.fn(),
+      isDirty: false,
+      registerDirtyForm: vi.fn(),
+      unregisterDirtyForm: vi.fn(),
+    });
     mockUseAuth.mockReturnValue({
       user: {
         id: '1',
@@ -90,8 +98,4 @@ describe('OperatorLayout', () => {
     expect(heading).toHaveAttribute('title', longName);
   });
 
-  it('renders CourseSwitcher in sidebar header', () => {
-    render(<OperatorLayout />);
-    expect(screen.getByTestId('course-switcher')).toBeInTheDocument();
-  });
 });

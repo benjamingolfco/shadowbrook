@@ -37,6 +37,9 @@ Log.Logger = new LoggerConfiguration()
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Remove default console provider so writeToProviders only forwards to App Insights, not a second console
+builder.Logging.ClearProviders();
+
 builder.Host.UseSerilog((context, services, configuration) => configuration
     .ReadFrom.Configuration(context.Configuration)
     .ReadFrom.Services(services)
@@ -171,6 +174,7 @@ if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testi
     }
 }
 
+app.UseSerilogRequestLogging();
 app.UseDomainExceptionHandler();
 
 var cspAuthDomain = new Uri(builder.Configuration["AzureAd:Instance"]!).Host;

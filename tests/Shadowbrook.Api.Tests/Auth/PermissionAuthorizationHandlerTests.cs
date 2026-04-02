@@ -1,18 +1,12 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using NSubstitute;
 using Shadowbrook.Api.Infrastructure.Auth;
 
 namespace Shadowbrook.Api.Tests.Auth;
 
 public class PermissionAuthorizationHandlerTests
 {
-    private static ClaimsPrincipal UserWithPermissions(params string[] permissions)
-    {
-        var claims = permissions.Select(p => new Claim("permission", p)).ToList();
-        var identity = new ClaimsIdentity(claims, authenticationType: "test");
-        return new ClaimsPrincipal(identity);
-    }
-
     private static AuthorizationHandlerContext CreateContext(
         ClaimsPrincipal user, PermissionRequirement requirement) =>
         new([requirement], user, resource: null);
@@ -20,9 +14,11 @@ public class PermissionAuthorizationHandlerTests
     [Fact]
     public async Task UserWithMatchingPermission_Succeeds()
     {
-        var handler = new PermissionAuthorizationHandler();
+        var userContext = Substitute.For<IUserContext>();
+        userContext.HasPermission(Permissions.AppAccess).Returns(true);
+        var handler = new PermissionAuthorizationHandler(userContext);
         var requirement = new PermissionRequirement(Permissions.AppAccess);
-        var user = UserWithPermissions(Permissions.AppAccess);
+        var user = new ClaimsPrincipal(new ClaimsIdentity([], authenticationType: "test"));
         var context = CreateContext(user, requirement);
 
         await handler.HandleAsync(context);
@@ -33,9 +29,11 @@ public class PermissionAuthorizationHandlerTests
     [Fact]
     public async Task UserWithoutMatchingPermission_DoesNotSucceed()
     {
-        var handler = new PermissionAuthorizationHandler();
+        var userContext = Substitute.For<IUserContext>();
+        userContext.HasPermission(Permissions.UsersManage).Returns(false);
+        var handler = new PermissionAuthorizationHandler(userContext);
         var requirement = new PermissionRequirement(Permissions.UsersManage);
-        var user = UserWithPermissions(Permissions.AppAccess);
+        var user = new ClaimsPrincipal(new ClaimsIdentity([], authenticationType: "test"));
         var context = CreateContext(user, requirement);
 
         await handler.HandleAsync(context);
@@ -44,11 +42,13 @@ public class PermissionAuthorizationHandlerTests
     }
 
     [Fact]
-    public async Task UserWithNoPermissionClaims_DoesNotSucceed()
+    public async Task UserWithNoPermissions_DoesNotSucceed()
     {
-        var handler = new PermissionAuthorizationHandler();
+        var userContext = Substitute.For<IUserContext>();
+        userContext.HasPermission(Arg.Any<string>()).Returns(false);
+        var handler = new PermissionAuthorizationHandler(userContext);
         var requirement = new PermissionRequirement(Permissions.AppAccess);
-        var user = UserWithPermissions();
+        var user = new ClaimsPrincipal(new ClaimsIdentity([], authenticationType: "test"));
         var context = CreateContext(user, requirement);
 
         await handler.HandleAsync(context);

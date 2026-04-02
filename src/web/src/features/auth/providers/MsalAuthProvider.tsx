@@ -75,7 +75,9 @@ function MsalAuthContent({ children }: ProviderProps) {
   }, [instance]);
 
   const logout = useCallback(() => {
-    void instance.logoutRedirect();
+    const account = instance.getActiveAccount() ?? instance.getAllAccounts()[0];
+    sessionStorage.setItem('msal_post_logout', '1');
+    void instance.logoutRedirect({ account });
   }, [instance]);
 
   const user: User | null = useMemo(

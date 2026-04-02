@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using NSubstitute;
 using Shadowbrook.Api.Infrastructure.Auth;
 
 namespace Shadowbrook.Api.Tests.Auth;
@@ -11,13 +12,14 @@ public class RequireAppUserHandlerTests
         new([requirement], user, resource: null);
 
     [Fact]
-    public async Task UserWithAppUserIdClaim_Succeeds()
+    public async Task UserWithAppUserId_Succeeds()
     {
-        var handler = new RequireAppUserHandler();
+        var userContext = Substitute.For<IUserContext>();
+        userContext.AppUserId.Returns(Guid.NewGuid());
+        var handler = new RequireAppUserHandler(userContext);
         var requirement = new RequireAppUserRequirement();
 
-        var claims = new List<Claim> { new("app_user_id", Guid.NewGuid().ToString()) };
-        var identity = new ClaimsIdentity(claims, authenticationType: "test");
+        var identity = new ClaimsIdentity([], authenticationType: "test");
         var user = new ClaimsPrincipal(identity);
         var context = CreateContext(user, requirement);
 
@@ -28,9 +30,11 @@ public class RequireAppUserHandlerTests
     }
 
     [Fact]
-    public async Task UserWithoutAppUserIdClaim_FailsWithRequirementInFailedRequirements()
+    public async Task UserWithoutAppUserId_FailsWithRequirementInFailedRequirements()
     {
-        var handler = new RequireAppUserHandler();
+        var userContext = Substitute.For<IUserContext>();
+        userContext.AppUserId.Returns((Guid?)null);
+        var handler = new RequireAppUserHandler(userContext);
         var requirement = new RequireAppUserRequirement();
 
         var identity = new ClaimsIdentity([], authenticationType: "test");
