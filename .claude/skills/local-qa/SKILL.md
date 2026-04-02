@@ -103,10 +103,18 @@ All subsequent agent work happens in this worktree.
 
 ## Step 2: QA — Walk Happy Paths
 
-Dispatch a `qa-tester` subagent with this prompt:
+First, read `.local/test-credentials.md` from the repo root to get test account credentials.
+
+Dispatch a `qa-tester` subagent with this prompt (include the credentials content):
 
 ```
 You are doing exploratory QA on the Shadowbrook tee time booking app running at http://localhost:3000 (API at http://localhost:5221).
+
+## Test Credentials
+
+{paste full contents of .local/test-credentials.md here}
+
+Log in with the appropriate test account before starting your exploration. Pick the role that best fits the flows you're testing (e.g., operator credentials for course management flows, admin credentials for organization management).
 
 Your goal: walk every happy path you can find and verify it works. You are NOT looking for edge cases, security issues, or adversarial inputs. You are checking: "Can a user complete the core flows?"
 
