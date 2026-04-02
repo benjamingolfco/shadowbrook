@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Services;
@@ -9,6 +10,7 @@ namespace Shadowbrook.Api.Features.Waitlist.Endpoints;
 public static class WalkUpQrEndpoints
 {
     [WolverineGet("/walkup/status/{shortCode}")]
+    [AllowAnonymous]
     public static async Task<IResult> GetWalkUpStatus(
         string shortCode,
         ApplicationDbContext db,

@@ -1,8 +1,9 @@
-export type Role = 'admin' | 'operator' | 'golfer';
-
 export interface User {
   id: string;
-  name: string;
   email: string;
-  role: Role;
+  displayName: string;
+  role: string;
+  organization: { id: string; name: string } | null;
+  courses: { id: string; name: string }[];
+  permissions: string[];
 }

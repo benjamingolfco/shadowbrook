@@ -7,10 +7,16 @@ namespace Shadowbrook.Api.IntegrationTests;
 [IntegrationTest]
 public class TenantEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
-    private readonly HttpClient client = factory.CreateClient();
     private readonly TestWebApplicationFactory factory = factory;
+    private HttpClient client = null!;
 
-    public Task InitializeAsync() => this.factory.ResetDatabaseAsync();
+    public async Task InitializeAsync()
+    {
+        await this.factory.ResetDatabaseAsync();
+        await this.factory.SeedTestAdminAsync();
+        this.client = this.factory.CreateAuthenticatedClient();
+    }
+
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
@@ -161,7 +167,7 @@ public class TenantEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         await this.client.PostAsJsonAsync("/courses", new
         {
             Name = "Location Course",
-            TenantId = tenant!.Id,
+            OrganizationId = tenant!.Id,
             City = "Scottsdale",
             State = "AZ",
             TimeZoneId = TestTimeZones.Phoenix

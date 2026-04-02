@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Services;
@@ -13,6 +14,7 @@ namespace Shadowbrook.Api.Features.Waitlist.Endpoints;
 public static class WalkUpJoinEndpoints
 {
     [WolverinePost("/walkup/verify")]
+    [AllowAnonymous]
     public static async Task<IResult> VerifyShortCode(VerifyCodeRequest request, ApplicationDbContext db, TimeProvider timeProvider)
     {
         var waitlist = await db.CourseWaitlists
@@ -53,6 +55,7 @@ public static class WalkUpJoinEndpoints
     }
 
     [WolverinePost("/walkup/join")]
+    [AllowAnonymous]
     public static async Task<IResult> JoinWaitlist(
         JoinWaitlistRequest request,
         ICourseWaitlistRepository waitlistRepo,

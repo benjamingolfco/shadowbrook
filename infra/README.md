@@ -257,7 +257,7 @@ GET /tee-times [200, 145ms]
 | File | Purpose |
 |------|---------|
 | `src/backend/Shadowbrook.Api/Program.cs` | OTel + Serilog + health check registration |
-| `src/backend/Shadowbrook.Api/Infrastructure/Observability/TenantIdEnricher.cs` | Serilog enricher that adds `TenantId` from JWT claims |
+| `src/backend/Shadowbrook.Api/Infrastructure/Observability/OrganizationIdEnricher.cs` | Serilog enricher that adds `OrganizationId` from JWT claims |
 | `src/backend/Shadowbrook.Api/appsettings.json` | Serilog log level overrides (EF Core, ASP.NET Core, Wolverine) |
 | `infra/bicep/modules/log-analytics.bicep` | Log Analytics workspace (0.1 GB/day cap) |
 | `infra/bicep/modules/app-insights.bicep` | Application Insights linked to Log Analytics |

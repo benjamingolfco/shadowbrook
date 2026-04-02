@@ -11,6 +11,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Badge } from '@/components/ui/badge';
+import UserMenu from '@/components/layout/UserMenu';
 
 export default function AdminLayout() {
   return (
@@ -32,9 +33,18 @@ export default function AdminLayout() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <NavLink to="/admin/tenants">
+                <NavLink to="/admin" end>
                   {({ isActive }) => (
-                    <span className={isActive ? 'font-semibold' : ''}>Tenants</span>
+                    <span className={isActive ? 'font-semibold' : ''}>Dashboard</span>
+                  )}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <NavLink to="/admin/organizations">
+                  {({ isActive }) => (
+                    <span className={isActive ? 'font-semibold' : ''}>Organizations</span>
                   )}
                 </NavLink>
               </SidebarMenuButton>
@@ -44,6 +54,24 @@ export default function AdminLayout() {
                 <NavLink to="/admin/courses">
                   {({ isActive }) => (
                     <span className={isActive ? 'font-semibold' : ''}>Courses</span>
+                  )}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <NavLink to="/admin/users">
+                  {({ isActive }) => (
+                    <span className={isActive ? 'font-semibold' : ''}>Users</span>
+                  )}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <NavLink to="/admin/feature-flags">
+                  {({ isActive }) => (
+                    <span className={isActive ? 'font-semibold' : ''}>Feature Flags</span>
                   )}
                 </NavLink>
               </SidebarMenuButton>
@@ -63,8 +91,11 @@ export default function AdminLayout() {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-12 items-center gap-2 border-b px-4 md:hidden">
-          <SidebarTrigger />
+        <header className="flex h-12 items-center border-b px-4">
+          <SidebarTrigger className="md:hidden" />
+          <div className="ml-auto">
+            <UserMenu />
+          </div>
         </header>
         <Outlet />
       </SidebarInset>

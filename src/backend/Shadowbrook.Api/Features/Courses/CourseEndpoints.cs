@@ -1,8 +1,10 @@
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Auth;
+using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.CourseAggregate;
+using Shadowbrook.Domain.OrganizationAggregate;
 using Shadowbrook.Domain.TenantAggregate;
 using Wolverine.Http;
 
@@ -11,31 +13,49 @@ namespace Shadowbrook.Api.Features.Courses;
 public static class CourseEndpoints
 {
     [WolverinePost("/courses")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> CreateCourse(
         CreateCourseRequest request,
         [NotBody] ICourseRepository courseRepository,
         [NotBody] ITenantRepository tenantRepository,
-        [NotBody] ICurrentUser currentUser)
+        [NotBody] ApplicationDbContext db,
+        [NotBody] IUserContext userContext)
     {
-        var tenantId = currentUser.TenantId ?? request.TenantId;
-        if (tenantId is null)
+        var organizationId = userContext.OrganizationId ?? request.OrganizationId;
+        if (organizationId is null)
         {
-            return Results.BadRequest(new { error = "TenantId is required (via X-Tenant-Id header or request body)." });
+            return Results.BadRequest(new { error = "OrganizationId is required." });
         }
 
-        var tenant = await tenantRepository.GetByIdAsync(tenantId.Value);
-        if (tenant is null)
+        // Look up Organization first (admin-created orgs only exist here).
+        // Fall back to Tenant for legacy tenants — create an Organization row if one is missing.
+        var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == organizationId.Value);
+        string orgName;
+
+        if (org is not null)
         {
-            return Results.BadRequest(new { error = "Tenant does not exist." });
+            orgName = org.Name;
+        }
+        else
+        {
+            var tenant = await tenantRepository.GetByIdAsync(organizationId.Value);
+            if (tenant is null)
+            {
+                return Results.BadRequest(new { error = "Organization does not exist." });
+            }
+
+            orgName = tenant.OrganizationName;
+            var bridgeOrg = Organization.CreateWithId(organizationId.Value, orgName);
+            db.Organizations.Add(bridgeOrg);
         }
 
-        var duplicateExists = await courseRepository.ExistsByNameAsync(tenantId.Value, request.Name);
+        var duplicateExists = await courseRepository.ExistsByNameAsync(organizationId.Value, request.Name);
         if (duplicateExists)
         {
             return Results.Conflict(new { error = "A course with this name already exists for this tenant." });
         }
 
-        var course = Course.Create(tenantId.Value, request.Name, request.TimeZoneId,
+        var course = Course.Create(organizationId.Value, request.Name, request.TimeZoneId,
             request.StreetAddress, request.City, request.State, request.ZipCode,
             request.ContactEmail, request.ContactPhone);
 
@@ -52,17 +72,19 @@ public static class CourseEndpoints
             course.ContactPhone,
             course.TimeZoneId,
             course.CreatedAt,
-            new TenantInfo(tenant.Id, tenant.OrganizationName));
+            new TenantInfo(organizationId.Value, orgName));
 
         return Results.Created($"/courses/{course.Id}", response);
     }
 
     [WolverineGet("/courses")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> GetAllCourses(ApplicationDbContext db)
     {
         var courses = await (
             from c in db.Courses
-            join t in db.Tenants on c.TenantId equals t.Id
+            join o in db.Organizations on c.OrganizationId equals o.Id into orgs
+            from o in orgs.DefaultIfEmpty()
             select new CourseResponse(
                 c.Id,
                 c.Name,
@@ -74,19 +96,21 @@ public static class CourseEndpoints
                 c.ContactPhone,
                 c.TimeZoneId,
                 c.CreatedAt,
-                new TenantInfo(t.Id, t.OrganizationName)))
+                o == null ? null : new TenantInfo(o.Id, o.Name)))
             .ToListAsync();
 
         return Results.Ok(courses);
     }
 
-    [WolverineGet("/courses/{id}")]
-    public static async Task<IResult> GetCourseById(Guid id, ApplicationDbContext db)
+    [WolverineGet("/courses/{courseId}")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
+    public static async Task<IResult> GetCourseById(Guid courseId, ApplicationDbContext db)
     {
         var course = await (
             from c in db.Courses
-            join t in db.Tenants on c.TenantId equals t.Id
-            where c.Id == id
+            join o in db.Organizations on c.OrganizationId equals o.Id into orgs
+            from o in orgs.DefaultIfEmpty()
+            where c.Id == courseId
             select new CourseResponse(
                 c.Id,
                 c.Name,
@@ -98,19 +122,54 @@ public static class CourseEndpoints
                 c.ContactPhone,
                 c.TimeZoneId,
                 c.CreatedAt,
-                new TenantInfo(t.Id, t.OrganizationName)))
+                o == null ? null : new TenantInfo(o.Id, o.Name)))
             .FirstOrDefaultAsync();
 
         return course is null ? Results.NotFound() : Results.Ok(course);
     }
 
-    [WolverinePut("/courses/{id}/tee-time-settings")]
+    [WolverinePut("/courses/{courseId}")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
+    public static async Task<IResult> UpdateCourse(
+        Guid courseId,
+        UpdateCourseRequest request,
+        [NotBody] ApplicationDbContext db)
+    {
+        var course = await db.Courses
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(c => c.Id == courseId);
+
+        if (course is null)
+        {
+            return Results.NotFound();
+        }
+
+        course.UpdateDetails(request.Name, request.TimeZoneId);
+
+        var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == course.OrganizationId);
+
+        return Results.Ok(new CourseResponse(
+            course.Id,
+            course.Name,
+            course.StreetAddress,
+            course.City,
+            course.State,
+            course.ZipCode,
+            course.ContactEmail,
+            course.ContactPhone,
+            course.TimeZoneId,
+            course.CreatedAt,
+            org is null ? null : new TenantInfo(org.Id, org.Name)));
+    }
+
+    [WolverinePut("/courses/{courseId}/tee-time-settings")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> UpdateTeeTimeSettings(
-        Guid id,
+        Guid courseId,
         TeeTimeSettingsRequest request,
         ApplicationDbContext db)
     {
-        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
+        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
 
         if (course is null)
         {
@@ -125,10 +184,11 @@ public static class CourseEndpoints
             course.LastTeeTime!.Value));
     }
 
-    [WolverineGet("/courses/{id}/tee-time-settings")]
-    public static async Task<IResult> GetTeeTimeSettings(Guid id, ApplicationDbContext db)
+    [WolverineGet("/courses/{courseId}/tee-time-settings")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
+    public static async Task<IResult> GetTeeTimeSettings(Guid courseId, ApplicationDbContext db)
     {
-        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
+        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
 
         if (course is null)
         {
@@ -146,13 +206,14 @@ public static class CourseEndpoints
             course.LastTeeTime.Value));
     }
 
-    [WolverinePut("/courses/{id}/pricing")]
+    [WolverinePut("/courses/{courseId}/pricing")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> UpdatePricing(
-        Guid id,
+        Guid courseId,
         PricingRequest request,
         ApplicationDbContext db)
     {
-        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
+        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
 
         if (course is null)
         {
@@ -164,10 +225,11 @@ public static class CourseEndpoints
         return Results.Ok(new PricingResponse(course.FlatRatePrice!.Value));
     }
 
-    [WolverineGet("/courses/{id}/pricing")]
-    public static async Task<IResult> GetPricing(Guid id, ApplicationDbContext db)
+    [WolverineGet("/courses/{courseId}/pricing")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
+    public static async Task<IResult> GetPricing(Guid courseId, ApplicationDbContext db)
     {
-        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
+        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
 
         if (course is null)
         {
@@ -186,7 +248,7 @@ public static class CourseEndpoints
 public record CreateCourseRequest(
     string Name,
     string TimeZoneId,
-    Guid? TenantId = null,
+    Guid? OrganizationId = null,
     string? StreetAddress = null,
     string? City = null,
     string? State = null,
@@ -205,9 +267,11 @@ public record CourseResponse(
     string? ContactPhone,
     string TimeZoneId,
     DateTimeOffset CreatedAt,
-    TenantInfo Tenant);
+    TenantInfo? Tenant);
 
 public record TenantInfo(Guid Id, string OrganizationName);
+
+public sealed record UpdateCourseRequest(string Name, string TimeZoneId);
 
 public record TeeTimeSettingsRequest(
     int TeeTimeIntervalMinutes,
@@ -226,6 +290,24 @@ public record PricingResponse(decimal FlatRatePrice);
 public class CreateCourseRequestValidator : AbstractValidator<CreateCourseRequest>
 {
     public CreateCourseRequestValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty();
+        RuleFor(x => x.TimeZoneId)
+            .NotEmpty().WithMessage("TimeZoneId is required.");
+        RuleFor(x => x.TimeZoneId)
+            .Must(id =>
+            {
+                try { TimeZoneInfo.FindSystemTimeZoneById(id); return true; }
+                catch { return false; }
+            })
+            .When(x => !string.IsNullOrEmpty(x.TimeZoneId))
+            .WithMessage("TimeZoneId is not a valid IANA timezone.");
+    }
+}
+
+public class UpdateCourseRequestValidator : AbstractValidator<UpdateCourseRequest>
+{
+    public UpdateCourseRequestValidator()
     {
         RuleFor(x => x.Name).NotEmpty();
         RuleFor(x => x.TimeZoneId)

@@ -28,6 +28,7 @@ Thumbs.db
 
 # Claude Code (local only)
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 
 # Playwright MCP
 .playwright-mcp/

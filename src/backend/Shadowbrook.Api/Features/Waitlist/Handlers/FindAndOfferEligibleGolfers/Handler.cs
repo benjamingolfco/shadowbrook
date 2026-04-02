@@ -32,7 +32,7 @@ public static class FindAndOfferEligibleGolfersHandler
 
         if (eligibleEntries.Count == 0)
         {
-            logger.LogWarning(
+            logger.LogInformation(
                 "No eligible golfers found for opening {OpeningId}, skipping offer dispatch",
                 command.OpeningId);
             return;

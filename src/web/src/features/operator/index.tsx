@@ -1,22 +1,52 @@
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router';
 import OperatorLayout from '@/components/layout/OperatorLayout';
+import WaitlistShellLayout from '@/components/layout/WaitlistShellLayout';
 import TeeSheet from './pages/TeeSheet';
 import TeeTimeSettings from './pages/TeeTimeSettings';
 import WalkUpWaitlist from './pages/WalkUpWaitlist';
-import OrganizationSelect from './pages/OrganizationSelect';
 import CoursePortfolio from './pages/CoursePortfolio';
-import { TenantProvider, useTenantContext } from './context/TenantContext';
 import { CourseProvider, useCourseContext } from './context/CourseContext';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { useFeature } from '@/hooks/use-features';
+import { useAuth } from '@/features/auth';
 
 function CourseGate() {
-  const { course } = useCourseContext();
+  const { course, clearCourse } = useCourseContext();
+  const { courses } = useAuth();
+  const fullOperatorApp = useFeature('full-operator-app', course?.id);
+
+  useEffect(() => {
+    if (course && !courses.some((c) => c.id === course.id)) {
+      clearCourse();
+    }
+  }, [course, courses, clearCourse]);
 
   if (!course) {
+    if (fullOperatorApp) {
+      return (
+        <Routes>
+          <Route element={<OperatorLayout />}>
+            <Route path="*" element={<CoursePortfolio />} />
+          </Route>
+        </Routes>
+      );
+    }
+
     return (
       <Routes>
-        <Route element={<OperatorLayout />}>
+        <Route element={<WaitlistShellLayout />}>
           <Route path="*" element={<CoursePortfolio />} />
+        </Route>
+      </Routes>
+    );
+  }
+
+  if (!fullOperatorApp) {
+    return (
+      <Routes>
+        <Route element={<WaitlistShellLayout />}>
+          <Route path="*" element={<WalkUpWaitlist />} />
         </Route>
       </Routes>
     );
@@ -34,26 +64,12 @@ function CourseGate() {
   );
 }
 
-function TenantGate() {
-  const { tenant } = useTenantContext();
-
-  if (!tenant) {
-    return <OrganizationSelect />;
-  }
-
-  return (
-    <CourseProvider key={tenant.id} tenantId={tenant.id}>
-      <CourseGate />
-    </CourseProvider>
-  );
-}
-
 export default function OperatorFeature() {
   return (
     <ThemeProvider>
-      <TenantProvider>
-        <TenantGate />
-      </TenantProvider>
+      <CourseProvider>
+        <CourseGate />
+      </CourseProvider>
     </ThemeProvider>
   );
 }

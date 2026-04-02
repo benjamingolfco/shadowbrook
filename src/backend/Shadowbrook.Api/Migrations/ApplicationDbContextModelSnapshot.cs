@@ -97,6 +97,60 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("DevSmsMessages", (string)null);
                 });
 
+            modelBuilder.Entity("Shadowbrook.Domain.AppUserAggregate.AppUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("nvarchar(320)");
+
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("IdentityId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdentityId")
+                        .IsUnique()
+                        .HasFilter("[IdentityId] IS NOT NULL");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.ToTable("AppUsers", (string)null);
+                });
+
             modelBuilder.Entity("Shadowbrook.Domain.BookingAggregate.Booking", b =>
                 {
                     b.Property<Guid>("Id")
@@ -167,6 +221,9 @@ namespace Shadowbrook.Api.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("FeatureFlags")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<TimeOnly?>("FirstTeeTime")
                         .HasColumnType("time");
 
@@ -181,6 +238,9 @@ namespace Shadowbrook.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -197,9 +257,6 @@ namespace Shadowbrook.Api.Migrations
 
                     b.Property<int?>("TeeTimeIntervalMinutes")
                         .HasColumnType("int");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("TimeZoneId")
                         .IsRequired()
@@ -222,9 +279,9 @@ namespace Shadowbrook.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId");
+                    b.HasIndex("OrganizationId");
 
-                    b.HasIndex("TenantId", "Name")
+                    b.HasIndex("OrganizationId", "Name")
                         .IsUnique();
 
                     b.ToTable("Courses", (string)null);
@@ -375,6 +432,37 @@ namespace Shadowbrook.Api.Migrations
                     b.HasDiscriminator<bool>("IsWalkUp");
 
                     b.UseTphMappingStrategy();
+                });
+
+            modelBuilder.Entity("Shadowbrook.Domain.OrganizationAggregate.Organization", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("FeatureFlags")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Organizations", (string)null);
                 });
 
             modelBuilder.Entity("Shadowbrook.Domain.TeeTimeOpeningAggregate.TeeTimeOpening", b =>
@@ -614,11 +702,19 @@ namespace Shadowbrook.Api.Migrations
                     b.HasDiscriminator().HasValue(true);
                 });
 
+            modelBuilder.Entity("Shadowbrook.Domain.AppUserAggregate.AppUser", b =>
+                {
+                    b.HasOne("Shadowbrook.Domain.OrganizationAggregate.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("Shadowbrook.Domain.CourseAggregate.Course", b =>
                 {
-                    b.HasOne("Shadowbrook.Domain.TenantAggregate.Tenant", null)
+                    b.HasOne("Shadowbrook.Domain.OrganizationAggregate.Organization", null)
                         .WithMany()
-                        .HasForeignKey("TenantId")
+                        .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

@@ -35,16 +35,23 @@ When an issue number is provided:
    - Override via argument: `/qa 247 --url http://localhost:3000`
    - If the URL is not reachable, stop and tell the user
 
-4. **Dispatch the QA tester agent** via the Agent tool:
+4. **Load test credentials:**
+   - Read `.local/test-credentials.md` from the repo root
+   - This file contains usernames, passwords, and roles for test accounts
+   - Pass the full credentials content to the QA tester agent so it can authenticate
+
+5. **Dispatch the QA tester agent** via the Agent tool:
    - `subagent_type: "qa-tester"`
    - Include in the prompt:
      - The issue number and title
      - The full story and acceptance criteria text
      - The environment URL
+     - The test credentials (from `.local/test-credentials.md`)
+     - Instruction to log in with the appropriate test account before testing (pick the role that matches the story's persona)
      - Instruction to use Playwright MCP tools in headless mode (or headed if `--headed` was passed)
    - Wait for the agent to return the QA report
 
-5. **Post the report on the issue:**
+6. **Post the report on the issue:**
    ```bash
    gh issue comment {number} --repo benjamingolfco/shadowbrook --body "{report}"
    ```
@@ -55,7 +62,7 @@ When an issue number is provided:
    {report content}
    ```
 
-6. **Handle results:**
+7. **Handle results:**
 
    **All ACs pass:**
    - Check for open sub-issues:
@@ -90,7 +97,7 @@ When an issue number is provided:
    - Present the suggested story titles to the user
    - Ask if they want to create them as new issues (these are NOT sub-issues — they are new scope)
 
-7. **Summarize to the user** what was done for this issue:
+8. **Summarize to the user** what was done for this issue:
    - Whether all ACs passed or which failed
    - That the QA report was posted to the issue (link to the comment)
    - Whether the issue was moved to Done and closed, or left in QA

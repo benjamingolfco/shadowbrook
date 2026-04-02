@@ -1,13 +1,24 @@
 export const queryKeys = {
   courses: {
-    all: (tenantId: string) => ['courses', tenantId] as const,
+    all: ['courses'] as const,
     detail: (id: string) => ['courses', id] as const,
     settings: (id: string) => ['courses', id, 'settings'] as const,
     pricing: (id: string) => ['courses', id, 'pricing'] as const,
   },
-  tenants: {
-    all: ['tenants'] as const,
-    detail: (id: string) => ['tenants', id] as const,
+  organizations: {
+    all: ['organizations'] as const,
+    detail: (id: string) => ['organizations', id] as const,
+  },
+  users: {
+    all: ['users'] as const,
+    detail: (id: string) => ['users', id] as const,
+  },
+  analytics: {
+    summary: ['analytics', 'summary'] as const,
+    fillRates: (courseId?: string) => ['analytics', 'fill-rates', courseId] as const,
+    bookings: (courseId?: string) => ['analytics', 'bookings', courseId] as const,
+    popularTimes: (courseId?: string) => ['analytics', 'popular-times', courseId] as const,
+    waitlist: (courseId?: string) => ['analytics', 'waitlist', courseId] as const,
   },
   teeSheets: {
     byDate: (courseId: string, date: string) => ['tee-sheets', courseId, date] as const,
@@ -30,5 +41,6 @@ export const queryKeys = {
   },
   features: {
     all: ['features'] as const,
+    byCourse: (courseId: string) => ['features', courseId] as const,
   },
 };

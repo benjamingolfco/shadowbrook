@@ -95,7 +95,6 @@ export function AddTeeTimeOpeningDialog({ open, onOpenChange, courseId }: AddTee
       },
       {
         onSuccess: () => {
-          form.reset({ teeTime: '', slotsAvailable: 1 });
           onOpenChange(false);
         },
       },

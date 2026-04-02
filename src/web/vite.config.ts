@@ -20,7 +20,14 @@ export default defineConfig({
       '/health': 'http://localhost:5221',
       '/walkup': 'http://localhost:5221',
       '/waitlist': 'http://localhost:5221',
-      '/dev': 'http://localhost:5221',
+      '/dev/sms': {
+        target: 'http://localhost:5221',
+        bypass(req) {
+          // Let the SPA handle /dev/sms/golfer/:id (frontend route)
+          if (req.url?.startsWith('/dev/sms/golfer/')) return req.url;
+        },
+      },
+      '/auth': 'http://localhost:5221',
     },
   },
 })

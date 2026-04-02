@@ -4,7 +4,7 @@ namespace Shadowbrook.Domain.CourseAggregate;
 
 public interface ICourseRepository : IRepository<Course>
 {
-    Task<List<Course>> GetByTenantIdAsync(Guid tenantId);
-    Task<bool> ExistsByNameAsync(Guid tenantId, string name);
+    Task<List<Course>> GetByOrganizationIdAsync(Guid organizationId);
+    Task<bool> ExistsByNameAsync(Guid organizationId, string name);
     void Add(Course course);
 }

@@ -45,7 +45,7 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - docs/ — Documentation
 - docs/plans/ — Design docs and implementation plans
 - infra/ — Azure deployment config (Bicep modules, deploy scripts, parameter files)
-- src/backend/Shadowbrook.Api/Infrastructure/Observability/ — Serilog enrichers (TenantIdEnricher)
+- src/backend/Shadowbrook.Api/Infrastructure/Observability/ — Serilog enrichers (OrganizationIdEnricher)
 
 ## Code Conventions
 - C#: `.editorconfig` at repo root defines style rules; see `.claude/rules/backend/backend-conventions.md` for full conventions

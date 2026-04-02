@@ -7,18 +7,21 @@ namespace Shadowbrook.Api.IntegrationTests;
 [IntegrationTest]
 public class CoursePricingTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
-    private readonly HttpClient client = factory.CreateClient();
+    private HttpClient client = null!;
 
-    public Task InitializeAsync() => factory.ResetDatabaseAsync();
+    public async Task InitializeAsync()
+    {
+        await factory.ResetDatabaseAsync();
+        await factory.SeedTestAdminAsync();
+        this.client = factory.CreateAuthenticatedClient();
+    }
+
     public Task DisposeAsync() => Task.CompletedTask;
 
     private async Task<Guid> CreateCourse()
     {
         var tenantId = await CreateTestTenantAsync();
-        var request = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        request.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request.Content = JsonContent.Create(new { Name = "Test Course", TimeZoneId = TestTimeZones.Chicago });
-        var response = await this.client.SendAsync(request);
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Test Course", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var course = await response.Content.ReadFromJsonAsync<CourseIdResponse>();
         return course!.Id;
     }

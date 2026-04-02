@@ -20,45 +20,6 @@ public static class TestSetup
         return tenant!.Id;
     }
 
-    public static async Task<(Guid TenantId, Guid CourseId)> CreateCourseAsync(
-        HttpClient client,
-        string? courseName = null,
-        string timeZoneId = "America/Chicago")
-    {
-        var tenantId = await CreateTenantAsync(client);
-
-        var request = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        request.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request.Content = JsonContent.Create(new
-        {
-            Name = courseName ?? $"Test Course {Guid.NewGuid()}",
-            TimeZoneId = timeZoneId
-        });
-        var response = await client.SendAsync(request);
-        response.EnsureSuccessStatusCode();
-
-        var course = await response.Content.ReadFromJsonAsync<CourseIdResponse>();
-        return (tenantId, course!.Id);
-    }
-
-    public static async Task<(Guid TenantId, Guid CourseId)> CreateCourseWithSettingsAsync(
-        HttpClient client,
-        int intervalMinutes = 10,
-        string firstTeeTime = "07:00",
-        string lastTeeTime = "17:00")
-    {
-        var (tenantId, courseId) = await CreateCourseAsync(client);
-
-        await client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
-        {
-            TeeTimeIntervalMinutes = intervalMinutes,
-            FirstTeeTime = firstTeeTime,
-            LastTeeTime = lastTeeTime
-        });
-
-        return (tenantId, courseId);
-    }
-
     public static async Task<(Guid WaitlistId, string ShortCode)> OpenWaitlistAsync(
         HttpClient client,
         Guid courseId)

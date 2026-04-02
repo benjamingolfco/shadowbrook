@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from 'react-router';
+import { NavLink, Outlet, useNavigate } from 'react-router';
+import { useCallback } from 'react';
 import {
   Sidebar,
   SidebarContent,
@@ -10,36 +11,37 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useTenantContext } from '@/features/operator/context/TenantContext';
-import CourseSwitcher from '@/features/operator/components/CourseSwitcher';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useCourseContext } from '@/features/operator/context/CourseContext';
+import UserMenu from '@/components/layout/UserMenu';
 
 export default function OperatorLayout() {
-  const { tenant, clearTenant } = useTenantContext();
+  const { user } = useAuth();
+  const { clearCourse } = useCourseContext();
+  const navigate = useNavigate();
+
+  const handleSwitchCourse = useCallback(() => {
+    clearCourse();
+    navigate('/operator');
+  }, [clearCourse, navigate]);
+
+  const showSwitchCourse = (user?.courses?.length ?? 0) > 1;
 
   return (
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
-          <div className="flex flex-col gap-3 py-2">
-            <div className="flex items-center gap-2">
-              <h1
-                className="max-w-[180px] truncate text-lg font-semibold font-[family-name:var(--font-heading)]"
-                title={tenant?.organizationName ?? 'Shadowbrook'}
-              >
-                {tenant?.organizationName ?? 'Shadowbrook'}
-              </h1>
-              <Badge variant="success" className="text-[10px] px-1.5 py-0">
-                Operator
-              </Badge>
-            </div>
-            <CourseSwitcher />
-            {tenant && (
-              <Button variant="ghost" size="sm" onClick={clearTenant} className="justify-start px-0 text-muted-foreground hover:text-foreground">
-                Change Organization
-              </Button>
-            )}
+          <div className="flex items-center gap-2 py-2">
+            <h1
+              className="max-w-[180px] truncate text-lg font-semibold font-[family-name:var(--font-heading)]"
+              title={user?.organization?.name ?? 'Shadowbrook'}
+            >
+              {user?.organization?.name ?? 'Shadowbrook'}
+            </h1>
+            <Badge variant="success" className="text-[10px] px-1.5 py-0">
+              Operator
+            </Badge>
           </div>
         </SidebarHeader>
         <SidebarContent>
@@ -75,8 +77,11 @@ export default function OperatorLayout() {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-12 items-center gap-2 border-b px-4 md:hidden">
-          <SidebarTrigger />
+        <header className="flex h-12 items-center border-b px-4">
+          <SidebarTrigger className="md:hidden" />
+          <div className="ml-auto">
+            <UserMenu onSwitchCourse={showSwitchCourse ? handleSwitchCourse : undefined} />
+          </div>
         </header>
         <Outlet />
       </SidebarInset>

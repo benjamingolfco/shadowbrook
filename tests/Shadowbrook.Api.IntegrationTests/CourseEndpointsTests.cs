@@ -7,28 +7,30 @@ namespace Shadowbrook.Api.IntegrationTests;
 [IntegrationTest]
 public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
-    private readonly HttpClient client = factory.CreateClient();
     private readonly TestWebApplicationFactory factory = factory;
+    private HttpClient client = null!;
 
-    public Task InitializeAsync() => this.factory.ResetDatabaseAsync();
+    public async Task InitializeAsync()
+    {
+        await this.factory.ResetDatabaseAsync();
+        await this.factory.SeedTestAdminAsync();
+        this.client = this.factory.CreateAuthenticatedClient();
+    }
+
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task GetAllCourses_ReturnsOk()
     {
         var (tenantId, tenantName) = await CreateTestTenantAsync();
-        var request = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        request.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request.Content = JsonContent.Create(new { Name = "Test Course", TimeZoneId = TestTimeZones.Chicago });
-        await this.client.SendAsync(request);
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Test Course", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var getRequest = new HttpRequestMessage(HttpMethod.Get, "/courses");
-        getRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        var response = await this.client.SendAsync(getRequest);
+        var getResponse = await this.client.GetAsync("/courses");
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
 
-        var courses = await response.Content.ReadFromJsonAsync<List<CourseResponse>>();
+        var courses = await getResponse.Content.ReadFromJsonAsync<List<CourseResponse>>();
         Assert.NotNull(courses);
         Assert.NotEmpty(courses!);
     }
@@ -37,16 +39,11 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
     public async Task GetAllCourses_IncludesTenantInfo()
     {
         var (tenantId, tenantName) = await CreateTestTenantAsync();
-        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = "Test Course for Tenant Info", TimeZoneId = TestTimeZones.Chicago });
-        var createResponse = await this.client.SendAsync(createRequest);
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Test Course for Tenant Info", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var created = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
-        var getRequest = new HttpRequestMessage(HttpMethod.Get, "/courses");
-        getRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        var response = await this.client.SendAsync(getRequest);
-        var courses = await response.Content.ReadFromJsonAsync<List<CourseResponse>>();
+        var getResponse = await this.client.GetAsync("/courses");
+        var courses = await getResponse.Content.ReadFromJsonAsync<List<CourseResponse>>();
 
         Assert.NotNull(courses);
         var course = courses!.First(c => c.Id == created!.Id);
@@ -59,15 +56,10 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
     public async Task GetCourseById_WhenExists_ReturnsOk()
     {
         var (tenantId, _) = await CreateTestTenantAsync();
-        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = "Lookup Course", TimeZoneId = TestTimeZones.Chicago });
-        var createResponse = await this.client.SendAsync(createRequest);
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Lookup Course", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var created = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
-        var getRequest = new HttpRequestMessage(HttpMethod.Get, $"/courses/{created!.Id}");
-        getRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        var response = await this.client.SendAsync(getRequest);
+        var response = await this.client.GetAsync($"/courses/{created!.Id}");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -79,15 +71,10 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
     public async Task GetCourseById_IncludesTenantInfo()
     {
         var (tenantId, tenantName) = await CreateTestTenantAsync();
-        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = "Lookup Course with Tenant Info", TimeZoneId = TestTimeZones.Chicago });
-        var createResponse = await this.client.SendAsync(createRequest);
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = "Lookup Course with Tenant Info", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var created = await createResponse.Content.ReadFromJsonAsync<CourseResponse>();
 
-        var getRequest = new HttpRequestMessage(HttpMethod.Get, $"/courses/{created!.Id}");
-        getRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        var response = await this.client.SendAsync(getRequest);
+        var response = await this.client.GetAsync($"/courses/{created!.Id}");
         var course = await response.Content.ReadFromJsonAsync<CourseResponse>();
 
         Assert.NotNull(course);
@@ -99,10 +86,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
     [Fact]
     public async Task GetCourseById_WhenNotExists_ReturnsNotFound()
     {
-        var (tenantId, _) = await CreateTestTenantAsync();
-        var request = new HttpRequestMessage(HttpMethod.Get, $"/courses/{Guid.NewGuid()}");
-        request.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        var response = await this.client.SendAsync(request);
+        var response = await this.client.GetAsync($"/courses/{Guid.NewGuid()}");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -111,11 +95,11 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
     public async Task PostCourse_ReturnsCreated()
     {
         var (tenantId, tenantName) = await CreateTestTenantAsync();
-        var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        httpRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        httpRequest.Content = JsonContent.Create(new
+
+        var response = await this.client.PostAsJsonAsync("/courses", new
         {
             Name = "Braemar Golf Course",
+            OrganizationId = tenantId,
             StreetAddress = "6364 John Harris Dr",
             City = "Edina",
             State = "MN",
@@ -124,8 +108,6 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
             ContactPhone = "952-826-6799",
             TimeZoneId = TestTimeZones.Chicago
         });
-
-        var response = await this.client.SendAsync(httpRequest);
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
@@ -144,15 +126,8 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
     {
         var (tenantId, _) = await CreateTestTenantAsync();
 
-        var request1 = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        request1.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request1.Content = JsonContent.Create(new { Name = "Duplicate Course", TimeZoneId = TestTimeZones.Chicago });
-        await this.client.SendAsync(request1);
-
-        var request2 = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        request2.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request2.Content = JsonContent.Create(new { Name = "Duplicate Course", TimeZoneId = TestTimeZones.Chicago });
-        var response = await this.client.SendAsync(request2);
+        await this.client.PostAsJsonAsync("/courses", new { Name = "Duplicate Course", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Duplicate Course", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -162,15 +137,8 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
     {
         var (tenantId, _) = await CreateTestTenantAsync();
 
-        var request1 = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        request1.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request1.Content = JsonContent.Create(new { Name = "Pine Valley", TimeZoneId = TestTimeZones.Chicago });
-        await this.client.SendAsync(request1);
-
-        var request2 = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        request2.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request2.Content = JsonContent.Create(new { Name = "PINE VALLEY", TimeZoneId = TestTimeZones.Chicago });
-        var response = await this.client.SendAsync(request2);
+        await this.client.PostAsJsonAsync("/courses", new { Name = "Pine Valley", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "PINE VALLEY", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -182,15 +150,8 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         // positives/negatives. Equality check via == is correct; collation handles case.
         var (tenantId, _) = await CreateTestTenantAsync();
 
-        var request1 = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        request1.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request1.Content = JsonContent.Create(new { Name = "Pine%Valley", TimeZoneId = TestTimeZones.Chicago });
-        await this.client.SendAsync(request1);
-
-        var request2 = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        request2.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        request2.Content = JsonContent.Create(new { Name = "Pine%Valley", TimeZoneId = TestTimeZones.Chicago });
-        var response = await this.client.SendAsync(request2);
+        await this.client.PostAsJsonAsync("/courses", new { Name = "Pine%Valley", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Pine%Valley", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -201,17 +162,61 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
         var (tenantId1, _) = await CreateTestTenantAsync();
         var (tenantId2, _) = await CreateTestTenantAsync();
 
-        var request1 = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        request1.Headers.Add("X-Tenant-Id", tenantId1.ToString());
-        request1.Content = JsonContent.Create(new { Name = "Shared Name Course", TimeZoneId = TestTimeZones.Chicago });
-        await this.client.SendAsync(request1);
-
-        var request2 = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        request2.Headers.Add("X-Tenant-Id", tenantId2.ToString());
-        request2.Content = JsonContent.Create(new { Name = "Shared Name Course", TimeZoneId = TestTimeZones.Chicago });
-        var response = await this.client.SendAsync(request2);
+        await this.client.PostAsJsonAsync("/courses", new { Name = "Shared Name Course", OrganizationId = tenantId1, TimeZoneId = TestTimeZones.Chicago });
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Shared Name Course", OrganizationId = tenantId2, TimeZoneId = TestTimeZones.Chicago });
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostCourse_WithOrganizationOnly_ReturnsCreated()
+    {
+        var orgName = $"Admin Org {Guid.NewGuid()}";
+        var orgResponse = await this.client.PostAsJsonAsync("/organizations", new { Name = orgName });
+        Assert.Equal(HttpStatusCode.Created, orgResponse.StatusCode);
+        var org = await orgResponse.Content.ReadFromJsonAsync<OrganizationResponse>();
+
+        var response = await this.client.PostAsJsonAsync("/courses", new
+        {
+            Name = "Org-Only Course",
+            OrganizationId = org!.Id,
+            TimeZoneId = TestTimeZones.Chicago
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<CourseResponse>();
+        Assert.NotNull(body);
+        Assert.Equal("Org-Only Course", body!.Name);
+        Assert.NotNull(body.Tenant);
+        Assert.Equal(org.Id, body.Tenant!.Id);
+        Assert.Equal(orgName, body.Tenant.OrganizationName);
+    }
+
+    [Fact]
+    public async Task GetAllCourses_IncludesCoursesCreatedViaOrganization()
+    {
+        var orgName = $"Admin Org {Guid.NewGuid()}";
+        var orgResponse = await this.client.PostAsJsonAsync("/organizations", new { Name = orgName });
+        Assert.Equal(HttpStatusCode.Created, orgResponse.StatusCode);
+        var org = await orgResponse.Content.ReadFromJsonAsync<OrganizationResponse>();
+
+        await this.client.PostAsJsonAsync("/courses", new
+        {
+            Name = "Org Course For List",
+            OrganizationId = org!.Id,
+            TimeZoneId = TestTimeZones.Chicago
+        });
+
+        var getResponse = await this.client.GetAsync("/courses");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+
+        var courses = await getResponse.Content.ReadFromJsonAsync<List<CourseResponse>>();
+        Assert.NotNull(courses);
+        var course = courses!.FirstOrDefault(c => c.Name == "Org Course For List");
+        Assert.NotNull(course);
+        Assert.NotNull(course!.Tenant);
+        Assert.Equal(org.Id, course.Tenant!.Id);
+        Assert.Equal(orgName, course.Tenant.OrganizationName);
     }
 
     private async Task<(Guid Id, string OrganizationName)> CreateTestTenantAsync()

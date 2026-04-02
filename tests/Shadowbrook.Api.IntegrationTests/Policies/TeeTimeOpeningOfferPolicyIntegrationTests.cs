@@ -9,10 +9,15 @@ namespace Shadowbrook.Api.IntegrationTests.Policies;
 [IntegrationTest]
 public class TeeTimeOpeningOfferPolicyIntegrationTests(TestWebApplicationFactory factory) : IAsyncLifetime
 {
-    private readonly HttpClient client = factory.CreateClient();
     private readonly TestWebApplicationFactory factory = factory;
+    private HttpClient client = null!;
 
-    public Task InitializeAsync() => this.factory.ResetDatabaseAsync();
+    public async Task InitializeAsync()
+    {
+        await this.factory.ResetDatabaseAsync();
+        await this.factory.SeedTestAdminAsync();
+        this.client = this.factory.CreateAuthenticatedClient();
+    }
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
@@ -80,10 +85,7 @@ public class TeeTimeOpeningOfferPolicyIntegrationTests(TestWebApplicationFactory
     {
         var tenantId = await CreateTestTenantAsync();
 
-        var createRequest = new HttpRequestMessage(HttpMethod.Post, "/courses");
-        createRequest.Headers.Add("X-Tenant-Id", tenantId.ToString());
-        createRequest.Content = JsonContent.Create(new { Name = $"Test Course {Guid.NewGuid()}", TimeZoneId = TestTimeZones.Chicago });
-        var createResponse = await this.client.SendAsync(createRequest);
+        var createResponse = await this.client.PostAsJsonAsync("/courses", new { Name = $"Test Course {Guid.NewGuid()}", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         await this.client.PutAsJsonAsync($"/courses/{course!.Id}/tee-time-settings", new

@@ -23,10 +23,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useTenants } from '../hooks/useTenants';
+import { useOrganizations } from '../hooks/useOrganizations';
 
 const courseSchema = z.object({
-  tenantId: z.string().min(1, 'Tenant assignment is required'),
+  organizationId: z.string().min(1, 'Organization is required'),
   name: z.string().min(1, 'Course name is required'),
   timeZoneId: z.string().min(1, 'Timezone is required'),
   streetAddress: z.string().optional(),
@@ -42,12 +42,12 @@ type CourseFormData = z.infer<typeof courseSchema>;
 export default function CourseCreate() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { data: tenants, isLoading: isLoadingTenants, error: tenantsError } = useTenants();
+  const { data: organizations, isLoading: isLoadingOrgs, error: orgsError } = useOrganizations();
 
   const form = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
-      tenantId: '',
+      organizationId: '',
       name: '',
       timeZoneId: getBrowserTimeZone(),
       streetAddress: '',
@@ -82,40 +82,41 @@ export default function CourseCreate() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
             control={form.control}
-            name="tenantId"
+            name="organizationId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Assign to Tenant *</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingTenants || !tenants || tenants.length === 0}>
+                <FormLabel>Assign to Organization *</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingOrgs || !organizations || organizations.length === 0}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder={
-                        isLoadingTenants ? 'Loading tenants...' :
-                        !tenants || tenants.length === 0 ? 'No tenants available' :
-                        'Select a tenant'
+                        isLoadingOrgs ? 'Loading organizations...' :
+                        !organizations || organizations.length === 0 ? 'No organizations available' :
+                        'Select an organization'
                       } />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {tenants && tenants
-                      .sort((a, b) => a.organizationName.localeCompare(b.organizationName))
-                      .map((tenant) => (
-                        <SelectItem key={tenant.id} value={tenant.id}>
-                          {tenant.organizationName}
+                    {organizations && organizations
+                      .slice()
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((org) => (
+                        <SelectItem key={org.id} value={org.id}>
+                          {org.name}
                         </SelectItem>
                       ))}
                   </SelectContent>
                 </Select>
-                {tenantsError && (
+                {orgsError && (
                   <p className="text-sm text-destructive">
-                    Error loading tenants: {tenantsError instanceof Error ? tenantsError.message : 'Unknown error'}
+                    Error loading organizations: {orgsError instanceof Error ? orgsError.message : 'Unknown error'}
                   </p>
                 )}
-                {!isLoadingTenants && tenants && tenants.length === 0 && (
+                {!isLoadingOrgs && organizations && organizations.length === 0 && (
                   <p className="text-sm text-muted-foreground">
-                    No tenants found.{' '}
-                    <Link to="/admin/tenants/new" className="text-primary underline">
-                      Create a tenant
+                    No organizations found.{' '}
+                    <Link to="/admin/organizations/new" className="text-primary underline">
+                      Create an organization
                     </Link>{' '}
                     first.
                   </p>

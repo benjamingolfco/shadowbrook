@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Shadowbrook.Domain.CourseAggregate;
-using Shadowbrook.Domain.TenantAggregate;
+using Shadowbrook.Domain.OrganizationAggregate;
 
 namespace Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
 
@@ -22,14 +22,20 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course>
         builder.Property(c => c.ContactEmail).HasMaxLength(200);
         builder.Property(c => c.ContactPhone).HasMaxLength(20);
         builder.Property(c => c.FlatRatePrice).HasPrecision(18, 2);
+        builder.Property(c => c.FeatureFlags)
+            .HasColumnType("nvarchar(max)")
+            .HasConversion(
+                v => v == null ? null : System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                v => v == null ? null : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, bool>>(v, (System.Text.Json.JsonSerializerOptions?)null));
+        builder.Property(c => c.WaitlistEnabled);
 
-        builder.HasOne<Tenant>()
+        builder.HasOne<Organization>()
             .WithMany()
-            .HasForeignKey(c => c.TenantId)
+            .HasForeignKey(c => c.OrganizationId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(c => c.TenantId);
-        builder.HasIndex(c => new { c.TenantId, c.Name }).IsUnique();
+        builder.HasIndex(c => c.OrganizationId);
+        builder.HasIndex(c => new { c.OrganizationId, c.Name }).IsUnique();
 
         builder.HasShadowRowVersion();
         builder.HasShadowAuditProperties();

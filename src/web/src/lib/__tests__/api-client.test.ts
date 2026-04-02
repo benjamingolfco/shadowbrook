@@ -1,5 +1,15 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { api, ApiError, setActiveTenantId } from '../api-client';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { api, ApiError } from '../api-client';
+
+// Mock msal-config so tests don't require a real MSAL instance
+vi.mock('../msal-config', () => ({
+  msalInstance: {
+    getAllAccounts: vi.fn().mockReturnValue([]),
+    acquireTokenSilent: vi.fn(),
+    acquireTokenRedirect: vi.fn(),
+  },
+  loginRequest: { scopes: [] },
+}));
 
 function makeResponse(status: number, body: unknown = {}): Response {
   return new Response(JSON.stringify(body), {
@@ -9,10 +19,6 @@ function makeResponse(status: number, body: unknown = {}): Response {
 }
 
 describe('api-client', () => {
-  beforeEach(() => {
-    setActiveTenantId(null);
-  });
-
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -121,26 +127,13 @@ describe('api-client', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('sends X-Tenant-Id header when tenant is set', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(makeResponse(200, {}));
-    vi.stubGlobal('fetch', fetchMock);
-    setActiveTenantId('tenant-abc');
-
-    await api.get('/test');
-
-    const [, options] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect((options.headers as Record<string, string>)['X-Tenant-Id']).toBe('tenant-abc');
-
-    setActiveTenantId(null);
-  });
-
-  it('does not send X-Tenant-Id header when no tenant is set', async () => {
+  it('does not send Authorization header when no token is available', async () => {
     const fetchMock = vi.fn().mockResolvedValue(makeResponse(200, {}));
     vi.stubGlobal('fetch', fetchMock);
 
     await api.get('/test');
 
     const [, options] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect((options.headers as Record<string, string>)['X-Tenant-Id']).toBeUndefined();
+    expect((options.headers as Record<string, string>)['Authorization']).toBeUndefined();
   });
 });

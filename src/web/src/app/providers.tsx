@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { MockAuthProvider } from '@/features/auth';
+import { AuthProvider } from '@/features/auth';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ApiError } from '@/lib/api-client';
 
@@ -32,13 +32,13 @@ const queryClient = new QueryClient({
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <MockAuthProvider>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
         <TooltipProvider>
           {children}
         </TooltipProvider>
         <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
-    </MockAuthProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

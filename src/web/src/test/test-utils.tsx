@@ -14,19 +14,28 @@ function createTestQueryClient() {
 
 interface WrapperProps {
   children: ReactNode;
+  route?: string;
 }
 
-function AllProviders({ children }: WrapperProps) {
+function AllProviders({ children, route }: WrapperProps) {
   const queryClient = createTestQueryClient();
   return (
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>{children}</MemoryRouter>
+      <MemoryRouter initialEntries={route ? [route] : undefined}>{children}</MemoryRouter>
     </QueryClientProvider>
   );
 }
 
-function customRender(ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) {
-  return render(ui, { wrapper: AllProviders, ...options });
+interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
+  route?: string;
+}
+
+function customRender(ui: ReactElement, options?: CustomRenderOptions) {
+  const { route, ...renderOptions } = options ?? {};
+  return render(ui, {
+    wrapper: ({ children }) => <AllProviders route={route}>{children}</AllProviders>,
+    ...renderOptions,
+  });
 }
 
 // re-export everything

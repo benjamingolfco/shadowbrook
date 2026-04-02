@@ -3,10 +3,9 @@ import { api } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-keys';
 import type { Course } from '@/types/course';
 
-export function useCourses(tenantId: string | undefined) {
+export function useCourses() {
   return useQuery({
-    queryKey: tenantId ? queryKeys.courses.all(tenantId) : ['courses', 'disabled'],
+    queryKey: queryKeys.courses.all,
     queryFn: () => api.get<Course[]>('/courses'),
-    enabled: !!tenantId,
   });
 }

@@ -4,15 +4,15 @@ namespace Shadowbrook.Domain.Tests.CourseAggregate;
 
 public class CourseTests
 {
-    private static readonly Guid TenantId = Guid.NewGuid();
+    private static readonly Guid OrganizationId = Guid.NewGuid();
 
     [Fact]
     public void Create_SetsAllRequiredProperties()
     {
-        var course = Course.Create(TenantId, "Pebble Beach", "America/Los_Angeles");
+        var course = Course.Create(OrganizationId, "Pebble Beach", "America/Los_Angeles");
 
         Assert.NotEqual(Guid.Empty, course.Id);
-        Assert.Equal(TenantId, course.TenantId);
+        Assert.Equal(OrganizationId, course.OrganizationId);
         Assert.Equal("Pebble Beach", course.Name);
         Assert.Equal("America/Los_Angeles", course.TimeZoneId);
         Assert.NotEqual(default, course.CreatedAt);
@@ -21,7 +21,7 @@ public class CourseTests
     [Fact]
     public void Create_TrimsName()
     {
-        var course = Course.Create(TenantId, "  Pebble Beach  ", "America/Los_Angeles");
+        var course = Course.Create(OrganizationId, "  Pebble Beach  ", "America/Los_Angeles");
 
         Assert.Equal("Pebble Beach", course.Name);
     }
@@ -30,7 +30,7 @@ public class CourseTests
     public void Create_WithOptionalParameters_SetsAllProperties()
     {
         var course = Course.Create(
-            TenantId,
+            OrganizationId,
             "Augusta National",
             "America/New_York",
             streetAddress: "2604 Washington Rd",
@@ -51,7 +51,7 @@ public class CourseTests
     [Fact]
     public void Create_WithoutOptionalParameters_LeavesThemNull()
     {
-        var course = Course.Create(TenantId, "Pebble Beach", "America/Los_Angeles");
+        var course = Course.Create(OrganizationId, "Pebble Beach", "America/Los_Angeles");
 
         Assert.Null(course.StreetAddress);
         Assert.Null(course.City);
@@ -69,7 +69,7 @@ public class CourseTests
     [Fact]
     public void UpdateTeeTimeSettings_SetsAllThreeProperties()
     {
-        var course = Course.Create(TenantId, "Pebble Beach", "America/Los_Angeles");
+        var course = Course.Create(OrganizationId, "Pebble Beach", "America/Los_Angeles");
         var first = new TimeOnly(7, 0);
         var last = new TimeOnly(17, 0);
 
@@ -83,7 +83,7 @@ public class CourseTests
     [Fact]
     public void UpdatePricing_SetsFlatRatePrice()
     {
-        var course = Course.Create(TenantId, "Pebble Beach", "America/Los_Angeles");
+        var course = Course.Create(OrganizationId, "Pebble Beach", "America/Los_Angeles");
 
         course.UpdatePricing(59.99m);
 

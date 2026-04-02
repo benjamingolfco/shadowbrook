@@ -1,16 +1,18 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Auth;
 using Shadowbrook.Api.Features.Bookings;
 using Shadowbrook.Api.Features.Waitlist;
 using Shadowbrook.Api.Features.Waitlist.Policies;
+using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Api.Infrastructure.Dev;
 using Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
+using Shadowbrook.Domain.AppUserAggregate;
 using Shadowbrook.Domain.BookingAggregate;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.CourseAggregate;
 using Shadowbrook.Domain.CourseWaitlistAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
+using Shadowbrook.Domain.OrganizationAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.TenantAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
@@ -19,13 +21,15 @@ namespace Shadowbrook.Api.Infrastructure.Data;
 
 public class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,
-    ICurrentUser? currentUser = null) : DbContext(options)
+    IUserContext? userContext = null) : DbContext(options)
 {
-    // Snapshot TenantId at DbContext construction time so the query filter sees the correct
-    // tenant for this request. EF Core evaluates query filters referencing 'this' against the
+    // Snapshot OrganizationId at DbContext construction time so the query filter sees the correct
+    // organization for this request. EF Core evaluates query filters referencing 'this' against the
     // specific DbContext instance executing the query, so a new instance per request is required.
-    public Guid? CurrentTenantId { get; } = currentUser?.TenantId;
+    public Guid? CurrentOrganizationId { get; } = userContext?.OrganizationId;
 
+    public DbSet<Organization> Organizations => Set<Organization>();
+    public DbSet<AppUser> AppUsers => Set<AppUser>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<Booking> Bookings => Set<Booking>();
@@ -42,7 +46,7 @@ public class ApplicationDbContext(
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
-        var userId = currentUser?.UserId;
+        var userId = userContext?.AppUserId?.ToString();
 
         foreach (var entry in ChangeTracker.Entries<Entity>()
             .Where(e => e.State is EntityState.Added or EntityState.Modified))
@@ -70,12 +74,14 @@ public class ApplicationDbContext(
             b.HasIndex(m => m.Timestamp);
         });
 
-        // Apply tenant query filter — reference 'this' so EF Core substitutes the actual
-        // DbContext instance at query time, ensuring CurrentTenantId is re-read per request.
+        // Apply organization query filter — reference 'this' so EF Core substitutes the actual
+        // DbContext instance at query time, ensuring CurrentOrganizationId is re-read per request.
         modelBuilder.Entity<Course>()
-            .HasQueryFilter(c => CurrentTenantId == null || c.TenantId == CurrentTenantId);
+            .HasQueryFilter(c => CurrentOrganizationId == null || c.OrganizationId == CurrentOrganizationId);
 
         // Apply domain entity configurations
+        modelBuilder.ApplyConfiguration(new OrganizationConfiguration());
+        modelBuilder.ApplyConfiguration(new AppUserConfiguration());
         modelBuilder.ApplyConfiguration(new CourseConfiguration());
         modelBuilder.ApplyConfiguration(new TenantConfiguration());
         modelBuilder.ApplyConfiguration(new BookingConfiguration());

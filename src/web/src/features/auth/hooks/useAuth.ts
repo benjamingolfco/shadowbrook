@@ -1,15 +1,15 @@
 import { createContext, useContext } from 'react';
 import type { User } from '@/types/user';
 
-export type Role = 'admin' | 'operator' | 'golfer';
-
 export interface AuthContextValue {
   user: User | null;
-  role: Role;
   isAuthenticated: boolean;
+  isLoading: boolean;
+  permissions: string[];
+  courses: { id: string; name: string }[];
   login: () => void;
   logout: () => void;
-  setRole: (role: Role) => void; // dev only
+  hasPermission: (permission: string) => boolean;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);

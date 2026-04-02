@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Domain.CourseAggregate;
+using Shadowbrook.Domain.OrganizationAggregate;
 using Shadowbrook.Domain.TenantAggregate;
 
 namespace Shadowbrook.Api.Infrastructure.Data;
@@ -28,27 +29,37 @@ public static class E2ESeedData
             await db.SaveChangesAsync();
         }
 
-        await EnsureCourseAsync(db, tenant.Id, "Pine Valley Test", "America/New_York");
-        await EnsureCourseAsync(db, tenant.Id, "Augusta Test", "America/New_York");
-        await EnsureCourseAsync(db, tenant.Id, "Pebble Beach Test", "America/Los_Angeles");
+        var organization = await db.Organizations
+            .FirstOrDefaultAsync(o => o.Name == TenantOrgName);
+
+        if (organization is null)
+        {
+            organization = Organization.Create(TenantOrgName);
+            db.Organizations.Add(organization);
+            await db.SaveChangesAsync();
+        }
+
+        await EnsureCourseAsync(db, organization.Id, "Pine Valley Test", "America/New_York");
+        await EnsureCourseAsync(db, organization.Id, "Augusta Test", "America/New_York");
+        await EnsureCourseAsync(db, organization.Id, "Pebble Beach Test", "America/Los_Angeles");
     }
 
     private static async Task EnsureCourseAsync(
         ApplicationDbContext db,
-        Guid tenantId,
+        Guid organizationId,
         string name,
         string timeZoneId)
     {
         var exists = await db.Courses
             .IgnoreQueryFilters()
-            .AnyAsync(c => c.TenantId == tenantId && c.Name == name);
+            .AnyAsync(c => c.OrganizationId == organizationId && c.Name == name);
 
         if (exists)
         {
             return;
         }
 
-        var course = Course.Create(tenantId, name, timeZoneId);
+        var course = Course.Create(organizationId, name, timeZoneId);
         db.Courses.Add(course);
         await db.SaveChangesAsync();
     }
