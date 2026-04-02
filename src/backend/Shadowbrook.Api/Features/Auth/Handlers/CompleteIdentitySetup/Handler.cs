@@ -7,7 +7,7 @@ public record CompleteIdentitySetupCommand(Guid AppUserId, string IdentityId, st
 
 public static class CompleteIdentitySetupHandler
 {
-    public static async Task Handle(CompleteIdentitySetupCommand command, IRepository<AppUser> repository)
+    public static async Task Handle(CompleteIdentitySetupCommand command, IAppUserRepository repository)
     {
         var user = await repository.GetRequiredByIdAsync(command.AppUserId);
 

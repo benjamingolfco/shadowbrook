@@ -9,7 +9,7 @@ namespace Shadowbrook.Api.Tests.Features.Auth.Handlers;
 
 public class CompleteIdentitySetupHandlerTests
 {
-    private readonly IRepository<AppUser> repository = Substitute.For<IRepository<AppUser>>();
+    private readonly IAppUserRepository repository = Substitute.For<IAppUserRepository>();
 
     [Fact]
     public async Task Handle_LinksIdentityAndActivatesUser()
