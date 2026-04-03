@@ -8,7 +8,7 @@ param environment string
 param location string
 
 @description('Daily ingestion cap in GB (must exceed actual daily volume or telemetry is silently dropped)')
-param dailyCapGb string = '5'
+param dailyCapGb string = '1'
 
 var workspaceName = 'shadowbrook-logs-${environment}'
 
