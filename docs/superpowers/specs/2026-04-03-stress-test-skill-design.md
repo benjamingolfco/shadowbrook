@@ -66,6 +66,7 @@ Four agent types launched in parallel from a coordinator:
 - Parses arguments, loads credentials from `.local/test-credentials.md`, resolves environment URLs
 - Launches all agents in parallel
 - Manages a safety timeout (default: 30 minutes) — kills the run if agents haven't naturally completed
+- **Live status updates** — periodically reports to the user on what's happening: which agents are active, notable actions taken, contention events, errors spotted. Keeps the user informed without requiring them to wait for the final report.
 - Collects results from all agents when they finish their scenarios or the observer triggers a circuit breaker
 - Assembles the final markdown report
 
