@@ -61,9 +61,9 @@ if (!string.IsNullOrEmpty(appInsightsConnectionString))
 {
     builder.Services.AddOpenTelemetry()
         .WithTracing(tracing => tracing
-            .AddAspNetCoreInstrumentation()
+            .AddAspNetCoreInstrumentation(o =>
+                o.Filter = context => context.Request.Path != "/health")
             .AddHttpClientInstrumentation()
-            .AddEntityFrameworkCoreInstrumentation()
             .AddSource("Wolverine"))
         .WithMetrics(metrics => metrics
             .AddAspNetCoreInstrumentation()
