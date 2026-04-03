@@ -95,18 +95,7 @@ If not logged in (non-zero exit or error output), stop:
 Verify the given feature area has a role brief in this skill. If not recognized, stop:
 > "Unknown feature area: {area}. Available areas: waitlist"
 
-### Step 3: Load How-To Skills
-
-Check `.claude/skills/how-tos/` for how-to files relevant to the feature area. Read any that exist and pass their content to the appropriate agents.
-
-For `waitlist`, load:
-- `operator-open-waitlist.md`
-- `operator-post-tee-time.md`
-- `operator-add-golfer-manually.md`
-
-Read each file that exists. Collect their content. Pass to the operator agent as `how_to_content`. If none exist, proceed without them.
-
-### Step 4: Announce the Run
+### Step 3: Announce the Run
 
 Before launching, output a clear summary to the user:
 
@@ -121,7 +110,7 @@ Starting stress test: {feature-area}
 Launching agents in parallel...
 ```
 
-### Step 5: Launch Agents in Parallel
+### Step 4: Launch Agents in Parallel
 
 Use the Agent tool to dispatch all agents simultaneously. Do not wait for one before starting the next.
 
@@ -143,8 +132,7 @@ Use the Agent tool to dispatch all agents simultaneously. Do not wait for one be
   - Role brief: the Operator role description from the feature area section above
   - Hint: `{hint}` (if provided)
   - Headed flag: `{headed}`
-  - How-to content: the loaded how-to file contents (if any)
-  - Instruction: perform the operator role actions continuously until told to stop; log each action with a timestamp
+  - Instruction: perform the operator role actions continuously until told to stop; log each action with a timestamp. Load your own how-to skills as defined in your agent definition.
 
 **Golfer agents (one per golfer, N total):**
 
@@ -160,7 +148,7 @@ For each golfer index 1..N:
   - Headed flag: `{headed}`
   - Instruction: perform the golfer role actions; use the assigned phone number for SMS-based flows; log each action with a timestamp
 
-### Step 6: Monitor and Report
+### Step 5: Monitor and Report
 
 While agents are running:
 
@@ -189,9 +177,9 @@ Stopping run. Fix the blocker and retry.
 ```
 Timeout reached ({M} minutes). Compiling results from agents that have returned.
 ```
-Collect partial results and proceed to Step 7.
+Collect partial results and proceed to Step 6.
 
-### Step 7: Assemble Report
+### Step 6: Assemble Report
 
 Collect output from all agents. Write the report to:
 ```

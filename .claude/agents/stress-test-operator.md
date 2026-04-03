@@ -31,9 +31,19 @@ The coordinator passes the following parameters:
 | `role_brief` | Description of what operator actions to perform during this run |
 | `hint` | Optional: additional context or guidance from the coordinator |
 | `headed` | Boolean — if true, launch browser in headed mode (visible); if false, headless |
-| `how_tos` | Optional: reference content for specific UI flows (how-to skill output) |
 
 ## Process
+
+### Step 0: Load How-To Skills
+
+Before doing anything else, read the how-to skills relevant to your feature area. These contain exact UI steps and terminology.
+
+For `waitlist`, read these files using the Read tool:
+- `.claude/skills/how-tos/operator-open-waitlist.md`
+- `.claude/skills/how-tos/operator-post-tee-time.md`
+- `.claude/skills/how-tos/operator-add-golfer-manually.md`
+
+If a file doesn't exist, skip it and proceed without it. Use the content of these how-tos as your primary guide for UI interactions — they contain exact button labels, form fields, and verification steps.
 
 ### Step 1: Launch Browser
 

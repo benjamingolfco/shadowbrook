@@ -35,6 +35,16 @@ The coordinator passes the following parameters:
 
 ## Process
 
+### Step 0: Load How-To Skills
+
+Before doing anything else, check for how-to skills relevant to your feature area. These contain exact UI steps and terminology for golfer flows.
+
+For `waitlist`, check if these files exist and read them using the Read tool:
+- `.claude/skills/how-tos/golfer-join-waitlist.md`
+- `.claude/skills/how-tos/golfer-accept-tee-time.md`
+
+If they don't exist, that's fine — use the feature area behaviors defined below. If they do exist, prefer the how-to steps over the inline instructions as they will be more current.
+
 ### Step 1: Launch Browser
 
 Launch the Playwright browser using Playwright MCP tools. Use headless mode unless `headed=true`.
