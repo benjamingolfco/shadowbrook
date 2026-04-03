@@ -43,4 +43,7 @@ export const queryKeys = {
     all: ['features'] as const,
     byCourse: (courseId: string) => ['features', courseId] as const,
   },
+  deadLetters: {
+    all: ['dead-letters'] as const,
+  },
 };

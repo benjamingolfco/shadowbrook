@@ -237,6 +237,9 @@ app.MapWolverineEndpoints(opts =>
         chain => chain.RoutePattern?.RawText?.Contains("{courseId}") == true);
 });
 
+app.MapDeadLettersEndpoints()
+   .RequireAuthorization();
+
 // Seed admin accounts from configuration
 var seedEmails = authSettings.GetSeedAdminEmailsList();
 if (seedEmails.Length > 0)
