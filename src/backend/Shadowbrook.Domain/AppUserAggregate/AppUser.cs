@@ -19,12 +19,12 @@ public class AppUser : Entity
 
     private AppUser() { } // EF
 
-    public static async Task<AppUser> CreateAdminAsync(
+    public static async Task<AppUser> CreateAdmin(
         string email,
         IAppUserEmailUniquenessChecker emailChecker,
         CancellationToken ct = default)
     {
-        if (await emailChecker.IsEmailInUseAsync(email.Trim(), ct))
+        if (await emailChecker.IsEmailInUse(email.Trim(), ct))
         {
             throw new DuplicateEmailException(email);
         }
@@ -49,7 +49,7 @@ public class AppUser : Entity
         return user;
     }
 
-    public static async Task<AppUser> CreateOperatorAsync(
+    public static async Task<AppUser> CreateOperator(
         string email,
         Guid organizationId,
         IAppUserEmailUniquenessChecker emailChecker,
@@ -60,7 +60,7 @@ public class AppUser : Entity
             throw new EmptyOrganizationIdException();
         }
 
-        if (await emailChecker.IsEmailInUseAsync(email.Trim(), ct))
+        if (await emailChecker.IsEmailInUse(email.Trim(), ct))
         {
             throw new DuplicateEmailException(email);
         }

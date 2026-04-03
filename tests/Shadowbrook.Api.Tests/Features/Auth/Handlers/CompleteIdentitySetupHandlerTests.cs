@@ -15,14 +15,14 @@ public class CompleteIdentitySetupHandlerTests
     private static IAppUserEmailUniquenessChecker NewChecker()
     {
         var checker = Substitute.For<IAppUserEmailUniquenessChecker>();
-        checker.IsEmailInUseAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        checker.IsEmailInUse(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
         return checker;
     }
 
     [Fact]
     public async Task Handle_LinksIdentityAndActivatesUser()
     {
-        var user = await AppUser.CreateAdminAsync("admin@example.com", NewChecker());
+        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
         user.ClearDomainEvents();
         this.repository.GetByIdAsync(user.Id).Returns(user);
 
@@ -54,7 +54,7 @@ public class CompleteIdentitySetupHandlerTests
     [Fact]
     public async Task Handle_AlreadyLinkedSameOid_IsIdempotent()
     {
-        var user = await AppUser.CreateAdminAsync("admin@example.com", NewChecker());
+        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
         user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
         user.ClearDomainEvents();
         this.repository.GetByIdAsync(user.Id).Returns(user);
@@ -69,7 +69,7 @@ public class CompleteIdentitySetupHandlerTests
     [Fact]
     public async Task Handle_AlreadyLinkedDifferentOid_Throws()
     {
-        var user = await AppUser.CreateAdminAsync("admin@example.com", NewChecker());
+        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
         user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
         this.repository.GetByIdAsync(user.Id).Returns(user);
 

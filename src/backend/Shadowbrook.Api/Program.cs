@@ -235,9 +235,9 @@ if (seedEmails.Length > 0)
     var emailChecker = scope.ServiceProvider.GetRequiredService<IAppUserEmailUniquenessChecker>();
     foreach (var email in seedEmails)
     {
-        if (!await emailChecker.IsEmailInUseAsync(email))
+        if (!await emailChecker.IsEmailInUse(email))
         {
-            db.AppUsers.Add(await AppUser.CreateAdminAsync(email, emailChecker));
+            db.AppUsers.Add(await AppUser.CreateAdmin(email, emailChecker));
         }
     }
 

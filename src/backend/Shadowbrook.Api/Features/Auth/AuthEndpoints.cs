@@ -105,8 +105,8 @@ public static class AuthEndpoints
         var role = Enum.Parse<AppUserRole>(request.Role, ignoreCase: true);
 
         var appUser = role == AppUserRole.Admin
-            ? await AppUser.CreateAdminAsync(request.Email, emailChecker)
-            : await AppUser.CreateOperatorAsync(request.Email, request.OrganizationId!.Value, emailChecker);
+            ? await AppUser.CreateAdmin(request.Email, emailChecker)
+            : await AppUser.CreateOperator(request.Email, request.OrganizationId!.Value, emailChecker);
 
         db.AppUsers.Add(appUser);
 

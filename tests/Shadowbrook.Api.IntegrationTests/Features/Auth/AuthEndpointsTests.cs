@@ -31,7 +31,7 @@ public class AuthEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifet
 
         var identityId = Guid.NewGuid().ToString();
         var emailChecker = scope.ServiceProvider.GetRequiredService<IAppUserEmailUniquenessChecker>();
-        var appUser = await AppUser.CreateOperatorAsync("operator@example.com", org.Id, emailChecker);
+        var appUser = await AppUser.CreateOperator("operator@example.com", org.Id, emailChecker);
         appUser.CompleteIdentitySetup(identityId, "Jane", "Smith");
         db.AppUsers.Add(appUser);
 

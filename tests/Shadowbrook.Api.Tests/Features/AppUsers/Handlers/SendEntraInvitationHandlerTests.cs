@@ -14,14 +14,14 @@ public class SendEntraInvitationHandlerTests
     private static IAppUserEmailUniquenessChecker NewChecker()
     {
         var checker = Substitute.For<IAppUserEmailUniquenessChecker>();
-        checker.IsEmailInUseAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        checker.IsEmailInUse(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
         return checker;
     }
 
     [Fact]
     public async Task Handle_LoadsAppUserAndCallsInvite()
     {
-        var user = await AppUser.CreateAdminAsync("admin@example.com", NewChecker());
+        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
         this.appUserRepo.GetByIdAsync(user.Id).Returns(user);
         this.invitationService.SendInvitationAsync("admin@example.com", Arg.Any<CancellationToken>())
             .Returns("entra-oid-456");

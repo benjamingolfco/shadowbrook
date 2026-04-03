@@ -2,5 +2,5 @@ namespace Shadowbrook.Domain.Services;
 
 public interface IAppUserEmailUniquenessChecker
 {
-    Task<bool> IsEmailInUseAsync(string email, CancellationToken ct = default);
+    Task<bool> IsEmailInUse(string email, CancellationToken ct = default);
 }

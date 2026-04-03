@@ -45,7 +45,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
         if (!await db.AppUsers.AnyAsync(u => u.IdentityId == identityId))
         {
             var email = $"{identityId}@test.com";
-            var admin = await AppUser.CreateAdminAsync(email, emailChecker);
+            var admin = await AppUser.CreateAdmin(email, emailChecker);
             admin.CompleteIdentitySetup(identityId, "Test", "Admin");
             db.AppUsers.Add(admin);
             await db.SaveChangesAsync();

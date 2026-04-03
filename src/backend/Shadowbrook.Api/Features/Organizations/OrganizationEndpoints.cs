@@ -62,7 +62,7 @@ public static class OrganizationEndpoints
         var org = Organization.Create(request.Name);
         db.Organizations.Add(org);
 
-        var appUser = await AppUser.CreateOperatorAsync(request.OperatorEmail, org.Id, emailChecker);
+        var appUser = await AppUser.CreateOperator(request.OperatorEmail, org.Id, emailChecker);
         db.AppUsers.Add(appUser);
 
         return Results.Created($"/organizations/{org.Id}", new OrganizationResponse(org.Id, org.Name));

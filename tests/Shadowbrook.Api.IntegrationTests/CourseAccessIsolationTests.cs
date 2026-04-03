@@ -37,7 +37,7 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var emailChecker = scope.ServiceProvider.GetRequiredService<IAppUserEmailUniquenessChecker>();
-        var operatorUser = await AppUser.CreateOperatorAsync("op@own.com", tenantId, emailChecker);
+        var operatorUser = await AppUser.CreateOperator("op@own.com", tenantId, emailChecker);
         operatorUser.CompleteIdentitySetup("operator-own-org", "Op", "Own");
         db.AppUsers.Add(operatorUser);
         await db.SaveChangesAsync();
@@ -128,7 +128,7 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var emailChecker = scope.ServiceProvider.GetRequiredService<IAppUserEmailUniquenessChecker>();
-        var operatorA = await AppUser.CreateOperatorAsync($"{operatorIdentityId}@orga.com", orgA.Id, emailChecker);
+        var operatorA = await AppUser.CreateOperator($"{operatorIdentityId}@orga.com", orgA.Id, emailChecker);
         operatorA.CompleteIdentitySetup(operatorIdentityId, "Operator", "A");
 
         db.Organizations.AddRange(orgA, orgB);
