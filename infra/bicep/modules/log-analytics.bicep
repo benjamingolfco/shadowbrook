@@ -7,8 +7,8 @@ param environment string
 @description('Azure region for resources')
 param location string
 
-@description('Daily ingestion cap in GB (safety net to stay within free tier)')
-param dailyCapGb string = '0.1'
+@description('Daily ingestion cap in GB (must exceed actual daily volume or telemetry is silently dropped)')
+param dailyCapGb string = '1'
 
 var workspaceName = 'shadowbrook-logs-${environment}'
 
