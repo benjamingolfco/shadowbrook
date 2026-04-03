@@ -5,6 +5,7 @@ using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.AppUserAggregate;
 using Shadowbrook.Domain.CourseAggregate;
 using Shadowbrook.Domain.OrganizationAggregate;
+using Shadowbrook.Domain.Services;
 
 namespace Shadowbrook.Api.IntegrationTests.Features.Auth;
 
@@ -29,7 +30,8 @@ public class AuthEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifet
         db.Courses.Add(course);
 
         var identityId = Guid.NewGuid().ToString();
-        var appUser = AppUser.CreateOperator("operator@example.com", org.Id);
+        var emailChecker = scope.ServiceProvider.GetRequiredService<IAppUserEmailUniquenessChecker>();
+        var appUser = await AppUser.CreateOperator("operator@example.com", org.Id, emailChecker);
         appUser.CompleteIdentitySetup(identityId, "Jane", "Smith");
         db.AppUsers.Add(appUser);
 
