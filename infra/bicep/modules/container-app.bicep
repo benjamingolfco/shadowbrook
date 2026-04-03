@@ -33,6 +33,9 @@ param corsOrigin string
 @description('Frontend URL used in outbound links (e.g., SMS messages with claim URLs)')
 param frontendUrl string
 
+@description('Client ID of the user-assigned managed identity (used for DefaultAzureCredential)')
+param managedIdentityClientId string
+
 @description('Regex pattern for allowed CORS origins (e.g., PR staging URLs). When set, takes precedence over corsOrigin.')
 param corsOriginPattern string = ''
 
@@ -108,6 +111,10 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
             {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
               secretRef: 'app-insights-connection-string'
+            }
+            {
+              name: 'AzureAd__ManagedIdentityClientId'
+              value: managedIdentityClientId
             }
             // GC tuning: keep heap within budget and return memory to OS aggressively.
             // GCHeapHardLimit is set to 640MiB (~60% of the 1Gi container limit),

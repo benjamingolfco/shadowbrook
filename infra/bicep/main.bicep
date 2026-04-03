@@ -162,6 +162,7 @@ module containerApp 'modules/container-app.bicep' = {
     frontendUrl: 'https://${staticWebApp.outputs.defaultHostname}'
     corsOrigin: 'https://${staticWebApp.outputs.defaultHostname}'
     // Match main hostname and PR staging URLs (e.g., <name>-123.<region>.<slot>.azurestaticapps.net)
+    managedIdentityClientId: managedIdentity.outputs.clientId
     corsOriginPattern: '^https://${split(staticWebApp.outputs.defaultHostname, '.')[0]}(-\\d+)?\\..*\\.azurestaticapps\\.net$'
   }
 }
