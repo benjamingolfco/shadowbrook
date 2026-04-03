@@ -6,10 +6,39 @@ import TeeSheet from './pages/TeeSheet';
 import TeeTimeSettings from './pages/TeeTimeSettings';
 import WalkUpWaitlist from './pages/WalkUpWaitlist';
 import CoursePortfolio from './pages/CoursePortfolio';
+import OrgPicker from './pages/OrgPicker';
 import { CourseProvider, useCourseContext } from './context/CourseContext';
+import { OrgProvider, useOrgContext } from './context/OrgContext';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { useFeature } from '@/hooks/use-features';
 import { useAuth } from '@/features/auth';
+
+function OrgGate() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin';
+
+  if (isAdmin) {
+    return <AdminOrgGate />;
+  }
+
+  return <CourseGate />;
+}
+
+function AdminOrgGate() {
+  const { org } = useOrgContext();
+
+  if (!org) {
+    return (
+      <Routes>
+        <Route element={<OperatorLayout />}>
+          <Route path="*" element={<OrgPicker />} />
+        </Route>
+      </Routes>
+    );
+  }
+
+  return <CourseGate />;
+}
 
 function CourseGate() {
   const { course, clearCourse } = useCourseContext();
@@ -67,9 +96,11 @@ function CourseGate() {
 export default function OperatorFeature() {
   return (
     <ThemeProvider>
-      <CourseProvider>
-        <CourseGate />
-      </CourseProvider>
+      <OrgProvider>
+        <CourseProvider>
+          <OrgGate />
+        </CourseProvider>
+      </OrgProvider>
     </ThemeProvider>
   );
 }
