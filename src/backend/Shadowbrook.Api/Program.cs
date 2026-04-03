@@ -64,6 +64,9 @@ if (!string.IsNullOrEmpty(appInsightsConnectionString))
             .AddAspNetCoreInstrumentation(o =>
                 o.Filter = context => context.Request.Path != "/health")
             .AddHttpClientInstrumentation()
+            .AddEntityFrameworkCoreInstrumentation(o =>
+                o.EnrichWithIDbCommand = (activity, _) =>
+                    activity.SetTag("db.statement", null))
             .AddSource("Wolverine"))
         .WithMetrics(metrics => metrics
             .AddAspNetCoreInstrumentation()
