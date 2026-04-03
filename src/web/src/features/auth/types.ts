@@ -6,6 +6,7 @@ export interface MeResponse {
   displayName: string;
   role: AppUserRole;
   organization: { id: string; name: string } | null;
+  organizations: { id: string; name: string }[] | null;
   courses: { id: string; name: string }[];
   permissions: string[];
 }

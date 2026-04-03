@@ -28,6 +28,7 @@ export function DevAuthProvider({ children }: ProviderProps) {
             displayName: me.displayName,
             role: me.role,
             organization: me.organization,
+            organizations: me.organizations,
             courses: me.courses,
             permissions: me.permissions,
           }
@@ -47,6 +48,7 @@ export function DevAuthProvider({ children }: ProviderProps) {
     unauthorized,
     permissions: user?.permissions ?? [],
     courses: user?.courses ?? [],
+    organizations: user?.organizations ?? [],
     login: () => {},
     logout: () => {},
     hasPermission,
@@ -95,6 +97,7 @@ function MsalAuthContent({ children }: ProviderProps) {
             displayName: me.displayName,
             role: me.role,
             organization: me.organization,
+            organizations: me.organizations,
             courses: me.courses,
             permissions: me.permissions,
           }
@@ -114,6 +117,7 @@ function MsalAuthContent({ children }: ProviderProps) {
     unauthorized,
     permissions: user?.permissions ?? [],
     courses: user?.courses ?? [],
+    organizations: user?.organizations ?? [],
     login,
     logout,
     hasPermission,

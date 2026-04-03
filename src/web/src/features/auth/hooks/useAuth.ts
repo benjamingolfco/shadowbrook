@@ -8,6 +8,7 @@ export interface AuthContextValue {
   unauthorized: boolean;
   permissions: string[];
   courses: { id: string; name: string }[];
+  organizations: { id: string; name: string }[];
   login: () => void;
   logout: () => void;
   hasPermission: (permission: string) => boolean;
