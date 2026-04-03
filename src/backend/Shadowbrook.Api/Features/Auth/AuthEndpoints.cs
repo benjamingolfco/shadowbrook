@@ -54,10 +54,16 @@ public static class AuthEndpoints
 
         if (appUser.Role == AppUserRole.Admin)
         {
-            courses = await db.Courses
-                .IgnoreQueryFilters()
-                .Select(c => new CourseResponse(c.Id, c.Name))
-                .ToListAsync();
+            courses = userContext.OrganizationId is { } adminOrgId
+                ? await db.Courses
+                    .IgnoreQueryFilters()
+                    .Where(c => c.OrganizationId == adminOrgId)
+                    .Select(c => new CourseResponse(c.Id, c.Name))
+                    .ToListAsync()
+                : await db.Courses
+                    .IgnoreQueryFilters()
+                    .Select(c => new CourseResponse(c.Id, c.Name))
+                    .ToListAsync();
         }
         else if (appUser.Role == AppUserRole.Operator && appUser.OrganizationId.HasValue)
         {
