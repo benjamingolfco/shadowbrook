@@ -1,15 +1,24 @@
+using NSubstitute;
 using Shadowbrook.Domain.AppUserAggregate;
 using Shadowbrook.Domain.AppUserAggregate.Events;
 using Shadowbrook.Domain.AppUserAggregate.Exceptions;
+using Shadowbrook.Domain.Services;
 
 namespace Shadowbrook.Domain.Tests.AppUserAggregate;
 
 public class AppUserTests
 {
-    [Fact]
-    public void CreateAdmin_SetsAdminRoleAndNullOrganizationId()
+    private static IAppUserEmailUniquenessChecker NewChecker(bool emailInUse = false)
     {
-        var user = AppUser.CreateAdmin("admin@shadowbrook.com");
+        var checker = Substitute.For<IAppUserEmailUniquenessChecker>();
+        checker.IsEmailInUseAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(emailInUse);
+        return checker;
+    }
+
+    [Fact]
+    public async Task CreateAdminAsync_SetsAdminRoleAndNullOrganizationId()
+    {
+        var user = await AppUser.CreateAdminAsync("admin@shadowbrook.com", NewChecker());
 
         Assert.NotEqual(Guid.Empty, user.Id);
         Assert.Null(user.IdentityId);
@@ -24,10 +33,10 @@ public class AppUserTests
     }
 
     [Fact]
-    public void CreateOperator_SetsOperatorRoleAndOrganizationId()
+    public async Task CreateOperatorAsync_SetsOperatorRoleAndOrganizationId()
     {
         var orgId = Guid.CreateVersion7();
-        var user = AppUser.CreateOperator("jane@example.com", orgId);
+        var user = await AppUser.CreateOperatorAsync("jane@example.com", orgId, NewChecker());
 
         Assert.NotEqual(Guid.Empty, user.Id);
         Assert.Null(user.IdentityId);
@@ -42,9 +51,43 @@ public class AppUserTests
     }
 
     [Fact]
-    public void Deactivate_SetsIsActiveFalse()
+    public async Task CreateAdminAsync_DuplicateEmail_ThrowsDuplicateEmailException()
     {
-        var user = AppUser.CreateOperator("e@e.com", Guid.CreateVersion7());
+        await Assert.ThrowsAsync<DuplicateEmailException>(
+            () => AppUser.CreateAdminAsync("admin@shadowbrook.com", NewChecker(emailInUse: true)));
+    }
+
+    [Fact]
+    public async Task CreateOperatorAsync_DuplicateEmail_ThrowsDuplicateEmailException()
+    {
+        await Assert.ThrowsAsync<DuplicateEmailException>(
+            () => AppUser.CreateOperatorAsync("jane@example.com", Guid.CreateVersion7(), NewChecker(emailInUse: true)));
+    }
+
+    [Fact]
+    public async Task CreateAdminAsync_UniqueEmail_Succeeds()
+    {
+        var user = await AppUser.CreateAdminAsync("unique@example.com", NewChecker(emailInUse: false));
+
+        Assert.Equal("unique@example.com", user.Email);
+        Assert.Equal(AppUserRole.Admin, user.Role);
+    }
+
+    [Fact]
+    public async Task CreateOperatorAsync_UniqueEmail_Succeeds()
+    {
+        var orgId = Guid.CreateVersion7();
+        var user = await AppUser.CreateOperatorAsync("unique@example.com", orgId, NewChecker(emailInUse: false));
+
+        Assert.Equal("unique@example.com", user.Email);
+        Assert.Equal(AppUserRole.Operator, user.Role);
+        Assert.Equal(orgId, user.OrganizationId);
+    }
+
+    [Fact]
+    public async Task Deactivate_SetsIsActiveFalse()
+    {
+        var user = await AppUser.CreateOperatorAsync("e@e.com", Guid.CreateVersion7(), NewChecker());
         user.CompleteIdentitySetup("oid", "Test", "User");
 
         user.Deactivate();
@@ -53,9 +96,9 @@ public class AppUserTests
     }
 
     [Fact]
-    public void Activate_SetsIsActiveTrue()
+    public async Task Activate_SetsIsActiveTrue()
     {
-        var user = AppUser.CreateOperator("e@e.com", Guid.CreateVersion7());
+        var user = await AppUser.CreateOperatorAsync("e@e.com", Guid.CreateVersion7(), NewChecker());
         user.CompleteIdentitySetup("oid", "Test", "User");
         user.Deactivate();
 
@@ -65,10 +108,10 @@ public class AppUserTests
     }
 
     [Fact]
-    public void MakeAdmin_SetsAdminRoleAndClearsOrganizationId()
+    public async Task MakeAdmin_SetsAdminRoleAndClearsOrganizationId()
     {
         var orgId = Guid.CreateVersion7();
-        var user = AppUser.CreateOperator("e@e.com", orgId);
+        var user = await AppUser.CreateOperatorAsync("e@e.com", orgId, NewChecker());
 
         user.MakeAdmin();
 
@@ -77,9 +120,9 @@ public class AppUserTests
     }
 
     [Fact]
-    public void AssignToOrganization_SetsOperatorRoleAndOrganizationId()
+    public async Task AssignToOrganization_SetsOperatorRoleAndOrganizationId()
     {
-        var user = AppUser.CreateAdmin("e@e.com");
+        var user = await AppUser.CreateAdminAsync("e@e.com", NewChecker());
         var newOrgId = Guid.CreateVersion7();
 
         user.AssignToOrganization(newOrgId);
@@ -89,22 +132,22 @@ public class AppUserTests
     }
 
     [Fact]
-    public void CreateOperator_WithEmptyGuid_Throws() =>
-        Assert.Throws<EmptyOrganizationIdException>(() =>
-            AppUser.CreateOperator("e@e.com", Guid.Empty));
+    public async Task CreateOperatorAsync_WithEmptyGuid_Throws() =>
+        await Assert.ThrowsAsync<EmptyOrganizationIdException>(
+            () => AppUser.CreateOperatorAsync("e@e.com", Guid.Empty, NewChecker()));
 
     [Fact]
-    public void AssignToOrganization_WithEmptyGuid_Throws()
+    public async Task AssignToOrganization_WithEmptyGuid_Throws()
     {
-        var user = AppUser.CreateAdmin("e@e.com");
+        var user = await AppUser.CreateAdminAsync("e@e.com", NewChecker());
 
         Assert.Throws<EmptyOrganizationIdException>(() => user.AssignToOrganization(Guid.Empty));
     }
 
     [Fact]
-    public void CompleteIdentitySetup_SetsIdentityAndActivates()
+    public async Task CompleteIdentitySetup_SetsIdentityAndActivates()
     {
-        var user = AppUser.CreateAdmin("admin@example.com");
+        var user = await AppUser.CreateAdminAsync("admin@example.com", NewChecker());
         user.ClearDomainEvents();
 
         user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
@@ -117,9 +160,9 @@ public class AppUserTests
     }
 
     [Fact]
-    public void CompleteIdentitySetup_SameOid_IsIdempotent()
+    public async Task CompleteIdentitySetup_SameOid_IsIdempotent()
     {
-        var user = AppUser.CreateAdmin("admin@example.com");
+        var user = await AppUser.CreateAdminAsync("admin@example.com", NewChecker());
         user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
         user.ClearDomainEvents();
 
@@ -130,9 +173,9 @@ public class AppUserTests
     }
 
     [Fact]
-    public void CompleteIdentitySetup_DifferentOid_Throws()
+    public async Task CompleteIdentitySetup_DifferentOid_Throws()
     {
-        var user = AppUser.CreateAdmin("admin@example.com");
+        var user = await AppUser.CreateAdminAsync("admin@example.com", NewChecker());
         user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
 
         Assert.Throws<IdentityAlreadyLinkedException>(

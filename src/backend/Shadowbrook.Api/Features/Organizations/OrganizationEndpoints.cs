@@ -5,6 +5,7 @@ using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.AppUserAggregate;
 using Shadowbrook.Domain.OrganizationAggregate;
+using Shadowbrook.Domain.Services;
 using Wolverine.Http;
 
 namespace Shadowbrook.Api.Features.Organizations;
@@ -55,18 +56,13 @@ public static class OrganizationEndpoints
     [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> CreateOrganization(
         CreateOrganizationRequest request,
-        [NotBody] ApplicationDbContext db)
+        [NotBody] ApplicationDbContext db,
+        [NotBody] IAppUserEmailUniquenessChecker emailChecker)
     {
-        var exists = await db.AppUsers.AnyAsync(u => u.Email == request.OperatorEmail);
-        if (exists)
-        {
-            return Results.Conflict(new { error = "A user with this email already exists." });
-        }
-
         var org = Organization.Create(request.Name);
         db.Organizations.Add(org);
 
-        var appUser = AppUser.CreateOperator(request.OperatorEmail, org.Id);
+        var appUser = await AppUser.CreateOperatorAsync(request.OperatorEmail, org.Id, emailChecker);
         db.AppUsers.Add(appUser);
 
         return Results.Created($"/organizations/{org.Id}", new OrganizationResponse(org.Id, org.Name));

@@ -19,8 +19,16 @@ public class AppUser : Entity
 
     private AppUser() { } // EF
 
-    public static AppUser CreateAdmin(string email)
+    public static async Task<AppUser> CreateAdminAsync(
+        string email,
+        IAppUserEmailUniquenessChecker emailChecker,
+        CancellationToken ct = default)
     {
+        if (await emailChecker.IsEmailInUseAsync(email.Trim(), ct))
+        {
+            throw new DuplicateEmailException(email);
+        }
+
         var user = new AppUser
         {
             Id = Guid.CreateVersion7(),
@@ -41,11 +49,20 @@ public class AppUser : Entity
         return user;
     }
 
-    public static AppUser CreateOperator(string email, Guid organizationId)
+    public static async Task<AppUser> CreateOperatorAsync(
+        string email,
+        Guid organizationId,
+        IAppUserEmailUniquenessChecker emailChecker,
+        CancellationToken ct = default)
     {
         if (organizationId == Guid.Empty)
         {
             throw new EmptyOrganizationIdException();
+        }
+
+        if (await emailChecker.IsEmailInUseAsync(email.Trim(), ct))
+        {
+            throw new DuplicateEmailException(email);
         }
 
         var user = new AppUser

@@ -151,6 +151,7 @@ else
     builder.Services.AddSingleton(_ => new GraphServiceClient(new DefaultAzureCredential()));
     builder.Services.AddScoped<IAppUserInvitationService, GraphAppUserInvitationService>();
 }
+builder.Services.AddScoped<IAppUserEmailUniquenessChecker, AppUserEmailUniquenessChecker>();
 builder.Services.AddScoped<IAppUserClaimsProvider, AppUserClaimsProvider>();
 builder.Services.AddScoped<ICourseTimeZoneProvider, CourseTimeZoneProvider>();
 builder.Services.AddScoped<ITimeProvider, Shadowbrook.Api.Infrastructure.Services.TimeZoneProvider>();
@@ -231,12 +232,12 @@ if (seedEmails.Length > 0)
 {
     await using var scope = app.Services.CreateAsyncScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var emailChecker = scope.ServiceProvider.GetRequiredService<IAppUserEmailUniquenessChecker>();
     foreach (var email in seedEmails)
     {
-        var exists = await db.AppUsers.AnyAsync(u => u.Email == email);
-        if (!exists)
+        if (!await emailChecker.IsEmailInUseAsync(email))
         {
-            db.AppUsers.Add(AppUser.CreateAdmin(email));
+            db.AppUsers.Add(await AppUser.CreateAdminAsync(email, emailChecker));
         }
     }
 

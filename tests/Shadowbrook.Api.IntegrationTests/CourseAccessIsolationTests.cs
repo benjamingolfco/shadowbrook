@@ -5,6 +5,7 @@ using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.AppUserAggregate;
 using Shadowbrook.Domain.CourseAggregate;
 using Shadowbrook.Domain.OrganizationAggregate;
+using Shadowbrook.Domain.Services;
 
 namespace Shadowbrook.Api.IntegrationTests;
 
@@ -35,7 +36,8 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
         // Seed operator in the same org
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var operatorUser = AppUser.CreateOperator("op@own.com", tenantId);
+        var emailChecker = scope.ServiceProvider.GetRequiredService<IAppUserEmailUniquenessChecker>();
+        var operatorUser = await AppUser.CreateOperatorAsync("op@own.com", tenantId, emailChecker);
         operatorUser.CompleteIdentitySetup("operator-own-org", "Op", "Own");
         db.AppUsers.Add(operatorUser);
         await db.SaveChangesAsync();
@@ -122,11 +124,13 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
         var orgB = Organization.Create($"Org-B-{operatorIdentityId}");
         var courseA = Course.Create(orgA.Id, $"Course-A-{operatorIdentityId}", TestTimeZones.Chicago);
         var courseB = Course.Create(orgB.Id, $"Course-B-{operatorIdentityId}", TestTimeZones.Chicago);
-        var operatorA = AppUser.CreateOperator("operator@orga.com", orgA.Id);
-        operatorA.CompleteIdentitySetup(operatorIdentityId, "Operator", "A");
 
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var emailChecker = scope.ServiceProvider.GetRequiredService<IAppUserEmailUniquenessChecker>();
+        var operatorA = await AppUser.CreateOperatorAsync($"{operatorIdentityId}@orga.com", orgA.Id, emailChecker);
+        operatorA.CompleteIdentitySetup(operatorIdentityId, "Operator", "A");
+
         db.Organizations.AddRange(orgA, orgB);
         db.Courses.AddRange(courseA, courseB);
         db.AppUsers.Add(operatorA);

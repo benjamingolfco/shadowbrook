@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Respawn;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.AppUserAggregate;
+using Shadowbrook.Domain.Services;
 using Testcontainers.MsSql;
 using Wolverine;
 
@@ -39,10 +40,12 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
     {
         await using var scope = Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var emailChecker = scope.ServiceProvider.GetRequiredService<IAppUserEmailUniquenessChecker>();
 
         if (!await db.AppUsers.AnyAsync(u => u.IdentityId == identityId))
         {
-            var admin = AppUser.CreateAdmin("admin@test.com");
+            var email = $"{identityId}@test.com";
+            var admin = await AppUser.CreateAdminAsync(email, emailChecker);
             admin.CompleteIdentitySetup(identityId, "Test", "Admin");
             db.AppUsers.Add(admin);
             await db.SaveChangesAsync();
