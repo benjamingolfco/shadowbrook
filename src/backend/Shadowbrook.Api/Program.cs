@@ -152,7 +152,14 @@ if (useDevAuth)
 }
 else
 {
-    builder.Services.AddSingleton(_ => new GraphServiceClient(new DefaultAzureCredential()));
+    var managedIdentityClientId = builder.Configuration["AzureAd:ManagedIdentityClientId"];
+    var credential = string.IsNullOrEmpty(managedIdentityClientId)
+        ? new DefaultAzureCredential()
+        : new DefaultAzureCredential(new DefaultAzureCredentialOptions
+        {
+            ManagedIdentityClientId = managedIdentityClientId
+        });
+    builder.Services.AddSingleton(_ => new GraphServiceClient(credential));
     builder.Services.AddScoped<IAppUserInvitationService, GraphAppUserInvitationService>();
 }
 builder.Services.AddScoped<IAppUserEmailUniquenessChecker, AppUserEmailUniquenessChecker>();
