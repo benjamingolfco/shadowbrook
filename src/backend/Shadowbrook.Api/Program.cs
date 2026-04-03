@@ -21,10 +21,10 @@ using Shadowbrook.Domain.CourseAggregate;
 using Shadowbrook.Domain.CourseWaitlistAggregate;
 using Shadowbrook.Domain.GolferAggregate;
 using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
+using Shadowbrook.Domain.Services;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.TenantAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
-using Shadowbrook.Domain.Services;
 using Shadowbrook.Domain.WaitlistServices;
 using Wolverine;
 using Wolverine.EntityFrameworkCore;
@@ -121,6 +121,7 @@ builder.Host.UseWolverine(opts =>
 
     opts.UseEntityFrameworkCoreTransactions();
     opts.Policies.AutoApplyTransactions();
+    opts.Policies.UseDurableLocalQueues();
     opts.UseFluentValidation();
     opts.PublishDomainEventsFromEntityFrameworkCore<Entity, IDomainEvent>(e => e.DomainEvents);
 });
