@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useDeadLetters, useReplayDeadLetters, useDeleteDeadLetters } from '../hooks/useDeadLetters';
-import type { DeadLetterMessage } from '../hooks/useDeadLetters';
+import type { DeadLetterEnvelope } from '../hooks/useDeadLetters';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -23,17 +23,20 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-function stripNamespace(typeName: string): string {
+function stripNamespace(typeName: string | undefined): string {
+  if (!typeName) return 'Unknown';
   const parts = typeName.split('.');
   return parts[parts.length - 1] ?? typeName;
 }
 
-function truncate(text: string, maxLength = 80): string {
+function truncate(text: string | undefined, maxLength = 80): string {
+  if (!text) return '';
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength) + '\u2026';
 }
 
-function formatSentAt(isoString: string): string {
+function formatSentAt(isoString: string | undefined): string {
+  if (!isoString) return '';
   return new Date(isoString).toLocaleString(undefined, {
     year: 'numeric',
     month: 'short',
@@ -44,10 +47,10 @@ function formatSentAt(isoString: string): string {
 }
 
 interface ExpandedRowProps {
-  message: DeadLetterMessage;
+  envelope: DeadLetterEnvelope;
 }
 
-function ExpandedRow({ message }: ExpandedRowProps) {
+function ExpandedRow({ envelope }: ExpandedRowProps) {
   return (
     <TableRow>
       <TableCell colSpan={5} className="bg-muted/40 px-6 py-4">
@@ -56,14 +59,14 @@ function ExpandedRow({ message }: ExpandedRowProps) {
             <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">
               Exception Message
             </p>
-            <p className="text-sm whitespace-pre-wrap break-words">{message.ExceptionMessage}</p>
+            <p className="text-sm whitespace-pre-wrap break-words">{envelope.exceptionMessage}</p>
           </div>
           <div>
             <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">
               Message Body
             </p>
             <pre className="text-xs bg-background border rounded-md p-3 overflow-x-auto whitespace-pre-wrap break-words">
-              {JSON.stringify(message.Body, null, 2)}
+              {JSON.stringify(envelope.message, null, 2)}
             </pre>
           </div>
         </div>
@@ -73,32 +76,19 @@ function ExpandedRow({ message }: ExpandedRowProps) {
 }
 
 export default function DeadLetters() {
-  const [cursor, setCursor] = useState<string | undefined>(undefined);
-  const [allMessages, setAllMessages] = useState<DeadLetterMessage[]>([]);
-  const [nextId, setNextId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
-  const { data, isLoading, error } = useDeadLetters(cursor);
+  const { data, isLoading, error } = useDeadLetters();
   const replay = useReplayDeadLetters();
   const deleteMessages = useDeleteDeadLetters();
 
-  useEffect(() => {
-    if (!data) return;
-    if (cursor === undefined) {
-      // Initial load or post-action refresh — replace all messages
-      setAllMessages(data.Messages);
-    } else {
-      // Pagination — append
-      setAllMessages((prev) => [...prev, ...data.Messages]);
-    }
-    setNextId(data.NextId);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+  const page = data?.[0];
+  const envelopes = page?.envelopes ?? [];
 
   function handleSelectAll(checked: boolean) {
     if (checked) {
-      setSelectedIds(new Set(allMessages.map((m) => m.Id)));
+      setSelectedIds(new Set(envelopes.map((e) => e.id)));
     } else {
       setSelectedIds(new Set());
     }
@@ -132,9 +122,6 @@ export default function DeadLetters() {
     replay.mutate(Array.from(selectedIds), {
       onSuccess: () => {
         setSelectedIds(new Set());
-        // Reset cursor so TanStack Query refetches from the beginning.
-        // Setting cursor to undefined triggers the useEffect to replace allMessages.
-        setCursor(undefined);
       },
     });
   }
@@ -143,21 +130,14 @@ export default function DeadLetters() {
     deleteMessages.mutate(Array.from(selectedIds), {
       onSuccess: () => {
         setSelectedIds(new Set());
-        setCursor(undefined);
       },
     });
   }
 
-  function handleLoadMore() {
-    if (nextId) {
-      setCursor(nextId);
-    }
-  }
-
-  const allSelected = allMessages.length > 0 && selectedIds.size === allMessages.length;
+  const allSelected = envelopes.length > 0 && selectedIds.size === envelopes.length;
   const someSelected = selectedIds.size > 0 && !allSelected;
 
-  if (isLoading && allMessages.length === 0) {
+  if (isLoading) {
     return (
       <div className="p-6">
         <p className="text-muted-foreground">Loading dead letter messages...</p>
@@ -165,7 +145,7 @@ export default function DeadLetters() {
     );
   }
 
-  if (error && allMessages.length === 0) {
+  if (error) {
     return (
       <div className="p-6">
         <p className="text-destructive">
@@ -183,7 +163,7 @@ export default function DeadLetters() {
             Dead Letter Queue
           </h1>
           <p className="text-sm text-muted-foreground">
-            Messages that failed processing and were not retried
+            {page ? `${page.totalCount} failed messages` : 'Messages that failed processing'}
           </p>
         </div>
 
@@ -226,80 +206,70 @@ export default function DeadLetters() {
         )}
       </div>
 
-      {allMessages.length === 0 && !isLoading ? (
+      {envelopes.length === 0 ? (
         <div className="border rounded-md p-12 text-center">
           <p className="text-muted-foreground text-sm">No dead letter messages. All clear.</p>
         </div>
       ) : (
-        <>
-          <div className="border rounded-md">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <Checkbox
-                      checked={allSelected}
-                      data-state={someSelected ? 'indeterminate' : undefined}
-                      onCheckedChange={(checked) => handleSelectAll(checked === true)}
-                      aria-label="Select all messages"
-                    />
-                  </TableHead>
-                  <TableHead>Message Type</TableHead>
-                  <TableHead>Exception Type</TableHead>
-                  <TableHead className="hidden md:table-cell">Exception Message</TableHead>
-                  <TableHead className="hidden md:table-cell whitespace-nowrap">Sent At</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {allMessages.map((message) => (
-                  <React.Fragment key={message.Id}>
-                    <TableRow
-                      className="cursor-pointer"
-                      onClick={(e) => {
-                        const target = e.target as HTMLElement;
-                        if (target.closest('[role="checkbox"]')) return;
-                        handleToggleExpand(message.Id);
-                      }}
-                    >
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <Checkbox
-                          checked={selectedIds.has(message.Id)}
-                          onCheckedChange={(checked) =>
-                            handleSelectOne(message.Id, checked === true)
-                          }
-                          aria-label={`Select message ${message.Id}`}
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium font-mono text-sm">
-                        {stripNamespace(message.MessageType)}
-                      </TableCell>
-                      <TableCell className="text-sm text-destructive">
-                        {stripNamespace(message.ExceptionType)}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                        {truncate(message.ExceptionMessage)}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground whitespace-nowrap">
-                        {formatSentAt(message.SentAt)}
-                      </TableCell>
-                    </TableRow>
-                    {expandedIds.has(message.Id) && (
-                      <ExpandedRow message={message} />
-                    )}
-                  </React.Fragment>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          {nextId && (
-            <div className="flex justify-center">
-              <Button variant="outline" onClick={handleLoadMore} disabled={isLoading}>
-                {isLoading ? 'Loading\u2026' : 'Load more'}
-              </Button>
-            </div>
-          )}
-        </>
+        <div className="border rounded-md">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={allSelected}
+                    data-state={someSelected ? 'indeterminate' : undefined}
+                    onCheckedChange={(checked) => handleSelectAll(checked === true)}
+                    aria-label="Select all messages"
+                  />
+                </TableHead>
+                <TableHead>Message Type</TableHead>
+                <TableHead>Exception Type</TableHead>
+                <TableHead className="hidden md:table-cell">Exception Message</TableHead>
+                <TableHead className="hidden md:table-cell whitespace-nowrap">Sent At</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {envelopes.map((envelope) => (
+                <React.Fragment key={envelope.id}>
+                  <TableRow
+                    className="cursor-pointer"
+                    onClick={(e) => {
+                      const target = e.target as HTMLElement;
+                      if (target.closest('[role="checkbox"]')) return;
+                      handleToggleExpand(envelope.id);
+                    }}
+                  >
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={selectedIds.has(envelope.id)}
+                        onCheckedChange={(checked) =>
+                          handleSelectOne(envelope.id, checked === true)
+                        }
+                        aria-label={`Select message ${envelope.id}`}
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium font-mono text-sm">
+                      {stripNamespace(envelope.messageType)}
+                    </TableCell>
+                    <TableCell className="text-sm text-destructive">
+                      {stripNamespace(envelope.exceptionType)}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                      {truncate(envelope.exceptionMessage)}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground whitespace-nowrap">
+                      {formatSentAt(envelope.sentAt)}
+                    </TableCell>
+                  </TableRow>
+                  {expandedIds.has(envelope.id) && (
+                    <ExpandedRow envelope={envelope} />
+                  )}
+                </React.Fragment>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </div>
   );

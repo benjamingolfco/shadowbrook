@@ -2,27 +2,31 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-keys';
 
-export interface DeadLetterMessage {
-  Id: string;
-  MessageType: string;
-  ExceptionType: string;
-  ExceptionMessage: string;
-  SentAt: string;
-  Body: unknown;
+export interface DeadLetterEnvelope {
+  id: string;
+  messageType: string;
+  exceptionType: string;
+  exceptionMessage: string;
+  sentAt: string;
+  replayable: boolean;
+  source: string;
+  receivedAt: string;
+  message: unknown;
 }
 
-export interface DeadLettersResponse {
-  Messages: DeadLetterMessage[];
-  NextId: string | null;
+export interface DeadLettersPage {
+  totalCount: number;
+  envelopes: DeadLetterEnvelope[];
+  pageNumber: number;
 }
 
-export function useDeadLetters(cursor?: string) {
+export function useDeadLetters(pageNumber = 1) {
   return useQuery({
-    queryKey: [...queryKeys.deadLetters.all, cursor],
+    queryKey: [...queryKeys.deadLetters.all, pageNumber],
     queryFn: () =>
-      api.post<DeadLettersResponse>('/dead-letters/', {
+      api.post<DeadLettersPage[]>('/dead-letters/', {
         Limit: 50,
-        ...(cursor ? { NextId: cursor } : {}),
+        PageNumber: pageNumber,
       }),
   });
 }
