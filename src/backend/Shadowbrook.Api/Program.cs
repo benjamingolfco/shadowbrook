@@ -61,9 +61,12 @@ if (!string.IsNullOrEmpty(appInsightsConnectionString))
 {
     builder.Services.AddOpenTelemetry()
         .WithTracing(tracing => tracing
-            .AddAspNetCoreInstrumentation()
+            .AddAspNetCoreInstrumentation(o =>
+                o.Filter = context => context.Request.Path != "/health")
             .AddHttpClientInstrumentation()
-            .AddEntityFrameworkCoreInstrumentation()
+            .AddEntityFrameworkCoreInstrumentation(o =>
+                o.EnrichWithIDbCommand = (activity, _) =>
+                    activity.SetTag("db.statement", null))
             .AddSource("Wolverine"))
         .WithMetrics(metrics => metrics
             .AddAspNetCoreInstrumentation()
@@ -149,7 +152,14 @@ if (useDevAuth)
 }
 else
 {
-    builder.Services.AddSingleton(_ => new GraphServiceClient(new DefaultAzureCredential()));
+    var managedIdentityClientId = builder.Configuration["AzureAd:ManagedIdentityClientId"];
+    var credential = string.IsNullOrEmpty(managedIdentityClientId)
+        ? new DefaultAzureCredential()
+        : new DefaultAzureCredential(new DefaultAzureCredentialOptions
+        {
+            ManagedIdentityClientId = managedIdentityClientId
+        });
+    builder.Services.AddSingleton(_ => new GraphServiceClient(credential));
     builder.Services.AddScoped<IAppUserInvitationService, GraphAppUserInvitationService>();
 }
 builder.Services.AddScoped<IAppUserEmailUniquenessChecker, AppUserEmailUniquenessChecker>();
