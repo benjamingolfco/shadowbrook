@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter, Navigate } from 'react-router';
-import { useAuth } from '@/features/auth';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router';
+import { useAuth, AuthProvider } from '@/features/auth';
 import AuthGuard from '@/features/auth/components/AuthGuard';
 import PermissionGuard from '@/features/auth/components/PermissionGuard';
 import RootErrorBoundary from '@/features/error/pages/RootErrorBoundary';
@@ -16,6 +16,17 @@ const DevGolferSmsPage = lazy(() => import('@/features/dev/pages/DevGolferSmsPag
 
 function LazyFeature({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<div className="p-6 text-muted-foreground">Loading...</div>}>{children}</Suspense>;
+}
+
+// Layout that provides AuthProvider/MsalProvider only for protected routes.
+// Public routes (join, walkup, QR) render outside this layout so anonymous
+// users never trigger MSAL auth redirects.
+function AuthenticatedLayout() {
+  return (
+    <AuthProvider>
+      <Outlet />
+    </AuthProvider>
+  );
 }
 
 function RoleRedirect() {
@@ -35,32 +46,39 @@ export const router = createBrowserRouter([
     path: '/',
     ErrorBoundary: RootErrorBoundary,
     children: [
+      // ── Protected routes (wrapped in AuthProvider) ──
       {
-        index: true,
-        element: (
-          <AuthGuard>
-            <RoleRedirect />
-          </AuthGuard>
-        ),
+        element: <AuthenticatedLayout />,
+        children: [
+          {
+            index: true,
+            element: (
+              <AuthGuard>
+                <RoleRedirect />
+              </AuthGuard>
+            ),
+          },
+          {
+            path: 'admin/*',
+            element: (
+              <AuthGuard>
+                <PermissionGuard permission="users:manage" fallback="/operator">
+                  <LazyFeature><AdminFeature /></LazyFeature>
+                </PermissionGuard>
+              </AuthGuard>
+            ),
+          },
+          {
+            path: 'operator/*',
+            element: (
+              <AuthGuard>
+                <LazyFeature><OperatorFeature /></LazyFeature>
+              </AuthGuard>
+            ),
+          },
+        ],
       },
-      {
-        path: 'admin/*',
-        element: (
-          <AuthGuard>
-            <PermissionGuard permission="users:manage" fallback="/operator">
-              <LazyFeature><AdminFeature /></LazyFeature>
-            </PermissionGuard>
-          </AuthGuard>
-        ),
-      },
-      {
-        path: 'operator/*',
-        element: (
-          <AuthGuard>
-            <LazyFeature><OperatorFeature /></LazyFeature>
-          </AuthGuard>
-        ),
-      },
+      // ── Public routes (no auth provider) ──
       {
         path: 'golfer/*',
         element: (
