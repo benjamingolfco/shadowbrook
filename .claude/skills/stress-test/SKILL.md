@@ -37,7 +37,7 @@ Orchestrate parallel AI agents (operator, golfers, observer) against a deployed 
 | test | https://white-stone-00610060f.1.azurestaticapps.net | https://shadowbrook-app-test.happypond-1a892999.eastus2.azurecontainerapps.io |
 | local | http://localhost:3000 | http://localhost:5221 |
 
-**App Insights (test env):** app name `shadowbrook-appinsights-test`, resource group `shadowbrook-rg-test`
+**App Insights (test env):** app name `shadowbrook-insights-test`, resource group `shadowbrook-test-rg`
 
 ## Feature Area Role Briefs
 
@@ -128,8 +128,8 @@ Use the Agent tool to dispatch all agents simultaneously. Do not wait for one be
 **Observer agent:**
 - `subagent_type`: `stress-test-observer`
 - Prompt includes:
-  - App Insights app name: `shadowbrook-appinsights-test`
-  - App Insights resource group: `shadowbrook-rg-test`
+  - App Insights app name: `shadowbrook-insights-test`
+  - App Insights resource group: `shadowbrook-test-rg`
   - API base URL: `{api_url}`
   - Feature area being tested: `{feature-area}`
   - Session duration hint: `{timeout} minutes`
