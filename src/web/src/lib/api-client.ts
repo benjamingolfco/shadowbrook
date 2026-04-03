@@ -5,6 +5,13 @@ const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 const useDevAuth = import.meta.env.VITE_USE_DEV_AUTH === 'true';
 const devIdentityId = import.meta.env.VITE_DEV_IDENTITY_ID ?? '';
 
+// Admin org impersonation — set by OrgContext
+let getAdminOrgId: (() => string | null) = () => null;
+
+export function setAdminOrgIdGetter(getter: () => string | null) {
+  getAdminOrgId = getter;
+}
+
 async function getAuthToken(): Promise<string | null> {
   if (useDevAuth) return devIdentityId || null;
   const accounts = msalInstance.getAllAccounts();
@@ -50,6 +57,11 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  const adminOrgId = getAdminOrgId();
+  if (adminOrgId) {
+    headers['X-Organization-Id'] = adminOrgId;
+  }
+
   const response = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers,
@@ -70,4 +82,5 @@ export const api = {
   post: <T>(path: string, body: unknown) => request<T>(path, { method: 'POST', body: JSON.stringify(body) }),
   put: <T>(path: string, body: unknown) => request<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
   delete: (path: string) => request<void>(path, { method: 'DELETE' }),
+  deleteWithBody: (path: string, body: unknown) => request<void>(path, { method: 'DELETE', body: JSON.stringify(body) }),
 };

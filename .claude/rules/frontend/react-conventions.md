@@ -79,7 +79,7 @@ const form = useForm({ resolver: zodResolver(schema) });
 
 Tailwind CSS utility classes. No CSS modules, no styled-components, no inline style objects.
 
-- Use shadcn/ui primitives from `@/components/ui/` for standard UI elements
+- Use shadcn/ui primitives from `@/components/ui/` for standard UI elements — never build custom interactive components (drawers, dialogs, dropdowns, popovers, tooltips) when a shadcn primitive exists. Custom components miss accessibility, animations, and dismiss behavior that shadcn handles out of the box.
 - Use `cn()` from `@/lib/utils` to merge conditional Tailwind classes
 - shadcn components are owned source files (not a node_module) — edit them freely
 - Add new shadcn components via `pnpm dlx shadcn@latest add <component>`

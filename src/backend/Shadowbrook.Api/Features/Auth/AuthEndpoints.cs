@@ -41,14 +41,29 @@ public static class AuthEndpoints
             }
         }
 
+        List<OrgResponse>? organizations = null;
+        if (appUser.Role == AppUserRole.Admin)
+        {
+            organizations = await db.Organizations
+                .OrderBy(o => o.Name)
+                .Select(o => new OrgResponse(o.Id, o.Name))
+                .ToListAsync();
+        }
+
         List<CourseResponse> courses;
 
         if (appUser.Role == AppUserRole.Admin)
         {
-            courses = await db.Courses
-                .IgnoreQueryFilters()
-                .Select(c => new CourseResponse(c.Id, c.Name))
-                .ToListAsync();
+            courses = userContext.OrganizationId is { } adminOrgId
+                ? await db.Courses
+                    .IgnoreQueryFilters()
+                    .Where(c => c.OrganizationId == adminOrgId)
+                    .Select(c => new CourseResponse(c.Id, c.Name))
+                    .ToListAsync()
+                : await db.Courses
+                    .IgnoreQueryFilters()
+                    .Select(c => new CourseResponse(c.Id, c.Name))
+                    .ToListAsync();
         }
         else if (appUser.Role == AppUserRole.Operator && appUser.OrganizationId.HasValue)
         {
@@ -71,6 +86,7 @@ public static class AuthEndpoints
             appUser.LastName,
             appUser.Role.ToString(),
             org,
+            organizations,
             courses,
             userContext.Permissions.ToList());
 
@@ -89,7 +105,8 @@ public static class AuthEndpoints
                 u.LastName,
                 u.Role.ToString(),
                 u.OrganizationId,
-                u.IsActive))
+                u.IsActive,
+                u.InviteSentAt))
             .ToListAsync();
 
         return Results.Ok(users);
@@ -117,7 +134,8 @@ public static class AuthEndpoints
             appUser.LastName,
             appUser.Role.ToString(),
             appUser.OrganizationId,
-            appUser.IsActive);
+            appUser.IsActive,
+            appUser.InviteSentAt);
 
         return Results.Created($"/auth/users/{appUser.Id}", response);
     }
@@ -170,7 +188,8 @@ public static class AuthEndpoints
             appUser.LastName,
             appUser.Role.ToString(),
             appUser.OrganizationId,
-            appUser.IsActive);
+            appUser.IsActive,
+            appUser.InviteSentAt);
 
         return Results.Ok(response);
     }
@@ -184,6 +203,7 @@ public sealed record MeResponse(
     string? LastName,
     string Role,
     OrgResponse? Organization,
+    List<OrgResponse>? Organizations,
     List<CourseResponse> Courses,
     List<string> Permissions);
 
@@ -198,7 +218,8 @@ public sealed record UserListResponse(
     string? LastName,
     string Role,
     Guid? OrganizationId,
-    bool IsActive);
+    bool IsActive,
+    DateTimeOffset? InviteSentAt);
 
 public sealed record CreateUserRequest(
     string Email,

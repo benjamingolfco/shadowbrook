@@ -76,6 +76,15 @@ export default function AdminLayout() {
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <NavLink to="/admin/dead-letters">
+                  {({ isActive }) => (
+                    <span className={isActive ? 'font-semibold' : ''}>Dead Letters</span>
+                  )}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             {(import.meta.env.DEV || import.meta.env.VITE_SHOW_DEV_TOOLS === 'true') && (
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
