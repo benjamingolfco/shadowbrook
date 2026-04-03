@@ -121,6 +121,7 @@ builder.Host.UseWolverine(opts =>
 
     opts.UseEntityFrameworkCoreTransactions();
     opts.Policies.AutoApplyTransactions();
+    opts.Policies.UseDurableLocalQueues();
     opts.UseFluentValidation();
     opts.PublishDomainEventsFromEntityFrameworkCore<Entity, IDomainEvent>(e => e.DomainEvents);
 });
