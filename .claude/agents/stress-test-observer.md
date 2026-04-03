@@ -25,8 +25,8 @@ The coordinator passes the following parameters:
 
 | Parameter | Description |
 |-----------|-------------|
-| `app_name` | App Insights resource name (e.g., `shadowbrook-app-insights-test`) |
-| `resource_group` | Azure resource group (e.g., `shadowbrook-test`) |
+| `app_name` | App Insights resource name (e.g., `shadowbrook-insights-test`) |
+| `resource_group` | Azure resource group (e.g., `shadowbrook-test-rg`) |
 | `time_offset` | ISO 8601 duration for the rolling query window (e.g., `PT2M` for last 2 minutes) |
 | `poll_interval_seconds` | How often to poll in seconds (default: 30) |
 | `run_duration_hint` | Approximate total run duration — used to know when to produce the final summary |
