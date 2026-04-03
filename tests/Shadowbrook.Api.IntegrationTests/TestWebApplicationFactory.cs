@@ -103,6 +103,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
     {
         builder.UseSetting("ConnectionStrings:DefaultConnection", this.connectionString);
         builder.UseSetting("Auth:UseDevAuth", "true");
+        builder.UseSetting("Auth:SeedAdminEmails", "");
         builder.UseSetting("App:FrontendUrl", "http://localhost:3000");
 
         builder.ConfigureServices(services =>
