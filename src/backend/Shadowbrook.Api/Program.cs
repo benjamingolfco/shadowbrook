@@ -1,6 +1,8 @@
+using Azure.Identity;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Graph;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Serilog;
@@ -22,6 +24,7 @@ using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.TenantAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Shadowbrook.Domain.Services;
 using Shadowbrook.Domain.WaitlistServices;
 using Wolverine;
 using Wolverine.EntityFrameworkCore;
@@ -137,6 +140,17 @@ builder.Services.AddScoped<IWaitlistOfferRepository, WaitlistOfferRepository>();
 builder.Services.AddScoped<IGolferWaitlistEntryRepository, GolferWaitlistEntryRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
+
+var useDevAuth = builder.Configuration.GetSection(AuthSettings.SectionName).Get<AuthSettings>()?.UseDevAuth ?? false;
+if (useDevAuth)
+{
+    builder.Services.AddScoped<IAppUserInvitationService, NoOpAppUserInvitationService>();
+}
+else
+{
+    builder.Services.AddSingleton(_ => new GraphServiceClient(new DefaultAzureCredential()));
+    builder.Services.AddScoped<IAppUserInvitationService, GraphAppUserInvitationService>();
+}
 builder.Services.AddScoped<IAppUserClaimsProvider, AppUserClaimsProvider>();
 builder.Services.AddScoped<ICourseTimeZoneProvider, CourseTimeZoneProvider>();
 builder.Services.AddScoped<ITimeProvider, Shadowbrook.Api.Infrastructure.Services.TimeZoneProvider>();
