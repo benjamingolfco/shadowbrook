@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { formatCourseTime } from '@/lib/course-time';
 import type { WalkUpWaitlistEntry } from '@/types/waitlist';
@@ -20,9 +20,21 @@ export function QueueDrawer({
 }: QueueDrawerProps) {
   const [expanded, setExpanded] = useState(false);
   const count = entries.length;
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!expanded) return;
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setExpanded(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [expanded]);
 
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       <button
         type="button"
         className="flex items-center gap-1.5 hover:text-foreground transition-colors"
