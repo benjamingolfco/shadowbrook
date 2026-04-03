@@ -110,12 +110,31 @@ Starting stress test: {feature-area}
 Launching agents in parallel...
 ```
 
-### Step 4: Launch Agents in Parallel
+### Step 4: Launch Operator for Setup
 
-Use the Agent tool to dispatch all agents simultaneously. Do not wait for one before starting the next.
+The operator must open the waitlist first so golfers have a short code to join with. Launch the operator agent in the **foreground** with a setup-only instruction.
 
-**Observer agent:**
-- `subagent_type`: `stress-test-observer`
+**Operator setup agent:**
+- `subagent_type`: `stress-test-operator` (fallback: `general-purpose` with agent definition from `.claude/agents/stress-test-operator.md` embedded in prompt)
+- Prompt includes:
+  - Frontend URL: `{frontend_url}`
+  - Operator credentials (username, password from `.local/test-credentials.md`)
+  - Headed flag: `{headed}`
+  - Instruction: Log in, open the walk-up waitlist for today, and report back the **4-digit short code**. Then stop — you will be re-launched for the full session after golfers are set up.
+  - Load your own how-to skills as defined in your agent definition.
+
+Wait for the operator to return. Extract the **short code** from the response. If the operator reports a CRITICAL BLOCKER (login failed, environment down), stop the run.
+
+Tell the user: `Waitlist opened. Short code: {code}. Launching golfers and observer...`
+
+### Step 5: Launch Remaining Agents in Parallel
+
+Now launch the operator (full session), observer, and all golfers simultaneously in the background.
+
+**Note on `subagent_type`:** Custom agent types (`stress-test-operator`, `stress-test-golfer`, `stress-test-observer`) require a session restart after the agent files are first created. If a custom type is not available, use `general-purpose` and read the agent definition file (e.g., `.claude/agents/stress-test-operator.md`) to embed its full content in the prompt.
+
+**Observer agent (background):**
+- `subagent_type`: `stress-test-observer` (fallback: `general-purpose`)
 - Prompt includes:
   - App Insights app name: `shadowbrook-insights-test`
   - App Insights resource group: `shadowbrook-test-rg`
@@ -124,31 +143,32 @@ Use the Agent tool to dispatch all agents simultaneously. Do not wait for one be
   - Session duration hint: `{timeout} minutes`
   - Instruction: monitor for errors, warnings, concurrency events, and flow gaps; emit `CIRCUIT_BREAKER` if critical system degradation is detected
 
-**Operator agent:**
-- `subagent_type`: `stress-test-operator`
+**Operator agent (background, full session):**
+- `subagent_type`: `stress-test-operator` (fallback: `general-purpose`)
 - Prompt includes:
   - Frontend URL: `{frontend_url}`
   - Operator credentials (username, password from `.local/test-credentials.md`)
   - Role brief: the Operator role description from the feature area section above
   - Hint: `{hint}` (if provided)
   - Headed flag: `{headed}`
-  - Instruction: perform the operator role actions continuously until told to stop; log each action with a timestamp. Load your own how-to skills as defined in your agent definition.
+  - Instruction: The waitlist is already open with short code `{code}`. Perform operator actions continuously: post tee time openings, monitor joins, cancel/repost slots, add golfers manually. Log each action with a timestamp. Load your own how-to skills.
 
-**Golfer agents (one per golfer, N total):**
+**Golfer agents (background, one per golfer, N total):**
 
 For each golfer index 1..N:
-- `subagent_type`: `stress-test-golfer`
+- `subagent_type`: `stress-test-golfer` (fallback: `general-purpose`)
 - Prompt includes:
   - `golfer_id`: the index (1, 2, 3, ...)
-  - Phone number: `+1555000{golfer_id}` (e.g. `+15550001` for golfer 1)
+  - `short_code`: `{code}` (from the operator setup step)
+  - Phone number: `555555000{golfer_id}` (10-digit format, e.g. `5555550001` for golfer 1)
   - Frontend URL: `{frontend_url}`
   - API base URL: `{api_url}`
   - Role brief: the Golfer role description from the feature area section above
   - Hint: `{hint}` (if provided)
   - Headed flag: `{headed}`
-  - Instruction: perform the golfer role actions; use the assigned phone number for SMS-based flows; log each action with a timestamp
+  - Instruction: join the waitlist using short code `{code}` and phone number `555555000{golfer_id}`; watch for SMS; accept/decline openings; log each action with a timestamp
 
-### Step 5: Monitor and Report
+### Step 6: Monitor and Report
 
 While agents are running:
 
@@ -177,9 +197,9 @@ Stopping run. Fix the blocker and retry.
 ```
 Timeout reached ({M} minutes). Compiling results from agents that have returned.
 ```
-Collect partial results and proceed to Step 6.
+Collect partial results and proceed to Step 7.
 
-### Step 6: Assemble Report
+### Step 7: Assemble Report
 
 Collect output from all agents. Write the report to:
 ```

@@ -28,6 +28,7 @@ The coordinator passes the following parameters:
 | `frontend_url` | Base URL of the Shadowbrook web app (e.g., `https://shadowbrook-app-test.happypond-1a892999.eastus2.azurecontainerapps.io`) |
 | `api_url` | Base URL of the Shadowbrook API (e.g., `https://shadowbrook-app-test.happypond-1a892999.eastus2.azurecontainerapps.io/api`) |
 | `golfer_id` | Unique identifier for this golfer agent (e.g., `golfer-1`, `golfer-2`) |
+| `short_code` | 4-digit waitlist short code from the operator (e.g., `1308`) |
 | `feature_area` | Which feature area to exercise (e.g., `waitlist`) |
 | `role_brief` | Short description of the scenario this agent should play out |
 | `hint` | Optional hint from the coordinator (e.g., `race-to-accept`, `decline-first`) |
@@ -81,11 +82,14 @@ Log every action with a timestamp and result. Continue until all scenarios compl
 
 ### waitlist
 
-1. Navigate to `{frontend_url}/join` or `{frontend_url}/w/{shortCode}` (use the URL from `role_brief` or coordinator hint).
-2. Fill in the name and phone number fields. Use a unique phone number derived from `golfer_id`:
-   - `golfer-1` → `+15550001`
-   - `golfer-2` → `+15550002`
-   - `golfer-N` → `+1555000{N}`
+1. Navigate to `{frontend_url}/join/{shortCode}` using the short code provided by the coordinator.
+   - The coordinator obtains the short code from the operator agent after the waitlist is opened.
+   - If no short code is provided, navigate to `{frontend_url}/join` and enter the code manually if prompted.
+2. Fill in the name and phone number fields. Use a unique 10-digit phone number derived from `golfer_id`:
+   - `golfer-1` → `5555550001`
+   - `golfer-2` → `5555550002`
+   - `golfer-N` → `555555000{N}`
+   Phone numbers must be 10 digits (no `+1` prefix in the form — the system normalizes automatically).
 3. Submit the join form.
 4. Poll for SMS messages filtering by this golfer's phone number. Check every 5 seconds for up to 60 seconds:
 
