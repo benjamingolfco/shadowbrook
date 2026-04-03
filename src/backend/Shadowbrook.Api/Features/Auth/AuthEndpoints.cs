@@ -41,6 +41,15 @@ public static class AuthEndpoints
             }
         }
 
+        List<OrgResponse>? organizations = null;
+        if (appUser.Role == AppUserRole.Admin)
+        {
+            organizations = await db.Organizations
+                .OrderBy(o => o.Name)
+                .Select(o => new OrgResponse(o.Id, o.Name))
+                .ToListAsync();
+        }
+
         List<CourseResponse> courses;
 
         if (appUser.Role == AppUserRole.Admin)
@@ -71,6 +80,7 @@ public static class AuthEndpoints
             appUser.LastName,
             appUser.Role.ToString(),
             org,
+            organizations,
             courses,
             userContext.Permissions.ToList());
 
@@ -184,6 +194,7 @@ public sealed record MeResponse(
     string? LastName,
     string Role,
     OrgResponse? Organization,
+    List<OrgResponse>? Organizations,
     List<CourseResponse> Courses,
     List<string> Permissions);
 
