@@ -60,6 +60,7 @@ export default function UserList() {
                 <TableHead>Role</TableHead>
                 <TableHead className="hidden md:table-cell">Organization</TableHead>
                 <TableHead>Active</TableHead>
+                <TableHead className="hidden md:table-cell">Invite Sent</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -81,6 +82,11 @@ export default function UserList() {
                     ) : (
                       <Badge variant="secondary">Inactive</Badge>
                     )}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                    {user.inviteSentAt
+                      ? new Date(user.inviteSentAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+                      : '—'}
                   </TableCell>
                 </TableRow>
               ))}

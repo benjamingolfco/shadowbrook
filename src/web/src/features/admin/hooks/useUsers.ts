@@ -10,6 +10,7 @@ export interface UserListItem {
   role: string;
   organizationId: string | null;
   isActive: boolean;
+  inviteSentAt: string | null;
 }
 
 export function useUsers() {
