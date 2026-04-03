@@ -17,7 +17,10 @@ async function getAuthToken(): Promise<string | null> {
     return response.accessToken;
   } catch (err) {
     if (err instanceof InteractionRequiredAuthError) {
-      await msalInstance.acquireTokenRedirect(loginRequest);
+      await msalInstance.acquireTokenRedirect({
+        ...loginRequest,
+        redirectStartPage: window.location.origin,
+      });
       return null;
     }
     throw err;
