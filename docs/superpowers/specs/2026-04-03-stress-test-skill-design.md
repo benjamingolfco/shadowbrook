@@ -21,7 +21,7 @@ A `/stress-test` skill that launches parallel AI agents to exercise the Shadowbr
 | `--golfers N` | 3 | Number of concurrent golfer agents |
 | `--headed` | false | Open visible browsers instead of headless |
 | `--env` | `test` | Target environment: `test` or `local` |
-| `--duration M` | 5 | Run duration in minutes |
+| `--timeout M` | 30 | Safety timeout in minutes — kills the run if agents haven't naturally completed |
 | `--hint "..."` | none | Natural language instructions to shape agent behavior toward specific contention patterns |
 
 **Environment resolution:**
@@ -65,8 +65,8 @@ Four agent types launched in parallel from a coordinator:
 
 - Parses arguments, loads credentials from `.local/test-credentials.md`, resolves environment URLs
 - Launches all agents in parallel
-- Manages a time window (default: 5 minutes)
-- Collects results from all agents when the window expires or the observer triggers a circuit breaker
+- Manages a safety timeout (default: 30 minutes) — kills the run if agents haven't naturally completed
+- Collects results from all agents when they finish their scenarios or the observer triggers a circuit breaker
 - Assembles the final markdown report
 
 ### Operator Agent
@@ -103,6 +103,17 @@ Four agent types launched in parallel from a coordinator:
   - Any unhandled exception
   - 3+ failed requests (500) within a single polling window
   - Signals the coordinator, which gracefully shuts down all browser agents
+
+## Agent Safety Rules
+
+All agents (operator, golfer, observer) operate under these hard constraints:
+
+- **NEVER fix issues.** If something is broken, log it and move on. Do not attempt workarounds.
+- **NEVER make changes to code.** No edits, no writes, no file modifications. Agents are read-only consumers of the system.
+- **NEVER modify infrastructure, configuration, or deployment state.**
+- **Report only.** Every agent's job is to exercise the system and document what happens — nothing more.
+
+These rules must be embedded in every agent definition file.
 
 ## Agent Behavior Model
 
