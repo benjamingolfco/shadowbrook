@@ -114,6 +114,8 @@ All agents (operator, golfer, observer) operate under these hard constraints:
 - **NEVER modify infrastructure, configuration, or deployment state.**
 - **Report only.** Every agent's job is to exercise the system and document what happens — nothing more.
 
+- **Flag critical blockers immediately.** If an agent encounters something that halts testing — app crash, login failure, page completely unresponsive, environment down — it must signal the coordinator right away so the run can break out early. Don't silently retry or keep going when the system is fundamentally broken.
+
 These rules must be embedded in every agent definition file.
 
 ## Agent Behavior Model
