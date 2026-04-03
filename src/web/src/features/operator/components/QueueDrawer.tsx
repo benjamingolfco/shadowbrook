@@ -1,6 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { formatCourseTime } from '@/lib/course-time';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
 import type { WalkUpWaitlistEntry } from '@/types/waitlist';
 
 interface QueueDrawerProps {
@@ -18,39 +25,29 @@ export function QueueDrawer({
   onRemove,
   removingEntryId,
 }: QueueDrawerProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
   const count = entries.length;
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!expanded) return;
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setExpanded(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [expanded]);
 
   return (
-    <div className="relative" ref={ref}>
-      <button
-        type="button"
-        className="flex items-center gap-1.5 hover:text-foreground transition-colors"
-        onClick={() => setExpanded(!expanded)}
-        aria-expanded={expanded}
-        aria-label={`${count} golfers waiting. ${expanded ? 'Hide' : 'Show'} queue`}
-      >
-        <span className={count > 0 ? 'text-xl font-semibold text-foreground' : 'text-xl font-semibold text-muted-foreground'}>
-          {count}
-        </span>
-        <span className="text-sm text-muted-foreground">waiting</span>
-        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />
-      </button>
-
-      {expanded && (
-        <div className="absolute top-full left-0 mt-2 z-10 w-72 border rounded-lg bg-background shadow-lg max-h-[320px] overflow-y-auto">
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
+        <button
+          type="button"
+          className="flex items-center gap-1.5 hover:text-foreground transition-colors"
+          aria-label={`${count} golfers waiting. ${open ? 'Hide' : 'Show'} queue`}
+        >
+          <span className={count > 0 ? 'text-xl font-semibold text-foreground' : 'text-xl font-semibold text-muted-foreground'}>
+            {count}
+          </span>
+          <span className="text-sm text-muted-foreground">waiting</span>
+          <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        </button>
+      </DrawerTrigger>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>{count} golfer{count !== 1 ? 's' : ''} waiting</DrawerTitle>
+        </DrawerHeader>
+        <div className="px-4 pb-4 max-h-[60vh] overflow-y-auto">
           {entries.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">Queue is empty</p>
           ) : (
@@ -69,7 +66,7 @@ export function QueueDrawer({
                     {entry.golferName}
                     {entry.groupSize > 1 && (
                       <span className="text-muted-foreground text-xs ml-1">
-                        (×{entry.groupSize})
+                        ({'\u00d7'}{entry.groupSize})
                       </span>
                     )}
                   </span>
@@ -92,7 +89,7 @@ export function QueueDrawer({
             </div>
           )}
         </div>
-      )}
-    </div>
+      </DrawerContent>
+    </Drawer>
   );
 }
