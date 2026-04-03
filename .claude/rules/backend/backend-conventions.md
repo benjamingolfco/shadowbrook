@@ -18,6 +18,7 @@ paths:
 - `is null` / `is not null` for null checks (not `== null`)
 - Always explicit accessibility modifiers
 - String interpolation over concatenation
+- Never use `Async` suffix on method names — the `Task<T>` return type already signals async behavior
 
 ## Project Structure (Feature-Based)
 

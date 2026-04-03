@@ -172,7 +172,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
     public async Task PostCourse_WithOrganizationOnly_ReturnsCreated()
     {
         var orgName = $"Admin Org {Guid.NewGuid()}";
-        var orgResponse = await this.client.PostAsJsonAsync("/organizations", new { Name = orgName });
+        var orgResponse = await this.client.PostAsJsonAsync("/organizations", new { Name = orgName, OperatorEmail = $"op-{Guid.NewGuid()}@example.com" });
         Assert.Equal(HttpStatusCode.Created, orgResponse.StatusCode);
         var org = await orgResponse.Content.ReadFromJsonAsync<OrganizationResponse>();
 
@@ -196,7 +196,7 @@ public class CourseEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
     public async Task GetAllCourses_IncludesCoursesCreatedViaOrganization()
     {
         var orgName = $"Admin Org {Guid.NewGuid()}";
-        var orgResponse = await this.client.PostAsJsonAsync("/organizations", new { Name = orgName });
+        var orgResponse = await this.client.PostAsJsonAsync("/organizations", new { Name = orgName, OperatorEmail = $"op-{Guid.NewGuid()}@example.com" });
         Assert.Equal(HttpStatusCode.Created, orgResponse.StatusCode);
         var org = await orgResponse.Content.ReadFromJsonAsync<OrganizationResponse>();
 

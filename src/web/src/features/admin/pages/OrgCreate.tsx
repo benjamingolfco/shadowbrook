@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const schema = z.object({
   name: z.string().min(1, 'Organization name is required'),
+  operatorEmail: z.string().email('Invalid email address'),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -27,7 +28,7 @@ export default function OrgCreate() {
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '' },
+    defaultValues: { name: '', operatorEmail: '' },
   });
 
   function onSubmit(data: FormData) {
@@ -62,6 +63,20 @@ export default function OrgCreate() {
                     <FormLabel>Organization Name *</FormLabel>
                     <FormControl>
                       <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="operatorEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Operator Email *</FormLabel>
+                    <FormControl>
+                      <Input type="email" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -34,6 +34,7 @@ public static class DomainExceptionHandler
                     InvalidSlotsAvailableException => StatusCodes.Status422UnprocessableEntity,
                     InvalidGroupSizeException => StatusCodes.Status422UnprocessableEntity,
                     IdentityAlreadyLinkedException => StatusCodes.Status409Conflict,
+                    DuplicateEmailException => StatusCodes.Status409Conflict,
                     EmptyOrganizationIdException => StatusCodes.Status422UnprocessableEntity,
                     _ => StatusCodes.Status400BadRequest
                 };

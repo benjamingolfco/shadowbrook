@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Domain.AppUserAggregate;
+using Shadowbrook.Domain.Services;
 using Wolverine.Http;
 
 namespace Shadowbrook.Api.Features.Auth;
@@ -98,19 +99,14 @@ public static class AuthEndpoints
     [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> CreateUser(
         CreateUserRequest request,
-        [NotBody] ApplicationDbContext db)
+        [NotBody] ApplicationDbContext db,
+        [NotBody] IAppUserEmailUniquenessChecker emailChecker)
     {
-        var exists = await db.AppUsers.AnyAsync(u => u.Email == request.Email);
-        if (exists)
-        {
-            return Results.Conflict(new { error = "A user with this email already exists." });
-        }
-
         var role = Enum.Parse<AppUserRole>(request.Role, ignoreCase: true);
 
         var appUser = role == AppUserRole.Admin
-            ? AppUser.CreateAdmin(request.Email)
-            : AppUser.CreateOperator(request.Email, request.OrganizationId!.Value);
+            ? await AppUser.CreateAdmin(request.Email, emailChecker)
+            : await AppUser.CreateOperator(request.Email, request.OrganizationId!.Value, emailChecker);
 
         db.AppUsers.Add(appUser);
 

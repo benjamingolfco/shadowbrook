@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Api.Infrastructure.Data;
+using Shadowbrook.Domain.AppUserAggregate;
 using Shadowbrook.Domain.OrganizationAggregate;
+using Shadowbrook.Domain.Services;
 using Wolverine.Http;
 
 namespace Shadowbrook.Api.Features.Organizations;
@@ -54,10 +56,15 @@ public static class OrganizationEndpoints
     [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> CreateOrganization(
         CreateOrganizationRequest request,
-        [NotBody] ApplicationDbContext db)
+        [NotBody] ApplicationDbContext db,
+        [NotBody] IAppUserEmailUniquenessChecker emailChecker)
     {
         var org = Organization.Create(request.Name);
         db.Organizations.Add(org);
+
+        var appUser = await AppUser.CreateOperator(request.OperatorEmail, org.Id, emailChecker);
+        db.AppUsers.Add(appUser);
+
         return Results.Created($"/organizations/{org.Id}", new OrganizationResponse(org.Id, org.Name));
     }
 
@@ -81,7 +88,7 @@ public static class OrganizationEndpoints
 
 public sealed record OrganizationListResponse(Guid Id, string Name, int CourseCount, int UserCount, DateTimeOffset CreatedAt);
 public sealed record OrganizationResponse(Guid Id, string Name);
-public sealed record CreateOrganizationRequest(string Name);
+public sealed record CreateOrganizationRequest(string Name, string OperatorEmail);
 public sealed record UpdateOrganizationRequest(string Name);
 
 public class CreateOrganizationRequestValidator : AbstractValidator<CreateOrganizationRequest>
@@ -89,6 +96,7 @@ public class CreateOrganizationRequestValidator : AbstractValidator<CreateOrgani
     public CreateOrganizationRequestValidator()
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.OperatorEmail).NotEmpty().EmailAddress();
     }
 }
 

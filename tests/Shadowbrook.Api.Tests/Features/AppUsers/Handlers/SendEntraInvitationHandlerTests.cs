@@ -11,10 +11,17 @@ public class SendEntraInvitationHandlerTests
     private readonly IAppUserRepository appUserRepo = Substitute.For<IAppUserRepository>();
     private readonly IAppUserInvitationService invitationService = Substitute.For<IAppUserInvitationService>();
 
+    private static IAppUserEmailUniquenessChecker NewChecker()
+    {
+        var checker = Substitute.For<IAppUserEmailUniquenessChecker>();
+        checker.IsEmailInUse(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        return checker;
+    }
+
     [Fact]
     public async Task Handle_LoadsAppUserAndCallsInvite()
     {
-        var user = AppUser.CreateAdmin("admin@example.com");
+        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
         this.appUserRepo.GetByIdAsync(user.Id).Returns(user);
         this.invitationService.SendInvitationAsync("admin@example.com", Arg.Any<CancellationToken>())
             .Returns("entra-oid-456");
