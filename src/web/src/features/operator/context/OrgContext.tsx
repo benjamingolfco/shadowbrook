@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { setAdminOrgIdGetter } from '@/lib/api-client';
 
 export interface SelectedOrg {
@@ -21,6 +22,7 @@ interface OrgProviderProps {
 }
 
 export function OrgProvider({ children }: OrgProviderProps) {
+  const queryClient = useQueryClient();
   const [org, setOrg] = useState<SelectedOrg | null>(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return null;
@@ -39,12 +41,14 @@ export function OrgProvider({ children }: OrgProviderProps) {
   const selectOrg = useCallback((newOrg: SelectedOrg) => {
     setOrg(newOrg);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newOrg));
-  }, []);
+    void queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+  }, [queryClient]);
 
   const clearOrg = useCallback(() => {
     setOrg(null);
     localStorage.removeItem(STORAGE_KEY);
-  }, []);
+    void queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+  }, [queryClient]);
 
   return (
     <OrgContext.Provider value={{ org, selectOrg, clearOrg }}>
