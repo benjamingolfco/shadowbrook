@@ -25,6 +25,7 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - Run tests: `make test`
 - Lint frontend: `make lint`
 - All commands: `make help`
+- Docker: Always use `docker compose` to run the app in Docker — never hand-craft `docker run` commands. The compose file has all environment variables, volume mounts, and service dependencies configured correctly.
 
 ## Tech Stack
 - Backend: .NET 10, EF Core 10, OpenAPI, minimal APIs (not controllers)
@@ -33,7 +34,7 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - Package manager: pnpm (never npm or yarn)
 - Messaging: WolverineFx (SQL Server transport, migrating to Azure Service Bus)
 - SMS: ITextMessageService abstraction (Twilio planned)
-- Observability: OpenTelemetry + Application Insights + Serilog (TenantId enrichment, Wolverine tracing)
+- Observability: Serilog + Application Insights (Serilog sink, OrganizationId enrichment)
 - Infra: Azure (Container Apps, Static Web Apps, SQL Database, Log Analytics, App Insights)
 
 ## Project Structure

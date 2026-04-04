@@ -25,6 +25,10 @@ WORKDIR /app
 COPY src/backend/ ./
 RUN dotnet restore Shadowbrook.Api/Shadowbrook.Api.csproj
 
+# Pre-generate Wolverine handler code (Static mode). No DB required —
+# transports and persistence are disabled during codegen.
+RUN dotnet run --project Shadowbrook.Api/Shadowbrook.Api.csproj --no-launch-profile -- codegen write
+
 # Build and publish API (framework-dependent deployment)
 RUN dotnet publish Shadowbrook.Api/Shadowbrook.Api.csproj \
     -c Release \
