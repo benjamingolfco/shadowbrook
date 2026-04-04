@@ -64,9 +64,9 @@ if (!string.IsNullOrEmpty(appInsightsConnectionString))
             .AddAspNetCoreInstrumentation(o =>
                 o.Filter = context => context.Request.Path != "/health")
             .AddHttpClientInstrumentation()
-            .AddEntityFrameworkCoreInstrumentation(o =>
-                o.EnrichWithIDbCommand = (activity, _) =>
-                    activity.SetTag("db.statement", null))
+            // EF Core instrumentation disabled — Wolverine's inbox/outbox polling generates
+            // ~232 dependency spans/min (~334K/day) with zero diagnostic value, consuming
+            // significant native memory in the OTEL pipeline that GC cannot reclaim.
             .AddSource("Wolverine"))
         .WithMetrics(metrics => metrics
             .AddAspNetCoreInstrumentation()

@@ -117,17 +117,18 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
               value: managedIdentityClientId
             }
             // GC tuning: keep heap within budget and return memory to OS aggressively.
-            // GCHeapHardLimit caps the managed heap at ~1 GiB (~50% of the 2 Gi container),
-            // leaving headroom for native memory, thread stacks, and Wolverine codegen.
+            // GCHeapHardLimit caps the managed heap at 512 MiB — keeps the heap compact
+            // while leaving ~1.5 GiB for native memory, thread stacks, and burst headroom.
+            // GCConserveMemory=9 (max) forces the most aggressive compaction/decommit.
             // GCRetainVM=0 forces Server GC to decommit pages after collection instead of
             // holding them — critical in containers where retained pages count toward the limit.
             {
               name: 'DOTNET_GCConserveMemory'
-              value: '7'
+              value: '9'
             }
             {
               name: 'DOTNET_GCHeapHardLimit'
-              value: '1073741824'
+              value: '536870912'
             }
             {
               name: 'DOTNET_GCRetainVM'
