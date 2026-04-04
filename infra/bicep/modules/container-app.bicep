@@ -84,8 +84,8 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
           name: 'shadowbrook-api'
           image: '${containerRegistryLoginServer}/shadowbrook:${imageTag}'
           resources: {
-            cpu: json('0.75')
-            memory: '1.5Gi'
+            cpu: json('1.0')
+            memory: '2Gi'
           }
           env: [
             {
@@ -117,15 +117,21 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
               value: managedIdentityClientId
             }
             // GC tuning: keep heap within budget and return memory to OS aggressively.
-            // GCHeapHardLimit is set to 640MiB (~60% of the 1Gi container limit),
+            // GCHeapHardLimit caps the managed heap at ~1 GiB (~50% of the 2 Gi container),
             // leaving headroom for native memory, thread stacks, and Wolverine codegen.
+            // GCRetainVM=0 forces Server GC to decommit pages after collection instead of
+            // holding them — critical in containers where retained pages count toward the limit.
             {
               name: 'DOTNET_GCConserveMemory'
               value: '7'
             }
             {
               name: 'DOTNET_GCHeapHardLimit'
-              value: '671088640'
+              value: '1073741824'
+            }
+            {
+              name: 'DOTNET_GCRetainVM'
+              value: '0'
             }
           ]
           probes: [
