@@ -30,6 +30,18 @@ Thumbs.db
 # Claude Code (local only)
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+.claude/commands
+.mcp.json
+
+# Shell/user dotfiles
+.bash_profile
+.bashrc
+.profile
+.zprofile
+.zshrc
+.gitconfig
+.gitmodules
+.ripgreprc
 
 # Playwright MCP
 .playwright-mcp/
