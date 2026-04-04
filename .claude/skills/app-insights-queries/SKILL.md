@@ -7,6 +7,24 @@ description: Canned KQL queries for Azure Application Insights. Use when debuggi
 
 Canned KQL queries for Azure Application Insights. Use these when debugging errors, investigating performance, or monitoring the system during stress tests or production incidents.
 
+## Logging Architecture
+
+- **Deployed environments (Test, Production):** Serilog App Insights sink only — populates `traces` and `exceptions` tables with structured properties (including `OrganizationId` in `customDimensions`). No console output (no stdout). No OTEL SDK — `requests` and `dependencies` tables are **empty**.
+- **Development:** Human-readable console output only (no App Insights sink unless connection string is set).
+- **Startup errors:** The bootstrap logger writes to console (stdout) in all environments for errors that occur before the Serilog host builds. These won't appear in App Insights — check Container Apps console logs (`ContainerAppConsoleLogs_CL` in Log Analytics) for startup crashes.
+- **Daily cap:** Log Analytics workspace has a 1 GB/day cap (raised from 0.1 GB after PR #349). Health probe logs and verbose `Microsoft.IdentityModel` logs are suppressed to stay within budget.
+
+### Available Tables
+
+| Table | Populated? | Source |
+|-------|-----------|--------|
+| `traces` | Yes | Serilog App Insights sink |
+| `exceptions` | Yes | Serilog App Insights sink |
+| `requests` | No | Would require OTEL SDK |
+| `dependencies` | No | Would require OTEL SDK |
+
+Queries below that reference `requests` or `dependencies` will return empty results. Use `traces` queries for request-level debugging (Serilog request logging writes status codes and durations as structured properties).
+
 ## Prerequisites
 
 - Logged in to Azure CLI: `az login`
@@ -28,86 +46,127 @@ az monitor app-insights query \
 
 Results are returned as JSON with a `tables` array containing `columns` and `rows`.
 
+### customDimensions Fields
+
+Serilog request logging (`UseSerilogRequestLogging`) writes these fields to `customDimensions` on request completion traces:
+
+| Field | Type | Example | Notes |
+|-------|------|---------|-------|
+| `RequestMethod` | string | `GET` | HTTP method |
+| `RequestPath` | string | `/courses/{id}/waitlist` | Route path |
+| `StatusCode` | string | `200` | HTTP status (string, cast to int for comparisons) |
+| `Elapsed` | string | `45.123` | Duration in ms (string, cast to real for math) |
+| `OrganizationId` | string | GUID | Tenant ID from `OrganizationIdEnricher` |
+| `SourceContext` | string | `Serilog.AspNetCore.RequestLoggingMiddleware` | Logger source — filter on this for request traces |
+| `EnvironmentName` | string | `Test` | Hosting environment |
+| `MachineName` | string | container hostname | Pod/container name |
+| `ConnectionId` | string | `0HNKIBA4MADT5` | Kestrel connection ID |
+| `RequestId` | string | `0HNKIBA4MADT5:00000001` | Kestrel request ID |
+
+Application log traces have `SourceContext` set to the logger's class name (e.g., `Microsoft.EntityFrameworkCore.Migrations`).
+
 ## Queries
 
 ### 1. Exceptions
 
-Unhandled exceptions grouped by type and operation. Use to identify error hotspots.
+Unhandled exceptions grouped by type. Use to identify error hotspots.
 
 ```kql
 exceptions
 | where timestamp > ago(1h)
-| summarize count() by type, operation_Name
+| summarize count() by type, outerMessage
 | order by count_ desc
 ```
 
 ### 2. Failed Requests
 
-4xx and 5xx responses by operation and status code. Use to identify broken endpoints.
+4xx and 5xx responses by path and status code. Excludes health probes.
 
 ```kql
-requests
+traces
 | where timestamp > ago(1h)
-| where resultCode >= 400
-| summarize count() by operation_Name, resultCode
+| where customDimensions["SourceContext"] == "Serilog.AspNetCore.RequestLoggingMiddleware"
+| where customDimensions["RequestPath"] != "/health"
+| extend StatusCode = toint(customDimensions["StatusCode"])
+| where StatusCode >= 400
+| summarize count() by tostring(customDimensions["RequestMethod"]), tostring(customDimensions["RequestPath"]), StatusCode
 | order by count_ desc
 ```
 
-### 3. Dependency Failures
+### 3. Slow Requests
 
-Failed outbound calls to SQL, external services, or downstream APIs. Use to find infrastructure problems.
-
-```kql
-dependencies
-| where timestamp > ago(1h)
-| where success == false
-| summarize count() by type, target, name
-| order by count_ desc
-```
-
-### 4. Slow Requests
-
-Response time percentiles (p50, p95, p99) by operation. Use to identify latency outliers.
+Response time percentiles (p50, p95, p99) by endpoint. Excludes health probes.
 
 ```kql
-requests
+traces
 | where timestamp > ago(1h)
+| where customDimensions["SourceContext"] == "Serilog.AspNetCore.RequestLoggingMiddleware"
+| where customDimensions["RequestPath"] != "/health"
+| extend Elapsed = toreal(customDimensions["Elapsed"])
 | summarize
-    p50 = percentile(duration, 50),
-    p95 = percentile(duration, 95),
-    p99 = percentile(duration, 99),
+    p50 = percentile(Elapsed, 50),
+    p95 = percentile(Elapsed, 95),
+    p99 = percentile(Elapsed, 99),
     count_ = count()
-  by operation_Name
+  by tostring(customDimensions["RequestMethod"]), tostring(customDimensions["RequestPath"])
 | order by p95 desc
 ```
 
-### 5. Traces by Severity
+### 4. Warnings and Errors
 
-Warnings and errors from Serilog/OpenTelemetry. Severity levels: 0=Verbose, 1=Information, 2=Warning, 3=Error, 4=Critical.
+Application log messages at Warning (2) or above. Excludes request completion logs. Severity levels: 0=Verbose, 1=Information, 2=Warning, 3=Error, 4=Critical.
 
 ```kql
 traces
 | where timestamp > ago(1h)
 | where severityLevel >= 2
-| project timestamp, severityLevel, message, operation_Name, cloud_RoleInstance
+| where customDimensions["SourceContext"] != "Serilog.AspNetCore.RequestLoggingMiddleware"
+| project timestamp, severityLevel, message, tostring(customDimensions["SourceContext"]), tostring(customDimensions["OrganizationId"])
 | order by timestamp desc
 ```
 
-### 6. Traces by Tenant
+### 5. Traces by Tenant
 
-Filtered by OrganizationId custom dimension, added by the `OrganizationIdEnricher`. Replace `{organizationId}` with the tenant's organization ID.
+All activity for a specific tenant. Replace `{organizationId}` with the tenant's organization ID.
 
 ```kql
 traces
 | where timestamp > ago(1h)
 | where customDimensions["OrganizationId"] == "{organizationId}"
-| project timestamp, severityLevel, message, operation_Name
+| project timestamp, severityLevel, message, tostring(customDimensions["RequestPath"]), tostring(customDimensions["StatusCode"])
 | order by timestamp desc
 ```
 
-### 7. Concurrency
+### 6. Request Volume
 
-Optimistic concurrency exceptions (`DbUpdateConcurrencyException`) and 409 Conflict responses. Use to detect contention during load.
+Requests per minute, excluding health probes. Use during stress tests to track throughput.
+
+```kql
+traces
+| where timestamp > ago(1h)
+| where customDimensions["SourceContext"] == "Serilog.AspNetCore.RequestLoggingMiddleware"
+| where customDimensions["RequestPath"] != "/health"
+| summarize count() by bin(timestamp, 1m)
+| order by timestamp asc
+```
+
+### 7. Error Spike Detection
+
+5xx responses per minute. Use for circuit breaker logic or alerting during stress tests.
+
+```kql
+traces
+| where timestamp > ago(1h)
+| where customDimensions["SourceContext"] == "Serilog.AspNetCore.RequestLoggingMiddleware"
+| extend StatusCode = toint(customDimensions["StatusCode"])
+| where StatusCode >= 500
+| summarize error_count = count() by bin(timestamp, 1m)
+| order by timestamp asc
+```
+
+### 8. Concurrency Events
+
+Optimistic concurrency exceptions and 409 Conflict responses. Use to detect contention under load.
 
 ```kql
 union
@@ -115,65 +174,58 @@ union
     exceptions
     | where timestamp > ago(1h)
     | where type contains "DbUpdateConcurrencyException"
-    | project timestamp, kind = "exception", detail = outerMessage, operation_Name
+    | project timestamp, kind = "exception", detail = outerMessage
 ),
 (
-    requests
+    traces
     | where timestamp > ago(1h)
-    | where resultCode == 409
-    | project timestamp, kind = "409_conflict", detail = name, operation_Name
+    | where customDimensions["SourceContext"] == "Serilog.AspNetCore.RequestLoggingMiddleware"
+    | where customDimensions["StatusCode"] == "409"
+    | project timestamp, kind = "409_conflict", detail = strcat(tostring(customDimensions["RequestMethod"]), " ", tostring(customDimensions["RequestPath"]))
 )
 | order by timestamp desc
 ```
 
-### 8. Request Volume
+### 9. Endpoint Breakdown
 
-Requests per minute for load monitoring. Use during stress tests to track throughput over time.
+Request count and avg duration by endpoint. Use to understand traffic distribution.
 
 ```kql
-requests
+traces
 | where timestamp > ago(1h)
-| summarize count() by bin(timestamp, 1m)
-| order by timestamp asc
+| where customDimensions["SourceContext"] == "Serilog.AspNetCore.RequestLoggingMiddleware"
+| where customDimensions["RequestPath"] != "/health"
+| extend Elapsed = toreal(customDimensions["Elapsed"])
+| summarize
+    count_ = count(),
+    avg_ms = round(avg(Elapsed), 1),
+    max_ms = round(max(Elapsed), 1)
+  by tostring(customDimensions["RequestMethod"]), tostring(customDimensions["RequestPath"])
+| order by count_ desc
 ```
 
-### 9. End-to-End Flow
+### 10. Recent Exceptions with Stack Traces
 
-Correlated traces for a single operation ID — requests, dependencies, traces, and exceptions in one view. Replace `{operationId}` with the target operation ID from a specific request.
+Full exception details for debugging. Shows the most recent exceptions with type, message, and stack trace.
 
 ```kql
-union
-(
-    requests
-    | where operation_Id == "{operationId}"
-    | project timestamp, kind = "request", name, resultCode = tostring(resultCode), duration, operation_Id
-),
-(
-    dependencies
-    | where operation_Id == "{operationId}"
-    | project timestamp, kind = "dependency", name, resultCode = tostring(resultCode), duration, operation_Id
-),
-(
-    traces
-    | where operation_Id == "{operationId}"
-    | project timestamp, kind = "trace", name = message, resultCode = tostring(severityLevel), duration = 0.0, operation_Id
-),
-(
-    exceptions
-    | where operation_Id == "{operationId}"
-    | project timestamp, kind = "exception", name = outerMessage, resultCode = type, duration = 0.0, operation_Id
-)
-| order by timestamp asc
+exceptions
+| where timestamp > ago(1h)
+| project timestamp, type, outerMessage, details
+| order by timestamp desc
+| take 20
 ```
 
-### 10. Error Spike Detection
+### 11. Ingestion Budget
 
-Server errors (5xx) per minute. Use for circuit breaker logic or alerting on error rate spikes during stress tests.
+Data volume by table over the last 24 hours. Use to monitor daily cap usage (1 GB/day limit).
 
 ```kql
-requests
-| where timestamp > ago(1h)
-| where resultCode >= 500
-| summarize error_count = count() by bin(timestamp, 1m)
-| order by timestamp asc
+union withsource=TableName traces, exceptions
+| where timestamp > ago(24h)
+| summarize
+    count_ = count(),
+    size_MB = round(estimate_data_size(*) / 1048576.0, 2)
+  by TableName
+| order by size_MB desc
 ```

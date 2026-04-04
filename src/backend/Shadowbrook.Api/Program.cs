@@ -50,15 +50,14 @@ builder.Host.UseSerilog((context, services, configuration) =>
         .Enrich.FromLogContext()
         .Enrich.WithMachineName()
         .Enrich.WithEnvironmentName()
-        .Enrich.With(services.GetRequiredService<OrganizationIdEnricher>())
-        .WriteTo.Console(outputTemplate:
-            "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}");
+        .Enrich.With(services.GetRequiredService<OrganizationIdEnricher>());
 
-    // Serilog sink replaces the full OTEL pipeline (tracing, metrics, span processors).
-    // The OTEL SDK consumed ~670 MB of native memory from span/metric processing buffers
-    // that the GC could never reclaim. The Serilog sink uses a managed TelemetryClient
-    // instead, populating the App Insights traces and exceptions tables with structured
-    // properties (including OrganizationId) in customDimensions.
+    if (context.HostingEnvironment.IsDevelopment() || string.IsNullOrEmpty(appInsightsConnectionString))
+    {
+        configuration.WriteTo.Console(outputTemplate:
+            "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}");
+    }
+
     if (!string.IsNullOrEmpty(appInsightsConnectionString))
     {
         configuration.WriteTo.ApplicationInsights(

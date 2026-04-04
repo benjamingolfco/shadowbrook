@@ -79,6 +79,11 @@ app.MapWolverineEndpoints(opts =>
 **Cause:** Domain event scraping requires `EfCoreEnvelopeTransaction` which **hard-requires** `IMessageDatabase` (SQL Server or PostgreSQL). Will NOT work with SQLite.
 **Fix:** Use SQL Server for tests via Testcontainers. See `TestWebApplicationFactory.cs`.
 
+### Class mistakenly discovered as a Wolverine handler
+**Symptom:** `UnResolvableVariableException` during codegen for a type Wolverine shouldn't be handling (e.g., `PolicyAuthorizationResult`).
+**Cause:** Wolverine discovers any class whose name ends with "Handler" and has a `Handle`/`HandleAsync` method. ASP.NET Core's `IAuthorizationMiddlewareResultHandler` matches both conventions, so Wolverine tries to generate code for it and fails on types it can't resolve.
+**Fix:** Add `[WolverineIgnore]` (from `Wolverine.Attributes`) to the class. See `AppUserAuthorizationResultHandler.cs`.
+
 ### Calling `SaveChangesAsync()` or `SaveAsync()` manually
 **Symptom:** Double saves, unexpected behavior, or events published outside Wolverine's pipeline.
 **Fix:** Don't call save — the transactional middleware handles it. Only exception: intentional mid-flow saves (like golfer upsert race condition pattern).
