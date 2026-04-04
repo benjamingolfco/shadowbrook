@@ -52,7 +52,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
         .Enrich.WithEnvironmentName()
         .Enrich.With(services.GetRequiredService<OrganizationIdEnricher>());
 
-    if (context.HostingEnvironment.IsDevelopment())
+    if (context.HostingEnvironment.IsDevelopment() || string.IsNullOrEmpty(appInsightsConnectionString))
     {
         configuration.WriteTo.Console(outputTemplate:
             "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}");
