@@ -84,8 +84,8 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
           name: 'shadowbrook-api'
           image: '${containerRegistryLoginServer}/shadowbrook:${imageTag}'
           resources: {
-            cpu: json('0.75')
-            memory: '1.5Gi'
+            cpu: json('0.5')
+            memory: '1Gi'
           }
           env: [
             {
