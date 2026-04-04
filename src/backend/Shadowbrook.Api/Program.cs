@@ -1,10 +1,7 @@
 using Azure.Identity;
-using Azure.Monitor.OpenTelemetry.AspNetCore;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Graph;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Trace;
 using Serilog;
 using Shadowbrook.Api.Features.Dev;
 using Shadowbrook.Api.Infrastructure.Auth;
@@ -40,40 +37,36 @@ Log.Logger = new LoggerConfiguration()
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Remove default console provider so writeToProviders only forwards to App Insights, not a second console
 builder.Logging.ClearProviders();
 
-builder.Host.UseSerilog((context, services, configuration) => configuration
-    .ReadFrom.Configuration(context.Configuration)
-    .ReadFrom.Services(services)
-    .Enrich.FromLogContext()
-    .Enrich.WithMachineName()
-    .Enrich.WithEnvironmentName()
-    .Enrich.With(services.GetRequiredService<OrganizationIdEnricher>())
-    .WriteTo.Console(outputTemplate:
-        "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}"),
-    writeToProviders: true);
+var appInsightsConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
 
 builder.Services.AddSingleton<OrganizationIdEnricher>();
 
-var appInsightsConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
-if (!string.IsNullOrEmpty(appInsightsConnectionString))
+builder.Host.UseSerilog((context, services, configuration) =>
 {
-    builder.Services.AddOpenTelemetry()
-        .WithTracing(tracing => tracing
-            .AddAspNetCoreInstrumentation(o =>
-                o.Filter = context => context.Request.Path != "/health")
-            .AddHttpClientInstrumentation()
-            // EF Core instrumentation disabled — Wolverine's inbox/outbox polling generates
-            // ~232 dependency spans/min (~334K/day) with zero diagnostic value, consuming
-            // significant native memory in the OTEL pipeline that GC cannot reclaim.
-            .AddSource("Wolverine"))
-        .WithMetrics(metrics => metrics
-            .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation())
-        .WithLogging()
-        .UseAzureMonitor(o => o.ConnectionString = appInsightsConnectionString);
-}
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .Enrich.WithMachineName()
+        .Enrich.WithEnvironmentName()
+        .Enrich.With(services.GetRequiredService<OrganizationIdEnricher>())
+        .WriteTo.Console(outputTemplate:
+            "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}");
+
+    // Serilog sink replaces the full OTEL pipeline (tracing, metrics, span processors).
+    // The OTEL SDK consumed ~670 MB of native memory from span/metric processing buffers
+    // that the GC could never reclaim. The Serilog sink uses a managed TelemetryClient
+    // instead, populating the App Insights traces and exceptions tables with structured
+    // properties (including OrganizationId) in customDimensions.
+    if (!string.IsNullOrEmpty(appInsightsConnectionString))
+    {
+        configuration.WriteTo.ApplicationInsights(
+            appInsightsConnectionString,
+            TelemetryConverter.Traces);
+    }
+});
 
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("App"));
 
