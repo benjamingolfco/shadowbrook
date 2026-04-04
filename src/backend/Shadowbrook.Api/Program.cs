@@ -1,9 +1,11 @@
 using Azure.Identity;
 using FluentValidation;
+using JasperFx;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Graph;
 using Serilog;
 using Shadowbrook.Api.Features.Dev;
+using Shadowbrook.Api.Infrastructure;
 using Shadowbrook.Api.Infrastructure.Auth;
 using Shadowbrook.Api.Infrastructure.Configuration;
 using Shadowbrook.Api.Infrastructure.Data;
@@ -23,19 +25,16 @@ using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 using Shadowbrook.Domain.TenantAggregate;
 using Shadowbrook.Domain.WaitlistOfferAggregate;
 using Shadowbrook.Domain.WaitlistServices;
-using Wolverine;
-using Wolverine.EntityFrameworkCore;
-using Wolverine.ErrorHandling;
-using Wolverine.FluentValidation;
 using Wolverine.Http;
 using Wolverine.Http.FluentValidation;
-using Wolverine.SqlServer;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+var isCodeGen = WolverineExtensions.IsCodeGeneration();
 
 builder.Logging.ClearProviders();
 
@@ -90,37 +89,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-builder.Host.UseWolverine(opts =>
-{
-    opts.Discovery.IncludeAssembly(typeof(Program).Assembly);
-
-    if (connectionString is not null)
-    {
-        // Increase command timeout for Wolverine transport provisioning — Azure SQL Basic tier
-        // (5 DTU) is too slow for the default 30s timeout during schema migration.
-        var wolverineConnectionString = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString)
-        {
-            ConnectTimeout = 120,
-            CommandTimeout = 120
-        }.ConnectionString;
-
-#pragma warning disable CS0618 // EnableMessageTransport not implemented in 5.20.1
-        opts.UseSqlServerPersistenceAndTransport(wolverineConnectionString, "wolverine")
-            .AutoProvision();
-#pragma warning restore CS0618
-    }
-
-    opts.MultipleHandlerBehavior = MultipleHandlerBehavior.Separated;
-
-    opts.OnException<DbUpdateConcurrencyException>()
-        .RetryTimes(3);
-
-    opts.UseEntityFrameworkCoreTransactions();
-    opts.Policies.AutoApplyTransactions();
-    opts.Policies.UseDurableLocalQueues();
-    opts.UseFluentValidation();
-    opts.PublishDomainEventsFromEntityFrameworkCore<Entity, IDomainEvent>(e => e.DomainEvents);
-});
+builder.Host.AddWolverine(builder.Environment, builder.Configuration, connectionString);
 
 builder.Services.AddSingleton<InMemoryTextMessageService>();
 builder.Services.AddScoped<DatabaseTextMessageService>();
@@ -176,7 +145,7 @@ if (!app.Environment.IsProduction())
     app.MapOpenApi();
 }
 
-if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testing")
+if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testing" && !isCodeGen)
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -235,7 +204,7 @@ app.MapDeadLettersEndpoints()
 
 // Seed admin accounts from configuration
 var seedEmails = authSettings.GetSeedAdminEmailsList();
-if (seedEmails.Length > 0)
+if (seedEmails.Length > 0 && !isCodeGen)
 {
     await using var scope = app.Services.CreateAsyncScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -251,4 +220,4 @@ if (seedEmails.Length > 0)
     await db.SaveChangesAsync();
 }
 
-app.Run();
+await app.RunJasperFxCommands(args);

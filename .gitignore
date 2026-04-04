@@ -1,6 +1,7 @@
 # .NET
 bin/
 obj/
+**/Internal/Generated/
 bin\\*
 obj\\*
 *.db

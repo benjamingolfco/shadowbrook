@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
+using Wolverine.Attributes;
 
 namespace Shadowbrook.Api.Infrastructure.Auth;
 
+[WolverineIgnore]
 public class AppUserAuthorizationResultHandler(IAuthorizationMiddlewareResultHandler defaultHandler)
     : IAuthorizationMiddlewareResultHandler
 {
