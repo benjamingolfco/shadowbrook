@@ -11,7 +11,7 @@ Canned KQL queries for Azure Application Insights. Use these when debugging erro
 
 - **Deployed environments (Test, Production):** Serilog App Insights sink only — populates `traces` and `exceptions` tables with structured properties (including `OrganizationId` in `customDimensions`). No console output (no stdout). No OTEL SDK — `requests` and `dependencies` tables are **empty**.
 - **Development:** Human-readable console output only (no App Insights sink unless connection string is set).
-- **Bootstrap logger:** Writes to console in all environments for startup errors before the host builds.
+- **Startup errors:** The bootstrap logger writes to console (stdout) in all environments for errors that occur before the Serilog host builds. These won't appear in App Insights — check Container Apps console logs (`ContainerAppConsoleLogs_CL` in Log Analytics) for startup crashes.
 - **Daily cap:** Log Analytics workspace has a 1 GB/day cap (raised from 0.1 GB after PR #349). Health probe logs and verbose `Microsoft.IdentityModel` logs are suppressed to stay within budget.
 
 ### Available Tables
