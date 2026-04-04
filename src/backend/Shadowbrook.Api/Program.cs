@@ -12,6 +12,7 @@ using Shadowbrook.Api.Infrastructure.Data;
 using Shadowbrook.Api.Infrastructure.Middleware;
 using Shadowbrook.Api.Infrastructure.Observability;
 using Shadowbrook.Api.Infrastructure.Repositories;
+using Serilog.Formatting.Compact;
 using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.AppUserAggregate;
 using Shadowbrook.Domain.BookingAggregate;
@@ -50,9 +51,17 @@ builder.Host.UseSerilog((context, services, configuration) =>
         .Enrich.FromLogContext()
         .Enrich.WithMachineName()
         .Enrich.WithEnvironmentName()
-        .Enrich.With(services.GetRequiredService<OrganizationIdEnricher>())
-        .WriteTo.Console(outputTemplate:
+        .Enrich.With(services.GetRequiredService<OrganizationIdEnricher>());
+
+    if (context.HostingEnvironment.IsDevelopment())
+    {
+        configuration.WriteTo.Console(outputTemplate:
             "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}");
+    }
+    else
+    {
+        configuration.WriteTo.Console(new RenderedCompactJsonFormatter());
+    }
 
     // Serilog sink replaces the full OTEL pipeline (tracing, metrics, span processors).
     // The OTEL SDK consumed ~670 MB of native memory from span/metric processing buffers
