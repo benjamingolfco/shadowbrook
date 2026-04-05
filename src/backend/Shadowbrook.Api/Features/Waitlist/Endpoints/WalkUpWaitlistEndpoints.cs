@@ -155,10 +155,21 @@ public static class WalkUpWaitlistEndpoints
         Guid courseId,
         CreateTeeTimeOpeningRequest request,
         ITeeTimeOpeningRepository openingRepo,
+        ICourseTimeZoneProvider courseTimeZoneProvider,
         ITimeProvider timeProvider)
     {
         var date = DateOnly.FromDateTime(request.TeeTime);
         var time = TimeOnly.FromDateTime(request.TeeTime);
+
+        var timeZoneId = await courseTimeZoneProvider.GetTimeZoneIdAsync(courseId);
+        var courseToday = timeProvider.GetCurrentDateByTimeZone(timeZoneId);
+        var rawCourseTime = timeProvider.GetCurrentTimeByTimeZone(timeZoneId);
+        var courseNowTime = new TimeOnly(rawCourseTime.Hour, rawCourseTime.Minute);
+
+        if (date < courseToday || (date == courseToday && time < courseNowTime))
+        {
+            return Results.Problem(detail: "Tee time must be in the future.", statusCode: 422);
+        }
 
         var teeTime = new TeeTime(date, time);
         var existing = await openingRepo.GetActiveByCourseTeeTimeAsync(courseId, teeTime);
