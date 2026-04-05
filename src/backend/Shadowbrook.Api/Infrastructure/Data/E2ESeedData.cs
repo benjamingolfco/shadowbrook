@@ -74,18 +74,18 @@ public static class E2ESeedData
         var emailChecker = new SeedEmailChecker(db);
 
         var adminExists = await db.AppUsers
-            .AnyAsync(u => u.IdentityId == "e2e-admin-oid");
+            .AnyAsync(u => u.Email == "e2e-admin@benjamingolfco.onmicrosoft.com");
 
         if (!adminExists)
         {
             var admin = await AppUser.CreateAdmin("e2e-admin@benjamingolfco.onmicrosoft.com", emailChecker);
-            admin.CompleteIdentitySetup("e2e-admin-oid", "E2E", "Admin");
+            admin.Activate();
             db.AppUsers.Add(admin);
             await db.SaveChangesAsync();
         }
 
         var operatorExists = await db.AppUsers
-            .AnyAsync(u => u.IdentityId == "e2e-operator-oid");
+            .AnyAsync(u => u.Email == "e2e-operator@shadowbrook.golf");
 
         if (!operatorExists)
         {
@@ -93,7 +93,7 @@ public static class E2ESeedData
                 "e2e-operator@shadowbrook.golf",
                 organizationId,
                 emailChecker);
-            operatorUser.CompleteIdentitySetup("e2e-operator-oid", "E2E", "Operator");
+            operatorUser.Activate();
             db.AppUsers.Add(operatorUser);
             await db.SaveChangesAsync();
         }
