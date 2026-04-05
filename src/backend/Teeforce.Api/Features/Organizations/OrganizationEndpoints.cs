@@ -62,7 +62,7 @@ public static class OrganizationEndpoints
         var org = Organization.Create(request.Name);
         db.Organizations.Add(org);
 
-        var appUser = await AppUser.CreateOperator(request.OperatorEmail, org.Id, emailChecker, request.SendInvite);
+        var appUser = await AppUser.CreateOperator(request.OperatorEmail, org.Id, emailChecker);
         db.AppUsers.Add(appUser);
 
         return Results.Created($"/organizations/{org.Id}", new OrganizationResponse(org.Id, org.Name));
@@ -88,7 +88,7 @@ public static class OrganizationEndpoints
 
 public sealed record OrganizationListResponse(Guid Id, string Name, int CourseCount, int UserCount, DateTimeOffset CreatedAt);
 public sealed record OrganizationResponse(Guid Id, string Name);
-public sealed record CreateOrganizationRequest(string Name, string OperatorEmail, bool SendInvite = false);
+public sealed record CreateOrganizationRequest(string Name, string OperatorEmail);
 public sealed record UpdateOrganizationRequest(string Name);
 
 public class CreateOrganizationRequestValidator : AbstractValidator<CreateOrganizationRequest>
