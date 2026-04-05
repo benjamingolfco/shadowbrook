@@ -1,6 +1,6 @@
 ## QA Report — Walk-Up Waitlist Golfer Flow (Manual Simulation)
 
-**Environment:** https://white-stone-00610060f.1.azurestaticapps.net / https://teeforce-app-test.happypond-1a892999.eastus2.azurecontainerapps.io
+**Environment:** https://purple-field-0a3932a0f.4.azurestaticapps.net / https://teeforce-app-test.wittywave-545ed3d5.eastus2.azurecontainerapps.io
 **Date:** 2026-04-04
 **Result:** PARTIAL — Steps 1–4 verified; Steps 5–8 not reachable in this session (no operator-created opening)
 
@@ -68,7 +68,7 @@ The global SMS log contains successful end-to-end completions from earlier sessi
 | Time | Phone | Message |
 |------|-------|---------|
 | 2026-04-04T02:07:55 | +15075251450 | Joined waitlist confirmation |
-| 2026-04-04T02:08:29 | +15075251450 | Offer SMS: "Pine Valley Golf Course: 9:20 PM tee time available\! Claim your spot: https://white-stone-00610060f.1.azurestaticapps.net/book/walkup/019d563f-b5ee-77cd-b5ed-8c8fab27d6e3" |
+| 2026-04-04T02:08:29 | +15075251450 | Offer SMS: "Pine Valley Golf Course: 9:20 PM tee time available\! Claim your spot: https://purple-field-0a3932a0f.4.azurestaticapps.net/book/walkup/019d563f-b5ee-77cd-b5ed-8c8fab27d6e3" |
 | 2026-04-04T02:10:19 | +15075251450 | Confirmation: "Your tee time at Pine Valley Golf Course on April 3 at 9:20 PM is confirmed. See you on the course\!" |
 
 The offer token `019d563f-b5ee-77cd-b5ed-8c8fab27d6e3` resolves as `status: "Accepted"` from `GET /waitlist/offers/{token}`, confirming the claim was recorded. An earlier session (2026-04-03T19:43:57) also shows a rejection flow ("Sorry, that tee time is no longer available.") after an offer was superseded.

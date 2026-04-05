@@ -11,8 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  E2E_BASE_URL: https://white-stone-00610060f.1.azurestaticapps.net
-  E2E_API_URL: https://teeforce-app-test.placeholder.azurecontainerapps.io # TODO: Update after Azure redeployment
+  E2E_BASE_URL: https://purple-field-0a3932a0f.4.azurestaticapps.net
+  E2E_API_URL: https://teeforce-app-test.wittywave-545ed3d5.eastus2.azurecontainerapps.io
 
 jobs:
   e2e:
