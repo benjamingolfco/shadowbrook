@@ -15,7 +15,7 @@ export default function WaitlistShellLayout() {
   }, [clearCourse, navigate]);
 
   // Show course name when selected, otherwise fall back to org name
-  const displayName = course?.name ?? user?.organization?.name ?? 'Shadowbrook';
+  const displayName = course?.name ?? user?.organization?.name ?? 'Teeforce';
   const showSwitchCourse = (user?.courses?.length ?? 0) > 1;
 
   return (

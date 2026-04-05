@@ -17,7 +17,7 @@ interface CourseContextValue {
 
 const CourseContext = createContext<CourseContextValue | undefined>(undefined);
 
-const STORAGE_KEY = 'shadowbrook-dev-course';
+const STORAGE_KEY = 'teeforce-dev-course';
 
 interface CourseProviderProps {
   children: ReactNode;

@@ -52,7 +52,7 @@ export default function WalkUpOfferPage() {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
         <div className="w-full max-w-sm">
-          <h1 className="text-xl font-bold text-center mb-8">Shadowbrook</h1>
+          <h1 className="text-xl font-bold text-center mb-8">Teeforce</h1>
           <AcceptConfirmation response={acceptResult.response} offer={acceptResult.offer} />
         </div>
       </div>
@@ -64,7 +64,7 @@ export default function WalkUpOfferPage() {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
         <div className="w-full max-w-sm">
-          <h1 className="text-xl font-bold text-center mb-8">Shadowbrook</h1>
+          <h1 className="text-xl font-bold text-center mb-8">Teeforce</h1>
           <Card>
             <CardContent className="pt-6 space-y-6">
               <div className="space-y-2">
@@ -91,7 +91,7 @@ export default function WalkUpOfferPage() {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
         <div className="w-full max-w-sm">
-          <h1 className="text-xl font-bold text-center mb-8">Shadowbrook</h1>
+          <h1 className="text-xl font-bold text-center mb-8">Teeforce</h1>
           <Card>
             <CardContent className="pt-6 text-center space-y-4">
               <h2 className="text-xl font-semibold">Offer Not Found</h2>
@@ -110,7 +110,7 @@ export default function WalkUpOfferPage() {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
         <div className="w-full max-w-sm">
-          <h1 className="text-xl font-bold text-center mb-8">Shadowbrook</h1>
+          <h1 className="text-xl font-bold text-center mb-8">Teeforce</h1>
           <Card>
             <CardContent className="pt-6 text-center space-y-4">
               <h2 className="text-xl font-semibold">Something Went Wrong</h2>
@@ -130,7 +130,7 @@ export default function WalkUpOfferPage() {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
         <div className="w-full max-w-sm">
-          <h1 className="text-xl font-bold text-center mb-8">Shadowbrook</h1>
+          <h1 className="text-xl font-bold text-center mb-8">Teeforce</h1>
           <Card>
             <CardContent className="pt-6 text-center space-y-4">
               <h2 className="text-xl font-semibold">Offer No Longer Available</h2>
@@ -149,7 +149,7 @@ export default function WalkUpOfferPage() {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
         <div className="w-full max-w-sm">
-          <h1 className="text-xl font-bold text-center mb-8">Shadowbrook</h1>
+          <h1 className="text-xl font-bold text-center mb-8">Teeforce</h1>
           <AcceptConfirmation offer={offer} />
         </div>
       </div>
@@ -163,7 +163,7 @@ export default function WalkUpOfferPage() {
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
       <div className="w-full max-w-sm">
-        <h1 className="text-xl font-bold text-center mb-8">Shadowbrook</h1>
+        <h1 className="text-xl font-bold text-center mb-8">Teeforce</h1>
 
         <OfferCard
           offer={offer}

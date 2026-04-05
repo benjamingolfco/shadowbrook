@@ -8,7 +8,7 @@ type: project
 
 **Task 1: Domain Events and Exception** ✓ Complete
 
-Created three files in `src/backend/Shadowbrook.Domain/AppUserAggregate/`:
+Created three files in `src/backend/Teeforce.Domain/AppUserAggregate/`:
 
 1. **AppUserCreated.cs** (`Events/`)
    - Record type implementing `IDomainEvent`

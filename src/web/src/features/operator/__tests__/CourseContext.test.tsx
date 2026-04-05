@@ -62,7 +62,7 @@ describe('CourseContext', () => {
 
   it('restores course from localStorage on mount', () => {
     const stored = { id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' };
-    localStorage.setItem('shadowbrook-dev-course', JSON.stringify(stored));
+    localStorage.setItem('teeforce-dev-course', JSON.stringify(stored));
 
     renderWithProvider();
 
@@ -80,7 +80,7 @@ describe('CourseContext', () => {
     expect(screen.getByTestId('course-id').textContent).toBe('course-1');
     expect(screen.getByTestId('course-name').textContent).toBe('Pine Valley');
 
-    const stored = JSON.parse(localStorage.getItem('shadowbrook-dev-course') ?? 'null') as {
+    const stored = JSON.parse(localStorage.getItem('teeforce-dev-course') ?? 'null') as {
       id: string; name: string; timeZoneId: string;
     };
     expect(stored).toEqual({ id: 'course-1', name: 'Pine Valley', timeZoneId: 'America/Chicago' });
@@ -100,7 +100,7 @@ describe('CourseContext', () => {
     });
 
     expect(screen.getByTestId('course-id').textContent).toBe('null');
-    expect(localStorage.getItem('shadowbrook-dev-course')).toBeNull();
+    expect(localStorage.getItem('teeforce-dev-course')).toBeNull();
   });
 
   it('throws error when used outside CourseProvider', () => {
@@ -114,7 +114,7 @@ describe('CourseContext', () => {
   });
 
   it('handles corrupt localStorage gracefully', () => {
-    localStorage.setItem('shadowbrook-dev-course', 'not-valid-json{{{');
+    localStorage.setItem('teeforce-dev-course', 'not-valid-json{{{');
 
     // Should not throw, should return null course
     renderWithProvider();

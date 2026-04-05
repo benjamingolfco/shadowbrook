@@ -21,7 +21,7 @@ export default function AdminLayout() {
           <div className="flex flex-col gap-3 py-2">
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-semibold font-[family-name:var(--font-heading)]">
-                Shadowbrook
+                Teeforce
               </h1>
               <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                 Admin

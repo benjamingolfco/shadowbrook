@@ -1,4 +1,4 @@
-# Dockerfile for Shadowbrook API
+# Dockerfile for Teeforce API
 # API-only — frontend deploys separately via Azure Static Web Apps
 
 # Dev stage: hot-reload with dotnet watch + vsdbg for debugging
@@ -7,8 +7,8 @@ WORKDIR /app
 RUN curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /vsdbg
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 COPY src/backend/ ./
-RUN dotnet restore Shadowbrook.Api/Shadowbrook.Api.csproj
-WORKDIR /app/Shadowbrook.Api
+RUN dotnet restore Teeforce.Api/Teeforce.Api.csproj
+WORKDIR /app/Teeforce.Api
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Development
@@ -23,14 +23,14 @@ WORKDIR /app
 
 # Copy and restore
 COPY src/backend/ ./
-RUN dotnet restore Shadowbrook.Api/Shadowbrook.Api.csproj
+RUN dotnet restore Teeforce.Api/Teeforce.Api.csproj
 
 # Pre-generate Wolverine handler code (Static mode). No DB required —
 # transports and persistence are disabled during codegen.
-RUN dotnet run --project Shadowbrook.Api/Shadowbrook.Api.csproj --no-launch-profile -- codegen write
+RUN dotnet run --project Teeforce.Api/Teeforce.Api.csproj --no-launch-profile -- codegen write
 
 # Build and publish API (framework-dependent deployment)
-RUN dotnet publish Shadowbrook.Api/Shadowbrook.Api.csproj \
+RUN dotnet publish Teeforce.Api/Teeforce.Api.csproj \
     -c Release \
     -o /app/publish \
     --self-contained false
@@ -53,4 +53,4 @@ EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 
 # Start the application
-ENTRYPOINT ["dotnet", "Shadowbrook.Api.dll"]
+ENTRYPOINT ["dotnet", "Teeforce.Api.dll"]

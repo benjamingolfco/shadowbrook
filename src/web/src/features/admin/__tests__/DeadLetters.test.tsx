@@ -21,12 +21,12 @@ const noopMutation = {
 
 const sampleEnvelope = {
   id: 'msg-1',
-  messageType: 'Shadowbrook.Domain.Events.BookingCreated',
+  messageType: 'Teeforce.Domain.Events.BookingCreated',
   exceptionType: 'System.InvalidOperationException',
   exceptionMessage: 'Cannot book: tee time is full',
   sentAt: '2026-04-03T10:30:00Z',
   replayable: false,
-  source: 'Shadowbrook.Api',
+  source: 'Teeforce.Api',
   receivedAt: 'local://queue/',
   message: { teeTimeId: 'tt-123', golferId: 'g-456' },
 };

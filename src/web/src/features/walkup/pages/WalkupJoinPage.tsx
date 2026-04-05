@@ -145,7 +145,7 @@ export default function WalkupJoinPage() {
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
       <div className="w-full max-w-sm">
-        <h1 className="text-xl font-bold text-center mb-8">Shadowbrook</h1>
+        <h1 className="text-xl font-bold text-center mb-8">Teeforce</h1>
 
         {phase === 'code' && <CodeEntry onVerified={handleVerified} initialCode={shortCode} />}
         {phase === 'join' && verifyData && (
