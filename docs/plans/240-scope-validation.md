@@ -26,8 +26,8 @@ Add `Audience` and `Scopes` to the `AzureAd` section:
 "AzureAd": {
   "Instance": "https://login.microsoftonline.com/",
   "TenantId": "f74e8993-5f31-49cb-8772-a20a7f0cf2b6",
-  "ClientId": "e3eea6af-dfac-49f5-a3ea-45dc1cf42873",
-  "Audience": "api://e3eea6af-dfac-49f5-a3ea-45dc1cf42873",
+  "ClientId": "c601e2a8-c9fe-4361-8627-2e5634a55040",
+  "Audience": "api://c601e2a8-c9fe-4361-8627-2e5634a55040",
   "Scopes": "access_as_user"
 }
 ```
