@@ -150,18 +150,14 @@ public static class WalkUpWaitlistEndpoints
         ICourseContext courseContext,
         ITimeProvider timeProvider)
     {
-        var date = DateOnly.FromDateTime(request.TeeTime);
-        var time = TimeOnly.FromDateTime(request.TeeTime);
+        var teeTime = new TeeTime(DateOnly.FromDateTime(request.TeeTime), TimeOnly.FromDateTime(request.TeeTime));
+        var courseNow = new TeeTime(courseContext.Today, courseContext.Now);
 
-        // Truncate to minute — a tee time at the same minute as the course clock is still valid
-        var courseNowMinute = new TimeOnly(courseContext.Now.Hour, courseContext.Now.Minute);
-
-        if (date < courseContext.Today || (date == courseContext.Today && time < courseNowMinute))
+        if (teeTime.Value < courseNow.Value)
         {
             return Results.Problem(detail: "Tee time must be in the future.", statusCode: 422);
         }
 
-        var teeTime = new TeeTime(date, time);
         var existing = await openingRepo.GetActiveByCourseTeeTimeAsync(courseId, teeTime);
 
         if (existing is not null)
@@ -181,7 +177,7 @@ public static class WalkUpWaitlistEndpoints
             });
         }
 
-        var opening = TeeTimeOpening.Create(courseId, date, time, request.SlotsAvailable, operatorOwned: true, timeProvider);
+        var opening = TeeTimeOpening.Create(courseId, teeTime.Date, teeTime.Time, request.SlotsAvailable, operatorOwned: true, timeProvider);
         openingRepo.Add(opening);
 
         return Results.Created(
