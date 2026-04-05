@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Shadowbrook.Api.Features.Waitlist.Policies;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
@@ -212,5 +213,122 @@ public class TeeTimeOpeningOfferPolicyTests
         var result = policy.Handle(new WakeUpOfferPolicy(openingId));
 
         Assert.Null(result);
+    }
+
+    [Fact]
+    public void NotFound_OfferDispatchGracePeriodTimeout_DoesNotThrow()
+    {
+        var timeout = new OfferDispatchGracePeriodTimeout(Guid.NewGuid(), TimeSpan.FromMinutes(5));
+        var logger = NullLogger<TeeTimeOpeningOfferPolicy>.Instance;
+
+        TeeTimeOpeningOfferPolicy.NotFound(timeout, logger);
+    }
+
+    [Fact]
+    public void NotFound_TeeTimeOpeningCancelled_DoesNotThrow()
+    {
+        var evt = new TeeTimeOpeningCancelled
+        {
+            OpeningId = Guid.NewGuid(),
+            CourseId = Guid.NewGuid(),
+            Date = new DateOnly(2026, 3, 25),
+            TeeTime = new TimeOnly(14, 30)
+        };
+        var logger = NullLogger<TeeTimeOpeningOfferPolicy>.Instance;
+
+        TeeTimeOpeningOfferPolicy.NotFound(evt, logger);
+    }
+
+    [Fact]
+    public void NotFound_WaitlistOfferAccepted_DoesNotThrow()
+    {
+        var evt = new WaitlistOfferAccepted
+        {
+            WaitlistOfferId = Guid.NewGuid(),
+            BookingId = Guid.NewGuid(),
+            OpeningId = Guid.NewGuid(),
+            GolferWaitlistEntryId = Guid.NewGuid(),
+            GolferId = Guid.NewGuid(),
+            GroupSize = 1,
+            CourseId = Guid.NewGuid(),
+            Date = new DateOnly(2026, 3, 25),
+            TeeTime = new TimeOnly(14, 30)
+        };
+        var logger = NullLogger<TeeTimeOpeningOfferPolicy>.Instance;
+
+        TeeTimeOpeningOfferPolicy.NotFound(evt, logger);
+    }
+
+    [Fact]
+    public void NotFound_TeeTimeOpeningSlotsClaimed_DoesNotThrow()
+    {
+        var evt = new TeeTimeOpeningSlotsClaimed
+        {
+            OpeningId = Guid.NewGuid(),
+            BookingId = Guid.NewGuid(),
+            GolferId = Guid.NewGuid(),
+            CourseId = Guid.NewGuid(),
+            Date = new DateOnly(2026, 3, 25),
+            TeeTime = new TimeOnly(14, 30),
+            GroupSize = 1
+        };
+        var logger = NullLogger<TeeTimeOpeningOfferPolicy>.Instance;
+
+        TeeTimeOpeningOfferPolicy.NotFound(evt, logger);
+    }
+
+    [Fact]
+    public void NotFound_WaitlistOfferRejected_DoesNotThrow()
+    {
+        var evt = new WaitlistOfferRejected
+        {
+            WaitlistOfferId = Guid.NewGuid(),
+            OpeningId = Guid.NewGuid(),
+            GolferWaitlistEntryId = Guid.NewGuid(),
+            Reason = "Declined"
+        };
+        var logger = NullLogger<TeeTimeOpeningOfferPolicy>.Instance;
+
+        TeeTimeOpeningOfferPolicy.NotFound(evt, logger);
+    }
+
+    [Fact]
+    public void NotFound_WaitlistOfferStale_DoesNotThrow()
+    {
+        var evt = new WaitlistOfferStale
+        {
+            WaitlistOfferId = Guid.NewGuid(),
+            OpeningId = Guid.NewGuid()
+        };
+        var logger = NullLogger<TeeTimeOpeningOfferPolicy>.Instance;
+
+        TeeTimeOpeningOfferPolicy.NotFound(evt, logger);
+    }
+
+    [Fact]
+    public void NotFound_TeeTimeOpeningFilled_DoesNotThrow()
+    {
+        var evt = new TeeTimeOpeningFilled { OpeningId = Guid.NewGuid() };
+        var logger = NullLogger<TeeTimeOpeningOfferPolicy>.Instance;
+
+        TeeTimeOpeningOfferPolicy.NotFound(evt, logger);
+    }
+
+    [Fact]
+    public void NotFound_TeeTimeOpeningExpired_DoesNotThrow()
+    {
+        var evt = new TeeTimeOpeningExpired { OpeningId = Guid.NewGuid() };
+        var logger = NullLogger<TeeTimeOpeningOfferPolicy>.Instance;
+
+        TeeTimeOpeningOfferPolicy.NotFound(evt, logger);
+    }
+
+    [Fact]
+    public void NotFound_WakeUpOfferPolicy_DoesNotThrow()
+    {
+        var command = new WakeUpOfferPolicy(Guid.NewGuid());
+        var logger = NullLogger<TeeTimeOpeningOfferPolicy>.Instance;
+
+        TeeTimeOpeningOfferPolicy.NotFound(command, logger);
     }
 }

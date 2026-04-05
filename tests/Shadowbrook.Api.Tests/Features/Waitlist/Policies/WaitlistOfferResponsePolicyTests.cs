@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Shadowbrook.Api.Features.Waitlist.Handlers;
 using Shadowbrook.Api.Features.Waitlist.Policies;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
@@ -96,5 +97,49 @@ public class WaitlistOfferResponsePolicyTests
         });
 
         Assert.True(policy.IsCompleted());
+    }
+
+    [Fact]
+    public void NotFound_OfferResponseBufferTimeout_DoesNotThrow()
+    {
+        var timeout = new OfferResponseBufferTimeout(Guid.NewGuid(), TimeSpan.FromMinutes(5));
+        var logger = NullLogger<WaitlistOfferResponsePolicy>.Instance;
+
+        WaitlistOfferResponsePolicy.NotFound(timeout, logger);
+    }
+
+    [Fact]
+    public void NotFound_WaitlistOfferAccepted_DoesNotThrow()
+    {
+        var evt = new WaitlistOfferAccepted
+        {
+            WaitlistOfferId = Guid.NewGuid(),
+            BookingId = Guid.NewGuid(),
+            OpeningId = Guid.NewGuid(),
+            GolferWaitlistEntryId = Guid.NewGuid(),
+            GolferId = Guid.NewGuid(),
+            GroupSize = 1,
+            CourseId = Guid.NewGuid(),
+            Date = new DateOnly(2026, 3, 25),
+            TeeTime = new TimeOnly(14, 30)
+        };
+        var logger = NullLogger<WaitlistOfferResponsePolicy>.Instance;
+
+        WaitlistOfferResponsePolicy.NotFound(evt, logger);
+    }
+
+    [Fact]
+    public void NotFound_WaitlistOfferRejected_DoesNotThrow()
+    {
+        var evt = new WaitlistOfferRejected
+        {
+            WaitlistOfferId = Guid.NewGuid(),
+            OpeningId = Guid.NewGuid(),
+            GolferWaitlistEntryId = Guid.NewGuid(),
+            Reason = "Declined"
+        };
+        var logger = NullLogger<WaitlistOfferResponsePolicy>.Instance;
+
+        WaitlistOfferResponsePolicy.NotFound(evt, logger);
     }
 }
