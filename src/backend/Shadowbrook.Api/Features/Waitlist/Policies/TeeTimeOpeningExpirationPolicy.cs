@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Shadowbrook.Api.Features.Waitlist.Handlers;
 using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.Common;
@@ -44,6 +45,24 @@ public class TeeTimeOpeningExpirationPolicy : Saga
 
     public void Handle(
         [SagaIdentityFrom("OpeningId")] TeeTimeOpeningCancelled evt) => MarkCompleted();
+
+    public static void NotFound(TeeTimeOpeningExpirationTimeout timeout, ILogger<TeeTimeOpeningExpirationPolicy> logger) =>
+        logger.LogInformation("Policy already completed, ignoring {MessageType} for {Id}", nameof(TeeTimeOpeningExpirationTimeout), timeout.Id);
+
+    public static void NotFound(
+        [SagaIdentityFrom("OpeningId")] TeeTimeOpeningFilled evt,
+        ILogger<TeeTimeOpeningExpirationPolicy> logger) =>
+        logger.LogInformation("Policy already completed, ignoring {EventType} for opening {OpeningId}", nameof(TeeTimeOpeningFilled), evt.OpeningId);
+
+    public static void NotFound(
+        [SagaIdentityFrom("OpeningId")] TeeTimeOpeningExpired evt,
+        ILogger<TeeTimeOpeningExpirationPolicy> logger) =>
+        logger.LogInformation("Policy already completed, ignoring {EventType} for opening {OpeningId}", nameof(TeeTimeOpeningExpired), evt.OpeningId);
+
+    public static void NotFound(
+        [SagaIdentityFrom("OpeningId")] TeeTimeOpeningCancelled evt,
+        ILogger<TeeTimeOpeningExpirationPolicy> logger) =>
+        logger.LogInformation("Policy already completed, ignoring {EventType} for opening {OpeningId}", nameof(TeeTimeOpeningCancelled), evt.OpeningId);
 }
 
 public record TeeTimeOpeningExpirationTimeout(Guid Id, TimeSpan Delay) : TimeoutMessage(Delay);

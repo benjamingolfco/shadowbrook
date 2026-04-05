@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Shadowbrook.Api.Features.Waitlist.Handlers;
 using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
 using Wolverine;
@@ -38,6 +39,19 @@ public class WaitlistOfferResponsePolicy : Saga
 
     public void Handle(
         [SagaIdentityFrom("WaitlistOfferId")] WaitlistOfferRejected evt) => MarkCompleted();
+
+    public static void NotFound(OfferResponseBufferTimeout timeout, ILogger<WaitlistOfferResponsePolicy> logger) =>
+        logger.LogInformation("Policy already completed, ignoring {MessageType} for {Id}", nameof(OfferResponseBufferTimeout), timeout.Id);
+
+    public static void NotFound(
+        [SagaIdentityFrom("WaitlistOfferId")] WaitlistOfferAccepted evt,
+        ILogger<WaitlistOfferResponsePolicy> logger) =>
+        logger.LogInformation("Policy already completed, ignoring {EventType} for offer {WaitlistOfferId}", nameof(WaitlistOfferAccepted), evt.WaitlistOfferId);
+
+    public static void NotFound(
+        [SagaIdentityFrom("WaitlistOfferId")] WaitlistOfferRejected evt,
+        ILogger<WaitlistOfferResponsePolicy> logger) =>
+        logger.LogInformation("Policy already completed, ignoring {EventType} for offer {WaitlistOfferId}", nameof(WaitlistOfferRejected), evt.WaitlistOfferId);
 }
 
 public record OfferResponseBufferTimeout(Guid Id, TimeSpan Buffer) : TimeoutMessage(Buffer);

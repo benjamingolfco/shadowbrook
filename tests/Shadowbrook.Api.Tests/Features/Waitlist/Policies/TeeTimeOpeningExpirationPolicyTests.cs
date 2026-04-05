@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using Shadowbrook.Api.Features.Waitlist.Handlers;
@@ -91,5 +92,47 @@ public class TeeTimeOpeningExpirationPolicyTests
         policy.Handle(evt);
 
         Assert.True(policy.IsCompleted());
+    }
+
+    [Fact]
+    public void NotFound_ExpirationTimeout_DoesNotThrow()
+    {
+        var timeout = new TeeTimeOpeningExpirationTimeout(Guid.NewGuid(), TimeSpan.FromMinutes(5));
+        var logger = NullLogger<TeeTimeOpeningExpirationPolicy>.Instance;
+
+        TeeTimeOpeningExpirationPolicy.NotFound(timeout, logger);
+    }
+
+    [Fact]
+    public void NotFound_TeeTimeOpeningFilled_DoesNotThrow()
+    {
+        var evt = new TeeTimeOpeningFilled { OpeningId = Guid.NewGuid() };
+        var logger = NullLogger<TeeTimeOpeningExpirationPolicy>.Instance;
+
+        TeeTimeOpeningExpirationPolicy.NotFound(evt, logger);
+    }
+
+    [Fact]
+    public void NotFound_TeeTimeOpeningExpired_DoesNotThrow()
+    {
+        var evt = new TeeTimeOpeningExpired { OpeningId = Guid.NewGuid() };
+        var logger = NullLogger<TeeTimeOpeningExpirationPolicy>.Instance;
+
+        TeeTimeOpeningExpirationPolicy.NotFound(evt, logger);
+    }
+
+    [Fact]
+    public void NotFound_TeeTimeOpeningCancelled_DoesNotThrow()
+    {
+        var evt = new TeeTimeOpeningCancelled
+        {
+            OpeningId = Guid.NewGuid(),
+            CourseId = Guid.NewGuid(),
+            Date = new DateOnly(2026, 3, 25),
+            TeeTime = new TimeOnly(14, 30)
+        };
+        var logger = NullLogger<TeeTimeOpeningExpirationPolicy>.Instance;
+
+        TeeTimeOpeningExpirationPolicy.NotFound(evt, logger);
     }
 }
