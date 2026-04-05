@@ -128,11 +128,6 @@ public class AppUser : Entity
 
     public async Task Invite(IAppUserInvitationService invitationService, CancellationToken ct)
     {
-        if (IdentityId is not null || InviteSentAt is not null)
-        {
-            return;
-        }
-
         var identityId = await invitationService.SendInvitationAsync(Email, ct);
         IdentityId = identityId;
         InviteSentAt = DateTimeOffset.UtcNow;
