@@ -487,7 +487,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     {
         var (_, courseId) = await CreateTestCourseAsync();
 
-        var teeTime = DateTime.Today.AddHours(10);
+        var teeTime = DateTime.UtcNow.Date.AddDays(1).AddHours(10);
         var response = await PostCreateOpeningAsync(courseId, new { TeeTime = teeTime, SlotsAvailable = 4 });
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -502,7 +502,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     public async Task CreateOpening_DuplicateTime_Returns409()
     {
         var (_, courseId) = await CreateTestCourseAsync();
-        var teeTime = DateTime.Today.AddHours(10);
+        var teeTime = DateTime.UtcNow.Date.AddDays(1).AddHours(10);
 
         var firstResponse = await PostCreateOpeningAsync(courseId, new { TeeTime = teeTime, SlotsAvailable = 4 });
         var firstBody = await firstResponse.Content.ReadFromJsonAsync<TeeTimeOpeningResponse>();
@@ -523,7 +523,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     public async Task CreateOpening_DuplicateTime_PartialSlots_Returns409WithContext()
     {
         var (_, courseId) = await CreateTestCourseAsync();
-        var teeTime = DateTime.Today.AddHours(10);
+        var teeTime = DateTime.UtcNow.Date.AddDays(1).AddHours(10);
 
         var firstResponse = await PostCreateOpeningAsync(courseId, new { TeeTime = teeTime, SlotsAvailable = 2 });
         var firstBody = await firstResponse.Content.ReadFromJsonAsync<TeeTimeOpeningResponse>();
@@ -545,8 +545,8 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     {
         var (_, courseId) = await CreateTestCourseAsync();
 
-        var r1 = await PostCreateOpeningAsync(courseId, new { TeeTime = DateTime.Today.AddHours(10), SlotsAvailable = 4 });
-        var r2 = await PostCreateOpeningAsync(courseId, new { TeeTime = DateTime.Today.AddHours(10).AddMinutes(30), SlotsAvailable = 4 });
+        var r1 = await PostCreateOpeningAsync(courseId, new { TeeTime = DateTime.UtcNow.Date.AddDays(1).AddHours(10), SlotsAvailable = 4 });
+        var r2 = await PostCreateOpeningAsync(courseId, new { TeeTime = DateTime.UtcNow.Date.AddDays(1).AddHours(10).AddMinutes(30), SlotsAvailable = 4 });
 
         Assert.Equal(HttpStatusCode.Created, r1.StatusCode);
         Assert.Equal(HttpStatusCode.Created, r2.StatusCode);
@@ -558,7 +558,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
         var (_, courseId1) = await CreateTestCourseAsync();
         var (_, courseId2) = await CreateTestCourseAsync();
 
-        var teeTime = DateTime.Today.AddHours(10);
+        var teeTime = DateTime.UtcNow.Date.AddDays(1).AddHours(10);
         var r1 = await PostCreateOpeningAsync(courseId1, new { TeeTime = teeTime, SlotsAvailable = 4 });
         var r2 = await PostCreateOpeningAsync(courseId2, new { TeeTime = teeTime, SlotsAvailable = 4 });
 
@@ -571,7 +571,7 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
     {
         var (_, courseId) = await CreateTestCourseAsync();
 
-        var teeTime = DateTime.Today.AddHours(10);
+        var teeTime = DateTime.UtcNow.Date.AddDays(1).AddHours(10);
         var r1 = await PostCreateOpeningAsync(courseId, new { TeeTime = teeTime, SlotsAvailable = 4 });
         var body = await r1.Content.ReadFromJsonAsync<TeeTimeOpeningResponse>();
         await PostCancelOpeningAsync(courseId, body!.Id);

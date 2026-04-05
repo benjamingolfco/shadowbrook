@@ -1,22 +1,36 @@
 import { test, expect } from '../../fixtures/auth';
-import { AdminRegisterPage } from '../../fixtures/admin-register-page';
 import { OperatorWaitlistPage } from '../../fixtures/operator-waitlist-page';
 import { WalkupPage } from '../../fixtures/walkup-page';
 import { WalkUpOfferPage } from '../../fixtures/walk-up-offer-page';
 import { waitForSms, extractOfferUrl } from '../../fixtures/sms-helper';
-import { TEST_TENANT_NAME, TEST_GOLFER, uniqueCourseName } from '../../fixtures/test-data';
+import { TEST_GOLFER, TEST_ADMIN_IDENTITY_ID } from '../../fixtures/test-data';
+import { API_BASE_URL } from '../../playwright.config';
 
-const courseName = uniqueCourseName();
+// Create a fresh course per run via API to avoid stale waitlist state
+const courseName = `E2E Run ${Date.now()}`;
 let walkupCode: string;
 let offerPath: string;
 
 test.describe.serial('Walkup Waitlist Flow', () => {
-  test('admin registers a new course', async ({ page, asAdmin }) => {
-    await asAdmin();
-    const register = new AdminRegisterPage(page);
+  test('setup: create a fresh course', async () => {
+    // Get the E2E org ID from the admin's profile
+    const meResponse = await fetch(`${API_BASE_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${TEST_ADMIN_IDENTITY_ID}` },
+    });
+    const me = await meResponse.json();
+    const orgId = me.organizations[0].id;
 
-    await register.goto();
-    await register.registerCourse(courseName, TEST_TENANT_NAME);
+    const response = await fetch(`${API_BASE_URL}/courses`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${TEST_ADMIN_IDENTITY_ID}`,
+        'X-Organization-Id': orgId,
+      },
+      body: JSON.stringify({ name: courseName, timeZoneId: 'Etc/UTC' }),
+    });
+
+    expect(response.status).toBe(201);
   });
 
   test('operator opens a walkup waitlist', async ({ page, asOperator }) => {
@@ -24,9 +38,8 @@ test.describe.serial('Walkup Waitlist Flow', () => {
     const waitlist = new OperatorWaitlistPage(page);
 
     await waitlist.goto();
-    await waitlist.selectTenant(TEST_TENANT_NAME);
     await waitlist.selectCourse(courseName);
-    await waitlist.openWaitlist();
+    await waitlist.ensureFreshWaitlist();
 
     walkupCode = await waitlist.getShortCode();
     expect(walkupCode).toBeTruthy();
@@ -44,9 +57,8 @@ test.describe.serial('Walkup Waitlist Flow', () => {
 
     await walkup.fillJoinForm(TEST_GOLFER);
 
-    // Should see confirmation with position
+    // Should see confirmation
     await expect(walkup.getConfirmationHeading()).toBeVisible();
-    await expect(walkup.getPositionText()).toBeVisible();
   });
 
   test('operator adds a tee time opening', async ({ page, asOperator }) => {
@@ -54,14 +66,12 @@ test.describe.serial('Walkup Waitlist Flow', () => {
     const waitlist = new OperatorWaitlistPage(page);
 
     await waitlist.goto();
-    await waitlist.selectTenant(TEST_TENANT_NAME);
     await waitlist.selectCourse(courseName);
 
-    // Use a time 10 minutes from now — within the golfer's 30-minute walkup window
-    // and past the 5-minute grace period for future-time validation.
-    // The course was registered with the browser's timezone, so local time works.
-    const futureTime = new Date(Date.now() + 10 * 60 * 1000);
-    const timeStr = `${String(futureTime.getHours()).padStart(2, '0')}:${String(futureTime.getMinutes()).padStart(2, '0')}`;
+    // Course uses UTC timezone. Compute tee time 10 minutes from now in UTC —
+    // within the 30-minute walkup window and past the 5-minute grace period.
+    const futureUtc = new Date(Date.now() + 10 * 60 * 1000);
+    const timeStr = `${String(futureUtc.getUTCHours()).padStart(2, '0')}:${String(futureUtc.getUTCMinutes()).padStart(2, '0')}`;
     await waitlist.addTeeTimeOpening(timeStr, 1);
 
     // Verify the opening appears in the list

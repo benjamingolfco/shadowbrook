@@ -25,7 +25,8 @@ export async function waitForSms(
 
     if (response.ok) {
       const messages: DevSmsMessage[] = await response.json();
-      const match = messages.find((m) => predicate(m.body));
+      // Use findLast to get the most recent match — avoids stale SMS from prior runs
+      const match = messages.findLast((m) => predicate(m.body));
       if (match) {
         return match.body;
       }
