@@ -15,6 +15,6 @@ export const TEST_GOLFER = {
   normalizedPhone: '+15559990001',
 };
 
-/** Identity IDs matching AppUsers seeded in E2ESeedData.cs */
-export const TEST_ADMIN_IDENTITY_ID = 'e2e-admin-oid';
-export const TEST_OPERATOR_IDENTITY_ID = 'e2e-operator-oid';
+/** Dev auth emails matching AppUsers seeded in E2ESeedData.cs */
+export const TEST_ADMIN_EMAIL = 'e2e-admin@benjamingolfco.onmicrosoft.com';
+export const TEST_OPERATOR_EMAIL = 'e2e-operator@shadowbrook.golf';
