@@ -8,11 +8,7 @@ export class OperatorWaitlistPage {
   }
 
   async goto() {
-    await this.page.goto('/operator/waitlist');
-  }
-
-  async selectTenant(tenantName: string) {
-    await this.page.getByRole('cell', { name: tenantName }).click();
+    await this.page.goto('/operator');
   }
 
   async selectCourse(courseName: string) {

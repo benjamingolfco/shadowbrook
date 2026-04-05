@@ -24,7 +24,6 @@ test.describe.serial('Walkup Waitlist Flow', () => {
     const waitlist = new OperatorWaitlistPage(page);
 
     await waitlist.goto();
-    await waitlist.selectTenant(TEST_TENANT_NAME);
     await waitlist.selectCourse(courseName);
     await waitlist.openWaitlist();
 
@@ -54,7 +53,6 @@ test.describe.serial('Walkup Waitlist Flow', () => {
     const waitlist = new OperatorWaitlistPage(page);
 
     await waitlist.goto();
-    await waitlist.selectTenant(TEST_TENANT_NAME);
     await waitlist.selectCourse(courseName);
 
     // Use a time 10 minutes from now — within the golfer's 30-minute walkup window

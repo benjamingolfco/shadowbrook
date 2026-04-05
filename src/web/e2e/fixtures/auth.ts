@@ -90,9 +90,9 @@ async function setRole(page: Page, role: 'admin' | 'operator', identityId: strin
 
   // Wait for the app to finish loading and redirect based on role
   if (role === 'admin') {
-    await page.waitForURL('**/admin/**');
+    await page.waitForURL('**/admin*');
   } else {
-    await page.waitForURL('**/operator/**');
+    await page.waitForURL('**/operator*');
   }
 }
 
