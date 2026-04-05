@@ -194,6 +194,37 @@ public static class AuthEndpoints
         return Results.Ok(response);
     }
 
+    [WolverinePost("/auth/users/{id}/invite")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
+    public static async Task<IResult> InviteUser(
+        Guid id,
+        [NotBody] ApplicationDbContext db,
+        [NotBody] IAppUserInvitationService invitationService,
+        CancellationToken ct)
+    {
+        var appUser = await db.AppUsers
+            .FirstOrDefaultAsync(u => u.Id == id, ct);
+
+        if (appUser is null)
+        {
+            return Results.NotFound();
+        }
+
+        await appUser.Invite(invitationService, ct);
+
+        var response = new UserListResponse(
+            appUser.Id,
+            appUser.Email,
+            appUser.FirstName,
+            appUser.LastName,
+            appUser.Role.ToString(),
+            appUser.OrganizationId,
+            appUser.IsActive,
+            appUser.InviteSentAt);
+
+        return Results.Ok(response);
+    }
+
 }
 
 public sealed record MeResponse(
