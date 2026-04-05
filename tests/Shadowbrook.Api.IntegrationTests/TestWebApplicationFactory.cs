@@ -1,3 +1,4 @@
+using JasperFx.CommandLine;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.SqlClient;
@@ -24,6 +25,10 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
     public async Task InitializeAsync()
     {
+        // Required so that RunJasperFxCommands in Program.cs starts the host when
+        // running under WebApplicationFactory (instead of blocking on app.Run()).
+        JasperFxEnvironment.AutoStartHost = true;
+
         await this.sqlContainer.StartAsync();
         this.connectionString = this.sqlContainer.GetConnectionString();
     }

@@ -166,14 +166,16 @@ if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testi
 app.UseSerilogRequestLogging();
 app.UseDomainExceptionHandler();
 
-var cspAuthDomain = new Uri(builder.Configuration["AzureAd:Instance"]!).Host;
+var azureAdInstance = builder.Configuration["AzureAd:Instance"];
+var cspAuthDirectives = !string.IsNullOrEmpty(azureAdInstance)
+    ? $"connect-src 'self' https://{new Uri(azureAdInstance).Host}; frame-src https://{new Uri(azureAdInstance).Host};"
+    : "connect-src 'self';";
 app.Use(async (context, next) =>
 {
     context.Response.Headers.Append(
         "Content-Security-Policy",
         $"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
-        + $"img-src 'self' data:; connect-src 'self' https://{cspAuthDomain}; "
-        + $"frame-src https://{cspAuthDomain};");
+        + $"img-src 'self' data:; {cspAuthDirectives}");
     await next();
 });
 
