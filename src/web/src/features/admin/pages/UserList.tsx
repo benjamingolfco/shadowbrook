@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router';
-import { useUsers } from '../hooks/useUsers';
+import { useUsers, useInviteUser } from '../hooks/useUsers';
 import { useOrganizations } from '../hooks/useOrganizations';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,12 +11,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MoreHorizontal } from 'lucide-react';
 
 export default function UserList() {
   const { data: users, isLoading, error } = useUsers();
   const { data: orgs } = useOrganizations();
   const orgMap = new Map(orgs?.map(o => [o.id, o.name]) ?? []);
   const navigate = useNavigate();
+  const inviteUser = useInviteUser();
 
   if (isLoading) {
     return (
@@ -61,6 +69,7 @@ export default function UserList() {
                 <TableHead className="hidden md:table-cell">Organization</TableHead>
                 <TableHead>Active</TableHead>
                 <TableHead className="hidden md:table-cell">Invite Sent</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -87,6 +96,23 @@ export default function UserList() {
                     {user.inviteSentAt
                       ? new Date(user.inviteSentAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
                       : '—'}
+                  </TableCell>
+                  <TableCell className="w-[50px]" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => inviteUser.mutate(user.id)}
+                          disabled={inviteUser.isPending}
+                        >
+                          {user.inviteSentAt ? 'Resend Invite' : 'Send Invite'}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}

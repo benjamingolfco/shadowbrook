@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router';
 import { useState } from 'react';
-import { useUsers, useUpdateUser } from '../hooks/useUsers';
+import { useUsers, useUpdateUser, useInviteUser } from '../hooks/useUsers';
 import { useOrganizations } from '../hooks/useOrganizations';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,7 @@ export default function UserDetail() {
   const { data: users, isLoading, error } = useUsers();
   const { data: orgs, isLoading: isLoadingOrgs } = useOrganizations();
   const updateUser = useUpdateUser();
+  const inviteUser = useInviteUser();
 
   const user = users?.find((u) => u.id === id);
 
@@ -108,6 +109,20 @@ export default function UserDetail() {
               <p className="text-sm font-medium text-muted-foreground">Email</p>
               <p className="mt-1">{user.email}</p>
             </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Invite Sent</p>
+              <p className="mt-1">
+                {user.inviteSentAt
+                  ? new Date(user.inviteSentAt).toLocaleDateString(undefined, {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    })
+                  : 'Not sent'}
+              </p>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -179,6 +194,17 @@ export default function UserDetail() {
               disabled={updateUser.isPending}
             >
               {user.isActive ? 'Deactivate' : 'Activate'}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => inviteUser.mutate(user.id)}
+              disabled={inviteUser.isPending}
+            >
+              {inviteUser.isPending
+                ? 'Sending...'
+                : user.inviteSentAt
+                  ? 'Resend Invite'
+                  : 'Send Invite'}
             </Button>
           </div>
         </CardContent>

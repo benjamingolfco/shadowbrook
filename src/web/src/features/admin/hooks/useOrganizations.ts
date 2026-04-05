@@ -21,7 +21,8 @@ export function useOrganization(id: string) {
 export function useCreateOrganization() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { name: string; operatorEmail: string }) => api.post<{ id: string; name: string }>('/organizations', data),
+    mutationFn: (data: { name: string; operatorEmail: string; sendInvite: boolean }) =>
+      api.post<{ id: string; name: string }>('/organizations', data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.organizations.all });
     },
