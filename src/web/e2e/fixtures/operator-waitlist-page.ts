@@ -18,23 +18,48 @@ export class OperatorWaitlistPage {
     await this.page.getByRole('heading', { name: 'Walk-Up Waitlist' }).waitFor();
   }
 
-  async openWaitlist() {
-    await this.openWaitlistButton.click();
-
-    // No confirmation dialog — button directly fires the mutation.
-    // Wait for either the short code (success) or an error message (API failure).
+  /**
+   * Ensure a fresh waitlist is open for today.
+   * Handles three possible states:
+   * - No waitlist → click "Open Waitlist for Today"
+   * - Already open → close it, then reopen
+   * - Closed → reopen it
+   */
+  async ensureFreshWaitlist() {
+    const openButton = this.openWaitlistButton;
     const shortCode = this.page.getByTestId('short-code');
-    const error = this.page.getByRole('alert');
+    const closedBadge = this.page.getByText('Closed', { exact: true });
 
-    const result = await Promise.race([
-      shortCode.waitFor().then(() => 'success' as const),
-      error.waitFor().then(() => 'error' as const),
+    // Wait for the page to settle into one of three states
+    const state = await Promise.race([
+      openButton.waitFor().then(() => 'no-waitlist' as const),
+      shortCode.waitFor().then(() => 'open' as const),
+      closedBadge.waitFor().then(() => 'closed' as const),
     ]);
 
-    if (result === 'error') {
-      const msg = await error.textContent();
-      throw new Error(`Open waitlist failed: ${msg}`);
+    if (state === 'open') {
+      // Close the existing waitlist first
+      await this.page.getByText('Close waitlist for today').click();
+      const closeDialog = this.page.getByRole('alertdialog');
+      await closeDialog.waitFor();
+      await closeDialog.getByRole('button', { name: 'Close Waitlist' }).click();
+      // Wait for closed state
+      await closedBadge.waitFor();
     }
+
+    if (state === 'open' || state === 'closed') {
+      // Reopen from closed state
+      await this.page.getByRole('button', { name: 'Reopen' }).click();
+      const reopenDialog = this.page.getByRole('alertdialog');
+      await reopenDialog.waitFor();
+      await reopenDialog.getByRole('button', { name: 'Reopen Waitlist' }).click();
+    } else {
+      // No waitlist yet — open fresh
+      await openButton.click();
+    }
+
+    // Wait for the short code to appear (confirms waitlist is open)
+    await shortCode.waitFor();
   }
 
   async getShortCode(): Promise<string> {
@@ -61,10 +86,5 @@ export class OperatorWaitlistPage {
 
     // Wait for success feedback
     await this.page.getByRole('button', { name: 'Posted!' }).waitFor();
-  }
-
-  /** Openings are now rendered inline — no tab to select. This is a no-op for backward compat. */
-  async selectOpeningsTab() {
-    // Openings list is always visible on the active waitlist page — no tab needed.
   }
 }

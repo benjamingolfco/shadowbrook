@@ -3,21 +3,18 @@
  * Must match E2ESeedData.cs in the backend.
  */
 export const TEST_TENANT_NAME = 'E2E Test Golf Group';
+
+/** Dedicated e2e course seeded with UTC timezone to avoid timezone mismatches. */
+export const TEST_E2E_COURSE = 'E2E Walkup Course';
+
+/** Dedicated e2e golfer — unique phone number to avoid SMS collisions. */
 export const TEST_GOLFER = {
   firstName: 'E2E',
   lastName: 'Tester',
-  phone: '5551230000',
-  /** Phone in E.164 format as stored by the backend (for dev SMS API lookups) */
-  normalizedPhone: '+15551230000',
+  phone: '5559990001',
+  normalizedPhone: '+15559990001',
 };
 
 /** Identity IDs matching AppUsers seeded in E2ESeedData.cs */
 export const TEST_ADMIN_IDENTITY_ID = 'e2e-admin-oid';
 export const TEST_OPERATOR_IDENTITY_ID = 'e2e-operator-oid';
-
-/**
- * Generate a unique course name per test run to avoid stale state.
- */
-export function uniqueCourseName(): string {
-  return `E2E Run ${Date.now()}`;
-}

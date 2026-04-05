@@ -44,6 +44,7 @@ public static class E2ESeedData
         await EnsureCourseAsync(db, organization.Id, "Pine Valley Test", "America/New_York");
         await EnsureCourseAsync(db, organization.Id, "Augusta Test", "America/New_York");
         await EnsureCourseAsync(db, organization.Id, "Pebble Beach Test", "America/Los_Angeles");
+        await EnsureCourseAsync(db, organization.Id, "E2E Walkup Course", "Etc/UTC");
 
         await EnsureAppUsersAsync(db, organization.Id);
     }
