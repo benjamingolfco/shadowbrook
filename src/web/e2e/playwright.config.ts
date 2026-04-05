@@ -21,4 +21,13 @@ export default defineConfig({
       use: { browserName: 'chromium' },
     },
   ],
+  ...(!process.env.CI && !process.env.E2E_BASE_URL
+    ? {
+        webServer: {
+          command: 'pnpm dev --mode e2e',
+          url: 'http://localhost:3000',
+          reuseExistingServer: true,
+        },
+      }
+    : {}),
 });
