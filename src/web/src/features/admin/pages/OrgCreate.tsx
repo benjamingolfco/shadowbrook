@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
 import { useCreateOrganization } from '../hooks/useOrganizations';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import {
   Form,
@@ -18,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 const schema = z.object({
   name: z.string().min(1, 'Organization name is required'),
   operatorEmail: z.string().email('Invalid email address'),
+  sendInvite: z.boolean(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -28,7 +30,7 @@ export default function OrgCreate() {
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', operatorEmail: '' },
+    defaultValues: { name: '', operatorEmail: '', sendInvite: false },
   });
 
   function onSubmit(data: FormData) {
@@ -79,6 +81,24 @@ export default function OrgCreate() {
                       <Input type="email" {...field} />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="sendInvite"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="font-normal">
+                      Send Invite to First Operator
+                    </FormLabel>
                   </FormItem>
                 )}
               />
