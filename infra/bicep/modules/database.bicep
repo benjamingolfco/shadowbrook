@@ -15,8 +15,8 @@ param managedIdentityPrincipalId string
 param managedIdentityName string
 
 // Resource names
-var sqlServerName = 'shadowbrook-sql-${environment}'
-var databaseName = 'shadowbrook-db-${environment}'
+var sqlServerName = 'teeforce-sql-${environment}'
+var databaseName = 'teeforce-db-${environment}'
 
 // Azure SQL Server — Entra-only authentication, no SQL admin credentials
 resource sqlServer 'Microsoft.Sql/servers@2023-08-01' = {

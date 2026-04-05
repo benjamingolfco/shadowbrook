@@ -1,4 +1,4 @@
-// Shadowbrook - Shared Infrastructure
+// Teeforce - Shared Infrastructure
 //
 // Subscription-level deployment that creates the shared resource group
 // and deploys resources shared across all environments.
@@ -10,7 +10,7 @@ targetScope = 'subscription'
 param location string = 'eastus2'
 
 @description('Name of the shared resource group')
-param resourceGroupName string = 'shadowbrook-shared-rg'
+param resourceGroupName string = 'teeforce-shared-rg'
 
 // Create the shared resource group
 resource sharedRg 'Microsoft.Resources/resourceGroups@2024-03-01' = {

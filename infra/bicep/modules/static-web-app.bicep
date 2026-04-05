@@ -8,7 +8,7 @@ param environment string
 param location string
 
 // Resource names
-var staticWebAppName = 'shadowbrook-web-${environment}'
+var staticWebAppName = 'teeforce-web-${environment}'
 
 // Static Web App
 resource staticWebApp 'Microsoft.Web/staticSites@2024-04-01' = {

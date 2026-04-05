@@ -5,7 +5,7 @@
 param location string
 
 // ACR names must be globally unique, alphanumeric only
-var name = 'shadowbrookacr'
+var name = 'teeforceacr'
 
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2025-11-01' = {
   name: name
@@ -18,7 +18,7 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2025-11-01' =
     publicNetworkAccess: 'Enabled'
   }
   tags: {
-    workload: 'shadowbrook'
+    workload: 'teeforce'
   }
 }
 

@@ -10,7 +10,7 @@ param location string
 @description('Daily ingestion cap in GB (must exceed actual daily volume or telemetry is silently dropped)')
 param dailyCapGb string = '1'
 
-var workspaceName = 'shadowbrook-logs-${environment}'
+var workspaceName = 'teeforce-logs-${environment}'
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: workspaceName

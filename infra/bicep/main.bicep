@@ -1,8 +1,8 @@
-// Shadowbrook - Environment Infrastructure Orchestration
+// Teeforce - Environment Infrastructure Orchestration
 //
 // Subscription-level deployment that creates the environment resource group
 // and deploys environment-specific resources. ACR lives in the shared resource group
-// (shadowbrook-shared-rg) and is referenced cross-RG via 'existing' resource.
+// (teeforce-shared-rg) and is referenced cross-RG via 'existing' resource.
 // Deployed via: az deployment sub create
 //
 // Deployment order (with explicit dependsOn):
@@ -28,13 +28,13 @@ param location string = 'eastus2'
 param imageTag string = 'latest'
 
 @description('Name of the shared resource group containing ACR')
-param sharedResourceGroup string = 'shadowbrook-shared-rg'
+param sharedResourceGroup string = 'teeforce-shared-rg'
 
 @description('Name of the shared Azure Container Registry')
-param acrName string = 'shadowbrookacr'
+param acrName string = 'teeforceacr'
 
 @description('Name of the environment resource group')
-param resourceGroupName string = 'shadowbrook-${environment}-rg'
+param resourceGroupName string = 'teeforce-${environment}-rg'
 
 // ============================================================================
 // Resource Group
@@ -66,7 +66,7 @@ module database 'modules/database.bicep' = {
     environment: environment
     location: location
     managedIdentityPrincipalId: managedIdentity.outputs.principalId
-    managedIdentityName: 'id-shadowbrook-${environment}'
+    managedIdentityName: 'id-teeforce-${environment}'
   }
 }
 

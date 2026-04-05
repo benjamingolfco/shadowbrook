@@ -39,7 +39,7 @@ param managedIdentityClientId string
 @description('Regex pattern for allowed CORS origins (e.g., PR staging URLs). When set, takes precedence over corsOrigin.')
 param corsOriginPattern string = ''
 
-var containerAppName = 'shadowbrook-app-${environment}'
+var containerAppName = 'teeforce-app-${environment}'
 
 // Container App
 resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
@@ -81,8 +81,8 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
     template: {
       containers: [
         {
-          name: 'shadowbrook-api'
-          image: '${containerRegistryLoginServer}/shadowbrook:${imageTag}'
+          name: 'teeforce-api'
+          image: '${containerRegistryLoginServer}/teeforce:${imageTag}'
           resources: {
             cpu: json('0.5')
             memory: '1Gi'
