@@ -3,7 +3,7 @@ import { OperatorWaitlistPage } from '../../fixtures/operator-waitlist-page';
 import { WalkupPage } from '../../fixtures/walkup-page';
 import { WalkUpOfferPage } from '../../fixtures/walk-up-offer-page';
 import { waitForSms, extractOfferUrl } from '../../fixtures/sms-helper';
-import { TEST_GOLFER, TEST_ADMIN_IDENTITY_ID } from '../../fixtures/test-data';
+import { TEST_GOLFER, TEST_ADMIN_EMAIL } from '../../fixtures/test-data';
 import { API_BASE_URL } from '../../playwright.config';
 
 // Create a fresh course per run via API to avoid stale waitlist state
@@ -15,7 +15,7 @@ test.describe.serial('Walkup Waitlist Flow', () => {
   test('setup: create a fresh course', async () => {
     // Get the E2E org ID from the admin's profile
     const meResponse = await fetch(`${API_BASE_URL}/auth/me`, {
-      headers: { Authorization: `Bearer ${TEST_ADMIN_IDENTITY_ID}` },
+      headers: { Authorization: `Bearer ${TEST_ADMIN_EMAIL}` },
     });
     const me = await meResponse.json();
     const orgId = me.organizations[0].id;
@@ -24,7 +24,7 @@ test.describe.serial('Walkup Waitlist Flow', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${TEST_ADMIN_IDENTITY_ID}`,
+        Authorization: `Bearer ${TEST_ADMIN_EMAIL}`,
         'X-Organization-Id': orgId,
       },
       body: JSON.stringify({ name: courseName, timeZoneId: 'Etc/UTC' }),

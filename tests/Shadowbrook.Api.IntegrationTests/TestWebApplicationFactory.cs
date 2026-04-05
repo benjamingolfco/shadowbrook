@@ -33,25 +33,24 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
         this.connectionString = this.sqlContainer.GetConnectionString();
     }
 
-    public HttpClient CreateAuthenticatedClient(string identityId = "test-admin-oid")
+    public HttpClient CreateAuthenticatedClient(string email = "test-admin@test.com")
     {
         var client = CreateClient();
         client.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", identityId);
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", email);
         return client;
     }
 
-    public async Task SeedTestAdminAsync(string identityId = "test-admin-oid")
+    public async Task SeedTestAdminAsync(string email = "test-admin@test.com")
     {
         await using var scope = Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var emailChecker = scope.ServiceProvider.GetRequiredService<IAppUserEmailUniquenessChecker>();
 
-        if (!await db.AppUsers.AnyAsync(u => u.IdentityId == identityId))
+        if (!await db.AppUsers.AnyAsync(u => u.Email == email))
         {
-            var email = $"{identityId}@test.com";
             var admin = await AppUser.CreateAdmin(email, emailChecker);
-            admin.CompleteIdentitySetup(identityId, "Test", "Admin");
+            admin.Activate();
             db.AppUsers.Add(admin);
             await db.SaveChangesAsync();
         }

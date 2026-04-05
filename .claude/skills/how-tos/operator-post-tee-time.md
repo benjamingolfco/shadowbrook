@@ -18,6 +18,7 @@ description: Use when you need to post a tee time opening on the walk-up waitlis
 5. Verify: The button briefly shows "Posted!" and the opening appears in the **Today's Openings** section below as "Open · N / M slots filled · Waiting for golfers..."
 
 ## Notes
+- **The tee time must be within 30 minutes of the current time** for waiting golfers to receive an SMS offer. Openings posted for times further out will not trigger the waitlist offer flow. When stress testing, always calculate tee times relative to "now" (e.g., if it's 10:52 PM UTC, post openings for 10:55 PM, 11:05 PM, 11:15 PM — not 08:00 AM or 09:00 AM).
 - The time input is `type="time"` — use 24-hour format in automation (`09:00` not `09:00 AM`)
 - Posting the same time twice will create two separate openings at that time
 - Each opening can be cancelled via the "Cancel" link in the opening row

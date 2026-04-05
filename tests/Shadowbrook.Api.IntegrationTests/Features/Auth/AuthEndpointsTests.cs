@@ -29,17 +29,15 @@ public class AuthEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifet
         var course = Course.Create(org.Id, "Pine Valley Golf Club", "America/Chicago");
         db.Courses.Add(course);
 
-        var identityId = Guid.NewGuid().ToString();
         var emailChecker = scope.ServiceProvider.GetRequiredService<IAppUserEmailUniquenessChecker>();
         var appUser = await AppUser.CreateOperator("operator@example.com", org.Id, emailChecker);
-        appUser.CompleteIdentitySetup(identityId, "Jane", "Smith");
+        appUser.Activate();
         db.AppUsers.Add(appUser);
 
         await db.SaveChangesAsync();
 
-        // Create client with Bearer token set to identityId (DevAuth treats it as `oid`)
-        var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {identityId}");
+        // Create client with Bearer token set to email (DevAuth treats oid as email)
+        var client = factory.CreateAuthenticatedClient("operator@example.com");
 
         var response = await client.GetAsync("/auth/me");
 
@@ -49,8 +47,8 @@ public class AuthEndpointsTests(TestWebApplicationFactory factory) : IAsyncLifet
         Assert.NotNull(body);
         Assert.Equal(appUser.Id, body!.Id);
         Assert.Equal("operator@example.com", body.Email);
-        Assert.Equal("Jane", body.FirstName);
-        Assert.Equal("Smith", body.LastName);
+        Assert.Null(body.FirstName);
+        Assert.Null(body.LastName);
         Assert.Equal("Operator", body.Role);
         Assert.NotNull(body.Organization);
         Assert.Equal(org.Id, body.Organization!.Id);

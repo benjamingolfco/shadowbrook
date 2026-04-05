@@ -12,7 +12,7 @@ import { API_BASE_URL } from '../playwright.config';
  * Requires:
  * - Frontend running with VITE_USE_DEV_AUTH=true (--mode e2e)
  * - Backend running with Auth:UseDevAuth=true
- * - E2E seed data with AppUsers for e2e-admin-oid and e2e-operator-oid
+ * - E2E seed data with AppUsers for e2e-admin@benjamingolfco.onmicrosoft.com and e2e-operator@shadowbrook.golf
  */
 
 interface MePayload {
@@ -109,12 +109,12 @@ export const test = base.extend<{
   },
   asOperator: async ({ page }, use) => {
     await use(async () => {
-      await setRole(page, 'operator', 'e2e-operator-oid');
+      await setRole(page, 'operator', 'e2e-operator@shadowbrook.golf');
     });
   },
   asAdmin: async ({ page }, use) => {
     await use(async () => {
-      await setRole(page, 'admin', 'e2e-admin-oid');
+      await setRole(page, 'admin', 'e2e-admin@benjamingolfco.onmicrosoft.com');
     });
   },
 });
