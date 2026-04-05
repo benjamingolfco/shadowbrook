@@ -250,6 +250,7 @@ For operations spanning multiple aggregates, use sequential event chains instead
 - Map in EF Core using `ComplexProperty` (not `OwnsOne`) — this is the modern EF Core 10 approach
 - Use `HasColumnName` inside `ComplexProperty` to control column names (default is `{Nav}_{Prop}`)
 - Events carry flat fields, not value objects — events are data contracts across boundaries
+- Use value objects for comparisons when they normalize data — e.g., `TeeTime` normalizes seconds to zero in its constructor, so comparing two `TeeTime` instances gives minute-granularity comparison without manual truncation. Prefer `new TeeTime(date, time).Value < new TeeTime(otherDate, otherTime).Value` over hand-rolling `new TimeOnly(hour, minute)`.
 
 ```csharp
 // Domain: Value object

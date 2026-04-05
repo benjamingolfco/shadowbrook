@@ -1,8 +1,8 @@
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
-import { getNextTeeTimeInterval, buildTeeTimeDateTime } from '@/lib/course-time';
+import { getNextTeeTimeInterval, buildTeeTimeDateTime, getCourseNow } from '@/lib/course-time';
 import { useCourseContext } from '../context/CourseContext';
 import { useCreateTeeTimeOpening } from '../hooks/useWaitlist';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,12 +12,19 @@ import { Label } from '@/components/ui/label';
 import { ApiError } from '@/lib/api-client';
 import type { DuplicateOpeningError } from '@/types/waitlist';
 
-const schema = z.object({
-  teeTime: z.string().min(1, 'Time is required'),
-  slotsAvailable: z.number().min(1).max(4),
-});
+function createSchema(timeZoneId: string) {
+  return z
+    .object({
+      teeTime: z.string().min(1, 'Time is required'),
+      slotsAvailable: z.number().min(1).max(4),
+    })
+    .refine((data) => data.teeTime >= getCourseNow(timeZoneId), {
+      message: 'Tee time must be in the future',
+      path: ['teeTime'],
+    });
+}
 
-type FormData = z.infer<typeof schema>;
+type FormData = z.infer<ReturnType<typeof createSchema>>;
 
 interface PostTeeTimeFormProps {
   courseId: string;
@@ -30,6 +37,8 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
   const timeInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedSlots, setSelectedSlots] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  const schema = useMemo(() => createSchema(timeZoneId), [timeZoneId]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),

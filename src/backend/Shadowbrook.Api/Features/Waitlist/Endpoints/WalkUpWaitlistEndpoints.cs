@@ -19,14 +19,12 @@ public static class WalkUpWaitlistEndpoints
     [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> OpenWaitlist(
         Guid courseId,
-        ICourseTimeZoneProvider timeZoneProvider,
+        ICourseContext courseContext,
         ICourseWaitlistRepository repo,
         IShortCodeGenerator shortCodeGenerator,
-        ITimeProvider timeProvider,
-        TimeProvider systemTimeProvider)
+        ITimeProvider timeProvider)
     {
-        var timeZoneId = await timeZoneProvider.GetTimeZoneIdAsync(courseId);
-        var today = CourseTime.Today(systemTimeProvider, timeZoneId);
+        var today = courseContext.Today;
 
         var waitlist = await Domain.CourseWaitlistAggregate.WalkUpWaitlist.OpenAsync(
             courseId, today, shortCodeGenerator, repo, timeProvider);
@@ -41,13 +39,11 @@ public static class WalkUpWaitlistEndpoints
     [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> CloseWaitlist(
         Guid courseId,
-        ICourseTimeZoneProvider timeZoneProvider,
+        ICourseContext courseContext,
         ICourseWaitlistRepository repo,
-        ITimeProvider timeProvider,
-        TimeProvider systemTimeProvider)
+        ITimeProvider timeProvider)
     {
-        var timeZoneId = await timeZoneProvider.GetTimeZoneIdAsync(courseId);
-        var today = CourseTime.Today(systemTimeProvider, timeZoneId);
+        var today = courseContext.Today;
 
         var waitlist = await repo.GetOpenByCourseDateAsync(courseId, today);
 
@@ -65,12 +61,10 @@ public static class WalkUpWaitlistEndpoints
     [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> ReopenWaitlist(
         Guid courseId,
-        ICourseTimeZoneProvider timeZoneProvider,
-        ICourseWaitlistRepository repo,
-        TimeProvider systemTimeProvider)
+        ICourseContext courseContext,
+        ICourseWaitlistRepository repo)
     {
-        var timeZoneId = await timeZoneProvider.GetTimeZoneIdAsync(courseId);
-        var today = CourseTime.Today(systemTimeProvider, timeZoneId);
+        var today = courseContext.Today;
 
         var waitlist = await repo.GetByCourseDateAsync(courseId, today);
 
@@ -88,13 +82,11 @@ public static class WalkUpWaitlistEndpoints
     [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> GetToday(
         Guid courseId,
+        ICourseContext courseContext,
         ApplicationDbContext db,
-        ICourseTimeZoneProvider timeZoneProvider,
-        ICourseWaitlistRepository repo,
-        TimeProvider systemTimeProvider)
+        ICourseWaitlistRepository repo)
     {
-        var timeZoneId = await timeZoneProvider.GetTimeZoneIdAsync(courseId);
-        var today = CourseTime.Today(systemTimeProvider, timeZoneId);
+        var today = courseContext.Today;
 
         var waitlist = await repo.GetByCourseDateAsync(courseId, today);
 
@@ -155,12 +147,17 @@ public static class WalkUpWaitlistEndpoints
         Guid courseId,
         CreateTeeTimeOpeningRequest request,
         ITeeTimeOpeningRepository openingRepo,
+        ICourseContext courseContext,
         ITimeProvider timeProvider)
     {
-        var date = DateOnly.FromDateTime(request.TeeTime);
-        var time = TimeOnly.FromDateTime(request.TeeTime);
+        var teeTime = new TeeTime(DateOnly.FromDateTime(request.TeeTime), TimeOnly.FromDateTime(request.TeeTime));
+        var courseNow = new TeeTime(courseContext.Today, courseContext.Now);
 
-        var teeTime = new TeeTime(date, time);
+        if (teeTime.Value < courseNow.Value)
+        {
+            return Results.Problem(detail: "Tee time must be in the future.", statusCode: 422);
+        }
+
         var existing = await openingRepo.GetActiveByCourseTeeTimeAsync(courseId, teeTime);
 
         if (existing is not null)
@@ -180,7 +177,7 @@ public static class WalkUpWaitlistEndpoints
             });
         }
 
-        var opening = TeeTimeOpening.Create(courseId, date, time, request.SlotsAvailable, operatorOwned: true, timeProvider);
+        var opening = TeeTimeOpening.Create(courseId, teeTime.Date, teeTime.Time, request.SlotsAvailable, operatorOwned: true, timeProvider);
         openingRepo.Add(opening);
 
         return Results.Created(
@@ -225,15 +222,13 @@ public static class WalkUpWaitlistEndpoints
         Guid courseId,
         AddGolferToWaitlistRequest request,
         ApplicationDbContext db,
-        ICourseTimeZoneProvider timeZoneProvider,
+        ICourseContext courseContext,
         ICourseWaitlistRepository repo,
         IGolferWaitlistEntryRepository entryRepo,
         IGolferRepository golferRepo,
-        ITimeProvider timeProvider,
-        TimeProvider systemTimeProvider)
+        ITimeProvider timeProvider)
     {
-        var timeZoneId = await timeZoneProvider.GetTimeZoneIdAsync(courseId);
-        var today = CourseTime.Today(systemTimeProvider, timeZoneId);
+        var today = courseContext.Today;
         var normalizedPhone = PhoneNormalizer.Normalize(request.Phone);
 
         var waitlist = await repo.GetOpenByCourseDateAsync(courseId, today);
@@ -273,7 +268,7 @@ public static class WalkUpWaitlistEndpoints
             }
         }
 
-        var entry = await waitlist.Join(golfer, entryRepo, timeProvider, timeZoneId, request.GroupSize ?? 1);
+        var entry = await waitlist.Join(golfer, entryRepo, timeProvider, courseContext.TimeZoneId, request.GroupSize ?? 1);
         entryRepo.Add(entry);
 
         var submittedName = $"{request.FirstName.Trim()} {request.LastName.Trim()}";

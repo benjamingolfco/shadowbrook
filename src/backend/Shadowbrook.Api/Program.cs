@@ -127,6 +127,8 @@ builder.Services.AddScoped<IAppUserEmailUniquenessChecker, AppUserEmailUniquenes
 builder.Services.AddScoped<IAppUserClaimsProvider, AppUserClaimsProvider>();
 builder.Services.AddScoped<ICourseTimeZoneProvider, CourseTimeZoneProvider>();
 builder.Services.AddScoped<ITimeProvider, Shadowbrook.Api.Infrastructure.Services.TimeZoneProvider>();
+builder.Services.AddScoped<CourseContext>();
+builder.Services.AddScoped<ICourseContext>(sp => sp.GetRequiredService<CourseContext>());
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();

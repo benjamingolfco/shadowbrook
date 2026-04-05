@@ -4,9 +4,15 @@ import { PostTeeTimeForm } from '../components/PostTeeTimeForm';
 import { useCreateTeeTimeOpening } from '../hooks/useWaitlist';
 import { useCourseContext } from '../context/CourseContext';
 import { ApiError } from '@/lib/api-client';
+import * as courseTime from '@/lib/course-time';
 
 vi.mock('../hooks/useWaitlist');
 vi.mock('../context/CourseContext');
+vi.mock('@/lib/course-time', () => ({
+  getCourseNow: vi.fn(() => '09:00'),
+  getNextTeeTimeInterval: vi.fn(() => '09:10'),
+  buildTeeTimeDateTime: vi.fn((time: string) => `2026-04-04T${time}:00`),
+}));
 
 const mockMutate = vi.fn();
 
@@ -143,5 +149,37 @@ describe('PostTeeTimeForm', () => {
     expect(screen.getByText(/an opening already exists for this time with 2 slot\(s\)/i)).toBeInTheDocument();
     expect(screen.getByText(/would you like to add more slots to it/i)).toBeInTheDocument();
     expect(screen.getByText(/an opening already exists for this time with 2 slot\(s\)/i)).toHaveClass('text-amber-600');
+  });
+
+  it('shows validation error and does not call mutation when tee time is in the past', async () => {
+    vi.mocked(courseTime.getCourseNow).mockReturnValue('14:00');
+
+    render(<PostTeeTimeForm courseId="course-1" />);
+
+    const timeInput = screen.getByLabelText('Time');
+    fireEvent.change(timeInput, { target: { value: '13:00' } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Post Tee Time' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Tee time must be in the future')).toBeInTheDocument();
+    });
+    expect(mockMutate).not.toHaveBeenCalled();
+  });
+
+  it('calls mutation when tee time equals the current minute', async () => {
+    vi.mocked(courseTime.getCourseNow).mockReturnValue('14:00');
+
+    render(<PostTeeTimeForm courseId="course-1" />);
+
+    const timeInput = screen.getByLabelText('Time');
+    fireEvent.change(timeInput, { target: { value: '14:00' } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Post Tee Time' }));
+
+    await waitFor(() => {
+      expect(mockMutate).toHaveBeenCalled();
+    });
+    expect(screen.queryByText('Tee time must be in the future')).not.toBeInTheDocument();
   });
 });
