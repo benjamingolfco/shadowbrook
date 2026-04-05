@@ -25,12 +25,31 @@ public class SendEntraInvitationHandlerTests
         this.appUserRepo.GetByIdAsync(user.Id).Returns(user);
         this.invitationService.SendInvitationAsync("admin@example.com", Arg.Any<CancellationToken>())
             .Returns("entra-oid-456");
-        var evt = new AppUserCreatedEvent { AppUserId = user.Id, Email = user.Email, Role = user.Role };
+        var evt = new AppUserCreatedEvent { AppUserId = user.Id, Email = user.Email, Role = user.Role, ShouldSendInvite = true };
 
         await SendEntraInvitationHandler.Handle(evt, this.appUserRepo, this.invitationService, CancellationToken.None);
 
         await this.invitationService.Received(1).SendInvitationAsync("admin@example.com", Arg.Any<CancellationToken>());
         Assert.Equal("entra-oid-456", user.IdentityId);
         Assert.NotNull(user.InviteSentAt);
+    }
+
+    [Fact]
+    public async Task Handle_WhenShouldSendInviteIsFalse_SkipsInvitation()
+    {
+        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
+        this.appUserRepo.GetByIdAsync(user.Id).Returns(user);
+        var evt = new AppUserCreatedEvent
+        {
+            AppUserId = user.Id,
+            Email = user.Email,
+            Role = user.Role,
+            ShouldSendInvite = false,
+        };
+
+        await SendEntraInvitationHandler.Handle(evt, this.appUserRepo, this.invitationService, CancellationToken.None);
+
+        await this.invitationService.DidNotReceive().SendInvitationAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+        Assert.Null(user.InviteSentAt);
     }
 }
