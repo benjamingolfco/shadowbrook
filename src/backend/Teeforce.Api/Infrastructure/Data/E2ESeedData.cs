@@ -24,7 +24,7 @@ public static class E2ESeedData
             tenant = Tenant.Create(
                 TenantOrgName,
                 "E2E Admin",
-                "e2e@shadowbrook.golf",
+                "e2e@benjamingolfco.onmicrosoft.com",
                 "5550000000");
 
             db.Tenants.Add(tenant);
@@ -85,12 +85,12 @@ public static class E2ESeedData
         }
 
         var operatorExists = await db.AppUsers
-            .AnyAsync(u => u.Email == "e2e-operator@shadowbrook.golf");
+            .AnyAsync(u => u.Email == "e2e-operator@benjamingolfco.onmicrosoft.com");
 
         if (!operatorExists)
         {
             var operatorUser = await AppUser.CreateOperator(
-                "e2e-operator@shadowbrook.golf",
+                "e2e-operator@benjamingolfco.onmicrosoft.com",
                 organizationId,
                 emailChecker);
             operatorUser.Activate();

@@ -17,4 +17,4 @@ export const TEST_GOLFER = {
 
 /** Dev auth emails matching AppUsers seeded in E2ESeedData.cs */
 export const TEST_ADMIN_EMAIL = 'e2e-admin@benjamingolfco.onmicrosoft.com';
-export const TEST_OPERATOR_EMAIL = 'e2e-operator@shadowbrook.golf';
+export const TEST_OPERATOR_EMAIL = 'e2e-operator@benjamingolfco.onmicrosoft.com';

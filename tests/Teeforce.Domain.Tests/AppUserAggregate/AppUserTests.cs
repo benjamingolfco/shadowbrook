@@ -18,11 +18,11 @@ public class AppUserTests
     [Fact]
     public async Task CreateAdmin_SetsAdminRoleAndNullOrganizationId()
     {
-        var user = await AppUser.CreateAdmin("admin@shadowbrook.com", NewChecker());
+        var user = await AppUser.CreateAdmin("admin@benjamingolfco.onmicrosoft.com", NewChecker());
 
         Assert.NotEqual(Guid.Empty, user.Id);
         Assert.Null(user.IdentityId);
-        Assert.Equal("admin@shadowbrook.com", user.Email);
+        Assert.Equal("admin@benjamingolfco.onmicrosoft.com", user.Email);
         Assert.Null(user.FirstName);
         Assert.Null(user.LastName);
         Assert.Equal(AppUserRole.Admin, user.Role);
@@ -54,7 +54,7 @@ public class AppUserTests
     public async Task CreateAdmin_DuplicateEmail_ThrowsDuplicateEmailException()
     {
         await Assert.ThrowsAsync<DuplicateEmailException>(
-            () => AppUser.CreateAdmin("admin@shadowbrook.com", NewChecker(emailInUse: true)));
+            () => AppUser.CreateAdmin("admin@benjamingolfco.onmicrosoft.com", NewChecker(emailInUse: true)));
     }
 
     [Fact]
