@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using NSubstitute;
 using Shadowbrook.Api.Features.Waitlist.Endpoints;
+using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 
@@ -10,7 +11,7 @@ namespace Shadowbrook.Api.Tests.Features.Waitlist.Endpoints;
 public class CreateOpeningDuplicateGuardTests
 {
     private readonly ITeeTimeOpeningRepository openingRepo = Substitute.For<ITeeTimeOpeningRepository>();
-    private readonly ICourseTimeZoneProvider courseTimeZoneProvider = Substitute.For<ICourseTimeZoneProvider>();
+    private readonly ICourseContext courseContext = Substitute.For<ICourseContext>();
     private readonly ITimeProvider timeProvider = Substitute.For<ITimeProvider>();
 
     // Future tee time used in all duplicate-guard tests — 2099-01-01 10:00 is always in the future
@@ -20,10 +21,9 @@ public class CreateOpeningDuplicateGuardTests
     {
         this.timeProvider.GetCurrentTimestamp().Returns(DateTimeOffset.UtcNow);
 
-        // Stub time zone and course clock so the past-time guard always passes in these tests
-        this.courseTimeZoneProvider.GetTimeZoneIdAsync(Arg.Any<Guid>()).Returns("America/Chicago");
-        this.timeProvider.GetCurrentDateByTimeZone(Arg.Any<string>()).Returns(new DateOnly(2026, 4, 4));
-        this.timeProvider.GetCurrentTimeByTimeZone(Arg.Any<string>()).Returns(new TimeOnly(9, 0));
+        // Stub course context so the past-time guard always passes in these tests
+        this.courseContext.Today.Returns(new DateOnly(2026, 4, 4));
+        this.courseContext.Now.Returns(new TimeOnly(9, 0));
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public class CreateOpeningDuplicateGuardTests
             Arg.Is<TeeTime>(t => t.Date == DateOnly.FromDateTime(FutureTeeTime) && t.Time == TimeOnly.FromDateTime(FutureTeeTime)))
             .Returns((TeeTimeOpening?)null);
 
-        var result = await WalkUpWaitlistEndpoints.CreateOpening(courseId, request, this.openingRepo, this.courseTimeZoneProvider, this.timeProvider);
+        var result = await WalkUpWaitlistEndpoints.CreateOpening(courseId, request, this.openingRepo, this.courseContext, this.timeProvider);
 
         Assert.IsType<Created<WalkUpWaitlistOpeningResponse>>(result);
     }
@@ -61,7 +61,7 @@ public class CreateOpeningDuplicateGuardTests
             Arg.Is<TeeTime>(t => t.Date == DateOnly.FromDateTime(FutureTeeTime) && t.Time == TimeOnly.FromDateTime(FutureTeeTime)))
             .Returns(existing);
 
-        var result = await WalkUpWaitlistEndpoints.CreateOpening(courseId, request, this.openingRepo, this.courseTimeZoneProvider, this.timeProvider);
+        var result = await WalkUpWaitlistEndpoints.CreateOpening(courseId, request, this.openingRepo, this.courseContext, this.timeProvider);
 
         Assert.IsAssignableFrom<IResult>(result);
         var statusCodeResult = result as IStatusCodeHttpResult;
@@ -98,7 +98,7 @@ public class CreateOpeningDuplicateGuardTests
             Arg.Is<TeeTime>(t => t.Date == DateOnly.FromDateTime(FutureTeeTime) && t.Time == TimeOnly.FromDateTime(FutureTeeTime)))
             .Returns(existing);
 
-        var result = await WalkUpWaitlistEndpoints.CreateOpening(courseId, request, this.openingRepo, this.courseTimeZoneProvider, this.timeProvider);
+        var result = await WalkUpWaitlistEndpoints.CreateOpening(courseId, request, this.openingRepo, this.courseContext, this.timeProvider);
 
         Assert.IsAssignableFrom<IResult>(result);
         var statusCodeResult = result as IStatusCodeHttpResult;
@@ -140,7 +140,7 @@ public class CreateOpeningDuplicateGuardTests
             Arg.Is<TeeTime>(t => t.Date == DateOnly.FromDateTime(FutureTeeTime) && t.Time == TimeOnly.FromDateTime(FutureTeeTime)))
             .Returns(existing);
 
-        var result = await WalkUpWaitlistEndpoints.CreateOpening(courseId, request, this.openingRepo, this.courseTimeZoneProvider, this.timeProvider);
+        var result = await WalkUpWaitlistEndpoints.CreateOpening(courseId, request, this.openingRepo, this.courseContext, this.timeProvider);
 
         Assert.IsAssignableFrom<IResult>(result);
         var statusCodeResult = result as IStatusCodeHttpResult;

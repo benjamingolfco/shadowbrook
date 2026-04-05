@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using NSubstitute;
 using Shadowbrook.Api.Features.Waitlist.Endpoints;
+using Shadowbrook.Api.Infrastructure.Services;
 using Shadowbrook.Domain.Common;
 using Shadowbrook.Domain.TeeTimeOpeningAggregate;
 
@@ -9,20 +10,18 @@ namespace Shadowbrook.Api.Tests.Features.Waitlist.Endpoints;
 public class CreateOpeningPastTimeTests
 {
     private readonly ITeeTimeOpeningRepository openingRepo = Substitute.For<ITeeTimeOpeningRepository>();
-    private readonly ICourseTimeZoneProvider courseTimeZoneProvider = Substitute.For<ICourseTimeZoneProvider>();
+    private readonly ICourseContext courseContext = Substitute.For<ICourseContext>();
     private readonly ITimeProvider timeProvider = Substitute.For<ITimeProvider>();
 
-    private static readonly string TimeZoneId = "America/Chicago";
     private static readonly DateOnly CourseToday = new(2026, 4, 4);
     // Course clock is 14:00 — minute-truncated
     private static readonly TimeOnly CourseNow = new(14, 0);
 
     public CreateOpeningPastTimeTests()
     {
-        this.courseTimeZoneProvider.GetTimeZoneIdAsync(Arg.Any<Guid>()).Returns(TimeZoneId);
-        this.timeProvider.GetCurrentDateByTimeZone(TimeZoneId).Returns(CourseToday);
+        this.courseContext.Today.Returns(CourseToday);
         // Return 14:00:30 — the endpoint truncates to 14:00, so same-minute times are allowed
-        this.timeProvider.GetCurrentTimeByTimeZone(TimeZoneId).Returns(new TimeOnly(14, 0, 30));
+        this.courseContext.Now.Returns(new TimeOnly(14, 0, 30));
         this.timeProvider.GetCurrentTimestamp().Returns(DateTimeOffset.UtcNow);
 
         // Default: no existing opening so the duplicate check does not interfere
@@ -38,7 +37,7 @@ public class CreateOpeningPastTimeTests
         var request = new CreateTeeTimeOpeningRequest(CourseToday.ToDateTime(new TimeOnly(9, 0)), 2);
 
         var result = await WalkUpWaitlistEndpoints.CreateOpening(
-            courseId, request, this.openingRepo, this.courseTimeZoneProvider, this.timeProvider);
+            courseId, request, this.openingRepo, this.courseContext, this.timeProvider);
 
         var statusCodeResult = result as IStatusCodeHttpResult;
         Assert.NotNull(statusCodeResult);
@@ -53,7 +52,7 @@ public class CreateOpeningPastTimeTests
         var request = new CreateTeeTimeOpeningRequest(CourseToday.ToDateTime(new TimeOnly(15, 0)), 2);
 
         var result = await WalkUpWaitlistEndpoints.CreateOpening(
-            courseId, request, this.openingRepo, this.courseTimeZoneProvider, this.timeProvider);
+            courseId, request, this.openingRepo, this.courseContext, this.timeProvider);
 
         var statusCodeResult = result as IStatusCodeHttpResult;
         Assert.Null(statusCodeResult?.StatusCode == 422 ? statusCodeResult : null);
@@ -70,7 +69,7 @@ public class CreateOpeningPastTimeTests
         var request = new CreateTeeTimeOpeningRequest(yesterday.ToDateTime(new TimeOnly(10, 0)), 2);
 
         var result = await WalkUpWaitlistEndpoints.CreateOpening(
-            courseId, request, this.openingRepo, this.courseTimeZoneProvider, this.timeProvider);
+            courseId, request, this.openingRepo, this.courseContext, this.timeProvider);
 
         var statusCodeResult = result as IStatusCodeHttpResult;
         Assert.NotNull(statusCodeResult);
@@ -85,7 +84,7 @@ public class CreateOpeningPastTimeTests
         var request = new CreateTeeTimeOpeningRequest(CourseToday.ToDateTime(CourseNow), 2);
 
         var result = await WalkUpWaitlistEndpoints.CreateOpening(
-            courseId, request, this.openingRepo, this.courseTimeZoneProvider, this.timeProvider);
+            courseId, request, this.openingRepo, this.courseContext, this.timeProvider);
 
         var statusCodeResult = result as IStatusCodeHttpResult;
         Assert.NotEqual(422, statusCodeResult?.StatusCode);
