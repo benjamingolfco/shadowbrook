@@ -6,7 +6,7 @@ user-invocable: false
 
 # Agent Pipeline Protocol
 
-Multi-agent system for automating the Shadowbrook development workflow on GitHub Actions. The pipeline is split into two workflows — **Planning** (new issues → Ready) and **Implementation** (in-sprint execution).
+Multi-agent system for automating the Teeforce development workflow on GitHub Actions. The pipeline is split into two workflows — **Planning** (new issues → Ready) and **Implementation** (in-sprint execution).
 
 ## Architecture
 
@@ -14,8 +14,8 @@ Multi-agent system for automating the Shadowbrook development workflow on GitHub
 
 | Workflow | File | Triggers | Concurrency |
 |----------|------|----------|-------------|
-| **Shadowbrook Planning** | `claude-planning.yml` | issues, issue_comment, schedule (every 6h) | `planning-{issue}`, cancel-in-progress: true |
-| **Shadowbrook Implementation** | `claude-implementation.yml` | workflow_dispatch, pull_request, pull_request_review, check_suite, schedule (every 2h) | `sprint-{issue\|pr\|event}`, cancel-in-progress: false |
+| **Teeforce Planning** | `claude-planning.yml` | issues, issue_comment, schedule (every 6h) | `planning-{issue}`, cancel-in-progress: true |
+| **Teeforce Implementation** | `claude-implementation.yml` | workflow_dispatch, pull_request, pull_request_review, check_suite, schedule (every 2h) | `sprint-{issue\|pr\|event}`, cancel-in-progress: false |
 | **Claude Code Review** | `claude-code-review.yml` | pull_request | `review-{pr}`, cancel-in-progress: true |
 
 **Unchanged:** `pr.yml`
@@ -243,7 +243,7 @@ _Run: [#89](https://github.com/org/repo/actions/runs/12345)_
 Implemented flat-rate pricing feature for #6.
 
 **What was done:**
-- Created `src/backend/Shadowbrook.Api/Models/Pricing.cs` with flat-rate entity
+- Created `src/backend/Teeforce.Api/Models/Pricing.cs` with flat-rate entity
 - Added PUT/GET endpoints at `/courses/{id}/pricing`
 
 **PR:** #42
@@ -260,7 +260,7 @@ _Run: [#95](https://github.com/org/repo/actions/runs/12345)_
 Implement the flat-rate pricing feature following the architect's detailed plan.
 
 **Implementation scope:**
-- Modify `src/backend/Shadowbrook.Api/Models/Course.cs` to add `FlatRatePrice` property
+- Modify `src/backend/Teeforce.Api/Models/Course.cs` to add `FlatRatePrice` property
 - Create PUT/GET endpoints at `/courses/{id}/pricing`
 
 ---

@@ -117,9 +117,9 @@ You are implementing a cleanup task in the chore/cleanup worktree at: {worktree_
 
 1. Follow the architect's plan using TDD — write/modify tests first, verify they fail, then implement
 2. Remove each @cleanup comment after addressing it
-3. Run `dotnet build shadowbrook.slnx` to verify compilation
+3. Run `dotnet build teeforce.slnx` to verify compilation
 4. Run relevant tests to verify they pass
-5. Run `dotnet format shadowbrook.slnx` to fix style
+5. Run `dotnet format teeforce.slnx` to fix style
 6. For TypeScript changes: run `pnpm --dir src/web lint` and `pnpm --dir src/web test`
 
 Do NOT commit — changes will be committed after review.

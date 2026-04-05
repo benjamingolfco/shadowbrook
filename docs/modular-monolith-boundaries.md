@@ -79,15 +79,15 @@ This actually works well as separate modules because every step is already a sep
 
 ```
 src/backend/
-  Shadowbrook.Domain/                    # Aggregates, events, repository interfaces
-  Shadowbrook.Contracts/                 # Shared event/command types for cross-module messaging
-  Shadowbrook.Administration/            # Tenant + Course endpoints, repos
-  Shadowbrook.Golfers/                   # Golfer endpoints, repos
-  Shadowbrook.Waitlist/                  # Endpoints, handlers, policies, repos
-  Shadowbrook.Bookings/                  # Endpoints, handlers, policies, repos
-  Shadowbrook.Notifications/            # All SMS/notification handlers
-  Shadowbrook.TeeSheet/                 # Read model queries
-  Shadowbrook.Api/                       # Host — wires modules, shared infra, DbContext, middleware
+  Teeforce.Domain/                    # Aggregates, events, repository interfaces
+  Teeforce.Contracts/                 # Shared event/command types for cross-module messaging
+  Teeforce.Administration/            # Tenant + Course endpoints, repos
+  Teeforce.Golfers/                   # Golfer endpoints, repos
+  Teeforce.Waitlist/                  # Endpoints, handlers, policies, repos
+  Teeforce.Bookings/                  # Endpoints, handlers, policies, repos
+  Teeforce.Notifications/            # All SMS/notification handlers
+  Teeforce.TeeSheet/                 # Read model queries
+  Teeforce.Api/                       # Host — wires modules, shared infra, DbContext, middleware
 ```
 
 Each module project references `Domain` and `Contracts` but **not each other**. The `Api` host project references all modules and registers their services.
@@ -97,10 +97,10 @@ Each module project references `Domain` and `Contracts` but **not each other**. 
 ### Single vs. split Domain project
 
 **Option A — Single Domain project (pragmatic start):**
-Keep `Shadowbrook.Domain` as one project. Module projects reference it but can only use the aggregates/interfaces relevant to them by convention. The compiler won't stop a Waitlist handler from importing `Booking`, but the project boundary at the API layer still prevents most accidental coupling.
+Keep `Teeforce.Domain` as one project. Module projects reference it but can only use the aggregates/interfaces relevant to them by convention. The compiler won't stop a Waitlist handler from importing `Booking`, but the project boundary at the API layer still prevents most accidental coupling.
 
 **Option B — Split Domain per module (strongest isolation):**
-Each module gets its own domain project (e.g., `Shadowbrook.Waitlist.Domain`). Shared types like the `Entity` base class, `TeeTime` value object, and common interfaces move to `Shadowbrook.Domain.Common`. This gives compile-time guarantees at the domain level too, at the cost of more project plumbing.
+Each module gets its own domain project (e.g., `Teeforce.Waitlist.Domain`). Shared types like the `Entity` base class, `TeeTime` value object, and common interfaces move to `Teeforce.Domain.Common`. This gives compile-time guarantees at the domain level too, at the cost of more project plumbing.
 
 Recommendation: Start with Option A. If agents repeatedly reach across domain boundaries despite the API-layer split, upgrade to Option B.
 
@@ -117,8 +117,8 @@ Recommendation: Option A. The transactional middleware limitation makes split Db
 ### Shared Contracts project
 
 Domain events that cross module boundaries need a shared home. Options:
-- **`Shadowbrook.Contracts/`**: A thin project with just event/command record types. Both publisher and consumer reference it.
-- **Events stay in `Shadowbrook.Domain/`**: Simpler if keeping a single domain project — events are already there.
+- **`Teeforce.Contracts/`**: A thin project with just event/command record types. Both publisher and consumer reference it.
+- **Events stay in `Teeforce.Domain/`**: Simpler if keeping a single domain project — events are already there.
 
 If we go with a single Domain project (Option A above), a separate Contracts project isn't strictly needed. If we split the domain per module, Contracts becomes necessary.
 

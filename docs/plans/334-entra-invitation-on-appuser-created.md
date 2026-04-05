@@ -73,7 +73,7 @@ public class GraphSettings
 - If `Graph:ClientId` is configured → register `GraphAppUserInvitationService` with `GraphServiceClient` using `DefaultAzureCredential`
 - If not → register `NoOpAppUserInvitationService`
 
-### NuGet Packages (added to `Shadowbrook.Api`)
+### NuGet Packages (added to `Teeforce.Api`)
 
 - `Microsoft.Graph`
 - `Azure.Identity`

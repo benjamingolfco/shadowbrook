@@ -18,7 +18,7 @@ Use the `AddMicrosoftIdentityWebApi` configuration callback to add scope validat
 
 ### 1. Add `Audience` and `Scopes` to `appsettings.json`
 
-**File:** `src/backend/Shadowbrook.Api/appsettings.json`
+**File:** `src/backend/Teeforce.Api/appsettings.json`
 
 Add `Audience` and `Scopes` to the `AzureAd` section:
 
@@ -38,7 +38,7 @@ Add `Audience` and `Scopes` to the `AzureAd` section:
 
 ### 2. Add scope validation to `AuthServiceCollectionExtensions.cs`
 
-**File:** `src/backend/Shadowbrook.Api/Infrastructure/Auth/AuthServiceCollectionExtensions.cs`
+**File:** `src/backend/Teeforce.Api/Infrastructure/Auth/AuthServiceCollectionExtensions.cs`
 
 In the non-dev-auth branch, after `AddMicrosoftIdentityWebApi`, configure the JwtBearer options to validate scopes. There are two viable approaches:
 
@@ -229,16 +229,16 @@ This ensures dev mode and integration tests are completely unaffected.
 
 | File | Purpose |
 |------|---------|
-| `src/backend/Shadowbrook.Api/Infrastructure/Auth/ScopeRequirement.cs` | `IAuthorizationRequirement` that holds accepted scopes |
-| `src/backend/Shadowbrook.Api/Infrastructure/Auth/ScopeAuthorizationHandler.cs` | `AuthorizationHandler<ScopeRequirement>` that validates `scp` claim |
-| `tests/Shadowbrook.Api.Tests/Features/Auth/ScopeAuthorizationHandlerTests.cs` | Unit tests for the handler |
+| `src/backend/Teeforce.Api/Infrastructure/Auth/ScopeRequirement.cs` | `IAuthorizationRequirement` that holds accepted scopes |
+| `src/backend/Teeforce.Api/Infrastructure/Auth/ScopeAuthorizationHandler.cs` | `AuthorizationHandler<ScopeRequirement>` that validates `scp` claim |
+| `tests/Teeforce.Api.Tests/Features/Auth/ScopeAuthorizationHandlerTests.cs` | Unit tests for the handler |
 
 #### Modify
 
 | File | Change |
 |------|--------|
-| `src/backend/Shadowbrook.Api/appsettings.json` | Add `Audience` and `Scopes` to `AzureAd` section |
-| `src/backend/Shadowbrook.Api/Infrastructure/Auth/AuthServiceCollectionExtensions.cs` | Switch to two-lambda `AddMicrosoftIdentityWebApi` overload; add `ScopeRequirement` to all policies; register `ScopeAuthorizationHandler` |
+| `src/backend/Teeforce.Api/appsettings.json` | Add `Audience` and `Scopes` to `AzureAd` section |
+| `src/backend/Teeforce.Api/Infrastructure/Auth/AuthServiceCollectionExtensions.cs` | Switch to two-lambda `AddMicrosoftIdentityWebApi` overload; add `ScopeRequirement` to all policies; register `ScopeAuthorizationHandler` |
 
 ### 4. Testing strategy
 

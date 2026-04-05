@@ -7,7 +7,7 @@ Checklist for standing up a new environment (staging, production). Derived from 
 - [ ] Subscription exists in the correct Entra tenant (Benjamin Golf Co)
 - [ ] Admin user has Owner role on subscription (portal-only, not used in CLI)
 - [ ] Separate non-prod user for Azure CLI / AI sessions — Contributor on non-prod resource groups only, no prod access
-- [ ] Separate prod deploy credential (service principal or user) — Contributor scoped to `shadowbrook-prod-rg` + AcrPush on shared ACR, used only by manually-triggered workflows
+- [ ] Separate prod deploy credential (service principal or user) — Contributor scoped to `teeforce-prod-rg` + AcrPush on shared ACR, used only by manually-triggered workflows
 - [ ] Resource providers registered (Microsoft.App, Microsoft.Sql, Microsoft.Web, etc.)
 
 ## Infrastructure (Bicep)

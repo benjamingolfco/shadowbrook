@@ -21,14 +21,14 @@ Benjamin Golf Co (workforce tenant) — shared across all environments
 
 Dev/Test CIAM tenant (deferred — create when building self-service sign-up)
 ├── Users: Test operators (invited), test golfers (self-service)
-├── App registrations: Shadowbrook API + SPA (Non-Prod)
+├── App registrations: Teeforce API + SPA (Non-Prod)
 ├── Auth: <tenant>.ciamlogin.com
 ├── Identity providers: Microsoft, Google, email/password
 └── Access: mirrors production config for realistic testing
 
 Production CIAM tenant (planned)
 ├── Users: Course operators (invited), golfers (self-service)
-├── App registrations: Shadowbrook API + SPA (Prod)
+├── App registrations: Teeforce API + SPA (Prod)
 ├── Auth: <tenant>.ciamlogin.com
 ├── Identity providers: Microsoft, Google, email/password
 └── Access: operators invited manually, golfers self-service
@@ -71,8 +71,8 @@ The `#EXT#` in the UPN means the identity is backed by a personal Microsoft acco
 
 | App | Client ID | Type | Supported Accounts |
 |-----|-----------|------|--------------------|
-| Shadowbrook API (Non-Prod) | `e3eea6af-dfac-49f5-a3ea-45dc1cf42873` | API | This directory only |
-| Shadowbrook SPA (Non-Prod) | `0dc88653-3550-44f0-a0c7-db8ec622e5a9` | SPA | This directory only |
+| Teeforce API (Non-Prod) | `e3eea6af-dfac-49f5-a3ea-45dc1cf42873` | API | This directory only |
+| Teeforce SPA (Non-Prod) | `0dc88653-3550-44f0-a0c7-db8ec622e5a9` | SPA | This directory only |
 
 - API exposes scope: `api://e3eea6af-dfac-49f5-a3ea-45dc1cf42873/access_as_user`
 - SPA has delegated permission to call the API scope (admin consent granted)

@@ -34,15 +34,15 @@ Reference queries for Azure Application Insights. Run via `az monitor app-insigh
 ## Prerequisites
 
 - Must be logged in to Azure CLI: `az login`
-- App Insights app name: `shadowbrook-appinsights-test` (test env)
-- Resource group: `shadowbrook-rg-test` (test env)
+- App Insights app name: `teeforce-appinsights-test` (test env)
+- Resource group: `teeforce-rg-test` (test env)
 
 ## Running Queries
 
 ```bash
 az monitor app-insights query \
-  --app shadowbrook-appinsights-test \
-  --resource-group shadowbrook-rg-test \
+  --app teeforce-appinsights-test \
+  --resource-group teeforce-rg-test \
   --analytics-query "{KQL}" \
   --offset {timespan}
 ```
@@ -315,7 +315,7 @@ model: sonnet
 
 # Stress Test Operator
 
-You are a course operator exercising the Shadowbrook operator UI during a stress test. You log in with test credentials and perform realistic operator actions via a Playwright browser.
+You are a course operator exercising the Teeforce operator UI during a stress test. You log in with test credentials and perform realistic operator actions via a Playwright browser.
 
 ## Safety Rules
 
@@ -433,7 +433,7 @@ model: sonnet
 
 # Stress Test Golfer
 
-You are a golfer exercising the Shadowbrook public-facing UI during a stress test. You use anonymous flows (no login required) via a Playwright browser and read SMS messages via the dev API.
+You are a golfer exercising the Teeforce public-facing UI during a stress test. You use anonymous flows (no login required) via a Playwright browser and read SMS messages via the dev API.
 
 ## Safety Rules
 
@@ -561,7 +561,7 @@ user-invocable: true
 
 # Stress Test
 
-Launch parallel AI agents to exercise the Shadowbrook system with realistic concurrent usage. An operator agent and N golfer agents interact with the UI via Playwright browsers while an observer agent monitors App Insights for errors and flow gaps.
+Launch parallel AI agents to exercise the Teeforce system with realistic concurrent usage. An operator agent and N golfer agents interact with the UI via Playwright browsers while an observer agent monitors App Insights for errors and flow gaps.
 
 ## Usage
 
@@ -587,12 +587,12 @@ Launch parallel AI agents to exercise the Shadowbrook system with realistic conc
 
 | Env | Frontend | API |
 |-----|----------|-----|
-| `test` | `https://white-stone-00610060f.1.azurestaticapps.net` | `https://shadowbrook-app-test.happypond-1a892999.eastus2.azurecontainerapps.io` |
+| `test` | `https://white-stone-00610060f.1.azurestaticapps.net` | `https://teeforce-app-test.happypond-1a892999.eastus2.azurecontainerapps.io` |
 | `local` | `http://localhost:3000` | `http://localhost:5221` |
 
 App Insights (test env):
-- App name: `shadowbrook-appinsights-test`
-- Resource group: `shadowbrook-rg-test`
+- App name: `teeforce-appinsights-test`
+- Resource group: `teeforce-rg-test`
 
 ## Feature Area Role Briefs
 
@@ -790,7 +790,7 @@ git commit -m "feat: add stress test coordinator skill"
 - Read: `infra/bicep/modules/app-insights.bicep`
 - Read: `infra/bicep/parameters/test.bicepparam` or similar parameter files
 
-The skill and observer reference `shadowbrook-appinsights-test` and `shadowbrook-rg-test` — verify these are the actual resource names.
+The skill and observer reference `teeforce-appinsights-test` and `teeforce-rg-test` — verify these are the actual resource names.
 
 - [ ] **Step 1: Check the Bicep parameter files for test environment resource names**
 
@@ -802,7 +802,7 @@ Read the relevant files and find the actual App Insights resource name and resou
 
 - [ ] **Step 2: Update skill and observer if names differ**
 
-If the actual names are different from `shadowbrook-appinsights-test` / `shadowbrook-rg-test`, update:
+If the actual names are different from `teeforce-appinsights-test` / `teeforce-rg-test`, update:
 - `.claude/skills/app-insights-queries/SKILL.md` — the Prerequisites section
 - `.claude/skills/stress-test/SKILL.md` — the App Insights section under Environment Resolution
 - `.claude/agents/stress-test-observer.md` — any hardcoded references (there shouldn't be — these are passed as inputs)

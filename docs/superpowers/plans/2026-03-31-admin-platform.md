@@ -18,45 +18,45 @@
 
 | File | Responsibility |
 |------|---------------|
-| `src/backend/Shadowbrook.Domain/AppUserAggregate/AppUserRole.cs` | Rename Owner→Operator, remove Staff |
-| `src/backend/Shadowbrook.Domain/AppUserAggregate/AppUser.cs` | Remove CourseAssignment methods and collection |
-| `src/backend/Shadowbrook.Api/Auth/AppUserEnrichmentMiddleware.cs` | Remove course_id claims, rename Owner refs |
-| `src/backend/Shadowbrook.Api/Auth/ICurrentUser.cs` | Remove CourseIds property |
-| `src/backend/Shadowbrook.Api/Auth/CurrentUser.cs` | Remove CourseIds implementation |
-| `src/backend/Shadowbrook.Api/Auth/Permissions.cs` | Update role mapping (remove Staff, rename Owner) |
-| `src/backend/Shadowbrook.Api/Auth/CourseAccessAuthorizationHandler.cs` | Delete — EF query filter handles org scoping |
-| `src/backend/Shadowbrook.Api/Features/Auth/AuthEndpoints.cs` | Remove course assignment endpoint, update DTOs, expand UpdateUser |
-| `src/backend/Shadowbrook.Api/Infrastructure/Data/ApplicationDbContext.cs` | Remove CourseAssignment DbSet and config |
-| `src/backend/Shadowbrook.Api/Infrastructure/Middleware/DomainExceptionHandler.cs` | Remove CourseAssignment exception mappings |
-| `src/backend/Shadowbrook.Api/Program.cs` | Remove CourseAccessAuthorizationHandler registration |
-| `src/backend/Shadowbrook.Api/Features/Courses/CourseEndpoints.cs` | Add PUT endpoint, change RequireCourseAccess→RequireUsersManage |
-| `src/backend/Shadowbrook.Api/Features/FeatureFlags/FeatureEndpoints.cs` | Add PUT endpoints for org/course flags |
+| `src/backend/Teeforce.Domain/AppUserAggregate/AppUserRole.cs` | Rename Owner→Operator, remove Staff |
+| `src/backend/Teeforce.Domain/AppUserAggregate/AppUser.cs` | Remove CourseAssignment methods and collection |
+| `src/backend/Teeforce.Api/Auth/AppUserEnrichmentMiddleware.cs` | Remove course_id claims, rename Owner refs |
+| `src/backend/Teeforce.Api/Auth/ICurrentUser.cs` | Remove CourseIds property |
+| `src/backend/Teeforce.Api/Auth/CurrentUser.cs` | Remove CourseIds implementation |
+| `src/backend/Teeforce.Api/Auth/Permissions.cs` | Update role mapping (remove Staff, rename Owner) |
+| `src/backend/Teeforce.Api/Auth/CourseAccessAuthorizationHandler.cs` | Delete — EF query filter handles org scoping |
+| `src/backend/Teeforce.Api/Features/Auth/AuthEndpoints.cs` | Remove course assignment endpoint, update DTOs, expand UpdateUser |
+| `src/backend/Teeforce.Api/Infrastructure/Data/ApplicationDbContext.cs` | Remove CourseAssignment DbSet and config |
+| `src/backend/Teeforce.Api/Infrastructure/Middleware/DomainExceptionHandler.cs` | Remove CourseAssignment exception mappings |
+| `src/backend/Teeforce.Api/Program.cs` | Remove CourseAccessAuthorizationHandler registration |
+| `src/backend/Teeforce.Api/Features/Courses/CourseEndpoints.cs` | Add PUT endpoint, change RequireCourseAccess→RequireUsersManage |
+| `src/backend/Teeforce.Api/Features/FeatureFlags/FeatureEndpoints.cs` | Add PUT endpoints for org/course flags |
 
 ### Backend — New Files
 
 | File | Responsibility |
 |------|---------------|
-| `src/backend/Shadowbrook.Api/Features/Analytics/AnalyticsEndpoints.cs` | All analytics query endpoints |
-| `src/backend/Shadowbrook.Api/Features/Analytics/AnalyticsModels.cs` | Read-model records for analytics results |
+| `src/backend/Teeforce.Api/Features/Analytics/AnalyticsEndpoints.cs` | All analytics query endpoints |
+| `src/backend/Teeforce.Api/Features/Analytics/AnalyticsModels.cs` | Read-model records for analytics results |
 
 ### Backend — Deleted Files
 
 | File | Reason |
 |------|--------|
-| `src/backend/Shadowbrook.Domain/AppUserAggregate/CourseAssignment.cs` | Staff role removed |
-| `src/backend/Shadowbrook.Domain/AppUserAggregate/Exceptions/CourseAlreadyAssignedException.cs` | No more course assignments |
-| `src/backend/Shadowbrook.Domain/AppUserAggregate/Exceptions/CourseNotAssignedException.cs` | No more course assignments |
-| `src/backend/Shadowbrook.Api/Infrastructure/EntityTypeConfigurations/CourseAssignmentConfiguration.cs` | Table being dropped |
-| `src/backend/Shadowbrook.Api/Auth/CourseAccessRequirement.cs` | Policy removed |
+| `src/backend/Teeforce.Domain/AppUserAggregate/CourseAssignment.cs` | Staff role removed |
+| `src/backend/Teeforce.Domain/AppUserAggregate/Exceptions/CourseAlreadyAssignedException.cs` | No more course assignments |
+| `src/backend/Teeforce.Domain/AppUserAggregate/Exceptions/CourseNotAssignedException.cs` | No more course assignments |
+| `src/backend/Teeforce.Api/Infrastructure/EntityTypeConfigurations/CourseAssignmentConfiguration.cs` | Table being dropped |
+| `src/backend/Teeforce.Api/Auth/CourseAccessRequirement.cs` | Policy removed |
 
 ### Backend — Test Files Modified
 
 | File | Change |
 |------|--------|
-| `tests/Shadowbrook.Domain.Tests/AppUserAggregate/AppUserTests.cs` | Remove course assignment tests, update role refs |
-| `tests/Shadowbrook.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs` | Update to Operator, remove course_id claim assertions |
-| `tests/Shadowbrook.Api.Tests/Auth/CourseAccessAuthorizationHandlerTests.cs` | Delete — handler removed |
-| `tests/Shadowbrook.Api.Tests/Auth/PermissionAuthorizationHandlerTests.cs` | Update role references |
+| `tests/Teeforce.Domain.Tests/AppUserAggregate/AppUserTests.cs` | Remove course assignment tests, update role refs |
+| `tests/Teeforce.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs` | Update to Operator, remove course_id claim assertions |
+| `tests/Teeforce.Api.Tests/Auth/CourseAccessAuthorizationHandlerTests.cs` | Delete — handler removed |
+| `tests/Teeforce.Api.Tests/Auth/PermissionAuthorizationHandlerTests.cs` | Update role references |
 
 ### Frontend — Modified Files
 
@@ -106,16 +106,16 @@
 ## Task 1: Role Model — Rename Owner to Operator, Remove Staff
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Domain/AppUserAggregate/AppUserRole.cs`
-- Modify: `src/backend/Shadowbrook.Domain/AppUserAggregate/AppUser.cs`
-- Delete: `src/backend/Shadowbrook.Domain/AppUserAggregate/CourseAssignment.cs`
-- Delete: `src/backend/Shadowbrook.Domain/AppUserAggregate/Exceptions/CourseAlreadyAssignedException.cs`
-- Delete: `src/backend/Shadowbrook.Domain/AppUserAggregate/Exceptions/CourseNotAssignedException.cs`
-- Modify: `tests/Shadowbrook.Domain.Tests/AppUserAggregate/AppUserTests.cs`
+- Modify: `src/backend/Teeforce.Domain/AppUserAggregate/AppUserRole.cs`
+- Modify: `src/backend/Teeforce.Domain/AppUserAggregate/AppUser.cs`
+- Delete: `src/backend/Teeforce.Domain/AppUserAggregate/CourseAssignment.cs`
+- Delete: `src/backend/Teeforce.Domain/AppUserAggregate/Exceptions/CourseAlreadyAssignedException.cs`
+- Delete: `src/backend/Teeforce.Domain/AppUserAggregate/Exceptions/CourseNotAssignedException.cs`
+- Modify: `tests/Teeforce.Domain.Tests/AppUserAggregate/AppUserTests.cs`
 
 - [ ] **Step 1: Update domain tests for new role model**
 
-Update `tests/Shadowbrook.Domain.Tests/AppUserAggregate/AppUserTests.cs`:
+Update `tests/Teeforce.Domain.Tests/AppUserAggregate/AppUserTests.cs`:
 
 Remove these tests entirely (behavior removed):
 - `AssignCourse_AddsAssignment`
@@ -141,15 +141,15 @@ public void Create_WithOperatorRole_SetsOrganizationId()
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/Shadowbrook.Domain.Tests --filter AppUserTests -v minimal`
+Run: `dotnet test tests/Teeforce.Domain.Tests --filter AppUserTests -v minimal`
 Expected: Compilation errors — `AppUserRole.Operator` doesn't exist yet, `CourseAssignment` methods still referenced.
 
 - [ ] **Step 3: Update AppUserRole enum**
 
-Replace `src/backend/Shadowbrook.Domain/AppUserAggregate/AppUserRole.cs`:
+Replace `src/backend/Teeforce.Domain/AppUserAggregate/AppUserRole.cs`:
 
 ```csharp
-namespace Shadowbrook.Domain.AppUserAggregate;
+namespace Teeforce.Domain.AppUserAggregate;
 
 public enum AppUserRole
 {
@@ -160,12 +160,12 @@ public enum AppUserRole
 
 - [ ] **Step 4: Update AppUser aggregate**
 
-Replace `src/backend/Shadowbrook.Domain/AppUserAggregate/AppUser.cs`:
+Replace `src/backend/Teeforce.Domain/AppUserAggregate/AppUser.cs`:
 
 ```csharp
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.AppUserAggregate;
+namespace Teeforce.Domain.AppUserAggregate;
 
 public class AppUser : Entity
 {
@@ -214,13 +214,13 @@ public class AppUser : Entity
 - [ ] **Step 5: Delete CourseAssignment and its exceptions**
 
 Delete these files:
-- `src/backend/Shadowbrook.Domain/AppUserAggregate/CourseAssignment.cs`
-- `src/backend/Shadowbrook.Domain/AppUserAggregate/Exceptions/CourseAlreadyAssignedException.cs`
-- `src/backend/Shadowbrook.Domain/AppUserAggregate/Exceptions/CourseNotAssignedException.cs`
+- `src/backend/Teeforce.Domain/AppUserAggregate/CourseAssignment.cs`
+- `src/backend/Teeforce.Domain/AppUserAggregate/Exceptions/CourseAlreadyAssignedException.cs`
+- `src/backend/Teeforce.Domain/AppUserAggregate/Exceptions/CourseNotAssignedException.cs`
 
 - [ ] **Step 6: Run domain tests to verify they pass**
 
-Run: `dotnet test tests/Shadowbrook.Domain.Tests --filter AppUserTests -v minimal`
+Run: `dotnet test tests/Teeforce.Domain.Tests --filter AppUserTests -v minimal`
 Expected: PASS
 
 - [ ] **Step 7: Commit**
@@ -234,46 +234,46 @@ git add -A && git commit -m "refactor: simplify role model — rename Owner to O
 ## Task 2: Auth Infrastructure — Update Middleware, CurrentUser, Permissions, Handlers
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Api/Auth/Permissions.cs`
-- Modify: `src/backend/Shadowbrook.Api/Auth/ICurrentUser.cs`
-- Modify: `src/backend/Shadowbrook.Api/Auth/CurrentUser.cs`
-- Modify: `src/backend/Shadowbrook.Api/Auth/AppUserEnrichmentMiddleware.cs`
-- Modify: `src/backend/Shadowbrook.Api/Auth/CourseAccessAuthorizationHandler.cs`
-- Delete: `src/backend/Shadowbrook.Api/Auth/CourseAccessRequirement.cs`
-- Delete: `src/backend/Shadowbrook.Api/Infrastructure/EntityTypeConfigurations/CourseAssignmentConfiguration.cs`
-- Modify: `src/backend/Shadowbrook.Api/Infrastructure/Data/ApplicationDbContext.cs`
-- Modify: `src/backend/Shadowbrook.Api/Infrastructure/Middleware/DomainExceptionHandler.cs`
-- Modify: `src/backend/Shadowbrook.Api/Program.cs`
-- Modify: `tests/Shadowbrook.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs`
-- Modify: `tests/Shadowbrook.Api.Tests/Auth/CourseAccessAuthorizationHandlerTests.cs`
-- Modify: `tests/Shadowbrook.Api.Tests/Auth/PermissionAuthorizationHandlerTests.cs`
+- Modify: `src/backend/Teeforce.Api/Auth/Permissions.cs`
+- Modify: `src/backend/Teeforce.Api/Auth/ICurrentUser.cs`
+- Modify: `src/backend/Teeforce.Api/Auth/CurrentUser.cs`
+- Modify: `src/backend/Teeforce.Api/Auth/AppUserEnrichmentMiddleware.cs`
+- Modify: `src/backend/Teeforce.Api/Auth/CourseAccessAuthorizationHandler.cs`
+- Delete: `src/backend/Teeforce.Api/Auth/CourseAccessRequirement.cs`
+- Delete: `src/backend/Teeforce.Api/Infrastructure/EntityTypeConfigurations/CourseAssignmentConfiguration.cs`
+- Modify: `src/backend/Teeforce.Api/Infrastructure/Data/ApplicationDbContext.cs`
+- Modify: `src/backend/Teeforce.Api/Infrastructure/Middleware/DomainExceptionHandler.cs`
+- Modify: `src/backend/Teeforce.Api/Program.cs`
+- Modify: `tests/Teeforce.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs`
+- Modify: `tests/Teeforce.Api.Tests/Auth/CourseAccessAuthorizationHandlerTests.cs`
+- Modify: `tests/Teeforce.Api.Tests/Auth/PermissionAuthorizationHandlerTests.cs`
 
 - [ ] **Step 1: Update auth unit tests**
 
-Update `tests/Shadowbrook.Api.Tests/Auth/PermissionAuthorizationHandlerTests.cs`: Replace any `AppUserRole.Owner` or `AppUserRole.Staff` references with `AppUserRole.Operator`.
+Update `tests/Teeforce.Api.Tests/Auth/PermissionAuthorizationHandlerTests.cs`: Replace any `AppUserRole.Owner` or `AppUserRole.Staff` references with `AppUserRole.Operator`.
 
-Update `tests/Shadowbrook.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs`:
+Update `tests/Teeforce.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs`:
 - Remove all assertions about `course_id` claims
 - Remove `.Include(u => u.CourseAssignments)` references in test setup
 - Change auto-provision test: new users should be created as `AppUserRole.Operator` (not `Staff`)
 - Remove `CourseAssignments` from `EnrichmentData` assertions
 - Replace `Owner` references with `Operator`
 
-Delete `tests/Shadowbrook.Api.Tests/Auth/CourseAccessAuthorizationHandlerTests.cs` — the handler is being removed entirely. Course access is enforced by the EF query filter.
+Delete `tests/Teeforce.Api.Tests/Auth/CourseAccessAuthorizationHandlerTests.cs` — the handler is being removed entirely. Course access is enforced by the EF query filter.
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/Shadowbrook.Api.Tests --filter "PermissionAuthorizationHandler|AppUserEnrichmentMiddleware" -v minimal`
+Run: `dotnet test tests/Teeforce.Api.Tests --filter "PermissionAuthorizationHandler|AppUserEnrichmentMiddleware" -v minimal`
 Expected: Compilation errors from removed types/properties.
 
 - [ ] **Step 3: Update Permissions.cs**
 
-Replace `src/backend/Shadowbrook.Api/Auth/Permissions.cs`:
+Replace `src/backend/Teeforce.Api/Auth/Permissions.cs`:
 
 ```csharp
-using Shadowbrook.Domain.AppUserAggregate;
+using Teeforce.Domain.AppUserAggregate;
 
-namespace Shadowbrook.Api.Auth;
+namespace Teeforce.Api.Auth;
 
 public static class Permissions
 {
@@ -293,10 +293,10 @@ public static class Permissions
 
 - [ ] **Step 4: Update ICurrentUser — remove CourseIds**
 
-Replace `src/backend/Shadowbrook.Api/Auth/ICurrentUser.cs`:
+Replace `src/backend/Teeforce.Api/Auth/ICurrentUser.cs`:
 
 ```csharp
-namespace Shadowbrook.Api.Auth;
+namespace Teeforce.Api.Auth;
 
 public interface ICurrentUser
 {
@@ -310,12 +310,12 @@ public interface ICurrentUser
 
 - [ ] **Step 5: Update CurrentUser — remove CourseIds**
 
-Replace `src/backend/Shadowbrook.Api/Auth/CurrentUser.cs`:
+Replace `src/backend/Teeforce.Api/Auth/CurrentUser.cs`:
 
 ```csharp
 using System.Security.Claims;
 
-namespace Shadowbrook.Api.Auth;
+namespace Teeforce.Api.Auth;
 
 public class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUser
 {
@@ -352,16 +352,16 @@ public class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUse
 
 - [ ] **Step 6: Update AppUserEnrichmentMiddleware**
 
-Replace `src/backend/Shadowbrook.Api/Auth/AppUserEnrichmentMiddleware.cs`:
+Replace `src/backend/Teeforce.Api/Auth/AppUserEnrichmentMiddleware.cs`:
 
 ```csharp
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.AppUserAggregate;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.AppUserAggregate;
 
-namespace Shadowbrook.Api.Auth;
+namespace Teeforce.Api.Auth;
 
 public class AppUserEnrichmentMiddleware(RequestDelegate next)
 {
@@ -465,14 +465,14 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next)
 - [ ] **Step 7: Delete CourseAccessAuthorizationHandler and CourseAccessRequirement**
 
 Delete both files:
-- `src/backend/Shadowbrook.Api/Auth/CourseAccessAuthorizationHandler.cs`
-- `src/backend/Shadowbrook.Api/Auth/CourseAccessRequirement.cs`
+- `src/backend/Teeforce.Api/Auth/CourseAccessAuthorizationHandler.cs`
+- `src/backend/Teeforce.Api/Auth/CourseAccessRequirement.cs`
 
 Course access for Operators is enforced by the EF query filter on `Course` (scopes by `OrganizationId`). No separate authorization handler needed — `PermissionAuthorizationHandler` handles all permission checks.
 
 - [ ] **Step 9: Update Program.cs — remove RequireCourseAccess policy**
 
-In `src/backend/Shadowbrook.Api/Program.cs`, remove:
+In `src/backend/Teeforce.Api/Program.cs`, remove:
 - The `.AddPolicy("RequireCourseAccess", ...)` line
 - The `builder.Services.AddScoped<IAuthorizationHandler, CourseAccessAuthorizationHandler>();` line
 
@@ -480,32 +480,32 @@ The `CourseAccessAuthorizationHandler` is no longer needed as a separate handler
 
 - [ ] **Step 10: Update ApplicationDbContext — remove CourseAssignment DbSet and config**
 
-In `src/backend/Shadowbrook.Api/Infrastructure/Data/ApplicationDbContext.cs`:
+In `src/backend/Teeforce.Api/Infrastructure/Data/ApplicationDbContext.cs`:
 - Remove `public DbSet<CourseAssignment> CourseAssignments => Set<CourseAssignment>();`
-- Remove `using Shadowbrook.Domain.AppUserAggregate;` if no longer needed (keep if `AppUser` DbSet uses it)
+- Remove `using Teeforce.Domain.AppUserAggregate;` if no longer needed (keep if `AppUser` DbSet uses it)
 - Remove `modelBuilder.ApplyConfiguration(new CourseAssignmentConfiguration());` from `OnModelCreating`
 
-Delete: `src/backend/Shadowbrook.Api/Infrastructure/EntityTypeConfigurations/CourseAssignmentConfiguration.cs`
+Delete: `src/backend/Teeforce.Api/Infrastructure/EntityTypeConfigurations/CourseAssignmentConfiguration.cs`
 
 - [ ] **Step 11: Update AppUserConfiguration — remove CourseAssignments navigation**
 
-In `src/backend/Shadowbrook.Api/Infrastructure/EntityTypeConfigurations/AppUserConfiguration.cs`:
+In `src/backend/Teeforce.Api/Infrastructure/EntityTypeConfigurations/AppUserConfiguration.cs`:
 - Remove `builder.Navigation(u => u.CourseAssignments).AutoInclude();`
 
 - [ ] **Step 12: Update DomainExceptionHandler — remove CourseAssignment exceptions**
 
-In `src/backend/Shadowbrook.Api/Infrastructure/Middleware/DomainExceptionHandler.cs`:
+In `src/backend/Teeforce.Api/Infrastructure/Middleware/DomainExceptionHandler.cs`:
 - Remove the `CourseAlreadyAssignedException` and `CourseNotAssignedException` switch arms
-- Remove the `using Shadowbrook.Domain.AppUserAggregate.Exceptions;` import
+- Remove the `using Teeforce.Domain.AppUserAggregate.Exceptions;` import
 
 - [ ] **Step 13: Build to verify compilation**
 
-Run: `dotnet build shadowbrook.slnx`
+Run: `dotnet build teeforce.slnx`
 Expected: Build succeeds. Fix any remaining references to `Staff`, `Owner`, `CourseAssignment`, `CourseIds`, `CourseAccessRequirement`, or `RequireCourseAccess`.
 
 - [ ] **Step 14: Run auth tests to verify they pass**
 
-Run: `dotnet test tests/Shadowbrook.Api.Tests --filter "PermissionAuthorizationHandler|AppUserEnrichmentMiddleware" -v minimal`
+Run: `dotnet test tests/Teeforce.Api.Tests --filter "PermissionAuthorizationHandler|AppUserEnrichmentMiddleware" -v minimal`
 Expected: PASS
 
 - [ ] **Step 15: Commit**
@@ -519,7 +519,7 @@ git add -A && git commit -m "refactor: update auth infrastructure for two-role m
 ## Task 3: Auth Endpoints — Update for New Role Model
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Api/Features/Auth/AuthEndpoints.cs`
+- Modify: `src/backend/Teeforce.Api/Features/Auth/AuthEndpoints.cs`
 
 - [ ] **Step 1: Update AuthEndpoints.cs**
 
@@ -628,7 +628,7 @@ Remove `UpdateUserCoursesRequest`.
 
 - [ ] **Step 2: Build to verify**
 
-Run: `dotnet build shadowbrook.slnx`
+Run: `dotnet build teeforce.slnx`
 Expected: PASS
 
 - [ ] **Step 3: Commit**
@@ -642,11 +642,11 @@ git add -A && git commit -m "refactor: update auth endpoints for two-role model,
 ## Task 4: Update Course Endpoints — Replace RequireCourseAccess
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Api/Features/Courses/CourseEndpoints.cs`
+- Modify: `src/backend/Teeforce.Api/Features/Courses/CourseEndpoints.cs`
 
 - [ ] **Step 1: Replace RequireCourseAccess with RequireAppAccess**
 
-In `src/backend/Shadowbrook.Api/Features/Courses/CourseEndpoints.cs`, change all `[Authorize(Policy = "RequireCourseAccess")]` to `[Authorize(Policy = "RequireAppAccess")]`. The EF query filter on Course already scopes by organization.
+In `src/backend/Teeforce.Api/Features/Courses/CourseEndpoints.cs`, change all `[Authorize(Policy = "RequireCourseAccess")]` to `[Authorize(Policy = "RequireAppAccess")]`. The EF query filter on Course already scopes by organization.
 
 - [ ] **Step 2: Add PUT /courses/{courseId} endpoint for editing**
 
@@ -705,7 +705,7 @@ public sealed record UpdateCourseRequest(string Name, string TimeZoneId);
 
 - [ ] **Step 3: Build to verify**
 
-Run: `dotnet build shadowbrook.slnx`
+Run: `dotnet build teeforce.slnx`
 Expected: PASS
 
 - [ ] **Step 4: Commit**
@@ -719,12 +719,12 @@ git add -A && git commit -m "feat: add PUT /courses/{courseId} endpoint, replace
 ## Task 5: Feature Flag Management Endpoints
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Api/Features/FeatureFlags/FeatureEndpoints.cs`
-- Modify: `src/backend/Shadowbrook.Domain/OrganizationAggregate/Organization.cs`
+- Modify: `src/backend/Teeforce.Api/Features/FeatureFlags/FeatureEndpoints.cs`
+- Modify: `src/backend/Teeforce.Domain/OrganizationAggregate/Organization.cs`
 
 - [ ] **Step 1: Add SetFeatureFlags method to Organization domain entity**
 
-In `src/backend/Shadowbrook.Domain/OrganizationAggregate/Organization.cs`, add:
+In `src/backend/Teeforce.Domain/OrganizationAggregate/Organization.cs`, add:
 
 ```csharp
 public void SetFeatureFlags(Dictionary<string, bool> flags)
@@ -744,7 +744,7 @@ public void SetFeatureFlags(Dictionary<string, bool> flags)
 
 - [ ] **Step 2: Add feature flag management endpoints**
 
-Add to `src/backend/Shadowbrook.Api/Features/FeatureFlags/FeatureEndpoints.cs`:
+Add to `src/backend/Teeforce.Api/Features/FeatureFlags/FeatureEndpoints.cs`:
 
 ```csharp
 [WolverinePut("/organizations/{id}/features")]
@@ -790,7 +790,7 @@ public sealed record SetFeaturesRequest(Dictionary<string, bool> Flags);
 
 - [ ] **Step 3: Build to verify**
 
-Run: `dotnet build shadowbrook.slnx`
+Run: `dotnet build teeforce.slnx`
 Expected: PASS
 
 - [ ] **Step 4: Commit**
@@ -804,12 +804,12 @@ git add -A && git commit -m "feat: add PUT endpoints for org and course feature 
 ## Task 6: Organization Edit Endpoint
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Domain/OrganizationAggregate/Organization.cs`
+- Modify: `src/backend/Teeforce.Domain/OrganizationAggregate/Organization.cs`
 - Modify: existing org-related endpoints or create in `Features/Auth/AuthEndpoints.cs` or a dedicated file
 
 - [ ] **Step 1: Add UpdateName method to Organization**
 
-In `src/backend/Shadowbrook.Domain/OrganizationAggregate/Organization.cs`, add:
+In `src/backend/Teeforce.Domain/OrganizationAggregate/Organization.cs`, add:
 
 ```csharp
 public void UpdateName(string name)
@@ -907,7 +907,7 @@ public sealed record CreateOrganizationRequest(string Name);
 
 - [ ] **Step 3: Build to verify**
 
-Run: `dotnet build shadowbrook.slnx`
+Run: `dotnet build teeforce.slnx`
 Expected: PASS
 
 - [ ] **Step 4: Commit**
@@ -928,7 +928,7 @@ git add -A && git commit -m "feat: add organization CRUD endpoints"
 Run:
 ```bash
 export PATH="$PATH:/home/aaron/.dotnet/tools"
-dotnet ef migrations add SimplifyRoleModelDropCourseAssignments --project src/backend/Shadowbrook.Api
+dotnet ef migrations add SimplifyRoleModelDropCourseAssignments --project src/backend/Teeforce.Api
 ```
 
 This migration should:
@@ -952,7 +952,7 @@ migrationBuilder.Sql("UPDATE [AppUsers] SET [Role] = 'Operator' WHERE [Role] = '
 
 Run:
 ```bash
-dotnet ef migrations has-pending-model-changes --project src/backend/Shadowbrook.Api
+dotnet ef migrations has-pending-model-changes --project src/backend/Teeforce.Api
 ```
 Expected: No pending changes.
 
@@ -967,15 +967,15 @@ git add -A && git commit -m "feat: add migration to drop CourseAssignments and r
 ## Task 8: Analytics Endpoints
 
 **Files:**
-- Create: `src/backend/Shadowbrook.Api/Features/Analytics/AnalyticsModels.cs`
-- Create: `src/backend/Shadowbrook.Api/Features/Analytics/AnalyticsEndpoints.cs`
+- Create: `src/backend/Teeforce.Api/Features/Analytics/AnalyticsModels.cs`
+- Create: `src/backend/Teeforce.Api/Features/Analytics/AnalyticsEndpoints.cs`
 
 - [ ] **Step 1: Create analytics read models**
 
-Create `src/backend/Shadowbrook.Api/Features/Analytics/AnalyticsModels.cs`:
+Create `src/backend/Teeforce.Api/Features/Analytics/AnalyticsModels.cs`:
 
 ```csharp
-namespace Shadowbrook.Api.Features.Analytics;
+namespace Teeforce.Api.Features.Analytics;
 
 public sealed record PlatformSummary(
     int TotalOrganizations,
@@ -1006,15 +1006,15 @@ public sealed record WaitlistStatsResult(
 
 - [ ] **Step 2: Create analytics endpoints**
 
-Create `src/backend/Shadowbrook.Api/Features/Analytics/AnalyticsEndpoints.cs`:
+Create `src/backend/Teeforce.Api/Features/Analytics/AnalyticsEndpoints.cs`:
 
 ```csharp
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
+using Teeforce.Api.Infrastructure.Data;
 using Wolverine.Http;
 
-namespace Shadowbrook.Api.Features.Analytics;
+namespace Teeforce.Api.Features.Analytics;
 
 public static class AnalyticsEndpoints
 {
@@ -1182,10 +1182,10 @@ public static class AnalyticsEndpoints
 
 - [ ] **Step 3: Build to verify**
 
-Run: `dotnet build shadowbrook.slnx`
+Run: `dotnet build teeforce.slnx`
 Expected: PASS
 
-- [ ] **Step 4: Run `dotnet format shadowbrook.slnx` to fix style**
+- [ ] **Step 4: Run `dotnet format teeforce.slnx` to fix style**
 
 - [ ] **Step 5: Commit**
 
@@ -1924,16 +1924,16 @@ git add -A && git commit -m "test: update admin frontend tests for org-based mod
 
 - [ ] **Step 1: Run full backend build**
 
-Run: `dotnet build shadowbrook.slnx`
+Run: `dotnet build teeforce.slnx`
 Expected: PASS
 
 - [ ] **Step 2: Run dotnet format**
 
-Run: `dotnet format shadowbrook.slnx`
+Run: `dotnet format teeforce.slnx`
 
 - [ ] **Step 3: Run all backend tests**
 
-Run: `dotnet test shadowbrook.slnx -v minimal`
+Run: `dotnet test teeforce.slnx -v minimal`
 Expected: PASS
 
 - [ ] **Step 4: Run frontend lint and tests**

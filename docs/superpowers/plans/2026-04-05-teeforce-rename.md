@@ -4,7 +4,7 @@
 >
 > **HARD RULE: No building or testing.** Do NOT run `dotnet build`, `dotnet test`, `pnpm build`, `pnpm test`, `make dev`, or any compilation/test commands. Execute the rename steps as written and move on. Build and test verification happens once at the end as a dedicated gap-finding phase.
 
-**Goal:** Rename the entire project from Shadowbrook to Teeforce — code, config, infra, docs — in a single PR.
+**Goal:** Rename the entire project from Teeforce to Teeforce — code, config, infra, docs — in a single PR.
 
 **Architecture:** Big bang rename in one branch. All C# namespaces, project files, directories, Docker, infrastructure, workflows, and documentation updated together. Azure resource deployment and GitHub repo rename happen post-merge during a maintenance window.
 
@@ -17,24 +17,24 @@
 ### Task 1: Rename Solution File and Project Directories
 
 **Files:**
-- Rename: `shadowbrook.slnx` -> `teeforce.slnx`
-- Rename dirs: `src/backend/Shadowbrook.Api/` -> `src/backend/Teeforce.Api/`
-- Rename dirs: `src/backend/Shadowbrook.Domain/` -> `src/backend/Teeforce.Domain/`
-- Rename dirs: `tests/Shadowbrook.Domain.Tests/` -> `tests/Teeforce.Domain.Tests/`
-- Rename dirs: `tests/Shadowbrook.Api.Tests/` -> `tests/Teeforce.Api.Tests/`
-- Rename dirs: `tests/Shadowbrook.Api.IntegrationTests/` -> `tests/Teeforce.Api.IntegrationTests/`
+- Rename: `teeforce.slnx` -> `teeforce.slnx`
+- Rename dirs: `src/backend/Teeforce.Api/` -> `src/backend/Teeforce.Api/`
+- Rename dirs: `src/backend/Teeforce.Domain/` -> `src/backend/Teeforce.Domain/`
+- Rename dirs: `tests/Teeforce.Domain.Tests/` -> `tests/Teeforce.Domain.Tests/`
+- Rename dirs: `tests/Teeforce.Api.Tests/` -> `tests/Teeforce.Api.Tests/`
+- Rename dirs: `tests/Teeforce.Api.IntegrationTests/` -> `tests/Teeforce.Api.IntegrationTests/`
 
 - [ ] **Step 1: Rename solution file**
 
 ```bash
-git mv shadowbrook.slnx teeforce.slnx
+git mv teeforce.slnx teeforce.slnx
 ```
 
 - [ ] **Step 2: Update solution file contents**
 
-Replace all `Shadowbrook` with `Teeforce` inside `teeforce.slnx`. The file contains 5 project references like:
+Replace all `Teeforce` with `Teeforce` inside `teeforce.slnx`. The file contains 5 project references like:
 ```
-src/backend/Shadowbrook.Api/Shadowbrook.Api.csproj
+src/backend/Teeforce.Api/Teeforce.Api.csproj
 ```
 Each becomes:
 ```
@@ -44,40 +44,40 @@ src/backend/Teeforce.Api/Teeforce.Api.csproj
 - [ ] **Step 3: Rename project directories**
 
 ```bash
-git mv src/backend/Shadowbrook.Api src/backend/Teeforce.Api
-git mv src/backend/Shadowbrook.Domain src/backend/Teeforce.Domain
-git mv tests/Shadowbrook.Domain.Tests tests/Teeforce.Domain.Tests
-git mv tests/Shadowbrook.Api.Tests tests/Teeforce.Api.Tests
-git mv tests/Shadowbrook.Api.IntegrationTests tests/Teeforce.Api.IntegrationTests
+git mv src/backend/Teeforce.Api src/backend/Teeforce.Api
+git mv src/backend/Teeforce.Domain src/backend/Teeforce.Domain
+git mv tests/Teeforce.Domain.Tests tests/Teeforce.Domain.Tests
+git mv tests/Teeforce.Api.Tests tests/Teeforce.Api.Tests
+git mv tests/Teeforce.Api.IntegrationTests tests/Teeforce.Api.IntegrationTests
 ```
 
 - [ ] **Step 4: Rename .csproj files**
 
 ```bash
-git mv src/backend/Teeforce.Api/Shadowbrook.Api.csproj src/backend/Teeforce.Api/Teeforce.Api.csproj
-git mv src/backend/Teeforce.Domain/Shadowbrook.Domain.csproj src/backend/Teeforce.Domain/Teeforce.Domain.csproj
-git mv tests/Teeforce.Domain.Tests/Shadowbrook.Domain.Tests.csproj tests/Teeforce.Domain.Tests/Teeforce.Domain.Tests.csproj
-git mv tests/Teeforce.Api.Tests/Shadowbrook.Api.Tests.csproj tests/Teeforce.Api.Tests/Teeforce.Api.Tests.csproj
-git mv tests/Teeforce.Api.IntegrationTests/Shadowbrook.Api.IntegrationTests.csproj tests/Teeforce.Api.IntegrationTests/Teeforce.Api.IntegrationTests.csproj
+git mv src/backend/Teeforce.Api/Teeforce.Api.csproj src/backend/Teeforce.Api/Teeforce.Api.csproj
+git mv src/backend/Teeforce.Domain/Teeforce.Domain.csproj src/backend/Teeforce.Domain/Teeforce.Domain.csproj
+git mv tests/Teeforce.Domain.Tests/Teeforce.Domain.Tests.csproj tests/Teeforce.Domain.Tests/Teeforce.Domain.Tests.csproj
+git mv tests/Teeforce.Api.Tests/Teeforce.Api.Tests.csproj tests/Teeforce.Api.Tests/Teeforce.Api.Tests.csproj
+git mv tests/Teeforce.Api.IntegrationTests/Teeforce.Api.IntegrationTests.csproj tests/Teeforce.Api.IntegrationTests/Teeforce.Api.IntegrationTests.csproj
 ```
 
 - [ ] **Step 5: Update ProjectReference and InternalsVisibleTo in .csproj files**
 
 In `src/backend/Teeforce.Api/Teeforce.Api.csproj`:
-- Change `<InternalsVisibleTo Include="Shadowbrook.Api.Tests" />` to `<InternalsVisibleTo Include="Teeforce.Api.Tests" />`
-- Change `<ProjectReference Include="..\Shadowbrook.Domain\Shadowbrook.Domain.csproj" />` to `<ProjectReference Include="..\Teeforce.Domain\Teeforce.Domain.csproj" />`
+- Change `<InternalsVisibleTo Include="Teeforce.Api.Tests" />` to `<InternalsVisibleTo Include="Teeforce.Api.Tests" />`
+- Change `<ProjectReference Include="..\Teeforce.Domain\Teeforce.Domain.csproj" />` to `<ProjectReference Include="..\Teeforce.Domain\Teeforce.Domain.csproj" />`
 
 In `tests/Teeforce.Domain.Tests/Teeforce.Domain.Tests.csproj`:
-- Change `Include="..\..\src\backend\Shadowbrook.Domain\Shadowbrook.Domain.csproj"` to `Include="..\..\src\backend\Teeforce.Domain\Teeforce.Domain.csproj"`
+- Change `Include="..\..\src\backend\Teeforce.Domain\Teeforce.Domain.csproj"` to `Include="..\..\src\backend\Teeforce.Domain\Teeforce.Domain.csproj"`
 
 In `tests/Teeforce.Api.IntegrationTests/Teeforce.Api.IntegrationTests.csproj`:
-- Change `Include="..\..\src\backend\Shadowbrook.Api\Shadowbrook.Api.csproj"` to `Include="..\..\src\backend\Teeforce.Api\Teeforce.Api.csproj"`
+- Change `Include="..\..\src\backend\Teeforce.Api\Teeforce.Api.csproj"` to `Include="..\..\src\backend\Teeforce.Api\Teeforce.Api.csproj"`
 
 - [ ] **Step 6: Commit**
 
 ```bash
 git add -A
-git commit -m "chore: rename solution, projects, and directories from Shadowbrook to Teeforce"
+git commit -m "chore: rename solution, projects, and directories from Teeforce to Teeforce"
 ```
 
 ---
@@ -89,22 +89,22 @@ git commit -m "chore: rename solution, projects, and directories from Shadowbroo
 
 - [ ] **Step 1: Global find/replace in all C# files**
 
-Replace all occurrences of `Shadowbrook` with `Teeforce` in every `.cs` file under `src/backend/` and `tests/`. This covers:
-- `namespace Shadowbrook.` -> `namespace Teeforce.`
-- `using Shadowbrook.` -> `using Teeforce.`
-- `Shadowbrook.Api` -> `Teeforce.Api` (in string literals, assembly references)
-- `Shadowbrook.Domain` -> `Teeforce.Domain`
+Replace all occurrences of `Teeforce` with `Teeforce` in every `.cs` file under `src/backend/` and `tests/`. This covers:
+- `namespace Teeforce.` -> `namespace Teeforce.`
+- `using Teeforce.` -> `using Teeforce.`
+- `Teeforce.Api` -> `Teeforce.Api` (in string literals, assembly references)
+- `Teeforce.Domain` -> `Teeforce.Domain`
 
 Use a bulk find/replace across all `.cs` files:
 ```bash
-find src/backend tests -name "*.cs" -exec sed -i 's/Shadowbrook/Teeforce/g' {} +
+find src/backend tests -name "*.cs" -exec sed -i 's/Teeforce/Teeforce/g' {} +
 ```
 
 - [ ] **Step 2: Commit**
 
 ```bash
 git add -A
-git commit -m "chore: rename all C# namespaces from Shadowbrook to Teeforce"
+git commit -m "chore: rename all C# namespaces from Teeforce to Teeforce"
 ```
 
 ---
@@ -118,20 +118,20 @@ git commit -m "chore: rename all C# namespaces from Shadowbrook to Teeforce"
 - [ ] **Step 1: Update appsettings.Development.json**
 
 In `src/backend/Teeforce.Api/appsettings.Development.json`:
-- Change `Database=Shadowbrook` to `Database=Teeforce` in the connection string (line 13)
-- Change `admin-test@shadowbrook.com` to `admin-test@benjamingolfco.onmicrosoft.com` in SeedAdminEmails (line 23)
+- Change `Database=Teeforce` to `Database=Teeforce` in the connection string (line 13)
+- Change `admin-test@benjamingolfco.onmicrosoft.com` to `admin-test@benjamingolfco.onmicrosoft.com` in SeedAdminEmails (line 23)
 
 - [ ] **Step 2: Update docker-compose.yml**
 
 In `docker-compose.yml`:
-- Change `container_name: shadowbrook-api` to `container_name: teeforce-api` (line 19)
-- Change `dockerfile: src/backend/Shadowbrook.Api/Dockerfile` to `dockerfile: src/backend/Teeforce.Api/Dockerfile` (line 22)
-- Change `Database=Shadowbrook` to `Database=Teeforce` in ConnectionStrings__DefaultConnection (line 28)
-- Update volume paths: replace all `Shadowbrook.Api` with `Teeforce.Api` and `Shadowbrook.Domain` with `Teeforce.Domain` (lines 33-36)
+- Change `container_name: teeforce-api` to `container_name: teeforce-api` (line 19)
+- Change `dockerfile: src/backend/Teeforce.Api/Dockerfile` to `dockerfile: src/backend/Teeforce.Api/Dockerfile` (line 22)
+- Change `Database=Teeforce` to `Database=Teeforce` in ConnectionStrings__DefaultConnection (line 28)
+- Update volume paths: replace all `Teeforce.Api` with `Teeforce.Api` and `Teeforce.Domain` with `Teeforce.Domain` (lines 33-36)
 
 - [ ] **Step 3: Check appsettings.json (non-Development)**
 
-In `src/backend/Teeforce.Api/appsettings.json`, verify no `Shadowbrook` references remain. The main appsettings.json has `SeedAdminEmails` with `aarongbenjamin@gmail.com` (no change needed) but check for any other occurrences.
+In `src/backend/Teeforce.Api/appsettings.json`, verify no `Teeforce` references remain. The main appsettings.json has `SeedAdminEmails` with `aarongbenjamin@gmail.com` (no change needed) but check for any other occurrences.
 
 - [ ] **Step 4: Commit**
 
@@ -153,21 +153,21 @@ git commit -m "chore: update config files and docker-compose for Teeforce rename
 - [ ] **Step 1: Update E2ESeedData.cs**
 
 In `src/backend/Teeforce.Api/Infrastructure/Data/E2ESeedData.cs`:
-- Change `"e2e@shadowbrook.golf"` to `"e2e@benjamingolfco.onmicrosoft.com"` (line 27)
-- Change `"e2e-operator@shadowbrook.golf"` to `"e2e-operator@benjamingolfco.onmicrosoft.com"` (lines 88, 93)
+- Change `"e2e@benjamingolfco.onmicrosoft.com"` to `"e2e@benjamingolfco.onmicrosoft.com"` (line 27)
+- Change `"e2e-operator@benjamingolfco.onmicrosoft.com"` to `"e2e-operator@benjamingolfco.onmicrosoft.com"` (lines 88, 93)
 
 - [ ] **Step 2: Update e2e test fixtures**
 
 In `src/web/e2e/fixtures/test-data.ts`:
-- Change `'e2e-operator@shadowbrook.golf'` to `'e2e-operator@benjamingolfco.onmicrosoft.com'` (line 20)
+- Change `'e2e-operator@benjamingolfco.onmicrosoft.com'` to `'e2e-operator@benjamingolfco.onmicrosoft.com'` (line 20)
 
 In `src/web/e2e/fixtures/auth.ts`:
-- Change `e2e-operator@shadowbrook.golf` to `e2e-operator@benjamingolfco.onmicrosoft.com` (lines 15, 112)
+- Change `e2e-operator@benjamingolfco.onmicrosoft.com` to `e2e-operator@benjamingolfco.onmicrosoft.com` (lines 15, 112)
 
 - [ ] **Step 3: Update domain test email addresses**
 
 In `tests/Teeforce.Domain.Tests/AppUserAggregate/AppUserTests.cs`:
-- Change `"admin@shadowbrook.com"` to `"admin@benjamingolfco.onmicrosoft.com"` (lines 21, 25, 57)
+- Change `"admin@benjamingolfco.onmicrosoft.com"` to `"admin@benjamingolfco.onmicrosoft.com"` (lines 21, 25, 57)
 
 - [ ] **Step 4: Commit**
 
@@ -186,13 +186,13 @@ git commit -m "chore: update seed data and test emails to @benjamingolfco.onmicr
 - [ ] **Step 1: Update all project path references**
 
 In `Makefile`:
-- Change `dotnet run --project src/backend/Shadowbrook.Api` to `dotnet run --project src/backend/Teeforce.Api` (line 16)
-- Change `dotnet build shadowbrook.slnx` to `dotnet build teeforce.slnx` (line 22)
-- Change `dotnet test tests/Shadowbrook.Domain.Tests` to `dotnet test tests/Teeforce.Domain.Tests` (line 26)
-- Change `dotnet test tests/Shadowbrook.Api.Tests` to `dotnet test tests/Teeforce.Api.Tests` (line 27)
-- Change `dotnet clean shadowbrook.slnx` to `dotnet clean teeforce.slnx` (line 36)
+- Change `dotnet run --project src/backend/Teeforce.Api` to `dotnet run --project src/backend/Teeforce.Api` (line 16)
+- Change `dotnet build teeforce.slnx` to `dotnet build teeforce.slnx` (line 22)
+- Change `dotnet test tests/Teeforce.Domain.Tests` to `dotnet test tests/Teeforce.Domain.Tests` (line 26)
+- Change `dotnet test tests/Teeforce.Api.Tests` to `dotnet test tests/Teeforce.Api.Tests` (line 27)
+- Change `dotnet clean teeforce.slnx` to `dotnet clean teeforce.slnx` (line 36)
 
-Replace all remaining `Shadowbrook` occurrences with `Teeforce` and `shadowbrook` with `teeforce`.
+Replace all remaining `Teeforce` occurrences with `Teeforce` and `teeforce` with `teeforce`.
 
 - [ ] **Step 2: Commit**
 
@@ -219,60 +219,60 @@ git commit -m "chore: update Makefile paths for Teeforce rename"
 - [ ] **Step 1: Update deploy-api.yml**
 
 Replace all occurrences:
-- `shadowbrook-${{ inputs.environment }}-rg` -> `teeforce-${{ inputs.environment }}-rg` (line 34)
-- `shadowbrookacr` -> `teeforceacr` (line 35)
-- `shadowbrook` (IMAGE_NAME) -> `teeforce` (line 36)
-- `shadowbrook-app-${{ inputs.environment }}` -> `teeforce-app-${{ inputs.environment }}` (line 37)
-- `src/backend/Shadowbrook.Api/Dockerfile` -> `src/backend/Teeforce.Api/Dockerfile` (line 54)
+- `teeforce-${{ inputs.environment }}-rg` -> `teeforce-${{ inputs.environment }}-rg` (line 34)
+- `teeforceacr` -> `teeforceacr` (line 35)
+- `teeforce` (IMAGE_NAME) -> `teeforce` (line 36)
+- `teeforce-app-${{ inputs.environment }}` -> `teeforce-app-${{ inputs.environment }}` (line 37)
+- `src/backend/Teeforce.Api/Dockerfile` -> `src/backend/Teeforce.Api/Dockerfile` (line 54)
 
 - [ ] **Step 2: Update deploy-web.yml**
 
 Replace:
-- `shadowbrook-app-${{ inputs.environment }}` -> `teeforce-app-${{ inputs.environment }}` (line 51)
-- `shadowbrook-${{ inputs.environment }}-rg` -> `teeforce-${{ inputs.environment }}-rg` (line 52)
+- `teeforce-app-${{ inputs.environment }}` -> `teeforce-app-${{ inputs.environment }}` (line 51)
+- `teeforce-${{ inputs.environment }}-rg` -> `teeforce-${{ inputs.environment }}-rg` (line 52)
 
 - [ ] **Step 3: Update deploy-infra.yml**
 
-Replace all `shadowbrook` with `teeforce`:
-- Comments referencing `shadowbrook-shared-rg` (lines 4-5)
-- `"shadowbrook-shared"` -> `"teeforce-shared"` (line 53)
-- `"shadowbrook-app-${{ inputs.environment }}"` -> `"teeforce-app-${{ inputs.environment }}"` (line 61)
-- `"shadowbrook-${{ inputs.environment }}-rg"` -> `"teeforce-${{ inputs.environment }}-rg"` (line 62)
-- `"shadowbrook-${{ inputs.environment }}"` -> `"teeforce-${{ inputs.environment }}"` (line 72)
+Replace all `teeforce` with `teeforce`:
+- Comments referencing `teeforce-shared-rg` (lines 4-5)
+- `"teeforce-shared"` -> `"teeforce-shared"` (line 53)
+- `"teeforce-app-${{ inputs.environment }}"` -> `"teeforce-app-${{ inputs.environment }}"` (line 61)
+- `"teeforce-${{ inputs.environment }}-rg"` -> `"teeforce-${{ inputs.environment }}-rg"` (line 62)
+- `"teeforce-${{ inputs.environment }}"` -> `"teeforce-${{ inputs.environment }}"` (line 72)
 
 - [ ] **Step 4: Update acr-cleanup.yml and swa-cleanup.yml**
 
 In `acr-cleanup.yml`:
-- `shadowbrookacr` -> `teeforceacr` (line 30)
-- `shadowbrook` -> `teeforce` (IMAGE_NAME, line 31)
+- `teeforceacr` -> `teeforceacr` (line 30)
+- `teeforce` -> `teeforce` (IMAGE_NAME, line 31)
 
 In `swa-cleanup.yml`:
-- `shadowbrook-web-test` -> `teeforce-web-test` (line 30)
-- `shadowbrook-test-rg` -> `teeforce-test-rg` (line 31)
+- `teeforce-web-test` -> `teeforce-web-test` (line 30)
+- `teeforce-test-rg` -> `teeforce-test-rg` (line 31)
 
 - [ ] **Step 5: Update pr.yml**
 
 Replace all occurrences:
-- `shadowbrook.slnx` -> `teeforce.slnx` (lines 72, 75, 146, 174, 177, 180)
-- `src/backend/Shadowbrook.Api` -> `src/backend/Teeforce.Api` (lines 83, 89, 96, 114, 126)
+- `teeforce.slnx` -> `teeforce.slnx` (lines 72, 75, 146, 174, 177, 180)
+- `src/backend/Teeforce.Api` -> `src/backend/Teeforce.Api` (lines 83, 89, 96, 114, 126)
 
 - [ ] **Step 6: Update e2e.yml**
 
 Replace:
-- `shadowbrook-app-test.happypond-1a892999.eastus2.azurecontainerapps.io` -> leave as a placeholder comment `# URL will change after new container app deployment` and set to empty or a variable. The actual new URL won't be known until after Azure redeployment.
+- `teeforce-app-test.happypond-1a892999.eastus2.azurecontainerapps.io` -> leave as a placeholder comment `# URL will change after new container app deployment` and set to empty or a variable. The actual new URL won't be known until after Azure redeployment.
 
 Note: For now, comment out or set to a placeholder. The URL is updated post-deployment in the maintenance window.
 
 - [ ] **Step 7: Update claude-planning.yml and claude-implementation.yml**
 
 In `claude-planning.yml`:
-- `name: Shadowbrook Planning` -> `name: Teeforce Planning` (line 1)
-- `Planning Manager for the Shadowbrook agent pipeline` -> `Planning Manager for the Teeforce agent pipeline` (line 50)
+- `name: Teeforce Planning` -> `name: Teeforce Planning` (line 1)
+- `Planning Manager for the Teeforce agent pipeline` -> `Planning Manager for the Teeforce agent pipeline` (line 50)
 
 In `claude-implementation.yml`:
-- `name: Shadowbrook Implementation` -> `name: Teeforce Implementation` (line 1)
-- `benjamingolfco/shadowbrook` -> `benjamingolfco/teeforce` (lines 99, 110, 226)
-- `Sprint Manager for the Shadowbrook agent pipeline` -> `Sprint Manager for the Teeforce agent pipeline` (line 163)
+- `name: Teeforce Implementation` -> `name: Teeforce Implementation` (line 1)
+- `benjamingolfco/teeforce` -> `benjamingolfco/teeforce` (lines 99, 110, 226)
+- `Sprint Manager for the Teeforce agent pipeline` -> `Sprint Manager for the Teeforce agent pipeline` (line 163)
 
 - [ ] **Step 8: Commit**
 
@@ -299,51 +299,51 @@ git commit -m "chore: update GitHub Actions workflows for Teeforce rename"
 
 - [ ] **Step 1: Update main.bicep**
 
-Replace all occurrences of `shadowbrook` with `teeforce`:
+Replace all occurrences of `teeforce` with `teeforce`:
 - Comment line 1: `// Teeforce - Environment Infrastructure Orchestration`
 - Comment line 5: `teeforce-shared-rg`
-- `'shadowbrook-shared-rg'` -> `'teeforce-shared-rg'` (line 31)
-- `'shadowbrookacr'` -> `'teeforceacr'` (line 34)
-- `'shadowbrook-${environment}-rg'` -> `'teeforce-${environment}-rg'` (line 37)
-- `'id-shadowbrook-${environment}'` -> `'id-teeforce-${environment}'` (line 69)
+- `'teeforce-shared-rg'` -> `'teeforce-shared-rg'` (line 31)
+- `'teeforceacr'` -> `'teeforceacr'` (line 34)
+- `'teeforce-${environment}-rg'` -> `'teeforce-${environment}-rg'` (line 37)
+- `'id-teeforce-${environment}'` -> `'id-teeforce-${environment}'` (line 69)
 
 - [ ] **Step 2: Update shared.bicep**
 
 - Comment line 1: `// Teeforce - Shared Infrastructure`
-- `'shadowbrook-shared-rg'` -> `'teeforce-shared-rg'` (line 13)
+- `'teeforce-shared-rg'` -> `'teeforce-shared-rg'` (line 13)
 
 - [ ] **Step 3: Update all Bicep modules**
 
-In each module file, replace `shadowbrook` with `teeforce`:
+In each module file, replace `teeforce` with `teeforce`:
 
 `modules/container-app.bicep`:
-- `'shadowbrook-app-${environment}'` -> `'teeforce-app-${environment}'` (line 42)
-- `'shadowbrook-api'` -> `'teeforce-api'` (line 84)
-- `'/shadowbrook:${imageTag}'` -> `'/teeforce:${imageTag}'` (line 85)
+- `'teeforce-app-${environment}'` -> `'teeforce-app-${environment}'` (line 42)
+- `'teeforce-api'` -> `'teeforce-api'` (line 84)
+- `'/teeforce:${imageTag}'` -> `'/teeforce:${imageTag}'` (line 85)
 
 `modules/container-app-env.bicep`:
-- `'shadowbrook-env-${environment}'` -> `'teeforce-env-${environment}'` (line 17)
+- `'teeforce-env-${environment}'` -> `'teeforce-env-${environment}'` (line 17)
 
 `modules/database.bicep`:
-- `'shadowbrook-sql-${environment}'` -> `'teeforce-sql-${environment}'` (line 18)
-- `'shadowbrook-db-${environment}'` -> `'teeforce-db-${environment}'` (line 19)
+- `'teeforce-sql-${environment}'` -> `'teeforce-sql-${environment}'` (line 18)
+- `'teeforce-db-${environment}'` -> `'teeforce-db-${environment}'` (line 19)
 
 `modules/registry.bicep`:
-- `'shadowbrookacr'` -> `'teeforceacr'` (line 8)
-- `'shadowbrook'` -> `'teeforce'` in workload tag (line 21)
+- `'teeforceacr'` -> `'teeforceacr'` (line 8)
+- `'teeforce'` -> `'teeforce'` in workload tag (line 21)
 
 `modules/managed-identity.bicep`:
-- `'id-shadowbrook-${environment}'` -> `'id-teeforce-${environment}'` (line 11)
-- `'shadowbrook'` -> `'teeforce'` in workload tag (line 18)
+- `'id-teeforce-${environment}'` -> `'id-teeforce-${environment}'` (line 11)
+- `'teeforce'` -> `'teeforce'` in workload tag (line 18)
 
 `modules/log-analytics.bicep`:
-- `'shadowbrook-logs-${environment}'` -> `'teeforce-logs-${environment}'` (line 13)
+- `'teeforce-logs-${environment}'` -> `'teeforce-logs-${environment}'` (line 13)
 
 `modules/app-insights.bicep`:
-- `'shadowbrook-insights-${environment}'` -> `'teeforce-insights-${environment}'` (line 13)
+- `'teeforce-insights-${environment}'` -> `'teeforce-insights-${environment}'` (line 13)
 
 `modules/static-web-app.bicep`:
-- `'shadowbrook-web-${environment}'` -> `'teeforce-web-${environment}'` (line 11)
+- `'teeforce-web-${environment}'` -> `'teeforce-web-${environment}'` (line 11)
 
 - [ ] **Step 4: Commit**
 
@@ -365,42 +365,42 @@ git commit -m "chore: update Bicep templates for Teeforce rename"
 
 - [ ] **Step 1: Update deploy.sh**
 
-Replace all `shadowbrook` with `teeforce`:
+Replace all `teeforce` with `teeforce`:
 - Comment (line 4): `# Teeforce - Deploy Bicep infrastructure`
-- `ACR_NAME="shadowbrookacr"` -> `ACR_NAME="teeforceacr"` (line 33)
-- `"shadowbrook-shared"` -> `"teeforce-shared"` (line 41)
-- `shadowbrook` repository references -> `teeforce` (lines 48, 52, 54)
-- `"shadowbrook-app-${ENVIRONMENT}"` -> `"teeforce-app-${ENVIRONMENT}"` (line 59)
-- `"shadowbrook-${ENVIRONMENT}-rg"` -> `"teeforce-${ENVIRONMENT}-rg"` (line 60)
-- `"shadowbrook-${ENVIRONMENT}"` -> `"teeforce-${ENVIRONMENT}"` (line 71)
+- `ACR_NAME="teeforceacr"` -> `ACR_NAME="teeforceacr"` (line 33)
+- `"teeforce-shared"` -> `"teeforce-shared"` (line 41)
+- `teeforce` repository references -> `teeforce` (lines 48, 52, 54)
+- `"teeforce-app-${ENVIRONMENT}"` -> `"teeforce-app-${ENVIRONMENT}"` (line 59)
+- `"teeforce-${ENVIRONMENT}-rg"` -> `"teeforce-${ENVIRONMENT}-rg"` (line 60)
+- `"teeforce-${ENVIRONMENT}"` -> `"teeforce-${ENVIRONMENT}"` (line 71)
 
 - [ ] **Step 2: Update setup-github-oidc.sh**
 
-Replace all `shadowbrook` with `teeforce`:
+Replace all `teeforce` with `teeforce`:
 - Comment (line 4): `# Teeforce - Set up GitHub Actions OIDC authentication`
-- `REPO="benjamingolfco/shadowbrook"` -> `REPO="benjamingolfco/teeforce"` (line 26)
-- `APP_NAME="shadowbrook-github-actions"` -> `APP_NAME="teeforce-github-actions"` (line 27)
+- `REPO="benjamingolfco/teeforce"` -> `REPO="benjamingolfco/teeforce"` (line 26)
+- `APP_NAME="teeforce-github-actions"` -> `APP_NAME="teeforce-github-actions"` (line 27)
 - All resource group and ACR references (lines 133-135, 162-164)
 
 - [ ] **Step 3: Update grant-graph-permissions.sh**
 
 - Comment (line 4): `# Teeforce - Grant Microsoft Graph API permissions to managed identity`
-- `IDENTITY_NAME="id-shadowbrook-${ENVIRONMENT}"` -> `IDENTITY_NAME="id-teeforce-${ENVIRONMENT}"` (line 25)
-- `RESOURCE_GROUP="shadowbrook-${ENVIRONMENT}-rg"` -> `RESOURCE_GROUP="teeforce-${ENVIRONMENT}-rg"` (line 26)
+- `IDENTITY_NAME="id-teeforce-${ENVIRONMENT}"` -> `IDENTITY_NAME="id-teeforce-${ENVIRONMENT}"` (line 25)
+- `RESOURCE_GROUP="teeforce-${ENVIRONMENT}-rg"` -> `RESOURCE_GROUP="teeforce-${ENVIRONMENT}-rg"` (line 26)
 
 - [ ] **Step 4: Update teardown.sh**
 
 - Comment (line 4): `# Teardown Teeforce environment`
-- `shadowbrook-test-rg` -> `teeforce-test-rg` (line 11)
-- `shadowbrook-shared-rg` -> `teeforce-shared-rg` (line 12)
+- `teeforce-test-rg` -> `teeforce-test-rg` (line 11)
+- `teeforce-shared-rg` -> `teeforce-shared-rg` (line 12)
 
 - [ ] **Step 5: Update reset-db.sh**
 
 - Comment (line 4): `# Reset Teeforce database`
-- `"shadowbrook-sql-${ENVIRONMENT}"` -> `"teeforce-sql-${ENVIRONMENT}"` (line 11)
-- `"shadowbrook-db-${ENVIRONMENT}"` -> `"teeforce-db-${ENVIRONMENT}"` (line 12)
-- `"shadowbrook-${ENVIRONMENT}-rg"` -> `"teeforce-${ENVIRONMENT}-rg"` (line 13)
-- `shadowbrook-app-${ENVIRONMENT}` -> `teeforce-app-${ENVIRONMENT}` (line 47)
+- `"teeforce-sql-${ENVIRONMENT}"` -> `"teeforce-sql-${ENVIRONMENT}"` (line 11)
+- `"teeforce-db-${ENVIRONMENT}"` -> `"teeforce-db-${ENVIRONMENT}"` (line 12)
+- `"teeforce-${ENVIRONMENT}-rg"` -> `"teeforce-${ENVIRONMENT}-rg"` (line 13)
+- `teeforce-app-${ENVIRONMENT}` -> `teeforce-app-${ENVIRONMENT}` (line 47)
 
 - [ ] **Step 6: Commit**
 
@@ -425,14 +425,14 @@ git commit -m "chore: update infrastructure scripts for Teeforce rename"
 
 - [ ] **Step 1: Update README.md**
 
-- `# Shadowbrook` -> `# Teeforce` (line 1)
-- Badge URLs: `benjamingolfco/shadowbrook` -> `benjamingolfco/teeforce` (line 3)
-- `shadowbrook-app-test.happypond-...` -> add comment that URL will change post-deployment (line 21)
-- `shadowbrook.slnx` -> `teeforce.slnx` (line 54)
+- `# Teeforce` -> `# Teeforce` (line 1)
+- Badge URLs: `benjamingolfco/teeforce` -> `benjamingolfco/teeforce` (line 3)
+- `teeforce-app-test.happypond-...` -> add comment that URL will change post-deployment (line 21)
+- `teeforce.slnx` -> `teeforce.slnx` (line 54)
 
 - [ ] **Step 2: Update .claude/CLAUDE.md**
 
-Replace all occurrences of `Shadowbrook` with `Teeforce` and `shadowbrook` with `teeforce`:
+Replace all occurrences of `Teeforce` with `Teeforce` and `teeforce` with `teeforce`:
 - Title: `# Teeforce — Tee Time Booking Platform` (line 1)
 - All project structure paths (lines 46-54)
 - Build commands: `teeforce.slnx` (lines 63-64)
@@ -440,41 +440,41 @@ Replace all occurrences of `Shadowbrook` with `Teeforce` and `shadowbrook` with 
 
 - [ ] **Step 3: Update infra/README.md**
 
-Replace all `shadowbrook` with `teeforce` and `Shadowbrook` with `Teeforce` throughout the file (~30+ occurrences). This includes:
+Replace all `teeforce` with `teeforce` and `Teeforce` with `Teeforce` throughout the file (~30+ occurrences). This includes:
 - Title (line 1)
 - All resource group names, ACR names, resource naming examples
 - All CLI command examples
-- File path references to `src/backend/Shadowbrook.Api/` -> `src/backend/Teeforce.Api/`
+- File path references to `src/backend/Teeforce.Api/` -> `src/backend/Teeforce.Api/`
 - The test URL will need updating post-deployment
 
 - [ ] **Step 4: Update .claude/ rules files**
 
 In `.claude/rules/backend/backend-conventions.md`:
-- Replace all `Shadowbrook` with `Teeforce` and `shadowbrook` with `teeforce` (project paths, solution file, migration commands)
+- Replace all `Teeforce` with `Teeforce` and `teeforce` with `teeforce` (project paths, solution file, migration commands)
 
 In `.claude/rules/backend/ef-migrations.md`:
-- `src/backend/Shadowbrook.Api/Migrations/**` -> `src/backend/Teeforce.Api/Migrations/**` (line 3)
-- `src/backend/Shadowbrook.Api/Data/ApplicationDbContext.cs` -> `src/backend/Teeforce.Api/Data/ApplicationDbContext.cs` (line 4)
-- `--project src/backend/Shadowbrook.Api` -> `--project src/backend/Teeforce.Api` (line 17)
+- `src/backend/Teeforce.Api/Migrations/**` -> `src/backend/Teeforce.Api/Migrations/**` (line 3)
+- `src/backend/Teeforce.Api/Data/ApplicationDbContext.cs` -> `src/backend/Teeforce.Api/Data/ApplicationDbContext.cs` (line 4)
+- `--project src/backend/Teeforce.Api` -> `--project src/backend/Teeforce.Api` (line 17)
 
 In `.claude/rules/backend/integration-test-conventions.md`:
-- `tests/Shadowbrook.Api.IntegrationTests/**/*.cs` -> `tests/Teeforce.Api.IntegrationTests/**/*.cs` (line 3)
-- `tests/Shadowbrook.Api.IntegrationTests/` -> `tests/Teeforce.Api.IntegrationTests/` (line 10)
-- `"Shadowbrook.Api.IntegrationTests.StepOrderer"` -> `"Teeforce.Api.IntegrationTests.StepOrderer"` (line 44)
-- `"Shadowbrook.Api.IntegrationTests"` -> `"Teeforce.Api.IntegrationTests"` (line 45)
+- `tests/Teeforce.Api.IntegrationTests/**/*.cs` -> `tests/Teeforce.Api.IntegrationTests/**/*.cs` (line 3)
+- `tests/Teeforce.Api.IntegrationTests/` -> `tests/Teeforce.Api.IntegrationTests/` (line 10)
+- `"Teeforce.Api.IntegrationTests.StepOrderer"` -> `"Teeforce.Api.IntegrationTests.StepOrderer"` (line 44)
+- `"Teeforce.Api.IntegrationTests"` -> `"Teeforce.Api.IntegrationTests"` (line 45)
 
 - [ ] **Step 5: Update skills and plan docs**
 
 In `.claude/skills/how-tos/start-local-dev.md`:
-- `'dev-admin@shadowbrook.golf'` -> `'dev-admin@benjamingolfco.onmicrosoft.com'` (line 29)
+- `'dev-admin@benjamingolfco.onmicrosoft.com'` -> `'dev-admin@benjamingolfco.onmicrosoft.com'` (line 29)
 
 In `docs/superpowers/plans/2026-04-01-user-invite-flow.md`:
-- `"admin@shadowbrook.com"` -> `"admin@benjamingolfco.onmicrosoft.com"` (lines 116, 120)
+- `"admin@benjamingolfco.onmicrosoft.com"` -> `"admin@benjamingolfco.onmicrosoft.com"` (lines 116, 120)
 
-- [ ] **Step 6: Scan for any remaining Shadowbrook references in docs and .claude/**
+- [ ] **Step 6: Scan for any remaining Teeforce references in docs and .claude/**
 
 ```bash
-grep -ri "shadowbrook" .claude/ docs/ README.md --include="*.md" -l
+grep -ri "teeforce" .claude/ docs/ README.md --include="*.md" -l
 ```
 
 Fix any remaining occurrences found.
@@ -493,29 +493,29 @@ git commit -m "chore: update all documentation for Teeforce rename"
 **Files:**
 - Any files missed by previous tasks
 
-- [ ] **Step 1: Search entire repo for remaining Shadowbrook references**
+- [ ] **Step 1: Search entire repo for remaining Teeforce references**
 
 ```bash
-grep -ri "shadowbrook" --include="*.cs" --include="*.json" --include="*.yml" --include="*.yaml" --include="*.bicep" --include="*.sh" --include="*.md" --include="*.ts" --include="*.tsx" --include="*.csproj" --include="*.slnx" -l .
+grep -ri "teeforce" --include="*.cs" --include="*.json" --include="*.yml" --include="*.yaml" --include="*.bicep" --include="*.sh" --include="*.md" --include="*.ts" --include="*.tsx" --include="*.csproj" --include="*.slnx" -l .
 ```
 
 - [ ] **Step 2: Fix any remaining occurrences**
 
-For each file found, replace `Shadowbrook` with `Teeforce` and `shadowbrook` with `teeforce` (except in the spec/plan docs themselves which reference the rename, and git history).
+For each file found, replace `Teeforce` with `Teeforce` and `teeforce` with `teeforce` (except in the spec/plan docs themselves which reference the rename, and git history).
 
-- [ ] **Step 3: Search for @shadowbrook email domain**
+- [ ] **Step 3: Search for @teeforce email domain**
 
 ```bash
-grep -ri "@shadowbrook" --include="*.cs" --include="*.json" --include="*.ts" --include="*.md" -l .
+grep -ri "@teeforce" --include="*.cs" --include="*.json" --include="*.ts" --include="*.md" -l .
 ```
 
-Replace any remaining `@shadowbrook.com` or `@shadowbrook.golf` with `@benjamingolfco.onmicrosoft.com`.
+Replace any remaining `@benjamingolfco.onmicrosoft.com` or `@benjamingolfco.onmicrosoft.com` with `@benjamingolfco.onmicrosoft.com`.
 
 - [ ] **Step 4: Commit if any changes found**
 
 ```bash
 git add -A
-git commit -m "chore: fix remaining Shadowbrook references missed in earlier tasks"
+git commit -m "chore: fix remaining Teeforce references missed in earlier tasks"
 ```
 
 ---
@@ -584,7 +584,7 @@ git commit -m "fix: resolve build/test issues from Teeforce rename"
 
 - [ ] **Step 1: Rename GitHub repo**
 
-GitHub Settings -> General -> Repository name -> Change `shadowbrook` to `teeforce`.
+GitHub Settings -> General -> Repository name -> Change `teeforce` to `teeforce`.
 
 - [ ] **Step 2: Clone fresh into new directory**
 
@@ -595,28 +595,28 @@ git clone https://github.com/benjamingolfco/teeforce.git ~/dev/orgs/benjamingolf
 - [ ] **Step 3: Copy gitignored files from old clone**
 
 ```bash
-cp ~/dev/orgs/benjamingolfco/shadowbrook/.claude/settings.local.json ~/dev/orgs/benjamingolfco/teeforce/.claude/settings.local.json
-cp -r ~/dev/orgs/benjamingolfco/shadowbrook/.claude/commands ~/dev/orgs/benjamingolfco/teeforce/.claude/commands
-cp ~/dev/orgs/benjamingolfco/shadowbrook/.mcp.json ~/dev/orgs/benjamingolfco/teeforce/.mcp.json
-cp -r ~/dev/orgs/benjamingolfco/shadowbrook/.local ~/dev/orgs/benjamingolfco/teeforce/.local
-cp ~/dev/orgs/benjamingolfco/shadowbrook/src/web/.env.development.local ~/dev/orgs/benjamingolfco/teeforce/src/web/.env.development.local
-cp -r ~/dev/orgs/benjamingolfco/shadowbrook/.vscode ~/dev/orgs/benjamingolfco/teeforce/.vscode
-cp -r ~/dev/orgs/benjamingolfco/shadowbrook/.idea ~/dev/orgs/benjamingolfco/teeforce/.idea
+cp ~/dev/orgs/benjamingolfco/teeforce/.claude/settings.local.json ~/dev/orgs/benjamingolfco/teeforce/.claude/settings.local.json
+cp -r ~/dev/orgs/benjamingolfco/teeforce/.claude/commands ~/dev/orgs/benjamingolfco/teeforce/.claude/commands
+cp ~/dev/orgs/benjamingolfco/teeforce/.mcp.json ~/dev/orgs/benjamingolfco/teeforce/.mcp.json
+cp -r ~/dev/orgs/benjamingolfco/teeforce/.local ~/dev/orgs/benjamingolfco/teeforce/.local
+cp ~/dev/orgs/benjamingolfco/teeforce/src/web/.env.development.local ~/dev/orgs/benjamingolfco/teeforce/src/web/.env.development.local
+cp -r ~/dev/orgs/benjamingolfco/teeforce/.vscode ~/dev/orgs/benjamingolfco/teeforce/.vscode
+cp -r ~/dev/orgs/benjamingolfco/teeforce/.idea ~/dev/orgs/benjamingolfco/teeforce/.idea
 ```
 
 - [ ] **Step 4: Copy Claude Code memory files**
 
 ```bash
-cp -r ~/.claude/projects/-home-aaron-dev-orgs-benjamingolfco-shadowbrook ~/.claude/projects/-home-aaron-dev-orgs-benjamingolfco-teeforce
+cp -r ~/.claude/projects/-home-aaron-dev-orgs-benjamingolfco-teeforce ~/.claude/projects/-home-aaron-dev-orgs-benjamingolfco-teeforce
 ```
 
-Update any paths inside the memory files that reference `shadowbrook`.
+Update any paths inside the memory files that reference `teeforce`.
 
 - [ ] **Step 5: Create new ACR and push image**
 
 ```bash
 az acr create --name teeforceacr --resource-group teeforce-shared-rg --sku Basic
-az acr import --name teeforceacr --source shadowbrookacr.azurecr.io/shadowbrook:latest --image teeforce:latest
+az acr import --name teeforceacr --source teeforceacr.azurecr.io/teeforce:latest --image teeforce:latest
 ```
 
 - [ ] **Step 6: Deploy full Bicep stack with new resource names**
@@ -652,8 +652,8 @@ This updates the app registration and RBAC assignments to point to the new resou
 - [ ] **Step 10: Delete old Azure resources**
 
 ```bash
-az group delete --name shadowbrook-test-rg --yes
-az group delete --name shadowbrook-shared-rg --yes
+az group delete --name teeforce-test-rg --yes
+az group delete --name teeforce-shared-rg --yes
 ```
 
 Verify the old resources are gone and the new ones are healthy.

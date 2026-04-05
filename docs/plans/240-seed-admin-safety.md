@@ -12,7 +12,7 @@ This is preferred over a config toggle (`Auth:EnableSeedAdmins`) because a confi
 
 ## Changes
 
-### Modify: `src/backend/Shadowbrook.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs`
+### Modify: `src/backend/Teeforce.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs`
 
 1. Add `IHostEnvironment env` parameter to `InvokeAsync`
 2. Only read `Auth:SeedAdminEmails` when `env.IsDevelopment()` -- otherwise pass an empty array
@@ -31,7 +31,7 @@ var seedAdminEmails = env.IsDevelopment()
     : [];
 ```
 
-### Add/update tests: `tests/Shadowbrook.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs`
+### Add/update tests: `tests/Teeforce.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs`
 
 Add `IHostEnvironment` parameter to all existing `InvokeAsync` calls (create a simple stub that returns `Development`). Then add two new tests:
 

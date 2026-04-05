@@ -2,7 +2,7 @@
 
 ## Overview
 
-Internal admin tooling for managing the Shadowbrook platform — organizations, courses, users, feature flags, and analytics. This is Aaron's operational tool, not a self-service experience.
+Internal admin tooling for managing the Teeforce platform — organizations, courses, users, feature flags, and analytics. This is Aaron's operational tool, not a self-service experience.
 
 ## Role Model Simplification
 

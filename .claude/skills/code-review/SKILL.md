@@ -1,12 +1,12 @@
 ---
 name: code-review
-description: Review checklists for Shadowbrook PRs. Covers correctness, test coverage, .NET patterns, TypeScript patterns, security (OWASP), performance, and adherence to technical plans.
+description: Review checklists for Teeforce PRs. Covers correctness, test coverage, .NET patterns, TypeScript patterns, security (OWASP), performance, and adherence to technical plans.
 user-invocable: false
 ---
 
 # Code Review Checklists
 
-Review criteria for the Shadowbrook tee time booking platform. The Code Reviewer agent loads this skill for its evaluation framework. Criteria are ordered by severity — check correctness first, performance last.
+Review criteria for the Teeforce tee time booking platform. The Code Reviewer agent loads this skill for its evaluation framework. Criteria are ordered by severity — check correctness first, performance last.
 
 ## Correctness & Logic
 
@@ -66,7 +66,7 @@ Review criteria for the Shadowbrook tee time booking platform. The Code Reviewer
 
 ## Review Style
 
-- **Be specific.** Reference exact file paths and line numbers. Don't say "the endpoint has an issue" — say "`src/backend/Shadowbrook.Api/Endpoints/BookingEndpoints.cs:42` — the null check on `courseId` is missing."
+- **Be specific.** Reference exact file paths and line numbers. Don't say "the endpoint has an issue" — say "`src/backend/Teeforce.Api/Endpoints/BookingEndpoints.cs:42` — the null check on `courseId` is missing."
 - **Explain WHY.** Don't just say "change this." Explain the risk or benefit.
 - **Distinguish severity.** Clearly mark items as:
   - **Blocker** — must fix before merge (correctness bugs, security issues, missing tests for critical paths)

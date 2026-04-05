@@ -5,22 +5,22 @@ description: GitHub project management commands, field IDs, status option IDs, i
 
 # GitHub Project Management
 
-Repo: `benjamingolfco/shadowbrook` | Project: #1 under `benjamingolfco` org
+Repo: `benjamingolfco/teeforce` | Project: #1 under `benjamingolfco` org
 
 | Action | Command |
 |--------|---------|
-| Create issue | `gh api repos/benjamingolfco/shadowbrook/issues -X POST -f title="..." -f body="..." -f type="Feature"` |
+| Create issue | `gh api repos/benjamingolfco/teeforce/issues -X POST -f title="..." -f body="..." -f type="Feature"` |
 | List issue types | `gh api orgs/benjamingolfco/issue-types` |
 | Add labels | `gh issue edit {number} --add-label "label1,label2"` |
 | Add to project | `gh project item-add 1 --owner benjamingolfco --url {issue_url}` |
 | Set project field | `gh project item-edit --project-id {id} --id {item_id} --field-id {field_id} --single-select-option-id {option_id}` |
-| Link sub-issue | `gh api repos/benjamingolfco/shadowbrook/issues/{parent}/sub_issues -X POST -F sub_issue_id={child_id}` |
+| Link sub-issue | `gh api repos/benjamingolfco/teeforce/issues/{parent}/sub_issues -X POST -F sub_issue_id={child_id}` |
 | View issue | `gh issue view {number}` |
 | List issues | `gh issue list --state open` |
 | List project items | `gh project item-list 1 --owner benjamingolfco` |
 | List project fields | `gh project field-list 1 --owner benjamingolfco` |
-| Pin issue comment | `gh api repos/benjamingolfco/shadowbrook/issues/comments/{comment_id}/pin -X PUT` |
-| Unpin issue comment | `gh api repos/benjamingolfco/shadowbrook/issues/comments/{comment_id}/pin -X DELETE` |
+| Pin issue comment | `gh api repos/benjamingolfco/teeforce/issues/comments/{comment_id}/pin -X PUT` |
+| Unpin issue comment | `gh api repos/benjamingolfco/teeforce/issues/comments/{comment_id}/pin -X DELETE` |
 
 Notes:
 - Use `-F` (not `-f`) for integer fields (e.g., `sub_issue_id`)
@@ -66,10 +66,10 @@ GitHub native issue dependencies for tracking blocked-by/blocking relationships:
 
 | Action | Command |
 |--------|---------|
-| List blockers | `gh api repos/benjamingolfco/shadowbrook/issues/{N}/dependencies/blocked_by` |
-| Add blocker | `gh api repos/benjamingolfco/shadowbrook/issues/{N}/dependencies/blocked_by -X POST -F issue_id={blocking_issue_node_id}` |
-| List what this blocks | `gh api repos/benjamingolfco/shadowbrook/issues/{N}/dependencies/blocking` |
-| Remove blocker | `gh api repos/benjamingolfco/shadowbrook/issues/{N}/dependencies/blocked_by/{dependency_id} -X DELETE` |
+| List blockers | `gh api repos/benjamingolfco/teeforce/issues/{N}/dependencies/blocked_by` |
+| Add blocker | `gh api repos/benjamingolfco/teeforce/issues/{N}/dependencies/blocked_by -X POST -F issue_id={blocking_issue_node_id}` |
+| List what this blocks | `gh api repos/benjamingolfco/teeforce/issues/{N}/dependencies/blocking` |
+| Remove blocker | `gh api repos/benjamingolfco/teeforce/issues/{N}/dependencies/blocked_by/{dependency_id} -X DELETE` |
 
 ## Milestones & Iterations
 

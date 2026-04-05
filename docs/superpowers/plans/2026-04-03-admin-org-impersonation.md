@@ -13,9 +13,9 @@
 ## File Map
 
 ### Backend
-- **Modify:** `src/backend/Shadowbrook.Api/Infrastructure/Auth/UserContext.cs` — read `X-Organization-Id` header for admins
-- **Modify:** `src/backend/Shadowbrook.Api/Features/Auth/AuthEndpoints.cs` — include `organizations` list in `MeResponse` for admins
-- **Test:** `tests/Shadowbrook.Api.Tests/Features/Auth/UserContextTests.cs` — unit tests for org override behavior
+- **Modify:** `src/backend/Teeforce.Api/Infrastructure/Auth/UserContext.cs` — read `X-Organization-Id` header for admins
+- **Modify:** `src/backend/Teeforce.Api/Features/Auth/AuthEndpoints.cs` — include `organizations` list in `MeResponse` for admins
+- **Test:** `tests/Teeforce.Api.Tests/Features/Auth/UserContextTests.cs` — unit tests for org override behavior
 
 ### Frontend
 - **Create:** `src/web/src/features/operator/context/OrgContext.tsx` — org selection context for admin impersonation
@@ -33,20 +33,20 @@
 ## Task 1: Backend — `UserContext` reads org override header for admins
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Api/Infrastructure/Auth/UserContext.cs:22-29`
-- Test: `tests/Shadowbrook.Api.Tests/Features/Auth/UserContextTests.cs` (create)
+- Modify: `src/backend/Teeforce.Api/Infrastructure/Auth/UserContext.cs:22-29`
+- Test: `tests/Teeforce.Api.Tests/Features/Auth/UserContextTests.cs` (create)
 
 - [ ] **Step 1: Write the failing test for admin org override**
 
-Create `tests/Shadowbrook.Api.Tests/Features/Auth/UserContextTests.cs`:
+Create `tests/Teeforce.Api.Tests/Features/Auth/UserContextTests.cs`:
 
 ```csharp
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using NSubstitute;
-using Shadowbrook.Api.Infrastructure.Auth;
+using Teeforce.Api.Infrastructure.Auth;
 
-namespace Shadowbrook.Api.Tests.Features.Auth;
+namespace Teeforce.Api.Tests.Features.Auth;
 
 public class UserContextTests
 {
@@ -148,12 +148,12 @@ public class UserContextTests
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `dotnet test tests/Shadowbrook.Api.Tests --filter "FullyQualifiedName~UserContextTests" --no-restore -v minimal`
+Run: `dotnet test tests/Teeforce.Api.Tests --filter "FullyQualifiedName~UserContextTests" --no-restore -v minimal`
 Expected: `OrganizationId_AdminWithHeader_ReturnsHeaderValue` FAILS (returns null, not the header value)
 
 - [ ] **Step 3: Implement the org override in `UserContext`**
 
-Modify `src/backend/Shadowbrook.Api/Infrastructure/Auth/UserContext.cs`. Replace the `OrganizationId` property:
+Modify `src/backend/Teeforce.Api/Infrastructure/Auth/UserContext.cs`. Replace the `OrganizationId` property:
 
 ```csharp
 public Guid? OrganizationId
@@ -186,18 +186,18 @@ private bool IsAdmin => User?.FindFirst("role")?.Value == "Admin";
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `dotnet test tests/Shadowbrook.Api.Tests --filter "FullyQualifiedName~UserContextTests" --no-restore -v minimal`
+Run: `dotnet test tests/Teeforce.Api.Tests --filter "FullyQualifiedName~UserContextTests" --no-restore -v minimal`
 Expected: All 5 tests PASS
 
 - [ ] **Step 5: Build to verify compilation**
 
-Run: `dotnet build shadowbrook.slnx`
+Run: `dotnet build teeforce.slnx`
 Expected: Build succeeded
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add tests/Shadowbrook.Api.Tests/Features/Auth/UserContextTests.cs src/backend/Shadowbrook.Api/Infrastructure/Auth/UserContext.cs
+git add tests/Teeforce.Api.Tests/Features/Auth/UserContextTests.cs src/backend/Teeforce.Api/Infrastructure/Auth/UserContext.cs
 git commit -m "feat: allow admin org impersonation via X-Organization-Id header"
 ```
 
@@ -206,7 +206,7 @@ git commit -m "feat: allow admin org impersonation via X-Organization-Id header"
 ## Task 2: Backend — Add `organizations` list to `MeResponse` for admins
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Api/Features/Auth/AuthEndpoints.cs:44-76,184-192`
+- Modify: `src/backend/Teeforce.Api/Features/Auth/AuthEndpoints.cs:44-76,184-192`
 
 - [ ] **Step 1: Modify `GetMe` to include organizations for admins**
 
@@ -255,13 +255,13 @@ var response = new MeResponse(
 
 - [ ] **Step 2: Build to verify compilation**
 
-Run: `dotnet build shadowbrook.slnx`
+Run: `dotnet build teeforce.slnx`
 Expected: Build succeeded
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/backend/Shadowbrook.Api/Features/Auth/AuthEndpoints.cs
+git add src/backend/Teeforce.Api/Features/Auth/AuthEndpoints.cs
 git commit -m "feat: include organizations list in /auth/me for admin users"
 ```
 
@@ -381,7 +381,7 @@ interface OrgContextValue {
 
 const OrgContext = createContext<OrgContextValue | undefined>(undefined);
 
-const STORAGE_KEY = 'shadowbrook-admin-org';
+const STORAGE_KEY = 'teeforce-admin-org';
 
 interface OrgProviderProps {
   children: ReactNode;
@@ -802,9 +802,9 @@ export default function OperatorLayout() {
             ) : (
               <h1
                 className="max-w-[180px] truncate text-lg font-semibold font-[family-name:var(--font-heading)]"
-                title={user?.organization?.name ?? 'Shadowbrook'}
+                title={user?.organization?.name ?? 'Teeforce'}
               >
-                {user?.organization?.name ?? 'Shadowbrook'}
+                {user?.organization?.name ?? 'Teeforce'}
               </h1>
             )}
             <Badge variant={isAdmin ? 'default' : 'success'} className="text-[10px] px-1.5 py-0">
@@ -877,7 +877,7 @@ git commit -m "feat: add org switcher dropdown to OperatorLayout for admins"
 When an admin selects an org and the `X-Organization-Id` header is active, the backend's EF query filter will scope courses. But `/auth/me` currently uses `IgnoreQueryFilters()` for admins (line 47-50 of `AuthEndpoints.cs`). We need to refine this so that when an admin sends the org header, courses are filtered to that org.
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Api/Features/Auth/AuthEndpoints.cs:44-64`
+- Modify: `src/backend/Teeforce.Api/Features/Auth/AuthEndpoints.cs:44-64`
 
 - [ ] **Step 1: Update `GetMe` to filter courses by org header for admins**
 
@@ -906,13 +906,13 @@ if (appUser.Role == AppUserRole.Admin)
 
 - [ ] **Step 2: Build to verify compilation**
 
-Run: `dotnet build shadowbrook.slnx`
+Run: `dotnet build teeforce.slnx`
 Expected: Build succeeded
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/backend/Shadowbrook.Api/Features/Auth/AuthEndpoints.cs
+git add src/backend/Teeforce.Api/Features/Auth/AuthEndpoints.cs
 git commit -m "feat: scope admin /auth/me courses to impersonated org"
 ```
 
@@ -975,7 +975,7 @@ git commit -m "feat: invalidate /auth/me cache on org switch"
 
 - [ ] **Step 1: Build backend**
 
-Run: `dotnet build shadowbrook.slnx`
+Run: `dotnet build teeforce.slnx`
 Expected: Build succeeded
 
 - [ ] **Step 2: Lint frontend**

@@ -14,8 +14,8 @@ description: Use when you need to start the local development environment from s
 1. Start the DB container: `docker compose up db -d` (from repo root)
 2. Start the API natively with dev auth:
    ```bash
-   cd /path/to/shadowbrook
-   Auth__UseDevAuth=true dotnet run --project src/backend/Shadowbrook.Api -- --urls "http://localhost:5221"
+   cd /path/to/teeforce
+   Auth__UseDevAuth=true dotnet run --project src/backend/Teeforce.Api -- --urls "http://localhost:5221"
    ```
 3. Start the frontend: `pnpm --dir src/web dev`
 4. Verify API: `curl http://localhost:5221/health` should return `Healthy`
@@ -24,9 +24,9 @@ description: Use when you need to start the local development environment from s
 ## Seeding Dev Users
 After first startup on a fresh DB, seed at minimum an admin user directly via SQL:
 ```sql
-USE Shadowbrook;
+USE Teeforce;
 INSERT INTO dbo.AppUsers (Id, IdentityId, Email, FirstName, LastName, Role, OrganizationId, IsActive, CreatedAt, UpdatedAt)
-VALUES (NEWID(), 'dev-admin-oid', 'dev-admin@shadowbrook.golf', 'Dev', 'Admin', 'Admin', NULL, 1, GETUTCDATE(), GETUTCDATE());
+VALUES (NEWID(), 'dev-admin-oid', 'dev-admin@benjamingolfco.onmicrosoft.com', 'Dev', 'Admin', 'Admin', NULL, 1, GETUTCDATE(), GETUTCDATE());
 ```
 
 The frontend `.env.development.local` must contain:

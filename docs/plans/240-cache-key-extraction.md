@@ -27,8 +27,8 @@ If the class name feels too long at call sites, an alternative is a small `AppUs
 
 ## Files to Modify
 
-- **Modify:** `src/backend/Shadowbrook.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs` — add `CacheKey()` static method, replace inline string on line 48
-- **Modify:** `src/backend/Shadowbrook.Api/Features/Auth/AuthEndpoints.cs` — replace both `cache.Remove(...)` calls (lines 169 and 219) to use the shared method
+- **Modify:** `src/backend/Teeforce.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs` — add `CacheKey()` static method, replace inline string on line 48
+- **Modify:** `src/backend/Teeforce.Api/Features/Auth/AuthEndpoints.cs` — replace both `cache.Remove(...)` calls (lines 169 and 219) to use the shared method
 
 ## Testing
 
@@ -40,4 +40,4 @@ No new tests needed. This is a mechanical refactor with no behavior change. Exis
 
 - [ ] Add `public static string CacheKey(string identityId)` to `AppUserEnrichmentMiddleware`
 - [ ] Replace the 3 inline cache key constructions with calls to the new method
-- [ ] Run `dotnet build shadowbrook.slnx` to verify compilation
+- [ ] Run `dotnet build teeforce.slnx` to verify compilation
