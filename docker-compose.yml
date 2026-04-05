@@ -27,6 +27,7 @@ services:
       ASPNETCORE_ENVIRONMENT: "Development"
       ConnectionStrings__DefaultConnection: "Server=db;Database=Shadowbrook;User Id=sa;Password=Dev@Password123!;TrustServerCertificate=True"
       Cors__AllowedOrigins__0: "http://localhost:3000"
+      Auth__UseDevAuth: "true"
     volumes:
       - ./src/backend:/app
       - api_obj:/app/Shadowbrook.Api/obj
