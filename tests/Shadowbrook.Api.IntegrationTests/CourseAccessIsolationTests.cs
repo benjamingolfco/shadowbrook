@@ -38,11 +38,11 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var emailChecker = scope.ServiceProvider.GetRequiredService<IAppUserEmailUniquenessChecker>();
         var operatorUser = await AppUser.CreateOperator("op@own.com", tenantId, emailChecker);
-        operatorUser.CompleteIdentitySetup("operator-own-org", "Op", "Own");
+        operatorUser.Activate();
         db.AppUsers.Add(operatorUser);
         await db.SaveChangesAsync();
 
-        var opClient = factory.CreateAuthenticatedClient("operator-own-org");
+        var opClient = factory.CreateAuthenticatedClient("op@own.com");
 
         // Act
         var response = await opClient.GetAsync($"/courses/{courseId}");
@@ -56,8 +56,8 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
     {
         // Arrange: Org A has Course A, Org B has Course B. Operator user belongs to Org A.
         // Authorization runs before data lookup, so no Tenant rows are needed.
-        var (_, courseBId) = await SeedTwoOrgsWithOperatorAsync("operator-cross-org-get");
-        var client = factory.CreateAuthenticatedClient("operator-cross-org-get");
+        var (_, courseBId) = await SeedTwoOrgsWithOperatorAsync("cross-get@orga.com");
+        var client = factory.CreateAuthenticatedClient("cross-get@orga.com");
 
         // Act
         var response = await client.GetAsync($"/courses/{courseBId}");
@@ -71,8 +71,8 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
     {
         // Arrange: Org A has Course A, Org B has Course B. Operator user belongs to Org A.
         // Authorization runs before data lookup, so no Tenant rows are needed.
-        var (_, courseBId) = await SeedTwoOrgsWithOperatorAsync("operator-cross-org-put");
-        var client = factory.CreateAuthenticatedClient("operator-cross-org-put");
+        var (_, courseBId) = await SeedTwoOrgsWithOperatorAsync("cross-put@orga.com");
+        var client = factory.CreateAuthenticatedClient("cross-put@orga.com");
 
         // Act
         var response = await client.PutAsJsonAsync($"/courses/{courseBId}/tee-time-settings", new
@@ -104,8 +104,8 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
         var courseId = (await courseResponse.Content.ReadFromJsonAsync<CourseIdResponse>())!.Id;
 
         // Seed a second admin to verify admins can access courses they didn't create.
-        await factory.SeedTestAdminAsync("admin-b-oid");
-        var adminBClient = factory.CreateAuthenticatedClient("admin-b-oid");
+        await factory.SeedTestAdminAsync("admin-b@test.com");
+        var adminBClient = factory.CreateAuthenticatedClient("admin-b@test.com");
 
         // Act
         var response = await adminBClient.GetAsync($"/courses/{courseId}");
@@ -118,18 +118,18 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
     /// Seeds Org A with Course A, Org B with Course B, and an Operator user in Org A.
     /// Returns (courseAId, courseBId). No Tenant rows — authorization fails before any data lookup.
     /// </summary>
-    private async Task<(Guid CourseAId, Guid CourseBId)> SeedTwoOrgsWithOperatorAsync(string operatorIdentityId)
+    private async Task<(Guid CourseAId, Guid CourseBId)> SeedTwoOrgsWithOperatorAsync(string operatorEmail)
     {
-        var orgA = Organization.Create($"Org-A-{operatorIdentityId}");
-        var orgB = Organization.Create($"Org-B-{operatorIdentityId}");
-        var courseA = Course.Create(orgA.Id, $"Course-A-{operatorIdentityId}", TestTimeZones.Chicago);
-        var courseB = Course.Create(orgB.Id, $"Course-B-{operatorIdentityId}", TestTimeZones.Chicago);
+        var orgA = Organization.Create($"Org-A-{operatorEmail}");
+        var orgB = Organization.Create($"Org-B-{operatorEmail}");
+        var courseA = Course.Create(orgA.Id, $"Course-A-{operatorEmail}", TestTimeZones.Chicago);
+        var courseB = Course.Create(orgB.Id, $"Course-B-{operatorEmail}", TestTimeZones.Chicago);
 
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var emailChecker = scope.ServiceProvider.GetRequiredService<IAppUserEmailUniquenessChecker>();
-        var operatorA = await AppUser.CreateOperator($"{operatorIdentityId}@orga.com", orgA.Id, emailChecker);
-        operatorA.CompleteIdentitySetup(operatorIdentityId, "Operator", "A");
+        var operatorA = await AppUser.CreateOperator(operatorEmail, orgA.Id, emailChecker);
+        operatorA.Activate();
 
         db.Organizations.AddRange(orgA, orgB);
         db.Courses.AddRange(courseA, courseB);
