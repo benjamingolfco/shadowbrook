@@ -11,6 +11,10 @@ export const TEST_GOLFER = {
   normalizedPhone: '+15551230000',
 };
 
+/** Identity IDs matching AppUsers seeded in E2ESeedData.cs */
+export const TEST_ADMIN_IDENTITY_ID = 'e2e-admin-oid';
+export const TEST_OPERATOR_IDENTITY_ID = 'e2e-operator-oid';
+
 /**
  * Generate a unique course name per test run to avoid stale state.
  */
