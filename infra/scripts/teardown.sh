@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Teardown Shadowbrook environment
+# Teardown Teeforce environment
 # By default, only deletes the environment resource group (preserves shared ACR).
 # Use --shared to also delete the shared resource group.
 #
 # Usage: ./teardown.sh [--shared]
 
 # Configuration
-RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-shadowbrook-test-rg}"
-SHARED_RESOURCE_GROUP="shadowbrook-shared-rg"
+RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-teeforce-test-rg}"
+SHARED_RESOURCE_GROUP="teeforce-shared-rg"
 DELETE_SHARED=false
 
 if [ "${1:-}" == "--shared" ]; then

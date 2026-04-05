@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Shadowbrook - Grant Microsoft Graph API permissions to managed identity
+# Teeforce - Grant Microsoft Graph API permissions to managed identity
 # Usage: ./grant-graph-permissions.sh <environment>
 #
 # Grants the User.Invite.All application permission to the environment's
@@ -22,8 +22,8 @@ if [ $# -eq 0 ]; then
 fi
 
 ENVIRONMENT=$1
-IDENTITY_NAME="id-shadowbrook-${ENVIRONMENT}"
-RESOURCE_GROUP="shadowbrook-${ENVIRONMENT}-rg"
+IDENTITY_NAME="id-teeforce-${ENVIRONMENT}"
+RESOURCE_GROUP="teeforce-${ENVIRONMENT}-rg"
 GRAPH_APP_ID="00000003-0000-0000-c000-000000000000"
 
 echo "==> Granting Graph API permissions for ${IDENTITY_NAME} in ${RESOURCE_GROUP}"
