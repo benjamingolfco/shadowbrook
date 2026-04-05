@@ -1,8 +1,8 @@
 # Deploy Bicep Infrastructure
 #
 # Subscription-level deployment (Bicep creates resource groups):
-#   1. Shared infrastructure (ACR) → shadowbrook-shared-rg
-#   2. Environment infrastructure  → shadowbrook-{env}-rg
+#   1. Shared infrastructure (ACR) → teeforce-shared-rg
+#   2. Environment infrastructure  → teeforce-{env}-rg
 #
 # Triggered manually or called by other workflows.
 
@@ -50,7 +50,7 @@ jobs:
       - name: Deploy shared infrastructure
         run: |
           az deployment sub create \
-            --name "shadowbrook-shared" \
+            --name "teeforce-shared" \
             --location ${{ env.LOCATION }} \
             --parameters infra/bicep/parameters.shared.bicepparam
 
@@ -58,8 +58,8 @@ jobs:
         id: current-image
         run: |
           TAG=$(az containerapp show \
-            --name "shadowbrook-app-${{ inputs.environment }}" \
-            --resource-group "shadowbrook-${{ inputs.environment }}-rg" \
+            --name "teeforce-app-${{ inputs.environment }}" \
+            --resource-group "teeforce-${{ inputs.environment }}-rg" \
             --query "properties.template.containers[0].image" \
             --output tsv 2>/dev/null \
             | sed 's/.*://')
@@ -69,7 +69,7 @@ jobs:
       - name: Deploy environment infrastructure
         run: |
           az deployment sub create \
-            --name "shadowbrook-${{ inputs.environment }}" \
+            --name "teeforce-${{ inputs.environment }}" \
             --location ${{ env.LOCATION }} \
             --parameters infra/bicep/parameters.${{ inputs.environment }}.bicepparam \
             --parameters imageTag=${{ steps.current-image.outputs.tag }}
