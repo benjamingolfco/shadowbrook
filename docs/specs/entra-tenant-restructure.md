@@ -71,10 +71,10 @@ The `#EXT#` in the UPN means the identity is backed by a personal Microsoft acco
 
 | App | Client ID | Type | Supported Accounts |
 |-----|-----------|------|--------------------|
-| Teeforce API (Non-Prod) | `e3eea6af-dfac-49f5-a3ea-45dc1cf42873` | API | This directory only |
-| Teeforce SPA (Non-Prod) | `0dc88653-3550-44f0-a0c7-db8ec622e5a9` | SPA | This directory only |
+| teeforce-api-test | `c601e2a8-c9fe-4361-8627-2e5634a55040` | API | This directory only |
+| teeforce-spa-test | `035f0285-de18-4df7-8d41-19393ecfc8d8` | SPA | This directory only |
 
-- API exposes scope: `api://e3eea6af-dfac-49f5-a3ea-45dc1cf42873/access_as_user`
+- API exposes scope: `api://c601e2a8-c9fe-4361-8627-2e5634a55040/access_as_user`
 - SPA has delegated permission to call the API scope (admin consent granted)
 - SPA redirect URI: `http://localhost:3000`
 
@@ -85,15 +85,15 @@ The `#EXT#` in the UPN means the identity is backed by a personal Microsoft acco
 "AzureAd": {
   "Instance": "https://login.microsoftonline.com/",
   "TenantId": "f74e8993-5f31-49cb-8772-a20a7f0cf2b6",
-  "ClientId": "e3eea6af-dfac-49f5-a3ea-45dc1cf42873"
+  "ClientId": "c601e2a8-c9fe-4361-8627-2e5634a55040"
 }
 ```
 
 **Frontend** (`.env.development`):
 ```
 VITE_ENTRA_AUTHORITY=https://login.microsoftonline.com/f74e8993-5f31-49cb-8772-a20a7f0cf2b6
-VITE_ENTRA_CLIENT_ID=0dc88653-3550-44f0-a0c7-db8ec622e5a9
-VITE_API_SCOPE=api://e3eea6af-dfac-49f5-a3ea-45dc1cf42873/access_as_user
+VITE_ENTRA_CLIENT_ID=035f0285-de18-4df7-8d41-19393ecfc8d8
+VITE_API_SCOPE=api://c601e2a8-c9fe-4361-8627-2e5634a55040/access_as_user
 ```
 
 **Note:** When migrated to CIAM, the authority URL will change to `https://<tenant>.ciamlogin.com` and the client IDs will be new app registrations in the CIAM tenant.
