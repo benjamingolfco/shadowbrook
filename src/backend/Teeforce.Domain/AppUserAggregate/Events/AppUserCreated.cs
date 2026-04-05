@@ -9,4 +9,5 @@ public record AppUserCreated : IDomainEvent
     public required Guid AppUserId { get; init; }
     public required string Email { get; init; }
     public required AppUserRole Role { get; init; }
+    public bool ShouldSendInvite { get; init; }
 }

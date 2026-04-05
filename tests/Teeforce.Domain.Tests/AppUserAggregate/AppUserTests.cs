@@ -30,6 +30,8 @@ public class AppUserTests
         Assert.False(user.IsActive);
         Assert.True(user.CreatedAt >= DateTimeOffset.UtcNow.AddSeconds(-2));
         Assert.Contains(user.DomainEvents, e => e is AppUserCreated);
+        var createdEvent = user.DomainEvents.OfType<AppUserCreated>().Single();
+        Assert.False(createdEvent.ShouldSendInvite);
     }
 
     [Fact]
@@ -48,6 +50,8 @@ public class AppUserTests
         Assert.False(user.IsActive);
         Assert.True(user.CreatedAt >= DateTimeOffset.UtcNow.AddSeconds(-2));
         Assert.Contains(user.DomainEvents, e => e is AppUserCreated);
+        var createdEvent = user.DomainEvents.OfType<AppUserCreated>().Single();
+        Assert.False(createdEvent.ShouldSendInvite);
     }
 
     [Fact]
@@ -180,5 +184,23 @@ public class AppUserTests
 
         Assert.Throws<IdentityAlreadyLinkedException>(
             () => user.CompleteIdentitySetup("different-oid", "Jane", "Smith"));
+    }
+
+    [Fact]
+    public async Task CreateAdmin_WithSendInvite_SetsEventFlag()
+    {
+        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker(), sendInvite: true);
+
+        var createdEvent = user.DomainEvents.OfType<AppUserCreated>().Single();
+        Assert.True(createdEvent.ShouldSendInvite);
+    }
+
+    [Fact]
+    public async Task CreateOperator_WithSendInvite_SetsEventFlag()
+    {
+        var user = await AppUser.CreateOperator("op@example.com", Guid.CreateVersion7(), NewChecker(), sendInvite: true);
+
+        var createdEvent = user.DomainEvents.OfType<AppUserCreated>().Single();
+        Assert.True(createdEvent.ShouldSendInvite);
     }
 }

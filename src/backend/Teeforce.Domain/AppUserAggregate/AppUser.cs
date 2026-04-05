@@ -22,6 +22,7 @@ public class AppUser : Entity
     public static async Task<AppUser> CreateAdmin(
         string email,
         IAppUserEmailUniquenessChecker emailChecker,
+        bool sendInvite = false,
         CancellationToken ct = default)
     {
         if (await emailChecker.IsEmailInUse(email.Trim(), ct))
@@ -44,6 +45,7 @@ public class AppUser : Entity
             AppUserId = user.Id,
             Email = user.Email,
             Role = user.Role,
+            ShouldSendInvite = sendInvite,
         });
 
         return user;
@@ -53,6 +55,7 @@ public class AppUser : Entity
         string email,
         Guid organizationId,
         IAppUserEmailUniquenessChecker emailChecker,
+        bool sendInvite = false,
         CancellationToken ct = default)
     {
         if (organizationId == Guid.Empty)
@@ -80,6 +83,7 @@ public class AppUser : Entity
             AppUserId = user.Id,
             Email = user.Email,
             Role = user.Role,
+            ShouldSendInvite = sendInvite,
         });
 
         return user;
@@ -128,11 +132,6 @@ public class AppUser : Entity
 
     public async Task Invite(IAppUserInvitationService invitationService, CancellationToken ct)
     {
-        if (IdentityId is not null || InviteSentAt is not null)
-        {
-            return;
-        }
-
         var identityId = await invitationService.SendInvitationAsync(Email, ct);
         IdentityId = identityId;
         InviteSentAt = DateTimeOffset.UtcNow;

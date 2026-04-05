@@ -13,6 +13,11 @@ public static class SendEntraInvitationHandler
         IAppUserInvitationService invitationService,
         CancellationToken ct)
     {
+        if (!evt.ShouldSendInvite)
+        {
+            return;
+        }
+
         var appUser = await appUserRepository.GetRequiredByIdAsync(evt.AppUserId);
         await appUser.Invite(invitationService, ct);
     }
