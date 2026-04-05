@@ -273,7 +273,7 @@ az containerapp logs show \
   --follow
 
 # Check health endpoint
-curl https://teeforce-app-test.happypond-1a892999.eastus2.azurecontainerapps.io/health
+curl https://teeforce-app-test.wittywave-545ed3d5.eastus2.azurecontainerapps.io/health
 ```
 
 In the Azure Portal:

@@ -1,7 +1,7 @@
 # Stress Test Report — waitlist — 2026-04-04
 
 **Duration:** 12 minutes  
-**Environment:** test (https://white-stone-00610060f.1.azurestaticapps.net)  
+**Environment:** test (https://purple-field-0a3932a0f.4.azurestaticapps.net)  
 **Agents:** 1 operator + 3 golfers + 1 observer  
 **Hint:** none  
 **Exit reason:** Circuit breaker — memory exceeded 1,000 MB  

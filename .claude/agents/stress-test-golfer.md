@@ -25,8 +25,8 @@ The coordinator passes the following parameters:
 
 | Parameter | Description |
 |-----------|-------------|
-| `frontend_url` | Base URL of the Teeforce web app (e.g., `https://teeforce-app-test.happypond-1a892999.eastus2.azurecontainerapps.io`) |
-| `api_url` | Base URL of the Teeforce API (e.g., `https://teeforce-app-test.happypond-1a892999.eastus2.azurecontainerapps.io/api`) |
+| `frontend_url` | Base URL of the Teeforce web app (e.g., `https://teeforce-app-test.wittywave-545ed3d5.eastus2.azurecontainerapps.io`) |
+| `api_url` | Base URL of the Teeforce API (e.g., `https://teeforce-app-test.wittywave-545ed3d5.eastus2.azurecontainerapps.io/api`) |
 | `golfer_id` | Unique identifier for this golfer agent (e.g., `golfer-1`, `golfer-2`) |
 | `short_code` | 4-digit waitlist short code from the operator (e.g., `1308`) |
 | `feature_area` | Which feature area to exercise (e.g., `waitlist`) |

@@ -28,7 +28,7 @@ A `/stress-test` skill that launches parallel AI agents to exercise the Teeforce
 
 | Env | Frontend | API |
 |-----|----------|-----|
-| `test` | `https://white-stone-00610060f.1.azurestaticapps.net` | `https://teeforce-app-test.happypond-1a892999.eastus2.azurecontainerapps.io` |
+| `test` | `https://purple-field-0a3932a0f.4.azurestaticapps.net` | `https://teeforce-app-test.wittywave-545ed3d5.eastus2.azurecontainerapps.io` |
 | `local` | `http://localhost:3000` | `http://localhost:5221` |
 
 ## Agent Architecture

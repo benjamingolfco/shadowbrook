@@ -1,6 +1,6 @@
 ---
 name: Live UX Review — March 2026
-description: Candid UX review of the live preview (white-stone-00610060f preview URL), covering all operator and admin pages as of late March 2026
+description: Candid UX review of the live preview (purple-field-0a3932a0f preview URL), covering all operator and admin pages as of late March 2026
 type: project
 ---
 

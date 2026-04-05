@@ -25,7 +25,7 @@ The coordinator passes the following parameters:
 
 | Parameter | Description |
 |-----------|-------------|
-| `frontend_url` | Base URL of the frontend (e.g., `https://teeforce-app-test.happypond-1a892999.eastus2.azurecontainerapps.io`) |
+| `frontend_url` | Base URL of the frontend (e.g., `https://teeforce-app-test.wittywave-545ed3d5.eastus2.azurecontainerapps.io`) |
 | `credentials` | Object with `upn` (user principal name) and `password` for Entra ID login |
 | `feature_area` | The area of the operator UI to exercise (e.g., `waitlist`) |
 | `role_brief` | Description of what operator actions to perform during this run |
