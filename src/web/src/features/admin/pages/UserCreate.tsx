@@ -5,6 +5,7 @@ import { z } from 'zod/v4';
 import { useCreateUser } from '../hooks/useUsers';
 import { useOrganizations } from '../hooks/useOrganizations';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -33,6 +34,7 @@ const userSchema = z
     email: z.string().email('Invalid email address'),
     role: z.enum(['Admin', 'Operator']),
     organizationId: z.string().optional(),
+    sendInvite: z.boolean(),
   })
   .check((ctx) => {
     if (ctx.value.role === 'Operator' && !ctx.value.organizationId) {
@@ -58,6 +60,7 @@ export default function UserCreate() {
       email: '',
       role: 'Operator',
       organizationId: '',
+      sendInvite: false,
     },
   });
 
@@ -69,6 +72,7 @@ export default function UserCreate() {
         email: data.email,
         role: data.role,
         organizationId: data.organizationId ?? null,
+        sendInvite: data.sendInvite,
       },
       {
         onSuccess: () => {
@@ -172,6 +176,24 @@ export default function UserCreate() {
                   )}
                 />
               )}
+
+              <FormField
+                control={form.control}
+                name="sendInvite"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="font-normal">
+                      Send Invite
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
 
               {createUser.isError && (
                 <p className="text-sm text-destructive">
