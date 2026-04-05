@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/backend/">
+    <Project Path="src/backend/Teeforce.Api/Teeforce.Api.csproj" />
+    <Project Path="src/backend/Teeforce.Domain/Teeforce.Domain.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Teeforce.Domain.Tests/Teeforce.Domain.Tests.csproj" />
+    <Project Path="tests/Teeforce.Api.Tests/Teeforce.Api.Tests.csproj" />
+    <Project Path="tests/Teeforce.Api.IntegrationTests/Teeforce.Api.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

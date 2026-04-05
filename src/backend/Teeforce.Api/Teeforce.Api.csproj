@@ -8,12 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Shadowbrook.Api.Tests" />
+    <InternalsVisibleTo Include="Teeforce.Api.Tests" />
   </ItemGroup>
 
 
   <ItemGroup>
-    <ProjectReference Include="..\Shadowbrook.Domain\Shadowbrook.Domain.csproj" />
+    <ProjectReference Include="..\Teeforce.Domain\Teeforce.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
