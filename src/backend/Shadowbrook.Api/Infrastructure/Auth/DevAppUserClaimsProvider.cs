@@ -15,8 +15,5 @@ public class DevAppUserClaimsProvider(ApplicationDbContext db) : IAppUserClaimsP
             .FirstOrDefaultAsync();
     }
 
-    public Task<AppUserClaimsData?> GetByEmailUnlinkedAsync(string email)
-    {
-        return Task.FromResult<AppUserClaimsData?>(null);
-    }
+    public Task<AppUserClaimsData?> GetByEmailUnlinkedAsync(string email) => Task.FromResult<AppUserClaimsData?>(null);
 }
