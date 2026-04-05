@@ -28,12 +28,9 @@ Checklist for standing up a new environment (staging, production). Derived from 
 
 ## Authentication
 
-- [ ] App registrations created in correct tenant (API + SPA)
-- [ ] API exposes `access_as_user` scope
-- [ ] SPA has delegated permission to API scope (admin consent granted)
-- [ ] SPA redirect URIs configured (production domain)
-- [ ] `appsettings.{Environment}.json` has correct TenantId, ClientId, Audience
-- [ ] Frontend env vars point to correct authority and client ID
+- [ ] Run `setup-entra-apps.sh {env} {spa-redirect-uri}` — creates `teeforce-api-{env}` and `teeforce-spa-{env}` app registrations with scopes, redirect URIs, and pre-authorization
+- [ ] `appsettings.{Environment}.json` has correct TenantId, ClientId, Audience from script output
+- [ ] Frontend env vars point to correct authority, client ID, and API scope from script output
 - [ ] `email` optional claim configured on API app registration (for guest/external users)
 
 ## Graph API (User Invitations)
@@ -45,7 +42,7 @@ Checklist for standing up a new environment (staging, production). Derived from 
 ## GitHub Actions CI/CD
 
 - [ ] Run `setup-github-oidc.sh` — creates app registration, service principal, federated credentials, RBAC, and GitHub secrets
-- [ ] Update SWA deployment token: `az staticwebapp secrets list ... | gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN`
+- [ ] Set SWA deployment token: `az staticwebapp secrets list --name teeforce-web-{env} ... | gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN_{ENV}`
 - [ ] Deploy workflows tested end-to-end
 
 ## DNS & Custom Domain
