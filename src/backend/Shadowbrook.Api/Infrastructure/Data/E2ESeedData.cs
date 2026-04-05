@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Shadowbrook.Domain.AppUserAggregate;
 using Shadowbrook.Domain.CourseAggregate;
 using Shadowbrook.Domain.OrganizationAggregate;
+using Shadowbrook.Domain.Services;
 using Shadowbrook.Domain.TenantAggregate;
 
 namespace Shadowbrook.Api.Infrastructure.Data;
@@ -42,6 +44,8 @@ public static class E2ESeedData
         await EnsureCourseAsync(db, organization.Id, "Pine Valley Test", "America/New_York");
         await EnsureCourseAsync(db, organization.Id, "Augusta Test", "America/New_York");
         await EnsureCourseAsync(db, organization.Id, "Pebble Beach Test", "America/Los_Angeles");
+
+        await EnsureAppUsersAsync(db, organization.Id);
     }
 
     private static async Task EnsureCourseAsync(
@@ -62,5 +66,41 @@ public static class E2ESeedData
         var course = Course.Create(organizationId, name, timeZoneId);
         db.Courses.Add(course);
         await db.SaveChangesAsync();
+    }
+
+    private static async Task EnsureAppUsersAsync(ApplicationDbContext db, Guid organizationId)
+    {
+        var emailChecker = new SeedEmailChecker(db);
+
+        var adminExists = await db.AppUsers
+            .AnyAsync(u => u.IdentityId == "e2e-admin-oid");
+
+        if (!adminExists)
+        {
+            var admin = await AppUser.CreateAdmin("e2e-admin@shadowbrook.golf", emailChecker);
+            admin.CompleteIdentitySetup("e2e-admin-oid", "E2E", "Admin");
+            db.AppUsers.Add(admin);
+            await db.SaveChangesAsync();
+        }
+
+        var operatorExists = await db.AppUsers
+            .AnyAsync(u => u.IdentityId == "e2e-operator-oid");
+
+        if (!operatorExists)
+        {
+            var operatorUser = await AppUser.CreateOperator(
+                "e2e-operator@shadowbrook.golf",
+                organizationId,
+                emailChecker);
+            operatorUser.CompleteIdentitySetup("e2e-operator-oid", "E2E", "Operator");
+            db.AppUsers.Add(operatorUser);
+            await db.SaveChangesAsync();
+        }
+    }
+
+    private sealed class SeedEmailChecker(ApplicationDbContext db) : IAppUserEmailUniquenessChecker
+    {
+        public async Task<bool> IsEmailInUse(string email, CancellationToken ct = default) =>
+            await db.AppUsers.AnyAsync(u => u.Email == email, ct);
     }
 }
