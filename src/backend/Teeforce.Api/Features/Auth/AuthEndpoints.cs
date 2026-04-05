@@ -122,8 +122,8 @@ public static class AuthEndpoints
         var role = Enum.Parse<AppUserRole>(request.Role, ignoreCase: true);
 
         var appUser = role == AppUserRole.Admin
-            ? await AppUser.CreateAdmin(request.Email, emailChecker, request.SendInvite)
-            : await AppUser.CreateOperator(request.Email, request.OrganizationId!.Value, emailChecker, request.SendInvite);
+            ? await AppUser.CreateAdmin(request.Email, emailChecker)
+            : await AppUser.CreateOperator(request.Email, request.OrganizationId!.Value, emailChecker);
 
         db.AppUsers.Add(appUser);
 
@@ -255,8 +255,7 @@ public sealed record UserListResponse(
 public sealed record CreateUserRequest(
     string Email,
     string Role,
-    Guid? OrganizationId,
-    bool SendInvite = false);
+    Guid? OrganizationId);
 
 public sealed record UpdateUserRequest(bool? IsActive, string? Role, Guid? OrganizationId);
 
