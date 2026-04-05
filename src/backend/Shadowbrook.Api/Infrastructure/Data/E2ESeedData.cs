@@ -78,7 +78,7 @@ public static class E2ESeedData
 
         if (!adminExists)
         {
-            var admin = await AppUser.CreateAdmin("e2e-admin@shadowbrook.golf", emailChecker);
+            var admin = await AppUser.CreateAdmin("e2e-admin@benjamingolfco.onmicrosoft.com", emailChecker);
             admin.CompleteIdentitySetup("e2e-admin-oid", "E2E", "Admin");
             db.AppUsers.Add(admin);
             await db.SaveChangesAsync();
