@@ -3,9 +3,9 @@ using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 
-using Shadowbrook.Api.Infrastructure;
+using Teeforce.Api.Infrastructure;
 
-namespace Shadowbrook.Api.Infrastructure.Auth;
+namespace Teeforce.Api.Infrastructure.Auth;
 
 public class DevAuthHandler(
     IOptionsMonitor<AuthenticationSchemeOptions> options,

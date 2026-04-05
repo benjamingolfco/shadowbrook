@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.AppUserAggregate.Exceptions;
+namespace Teeforce.Domain.AppUserAggregate.Exceptions;
 
 public class DuplicateEmailException(string email)
     : DomainException($"A user with email '{email}' already exists.");

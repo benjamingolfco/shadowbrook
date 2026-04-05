@@ -1,11 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.BookingAggregate;
-using Shadowbrook.Domain.GolferAggregate;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.BookingAggregate;
+using Teeforce.Domain.GolferAggregate;
 
-namespace Shadowbrook.Api.IntegrationTests;
+namespace Teeforce.Api.IntegrationTests;
 
 [Collection("Integration")]
 [IntegrationTest]

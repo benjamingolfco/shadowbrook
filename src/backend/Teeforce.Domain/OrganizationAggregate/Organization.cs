@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.OrganizationAggregate;
+namespace Teeforce.Domain.OrganizationAggregate;
 
 public class Organization : Entity
 {

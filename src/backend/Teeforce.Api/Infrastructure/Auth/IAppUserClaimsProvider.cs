@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.AppUserAggregate;
+using Teeforce.Domain.AppUserAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.Auth;
+namespace Teeforce.Api.Infrastructure.Auth;
 
 public interface IAppUserClaimsProvider
 {

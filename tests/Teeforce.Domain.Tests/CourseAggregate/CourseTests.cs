@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.CourseAggregate;
+using Teeforce.Domain.CourseAggregate;
 
-namespace Shadowbrook.Domain.Tests.CourseAggregate;
+namespace Teeforce.Domain.Tests.CourseAggregate;
 
 public class CourseTests
 {

@@ -3,13 +3,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.Identity.Web;
-using Shadowbrook.Api.Infrastructure.Configuration;
+using Teeforce.Api.Infrastructure.Configuration;
 
-namespace Shadowbrook.Api.Infrastructure.Auth;
+namespace Teeforce.Api.Infrastructure.Auth;
 
 public static class AuthServiceExtensions
 {
-    public static IServiceCollection AddShadowbrookAuth(
+    public static IServiceCollection AddTeeforceAuth(
         this IServiceCollection services, IConfiguration configuration)
     {
         var authSection = configuration.GetSection(AuthSettings.SectionName);

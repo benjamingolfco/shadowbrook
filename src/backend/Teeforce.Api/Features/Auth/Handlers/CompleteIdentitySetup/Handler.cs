@@ -1,7 +1,7 @@
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Api.Features.Auth.Handlers;
+namespace Teeforce.Api.Features.Auth.Handlers;
 
 public record CompleteIdentitySetupCommand(Guid AppUserId, string IdentityId, string FirstName, string LastName);
 

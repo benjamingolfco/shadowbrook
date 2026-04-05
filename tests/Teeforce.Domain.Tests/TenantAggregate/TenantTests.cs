@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.TenantAggregate;
+using Teeforce.Domain.TenantAggregate;
 
-namespace Shadowbrook.Domain.Tests.TenantAggregate;
+namespace Teeforce.Domain.Tests.TenantAggregate;
 
 public class TenantTests
 {

@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Logging;
-using Shadowbrook.Domain.BookingAggregate;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
+using Teeforce.Domain.BookingAggregate;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.TeeTimeOpeningAggregate.Events;
 
-namespace Shadowbrook.Api.Features.Bookings.Handlers;
+namespace Teeforce.Api.Features.Bookings.Handlers;
 
 public class TeeTimeOpeningCancelledCancelBookingsHandler(IBookingRepository bookingRepository, ILogger<TeeTimeOpeningCancelledCancelBookingsHandler> logger)
 {

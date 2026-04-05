@@ -1,4 +1,4 @@
-namespace Shadowbrook.Api.Features.Analytics;
+namespace Teeforce.Api.Features.Analytics;
 
 public sealed record PlatformSummary(
     int TotalOrganizations,

@@ -1,9 +1,9 @@
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate.Exceptions;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.GolferWaitlistEntryAggregate;
+using Teeforce.Domain.TeeTimeOpeningAggregate.Events;
+using Teeforce.Domain.TeeTimeOpeningAggregate.Exceptions;
 
-namespace Shadowbrook.Domain.TeeTimeOpeningAggregate;
+namespace Teeforce.Domain.TeeTimeOpeningAggregate;
 
 public class TeeTimeOpening : Entity
 {

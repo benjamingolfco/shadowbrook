@@ -1,4 +1,4 @@
-namespace Shadowbrook.Api.Infrastructure;
+namespace Teeforce.Api.Infrastructure;
 
 public static class HostEnvironmentExtensions
 {

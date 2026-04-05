@@ -1,9 +1,9 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using NSubstitute;
-using Shadowbrook.Api.Infrastructure.Auth;
+using Teeforce.Api.Infrastructure.Auth;
 
-namespace Shadowbrook.Api.Tests.Auth;
+namespace Teeforce.Api.Tests.Auth;
 
 public class PermissionAuthorizationHandlerTests
 {

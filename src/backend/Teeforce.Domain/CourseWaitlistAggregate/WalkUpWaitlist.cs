@@ -1,10 +1,10 @@
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseWaitlistAggregate.Events;
-using Shadowbrook.Domain.CourseWaitlistAggregate.Exceptions;
-using Shadowbrook.Domain.GolferAggregate;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseWaitlistAggregate.Events;
+using Teeforce.Domain.CourseWaitlistAggregate.Exceptions;
+using Teeforce.Domain.GolferAggregate;
+using Teeforce.Domain.GolferWaitlistEntryAggregate;
 
-namespace Shadowbrook.Domain.CourseWaitlistAggregate;
+namespace Teeforce.Domain.CourseWaitlistAggregate;
 
 public class WalkUpWaitlist : CourseWaitlist
 {

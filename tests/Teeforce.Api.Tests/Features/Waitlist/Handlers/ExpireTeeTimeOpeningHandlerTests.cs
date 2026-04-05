@@ -1,10 +1,10 @@
 using NSubstitute;
-using Shadowbrook.Api.Features.Waitlist.Handlers;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
+using Teeforce.Api.Features.Waitlist.Handlers;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
+using Teeforce.Domain.TeeTimeOpeningAggregate.Events;
 
-namespace Shadowbrook.Api.Tests.Features.Waitlist.Handlers;
+namespace Teeforce.Api.Tests.Features.Waitlist.Handlers;
 
 public class ExpireTeeTimeOpeningHandlerTests
 {

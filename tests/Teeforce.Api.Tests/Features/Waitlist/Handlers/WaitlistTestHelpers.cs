@@ -1,12 +1,12 @@
 using NSubstitute;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseWaitlistAggregate;
-using Shadowbrook.Domain.GolferAggregate;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseWaitlistAggregate;
+using Teeforce.Domain.GolferAggregate;
+using Teeforce.Domain.GolferWaitlistEntryAggregate;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
+using Teeforce.Domain.WaitlistOfferAggregate;
 
-namespace Shadowbrook.Api.Tests.Features.Waitlist.Handlers;
+namespace Teeforce.Api.Tests.Features.Waitlist.Handlers;
 
 internal static class WaitlistTestHelpers
 {

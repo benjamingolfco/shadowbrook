@@ -1,7 +1,7 @@
 using FluentValidation.TestHelper;
-using Shadowbrook.Api.Features.Organizations;
+using Teeforce.Api.Features.Organizations;
 
-namespace Shadowbrook.Api.Tests.Features.Organizations.Validators;
+namespace Teeforce.Api.Tests.Features.Organizations.Validators;
 
 public class CreateOrganizationRequestValidatorTests
 {

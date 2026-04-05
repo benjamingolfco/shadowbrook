@@ -1,7 +1,7 @@
 using FluentValidation.TestHelper;
-using Shadowbrook.Api.Features.Auth;
+using Teeforce.Api.Features.Auth;
 
-namespace Shadowbrook.Api.Tests.Features.Auth.Validators;
+namespace Teeforce.Api.Tests.Features.Auth.Validators;
 
 public class UpdateUserRequestValidatorTests
 {

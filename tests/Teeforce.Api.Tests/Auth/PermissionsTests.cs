@@ -1,7 +1,7 @@
-using Shadowbrook.Api.Infrastructure.Auth;
-using Shadowbrook.Domain.AppUserAggregate;
+using Teeforce.Api.Infrastructure.Auth;
+using Teeforce.Domain.AppUserAggregate;
 
-namespace Shadowbrook.Api.Tests.Auth;
+namespace Teeforce.Api.Tests.Auth;
 
 public class PermissionsTests
 {

@@ -1,10 +1,10 @@
 using NSubstitute;
-using Shadowbrook.Api.Features.AppUsers.Handlers.AppUserCreated;
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.Services;
-using AppUserCreatedEvent = Shadowbrook.Domain.AppUserAggregate.Events.AppUserCreated;
+using Teeforce.Api.Features.AppUsers.Handlers.AppUserCreated;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.Services;
+using AppUserCreatedEvent = Teeforce.Domain.AppUserAggregate.Events.AppUserCreated;
 
-namespace Shadowbrook.Api.Tests.Features.AppUsers.Handlers;
+namespace Teeforce.Api.Tests.Features.AppUsers.Handlers;
 
 public class SendEntraInvitationHandlerTests
 {

@@ -1,4 +1,4 @@
-namespace Shadowbrook.Domain.Common;
+namespace Teeforce.Domain.Common;
 
 public interface IRepository<T>
     where T : Entity

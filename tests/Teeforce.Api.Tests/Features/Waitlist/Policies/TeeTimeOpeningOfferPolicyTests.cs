@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Logging.Abstractions;
-using Shadowbrook.Api.Features.Waitlist.Policies;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
-using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
+using Teeforce.Api.Features.Waitlist.Policies;
+using Teeforce.Domain.TeeTimeOpeningAggregate.Events;
+using Teeforce.Domain.WaitlistOfferAggregate.Events;
 
-namespace Shadowbrook.Api.Tests.Features.Waitlist.Policies;
+namespace Teeforce.Api.Tests.Features.Waitlist.Policies;
 
 public class TeeTimeOpeningOfferPolicyTests
 {

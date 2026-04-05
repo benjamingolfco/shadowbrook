@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
-namespace Shadowbrook.Api.IntegrationTests;
+namespace Teeforce.Api.IntegrationTests;
 
 [Collection("Integration")]
 [IntegrationTest]

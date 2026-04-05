@@ -1,10 +1,10 @@
 using NSubstitute;
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.AppUserAggregate.Events;
-using Shadowbrook.Domain.AppUserAggregate.Exceptions;
-using Shadowbrook.Domain.Services;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.AppUserAggregate.Events;
+using Teeforce.Domain.AppUserAggregate.Exceptions;
+using Teeforce.Domain.Services;
 
-namespace Shadowbrook.Domain.Tests.AppUserAggregate;
+namespace Teeforce.Domain.Tests.AppUserAggregate;
 
 public class AppUserTests
 {

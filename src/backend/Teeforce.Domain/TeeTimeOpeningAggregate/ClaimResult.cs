@@ -1,4 +1,4 @@
-namespace Shadowbrook.Domain.TeeTimeOpeningAggregate;
+namespace Teeforce.Domain.TeeTimeOpeningAggregate;
 
 public record ClaimResult(bool Success, string? Reason = null)
 {

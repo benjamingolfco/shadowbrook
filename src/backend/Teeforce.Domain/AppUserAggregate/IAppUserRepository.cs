@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.AppUserAggregate;
+namespace Teeforce.Domain.AppUserAggregate;
 
 public interface IAppUserRepository : IRepository<AppUser>
 {

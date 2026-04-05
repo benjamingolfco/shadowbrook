@@ -1,8 +1,8 @@
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
-using Shadowbrook.Domain.WaitlistOfferAggregate.Exceptions;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.WaitlistOfferAggregate.Events;
+using Teeforce.Domain.WaitlistOfferAggregate.Exceptions;
 
-namespace Shadowbrook.Domain.WaitlistOfferAggregate;
+namespace Teeforce.Domain.WaitlistOfferAggregate;
 
 public class WaitlistOffer : Entity
 {

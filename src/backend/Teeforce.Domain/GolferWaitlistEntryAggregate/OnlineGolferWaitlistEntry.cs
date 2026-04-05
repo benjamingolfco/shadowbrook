@@ -1,4 +1,4 @@
-namespace Shadowbrook.Domain.GolferWaitlistEntryAggregate;
+namespace Teeforce.Domain.GolferWaitlistEntryAggregate;
 
 public class OnlineGolferWaitlistEntry : GolferWaitlistEntry
 {

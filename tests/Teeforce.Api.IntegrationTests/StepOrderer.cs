@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace Shadowbrook.Api.IntegrationTests;
+namespace Teeforce.Api.IntegrationTests;
 
 public class StepOrderer : ITestCaseOrderer
 {

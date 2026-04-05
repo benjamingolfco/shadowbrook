@@ -1,4 +1,4 @@
-namespace Shadowbrook.Domain.TeeTimeOpeningAggregate;
+namespace Teeforce.Domain.TeeTimeOpeningAggregate;
 
 public enum TeeTimeOpeningStatus
 {

@@ -1,9 +1,9 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using NSubstitute;
-using Shadowbrook.Api.Infrastructure.Auth;
+using Teeforce.Api.Infrastructure.Auth;
 
-namespace Shadowbrook.Api.Tests.Features.Auth;
+namespace Teeforce.Api.Tests.Features.Auth;
 
 public class UserContextTests
 {

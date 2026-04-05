@@ -1,15 +1,15 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Api.Infrastructure.Services;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseWaitlistAggregate;
-using Shadowbrook.Domain.GolferAggregate;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseWaitlistAggregate;
+using Teeforce.Domain.GolferAggregate;
+using Teeforce.Domain.GolferWaitlistEntryAggregate;
 using Wolverine.Http;
 
-namespace Shadowbrook.Api.Features.Waitlist.Endpoints;
+namespace Teeforce.Api.Features.Waitlist.Endpoints;
 
 public static class WalkUpJoinEndpoints
 {

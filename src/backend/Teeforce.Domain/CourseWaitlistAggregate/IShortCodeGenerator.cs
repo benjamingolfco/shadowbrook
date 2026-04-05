@@ -1,4 +1,4 @@
-namespace Shadowbrook.Domain.CourseWaitlistAggregate;
+namespace Teeforce.Domain.CourseWaitlistAggregate;
 
 public interface IShortCodeGenerator
 {

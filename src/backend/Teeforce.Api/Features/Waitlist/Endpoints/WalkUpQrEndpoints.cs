@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Api.Infrastructure.Services;
-using Shadowbrook.Domain.CourseWaitlistAggregate;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Domain.CourseWaitlistAggregate;
 using Wolverine.Http;
 
-namespace Shadowbrook.Api.Features.Waitlist.Endpoints;
+namespace Teeforce.Api.Features.Waitlist.Endpoints;
 
 public static class WalkUpQrEndpoints
 {

@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.GolferAggregate;
+using Teeforce.Domain.GolferAggregate;
 
-namespace Shadowbrook.Domain.Tests.GolferAggregate;
+namespace Teeforce.Domain.Tests.GolferAggregate;
 
 public class GolferTests
 {

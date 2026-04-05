@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.BookingAggregate;
+namespace Teeforce.Domain.BookingAggregate;
 
 public interface IBookingRepository : IRepository<Booking>
 {

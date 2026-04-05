@@ -1,14 +1,14 @@
 using System.Reflection;
 using JasperFx.CodeGeneration;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 using Wolverine;
 using Wolverine.EntityFrameworkCore;
 using Wolverine.ErrorHandling;
 using Wolverine.FluentValidation;
 using Wolverine.SqlServer;
 
-namespace Shadowbrook.Api.Infrastructure;
+namespace Teeforce.Api.Infrastructure;
 
 public static class WolverineExtensions
 {

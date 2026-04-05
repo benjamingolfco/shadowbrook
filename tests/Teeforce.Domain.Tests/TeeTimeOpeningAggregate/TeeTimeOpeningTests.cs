@@ -1,13 +1,13 @@
 using NSubstitute;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseWaitlistAggregate;
-using Shadowbrook.Domain.GolferAggregate;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate.Exceptions;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseWaitlistAggregate;
+using Teeforce.Domain.GolferAggregate;
+using Teeforce.Domain.GolferWaitlistEntryAggregate;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
+using Teeforce.Domain.TeeTimeOpeningAggregate.Events;
+using Teeforce.Domain.TeeTimeOpeningAggregate.Exceptions;
 
-namespace Shadowbrook.Domain.Tests.TeeTimeOpeningAggregate;
+namespace Teeforce.Domain.Tests.TeeTimeOpeningAggregate;
 
 public class TeeTimeOpeningTests
 {

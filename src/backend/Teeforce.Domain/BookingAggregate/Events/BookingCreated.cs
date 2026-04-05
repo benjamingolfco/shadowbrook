@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.BookingAggregate.Events;
+namespace Teeforce.Domain.BookingAggregate.Events;
 
 public record BookingCreated : IDomainEvent
 {

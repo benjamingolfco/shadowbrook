@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Api.Infrastructure.Services;
 
-namespace Shadowbrook.Api.Features.Dev;
+namespace Teeforce.Api.Features.Dev;
 
 public static class DevSmsEndpoints
 {

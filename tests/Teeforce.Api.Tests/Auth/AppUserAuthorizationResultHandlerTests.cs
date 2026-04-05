@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.Http;
 using NSubstitute;
-using Shadowbrook.Api.Infrastructure.Auth;
+using Teeforce.Api.Infrastructure.Auth;
 
-namespace Shadowbrook.Api.Tests.Auth;
+namespace Teeforce.Api.Tests.Auth;
 
 public class AppUserAuthorizationResultHandlerTests
 {

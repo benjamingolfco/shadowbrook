@@ -1,6 +1,6 @@
-using Shadowbrook.Api.Features.Tenants;
+using Teeforce.Api.Features.Tenants;
 
-namespace Shadowbrook.Api.Tests.Features.Tenants.Validators;
+namespace Teeforce.Api.Tests.Features.Tenants.Validators;
 
 public class CreateTenantRequestValidatorTests
 {

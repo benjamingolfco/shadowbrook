@@ -1,12 +1,12 @@
 using System.Security.Claims;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
-using Shadowbrook.Api.Features.Auth.Handlers;
-using Shadowbrook.Api.Infrastructure.Auth;
-using Shadowbrook.Domain.AppUserAggregate;
+using Teeforce.Api.Features.Auth.Handlers;
+using Teeforce.Api.Infrastructure.Auth;
+using Teeforce.Domain.AppUserAggregate;
 using Wolverine;
 
-namespace Shadowbrook.Api.Tests.Auth;
+namespace Teeforce.Api.Tests.Auth;
 
 public class AppUserClaimsTransformationTests
 {

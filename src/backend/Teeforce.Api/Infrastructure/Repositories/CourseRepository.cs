@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.CourseAggregate;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.CourseAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.Repositories;
+namespace Teeforce.Api.Infrastructure.Repositories;
 
 public class CourseRepository(ApplicationDbContext db) : ICourseRepository
 {

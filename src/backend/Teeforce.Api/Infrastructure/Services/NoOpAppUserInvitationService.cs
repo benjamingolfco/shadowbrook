@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Services;
+using Teeforce.Domain.Services;
 
-namespace Shadowbrook.Api.Infrastructure.Services;
+namespace Teeforce.Api.Infrastructure.Services;
 
 public class NoOpAppUserInvitationService(ILogger<NoOpAppUserInvitationService> logger) : IAppUserInvitationService
 {

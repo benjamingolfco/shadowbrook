@@ -1,14 +1,14 @@
 using Microsoft.Extensions.DependencyInjection;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Api.Infrastructure.Repositories;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseAggregate;
-using Shadowbrook.Domain.CourseWaitlistAggregate;
-using Shadowbrook.Domain.GolferAggregate;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.OrganizationAggregate;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Api.Infrastructure.Repositories;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseAggregate;
+using Teeforce.Domain.CourseWaitlistAggregate;
+using Teeforce.Domain.GolferAggregate;
+using Teeforce.Domain.GolferWaitlistEntryAggregate;
+using Teeforce.Domain.OrganizationAggregate;
 
-namespace Shadowbrook.Api.IntegrationTests.Repositories;
+namespace Teeforce.Api.IntegrationTests.Repositories;
 
 [Collection("Integration")]
 [IntegrationTest]

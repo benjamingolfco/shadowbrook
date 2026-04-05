@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Shadowbrook.Domain.BookingAggregate;
+using Teeforce.Domain.BookingAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
+namespace Teeforce.Api.Infrastructure.EntityTypeConfigurations;
 
 public class BookingConfiguration : IEntityTypeConfiguration<Booking>
 {

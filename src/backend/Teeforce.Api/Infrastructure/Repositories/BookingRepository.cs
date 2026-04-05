@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.BookingAggregate;
-using Shadowbrook.Domain.Common;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.BookingAggregate;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Api.Infrastructure.Repositories;
+namespace Teeforce.Api.Infrastructure.Repositories;
 
 public class BookingRepository(ApplicationDbContext db) : IBookingRepository
 {

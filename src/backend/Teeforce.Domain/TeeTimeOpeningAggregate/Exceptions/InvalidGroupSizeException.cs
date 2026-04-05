@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.TeeTimeOpeningAggregate.Exceptions;
+namespace Teeforce.Domain.TeeTimeOpeningAggregate.Exceptions;
 
 public class InvalidGroupSizeException()
     : DomainException("Group size must be at least 1.");

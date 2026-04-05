@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Shadowbrook.Domain.CourseWaitlistAggregate;
-using Shadowbrook.Domain.GolferAggregate;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
+using Teeforce.Domain.CourseWaitlistAggregate;
+using Teeforce.Domain.GolferAggregate;
+using Teeforce.Domain.GolferWaitlistEntryAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
+namespace Teeforce.Api.Infrastructure.EntityTypeConfigurations;
 
 public class GolferWaitlistEntryConfiguration : IEntityTypeConfiguration<GolferWaitlistEntry>
 {

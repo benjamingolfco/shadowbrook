@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.GolferWaitlistEntryAggregate;
+using Teeforce.Domain.WaitlistOfferAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.Repositories;
+namespace Teeforce.Api.Infrastructure.Repositories;
 
 public class GolferWaitlistEntryRepository(ApplicationDbContext db) : IGolferWaitlistEntryRepository
 {

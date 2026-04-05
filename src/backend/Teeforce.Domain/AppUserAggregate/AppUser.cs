@@ -1,9 +1,9 @@
-using Shadowbrook.Domain.AppUserAggregate.Events;
-using Shadowbrook.Domain.AppUserAggregate.Exceptions;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.Services;
+using Teeforce.Domain.AppUserAggregate.Events;
+using Teeforce.Domain.AppUserAggregate.Exceptions;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.Services;
 
-namespace Shadowbrook.Domain.AppUserAggregate;
+namespace Teeforce.Domain.AppUserAggregate;
 
 public class AppUser : Entity
 {

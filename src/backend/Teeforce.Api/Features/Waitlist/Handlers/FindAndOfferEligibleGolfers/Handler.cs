@@ -1,11 +1,11 @@
 using Microsoft.Extensions.Logging;
-using Shadowbrook.Api.Features.Waitlist.Policies;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate;
-using Shadowbrook.Domain.WaitlistServices;
+using Teeforce.Api.Features.Waitlist.Policies;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
+using Teeforce.Domain.WaitlistOfferAggregate;
+using Teeforce.Domain.WaitlistServices;
 
-namespace Shadowbrook.Api.Features.Waitlist.Handlers;
+namespace Teeforce.Api.Features.Waitlist.Handlers;
 
 public record FindAndOfferEligibleGolfers(Guid OpeningId, int MaxOffers);
 

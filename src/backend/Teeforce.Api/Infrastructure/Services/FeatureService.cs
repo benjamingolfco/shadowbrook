@@ -1,6 +1,6 @@
-using Shadowbrook.Api.Features.FeatureFlags;
+using Teeforce.Api.Features.FeatureFlags;
 
-namespace Shadowbrook.Api.Infrastructure.Services;
+namespace Teeforce.Api.Infrastructure.Services;
 
 public class FeatureService(IConfiguration configuration) : IFeatureService
 {

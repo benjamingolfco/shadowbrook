@@ -1,9 +1,9 @@
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.Services;
-using AppUserCreatedEvent = Shadowbrook.Domain.AppUserAggregate.Events.AppUserCreated;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.Services;
+using AppUserCreatedEvent = Teeforce.Domain.AppUserAggregate.Events.AppUserCreated;
 
-namespace Shadowbrook.Api.Features.AppUsers.Handlers.AppUserCreated;
+namespace Teeforce.Api.Features.AppUsers.Handlers.AppUserCreated;
 
 public static class SendEntraInvitationHandler
 {

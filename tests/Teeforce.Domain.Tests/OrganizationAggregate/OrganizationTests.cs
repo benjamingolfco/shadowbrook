@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.OrganizationAggregate;
+using Teeforce.Domain.OrganizationAggregate;
 
-namespace Shadowbrook.Domain.Tests.OrganizationAggregate;
+namespace Teeforce.Domain.Tests.OrganizationAggregate;
 
 public class OrganizationTests
 {

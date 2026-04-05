@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Auth;
-using Shadowbrook.Api.Infrastructure.Data;
+using Teeforce.Api.Infrastructure.Auth;
+using Teeforce.Api.Infrastructure.Data;
 using Wolverine.Http;
 
-namespace Shadowbrook.Api.Features.Analytics;
+namespace Teeforce.Api.Features.Analytics;
 
 public static class AnalyticsEndpoints
 {

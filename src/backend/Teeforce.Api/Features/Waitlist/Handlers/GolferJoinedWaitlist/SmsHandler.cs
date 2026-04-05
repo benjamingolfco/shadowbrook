@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseWaitlistAggregate.Events;
-using Shadowbrook.Domain.GolferAggregate;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseWaitlistAggregate.Events;
+using Teeforce.Domain.GolferAggregate;
 
-namespace Shadowbrook.Api.Features.Waitlist.Handlers;
+namespace Teeforce.Api.Features.Waitlist.Handlers;
 
 public static class GolferJoinedWaitlistSmsHandler
 {

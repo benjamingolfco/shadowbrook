@@ -1,4 +1,4 @@
-namespace Shadowbrook.Api.IntegrationTests;
+namespace Teeforce.Api.IntegrationTests;
 
 // Shared response records used across multiple scenario test classes.
 // Scenario-specific DTOs can still be defined as private records in the test class.

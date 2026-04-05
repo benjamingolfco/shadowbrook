@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Shadowbrook.Domain.GolferAggregate;
+using Teeforce.Domain.GolferAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
+namespace Teeforce.Api.Infrastructure.EntityTypeConfigurations;
 
 public class GolferConfiguration : IEntityTypeConfiguration<Golfer>
 {

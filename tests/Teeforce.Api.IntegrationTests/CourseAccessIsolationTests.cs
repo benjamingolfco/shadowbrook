@@ -1,13 +1,13 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.CourseAggregate;
-using Shadowbrook.Domain.OrganizationAggregate;
-using Shadowbrook.Domain.Services;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.CourseAggregate;
+using Teeforce.Domain.OrganizationAggregate;
+using Teeforce.Domain.Services;
 
-namespace Shadowbrook.Api.IntegrationTests;
+namespace Teeforce.Api.IntegrationTests;
 
 [Collection("Integration")]
 [IntegrationTest]

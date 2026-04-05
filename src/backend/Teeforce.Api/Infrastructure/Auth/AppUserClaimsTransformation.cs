@@ -1,10 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
-using Shadowbrook.Api.Features.Auth.Handlers;
-using Shadowbrook.Domain.AppUserAggregate;
+using Teeforce.Api.Features.Auth.Handlers;
+using Teeforce.Domain.AppUserAggregate;
 using Wolverine;
 
-namespace Shadowbrook.Api.Infrastructure.Auth;
+namespace Teeforce.Api.Infrastructure.Auth;
 
 // NOTE: This queries the DB on every authenticated request. If this becomes a performance
 // concern, reintroduce IMemoryCache (single instance) or IDistributedCache (multiple replicas).

@@ -1,7 +1,7 @@
-using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
-using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Teeforce.Domain.TeeTimeOpeningAggregate.Events;
+using Teeforce.Domain.WaitlistOfferAggregate;
 
-namespace Shadowbrook.Api.Features.Waitlist.Handlers;
+namespace Teeforce.Api.Features.Waitlist.Handlers;
 
 public static class TeeTimeOpeningCancelledRejectOffersHandler
 {

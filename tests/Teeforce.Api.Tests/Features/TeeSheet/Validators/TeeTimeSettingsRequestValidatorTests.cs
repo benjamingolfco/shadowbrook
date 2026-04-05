@@ -1,8 +1,8 @@
 using FluentValidation.TestHelper;
-using Shadowbrook.Api.Features.Courses;
-using static Shadowbrook.Api.Features.Courses.CourseEndpoints;
+using Teeforce.Api.Features.Courses;
+using static Teeforce.Api.Features.Courses.CourseEndpoints;
 
-namespace Shadowbrook.Api.Tests.Features.TeeSheet.Validators;
+namespace Teeforce.Api.Tests.Features.TeeSheet.Validators;
 
 public class TeeTimeSettingsRequestValidatorTests
 {

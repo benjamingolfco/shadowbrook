@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Auth;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
+using Teeforce.Api.Infrastructure.Auth;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.GolferWaitlistEntryAggregate;
 using Wolverine.Http;
 
-namespace Shadowbrook.Api.Features.Waitlist.Endpoints;
+namespace Teeforce.Api.Features.Waitlist.Endpoints;
 
 public static class RemoveWaitlistEntryEndpoint
 {

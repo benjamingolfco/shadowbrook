@@ -1,8 +1,8 @@
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Api.Infrastructure.Dev;
-using Shadowbrook.Domain.Common;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Api.Infrastructure.Dev;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Api.Infrastructure.Services;
+namespace Teeforce.Api.Infrastructure.Services;
 
 /// <summary>
 /// Development SMS service that persists messages to the database for inspection via /dev/sms endpoints.

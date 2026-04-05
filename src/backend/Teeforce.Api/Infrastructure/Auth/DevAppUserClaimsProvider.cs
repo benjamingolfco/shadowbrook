@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
+using Teeforce.Api.Infrastructure.Data;
 
-namespace Shadowbrook.Api.Infrastructure.Auth;
+namespace Teeforce.Api.Infrastructure.Auth;
 
 public class DevAppUserClaimsProvider(ApplicationDbContext db) : IAppUserClaimsProvider
 {

@@ -4,27 +4,27 @@ using JasperFx;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Graph;
 using Serilog;
-using Shadowbrook.Api.Features.Dev;
-using Shadowbrook.Api.Infrastructure;
-using Shadowbrook.Api.Infrastructure.Auth;
-using Shadowbrook.Api.Infrastructure.Configuration;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Api.Infrastructure.Middleware;
-using Shadowbrook.Api.Infrastructure.Observability;
-using Shadowbrook.Api.Infrastructure.Repositories;
-using Shadowbrook.Api.Infrastructure.Services;
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.BookingAggregate;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseAggregate;
-using Shadowbrook.Domain.CourseWaitlistAggregate;
-using Shadowbrook.Domain.GolferAggregate;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.Services;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
-using Shadowbrook.Domain.TenantAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate;
-using Shadowbrook.Domain.WaitlistServices;
+using Teeforce.Api.Features.Dev;
+using Teeforce.Api.Infrastructure;
+using Teeforce.Api.Infrastructure.Auth;
+using Teeforce.Api.Infrastructure.Configuration;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Api.Infrastructure.Middleware;
+using Teeforce.Api.Infrastructure.Observability;
+using Teeforce.Api.Infrastructure.Repositories;
+using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.BookingAggregate;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseAggregate;
+using Teeforce.Domain.CourseWaitlistAggregate;
+using Teeforce.Domain.GolferAggregate;
+using Teeforce.Domain.GolferWaitlistEntryAggregate;
+using Teeforce.Domain.Services;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
+using Teeforce.Domain.TenantAggregate;
+using Teeforce.Domain.WaitlistOfferAggregate;
+using Teeforce.Domain.WaitlistServices;
 using Wolverine.Http;
 using Wolverine.Http.FluentValidation;
 
@@ -127,14 +127,14 @@ else
 }
 builder.Services.AddScoped<IAppUserEmailUniquenessChecker, AppUserEmailUniquenessChecker>();
 builder.Services.AddScoped<ICourseTimeZoneProvider, CourseTimeZoneProvider>();
-builder.Services.AddScoped<ITimeProvider, Shadowbrook.Api.Infrastructure.Services.TimeZoneProvider>();
+builder.Services.AddScoped<ITimeProvider, Teeforce.Api.Infrastructure.Services.TimeZoneProvider>();
 builder.Services.AddScoped<CourseContext>();
 builder.Services.AddScoped<ICourseContext>(sp => sp.GetRequiredService<CourseContext>());
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-builder.Services.AddShadowbrookAuth(builder.Configuration);
+builder.Services.AddTeeforceAuth(builder.Configuration);
 
 var authSettings = builder.Configuration.GetSection(AuthSettings.SectionName).Get<AuthSettings>()!;
 

@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.WaitlistOfferAggregate;
 
-namespace Shadowbrook.Api.Features.Waitlist.Handlers;
+namespace Teeforce.Api.Features.Waitlist.Handlers;
 
 public record MarkOfferStale(Guid WaitlistOfferId, Guid OpeningId);
 

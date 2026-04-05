@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Shadowbrook.Api.Features.Waitlist.Policies;
+using Teeforce.Api.Features.Waitlist.Policies;
 
-namespace Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
+namespace Teeforce.Api.Infrastructure.EntityTypeConfigurations;
 
 public class TeeTimeOpeningOfferPolicyConfiguration : IEntityTypeConfiguration<TeeTimeOpeningOfferPolicy>
 {

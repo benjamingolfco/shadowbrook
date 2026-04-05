@@ -1,12 +1,12 @@
 using Microsoft.Extensions.Logging;
-using Shadowbrook.Api.Features.Waitlist.Handlers;
-using Shadowbrook.Api.Infrastructure.Services;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
+using Teeforce.Api.Features.Waitlist.Handlers;
+using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.TeeTimeOpeningAggregate.Events;
 using Wolverine;
 using Wolverine.Persistence.Sagas;
 
-namespace Shadowbrook.Api.Features.Waitlist.Policies;
+namespace Teeforce.Api.Features.Waitlist.Policies;
 
 public class TeeTimeOpeningExpirationPolicy : Saga
 {

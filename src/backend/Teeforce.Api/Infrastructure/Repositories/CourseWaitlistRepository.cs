@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.CourseWaitlistAggregate;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.CourseWaitlistAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.Repositories;
+namespace Teeforce.Api.Infrastructure.Repositories;
 
 public class CourseWaitlistRepository(ApplicationDbContext db) : ICourseWaitlistRepository
 {

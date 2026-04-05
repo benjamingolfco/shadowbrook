@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.AppUserAggregate.Events;
+namespace Teeforce.Domain.AppUserAggregate.Events;
 
 public record AppUserCreated : IDomainEvent
 {

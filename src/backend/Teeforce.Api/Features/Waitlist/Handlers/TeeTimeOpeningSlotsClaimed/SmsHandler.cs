@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Logging;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseAggregate;
-using Shadowbrook.Domain.GolferAggregate;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseAggregate;
+using Teeforce.Domain.GolferAggregate;
+using Teeforce.Domain.TeeTimeOpeningAggregate.Events;
 
-namespace Shadowbrook.Api.Features.Waitlist.Handlers;
+namespace Teeforce.Api.Features.Waitlist.Handlers;
 
 public static class TeeTimeOpeningSlotsClaimedSmsHandler
 {

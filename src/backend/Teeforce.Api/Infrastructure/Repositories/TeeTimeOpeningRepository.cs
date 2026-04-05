@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.Repositories;
+namespace Teeforce.Api.Infrastructure.Repositories;
 
 public class TeeTimeOpeningRepository(ApplicationDbContext db) : ITeeTimeOpeningRepository
 {

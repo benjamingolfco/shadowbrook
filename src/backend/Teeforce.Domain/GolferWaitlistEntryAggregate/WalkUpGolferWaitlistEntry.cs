@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate.Exceptions;
+using Teeforce.Domain.GolferWaitlistEntryAggregate.Exceptions;
 
-namespace Shadowbrook.Domain.GolferWaitlistEntryAggregate;
+namespace Teeforce.Domain.GolferWaitlistEntryAggregate;
 
 public class WalkUpGolferWaitlistEntry : GolferWaitlistEntry
 {

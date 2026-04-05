@@ -1,14 +1,14 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Auth;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.CourseAggregate;
-using Shadowbrook.Domain.OrganizationAggregate;
-using Shadowbrook.Domain.TenantAggregate;
+using Teeforce.Api.Infrastructure.Auth;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.CourseAggregate;
+using Teeforce.Domain.OrganizationAggregate;
+using Teeforce.Domain.TenantAggregate;
 using Wolverine.Http;
 
-namespace Shadowbrook.Api.Features.Courses;
+namespace Teeforce.Api.Features.Courses;
 
 public static class CourseEndpoints
 {

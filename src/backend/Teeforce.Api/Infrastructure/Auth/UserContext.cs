@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace Shadowbrook.Api.Infrastructure.Auth;
+namespace Teeforce.Api.Infrastructure.Auth;
 
 public class UserContext(IHttpContextAccessor httpContextAccessor) : IUserContext
 {

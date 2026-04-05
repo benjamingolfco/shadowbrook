@@ -1,4 +1,4 @@
-namespace Shadowbrook.Domain.Services;
+namespace Teeforce.Domain.Services;
 
 public interface IAppUserEmailUniquenessChecker
 {

@@ -1,12 +1,12 @@
 using Microsoft.Extensions.Logging;
-using Shadowbrook.Api.Features.Waitlist.Policies;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseWaitlistAggregate;
-using Shadowbrook.Domain.CourseWaitlistAggregate.Events;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.WaitlistServices;
+using Teeforce.Api.Features.Waitlist.Policies;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseWaitlistAggregate;
+using Teeforce.Domain.CourseWaitlistAggregate.Events;
+using Teeforce.Domain.GolferWaitlistEntryAggregate;
+using Teeforce.Domain.WaitlistServices;
 
-namespace Shadowbrook.Api.Features.Waitlist.Handlers;
+namespace Teeforce.Api.Features.Waitlist.Handlers;
 
 public static class GolferJoinedWaitlistWakeUpHandler
 {

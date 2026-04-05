@@ -1,7 +1,7 @@
 using System.Reflection;
-using Shadowbrook.Api.Features.FeatureFlags;
+using Teeforce.Api.Features.FeatureFlags;
 
-namespace Shadowbrook.Api.Tests.Services;
+namespace Teeforce.Api.Tests.Services;
 
 public class FeatureKeysTests
 {

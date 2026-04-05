@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace Shadowbrook.Api.Features.FeatureFlags;
+namespace Teeforce.Api.Features.FeatureFlags;
 
 public static class FeatureKeys
 {

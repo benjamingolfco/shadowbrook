@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.CourseWaitlistAggregate.Events;
+namespace Teeforce.Domain.CourseWaitlistAggregate.Events;
 
 public record WalkUpWaitlistReopened : IDomainEvent
 {

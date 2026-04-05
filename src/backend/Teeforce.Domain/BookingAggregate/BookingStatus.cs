@@ -1,4 +1,4 @@
-namespace Shadowbrook.Domain.BookingAggregate;
+namespace Teeforce.Domain.BookingAggregate;
 
 public enum BookingStatus
 {

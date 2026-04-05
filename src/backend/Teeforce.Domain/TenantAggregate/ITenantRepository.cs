@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.TenantAggregate;
+namespace Teeforce.Domain.TenantAggregate;
 
 public interface ITenantRepository : IRepository<Tenant>
 {

@@ -1,9 +1,9 @@
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace Shadowbrook.Api.IntegrationTests;
+namespace Teeforce.Api.IntegrationTests;
 
-[TraitDiscoverer("Shadowbrook.Api.IntegrationTests.IntegrationTestDiscoverer", "Shadowbrook.Api.IntegrationTests")]
+[TraitDiscoverer("Teeforce.Api.IntegrationTests.IntegrationTestDiscoverer", "Teeforce.Api.IntegrationTests")]
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
 public class IntegrationTestAttribute : Attribute, ITraitAttribute;
 

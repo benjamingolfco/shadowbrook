@@ -1,4 +1,4 @@
-namespace Shadowbrook.Domain.Common;
+namespace Teeforce.Domain.Common;
 
 public class EntityNotFoundException(string entityName, Guid id)
     : DomainException($"{entityName} {id} not found.")

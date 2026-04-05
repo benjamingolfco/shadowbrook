@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Auth;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure.Auth;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Api.Infrastructure.Services;
 using Wolverine.Http;
 
-namespace Shadowbrook.Api.Features.FeatureFlags;
+namespace Teeforce.Api.Features.FeatureFlags;
 
 public static class FeatureEndpoints
 {

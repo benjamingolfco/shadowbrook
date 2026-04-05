@@ -1,8 +1,8 @@
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.GolferWaitlistEntryAggregate;
+using Teeforce.Domain.WaitlistOfferAggregate.Events;
 
-namespace Shadowbrook.Api.Features.Waitlist.Handlers;
+namespace Teeforce.Api.Features.Waitlist.Handlers;
 
 public static class WaitlistOfferAcceptedRemoveFromWaitlistHandler
 {

@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.WaitlistOfferAggregate;
+namespace Teeforce.Domain.WaitlistOfferAggregate;
 
 public interface IWaitlistOfferRepository : IRepository<WaitlistOffer>
 {

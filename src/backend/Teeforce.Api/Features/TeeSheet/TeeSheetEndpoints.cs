@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Auth;
-using Shadowbrook.Api.Infrastructure.Data;
+using Teeforce.Api.Infrastructure.Auth;
+using Teeforce.Api.Infrastructure.Data;
 using Wolverine.Http;
 
-namespace Shadowbrook.Api.Features.TeeSheet;
+namespace Teeforce.Api.Features.TeeSheet;
 
 public static class TeeSheetEndpoints
 {

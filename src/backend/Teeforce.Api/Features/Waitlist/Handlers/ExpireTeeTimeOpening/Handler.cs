@@ -1,7 +1,7 @@
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
 
-namespace Shadowbrook.Api.Features.Waitlist.Handlers;
+namespace Teeforce.Api.Features.Waitlist.Handlers;
 
 public record ExpireTeeTimeOpening(Guid OpeningId);
 

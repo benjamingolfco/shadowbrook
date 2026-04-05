@@ -1,13 +1,13 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Auth;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.Services;
+using Teeforce.Api.Infrastructure.Auth;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.Services;
 using Wolverine.Http;
 
-namespace Shadowbrook.Api.Features.Auth;
+namespace Teeforce.Api.Features.Auth;
 
 public static class AuthEndpoints
 {

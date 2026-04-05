@@ -1,13 +1,13 @@
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Shadowbrook.Api.Features.Bookings.Handlers;
-using Shadowbrook.Domain.BookingAggregate;
-using Shadowbrook.Domain.BookingAggregate.Events;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseAggregate;
-using Shadowbrook.Domain.GolferAggregate;
+using Teeforce.Api.Features.Bookings.Handlers;
+using Teeforce.Domain.BookingAggregate;
+using Teeforce.Domain.BookingAggregate.Events;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseAggregate;
+using Teeforce.Domain.GolferAggregate;
 
-namespace Shadowbrook.Api.Tests.Features.Waitlist.Handlers;
+namespace Teeforce.Api.Tests.Features.Waitlist.Handlers;
 
 public class BookingCancelledSmsHandlerTests
 {
@@ -86,7 +86,7 @@ public class BookingCancelledSmsHandlerTests
     public async Task Handle_Success_SendsCancellationSms()
     {
         var golfer = Golfer.Create("+15559876543", "Bob", "Green");
-        var course = Course.Create(Guid.NewGuid(), "Shadowbrook Golf Club", "America/Chicago");
+        var course = Course.Create(Guid.NewGuid(), "Teeforce Golf Club", "America/Chicago");
         var booking = BuildCancelledBooking(golferId: golfer.Id, courseId: course.Id);
         var evt = BuildEvent(bookingId: booking.Id);
 
@@ -98,7 +98,7 @@ public class BookingCancelledSmsHandlerTests
 
         await this.sms.Received(1).SendAsync(
             "+15559876543",
-            Arg.Is<string>(m => m.Contains("Shadowbrook Golf Club") && m.Contains("cancelled") && m.Contains("July 4, 2026") && m.Contains("8:00 AM")),
+            Arg.Is<string>(m => m.Contains("Teeforce Golf Club") && m.Contains("cancelled") && m.Contains("July 4, 2026") && m.Contains("8:00 AM")),
             Arg.Any<CancellationToken>());
     }
 

@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
+namespace Teeforce.Domain.TeeTimeOpeningAggregate.Events;
 
 public record TeeTimeOpeningCancelled : IDomainEvent
 {

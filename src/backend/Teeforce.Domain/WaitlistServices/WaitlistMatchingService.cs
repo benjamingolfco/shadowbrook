@@ -1,7 +1,7 @@
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
+using Teeforce.Domain.GolferWaitlistEntryAggregate;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
 
-namespace Shadowbrook.Domain.WaitlistServices;
+namespace Teeforce.Domain.WaitlistServices;
 
 public class WaitlistMatchingService(
     IGolferWaitlistEntryRepository entryRepository,

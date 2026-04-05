@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.GolferAggregate;
+namespace Teeforce.Domain.GolferAggregate;
 
 public class Golfer : Entity
 {

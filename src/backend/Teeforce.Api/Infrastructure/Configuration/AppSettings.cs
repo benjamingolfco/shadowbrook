@@ -1,4 +1,4 @@
-namespace Shadowbrook.Api.Infrastructure.Configuration;
+namespace Teeforce.Api.Infrastructure.Configuration;
 
 public class AppSettings
 {

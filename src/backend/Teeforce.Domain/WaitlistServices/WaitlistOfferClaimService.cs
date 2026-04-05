@@ -1,8 +1,8 @@
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
+using Teeforce.Domain.WaitlistOfferAggregate;
 
-namespace Shadowbrook.Domain.WaitlistServices;
+namespace Teeforce.Domain.WaitlistServices;
 
 public class WaitlistOfferClaimService(ITimeProvider timeProvider)
 {

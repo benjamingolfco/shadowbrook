@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
+using Teeforce.Domain.WaitlistOfferAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
+namespace Teeforce.Api.Infrastructure.EntityTypeConfigurations;
 
 public class WaitlistOfferConfiguration : IEntityTypeConfiguration<WaitlistOffer>
 {

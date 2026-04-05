@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.AppUserAggregate;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.AppUserAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.Repositories;
+namespace Teeforce.Api.Infrastructure.Repositories;
 
 public class AppUserRepository(ApplicationDbContext db) : IAppUserRepository
 {

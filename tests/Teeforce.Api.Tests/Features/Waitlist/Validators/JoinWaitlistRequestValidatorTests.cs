@@ -1,6 +1,6 @@
-using Shadowbrook.Api.Features.Waitlist.Endpoints;
+using Teeforce.Api.Features.Waitlist.Endpoints;
 
-namespace Shadowbrook.Api.Tests.Features.Waitlist.Validators;
+namespace Teeforce.Api.Tests.Features.Waitlist.Validators;
 
 public class JoinWaitlistRequestValidatorTests
 {

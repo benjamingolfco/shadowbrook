@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Shadowbrook.Api.Migrations;
+namespace Teeforce.Api.Migrations;
 
 /// <inheritdoc />
 public partial class LocalQaFixes : Migration

@@ -1,10 +1,10 @@
 using NSubstitute;
-using Shadowbrook.Api.Features.Bookings.Handlers;
-using Shadowbrook.Domain.BookingAggregate;
-using Shadowbrook.Domain.BookingAggregate.Events;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
+using Teeforce.Api.Features.Bookings.Handlers;
+using Teeforce.Domain.BookingAggregate;
+using Teeforce.Domain.BookingAggregate.Events;
+using Teeforce.Domain.TeeTimeOpeningAggregate.Events;
 
-namespace Shadowbrook.Api.Tests.Features.Bookings.Handlers;
+namespace Teeforce.Api.Tests.Features.Bookings.Handlers;
 
 public class TeeTimeOpeningSlotsClaimedCreateConfirmedBookingHandlerTests
 {

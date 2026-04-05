@@ -1,16 +1,16 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
-using Shadowbrook.Api.Features.Waitlist.Handlers;
-using Shadowbrook.Api.Features.Waitlist.Policies;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseWaitlistAggregate;
-using Shadowbrook.Domain.CourseWaitlistAggregate.Events;
-using Shadowbrook.Domain.GolferAggregate;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
-using Shadowbrook.Domain.WaitlistServices;
+using Teeforce.Api.Features.Waitlist.Handlers;
+using Teeforce.Api.Features.Waitlist.Policies;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseWaitlistAggregate;
+using Teeforce.Domain.CourseWaitlistAggregate.Events;
+using Teeforce.Domain.GolferAggregate;
+using Teeforce.Domain.GolferWaitlistEntryAggregate;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
+using Teeforce.Domain.WaitlistServices;
 
-namespace Shadowbrook.Api.Tests.Features.Waitlist.Handlers;
+namespace Teeforce.Api.Tests.Features.Waitlist.Handlers;
 
 public class WakeUpOfferPolicyHandlerTests
 {

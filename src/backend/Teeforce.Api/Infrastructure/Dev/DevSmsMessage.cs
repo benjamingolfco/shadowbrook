@@ -1,6 +1,6 @@
-using Shadowbrook.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure.Services;
 
-namespace Shadowbrook.Api.Infrastructure.Dev;
+namespace Teeforce.Api.Infrastructure.Dev;
 
 public class DevSmsMessage
 {

@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.CourseWaitlistAggregate;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.CourseWaitlistAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.Services;
+namespace Teeforce.Api.Infrastructure.Services;
 
 public class ShortCodeGenerator(ApplicationDbContext db) : IShortCodeGenerator
 {

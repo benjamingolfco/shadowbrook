@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.CourseAggregate;
-using Shadowbrook.Domain.OrganizationAggregate;
-using Shadowbrook.Domain.Services;
-using Shadowbrook.Domain.TenantAggregate;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.CourseAggregate;
+using Teeforce.Domain.OrganizationAggregate;
+using Teeforce.Domain.Services;
+using Teeforce.Domain.TenantAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.Data;
+namespace Teeforce.Api.Infrastructure.Data;
 
 public static class E2ESeedData
 {

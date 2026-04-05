@@ -1,4 +1,4 @@
-namespace Shadowbrook.Domain.AppUserAggregate;
+namespace Teeforce.Domain.AppUserAggregate;
 
 public enum AppUserRole
 {

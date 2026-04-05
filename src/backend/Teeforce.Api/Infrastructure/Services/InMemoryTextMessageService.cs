@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Api.Infrastructure.Services;
+namespace Teeforce.Api.Infrastructure.Services;
 
 public record SmsMessage(string From, string To, string Body, DateTimeOffset Timestamp, SmsDirection Direction);
 

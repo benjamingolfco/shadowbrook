@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.BookingAggregate;
-using Shadowbrook.Domain.BookingAggregate.Events;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.GolferAggregate;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.BookingAggregate;
+using Teeforce.Domain.BookingAggregate.Events;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.GolferAggregate;
 
-namespace Shadowbrook.Api.Features.Bookings.Handlers;
+namespace Teeforce.Api.Features.Bookings.Handlers;
 
 public static class BookingCreatedConfirmationSmsHandler
 {

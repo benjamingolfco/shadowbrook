@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Shadowbrook.Domain.CourseAggregate;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
+using Teeforce.Domain.CourseAggregate;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
+namespace Teeforce.Api.Infrastructure.EntityTypeConfigurations;
 
 public class TeeTimeOpeningConfiguration : IEntityTypeConfiguration<TeeTimeOpening>
 {

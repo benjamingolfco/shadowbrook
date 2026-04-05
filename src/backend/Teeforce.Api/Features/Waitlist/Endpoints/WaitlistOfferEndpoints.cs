@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate;
-using Shadowbrook.Domain.WaitlistServices;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
+using Teeforce.Domain.WaitlistOfferAggregate;
+using Teeforce.Domain.WaitlistServices;
 using Wolverine.Http;
 
-namespace Shadowbrook.Api.Features.Waitlist.Endpoints;
+namespace Teeforce.Api.Features.Waitlist.Endpoints;
 
 public static class WaitlistOfferEndpoints
 {

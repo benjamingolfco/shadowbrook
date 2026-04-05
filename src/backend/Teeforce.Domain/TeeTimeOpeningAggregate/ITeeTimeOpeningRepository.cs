@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.TeeTimeOpeningAggregate;
+namespace Teeforce.Domain.TeeTimeOpeningAggregate;
 
 public interface ITeeTimeOpeningRepository : IRepository<TeeTimeOpening>
 {

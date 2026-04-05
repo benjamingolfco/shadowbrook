@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.OrganizationAggregate;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.OrganizationAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
+namespace Teeforce.Api.Infrastructure.EntityTypeConfigurations;
 
 public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
 {

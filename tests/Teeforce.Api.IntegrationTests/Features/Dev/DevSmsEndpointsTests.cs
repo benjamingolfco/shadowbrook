@@ -2,12 +2,12 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Api.Infrastructure.Dev;
-using Shadowbrook.Api.Infrastructure.Services;
-using Shadowbrook.Domain.GolferAggregate;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Api.Infrastructure.Dev;
+using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Domain.GolferAggregate;
 
-namespace Shadowbrook.Api.IntegrationTests.Features.Dev;
+namespace Teeforce.Api.IntegrationTests.Features.Dev;
 
 [Collection("Integration")]
 [IntegrationTest]
@@ -37,7 +37,7 @@ public class DevSmsEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
             db.DevSmsMessages.Add(new DevSmsMessage
             {
                 Id = Guid.CreateVersion7(),
-                From = "ShadowbrookGolfClub",
+                From = "TeeforceGolfClub",
                 To = "+15551234567",
                 Body = "Test message 1",
                 Direction = SmsDirection.Outbound,
@@ -47,7 +47,7 @@ public class DevSmsEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
             {
                 Id = Guid.CreateVersion7(),
                 From = "+15551234567",
-                To = "ShadowbrookGolfClub",
+                To = "TeeforceGolfClub",
                 Body = "Test reply 1",
                 Direction = SmsDirection.Inbound,
                 Timestamp = DateTimeOffset.UtcNow.AddHours(-1)
@@ -57,7 +57,7 @@ public class DevSmsEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
             db.DevSmsMessages.Add(new DevSmsMessage
             {
                 Id = Guid.CreateVersion7(),
-                From = "ShadowbrookGolfClub",
+                From = "TeeforceGolfClub",
                 To = "+15559876543",
                 Body = "Test message 2",
                 Direction = SmsDirection.Outbound,
@@ -67,7 +67,7 @@ public class DevSmsEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
             {
                 Id = Guid.CreateVersion7(),
                 From = "+15559876543",
-                To = "ShadowbrookGolfClub",
+                To = "TeeforceGolfClub",
                 Body = "Test reply 2",
                 Direction = SmsDirection.Inbound,
                 Timestamp = DateTimeOffset.UtcNow.AddMinutes(-30)

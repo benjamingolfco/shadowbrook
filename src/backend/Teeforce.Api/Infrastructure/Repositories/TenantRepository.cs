@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.TenantAggregate;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.TenantAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.Repositories;
+namespace Teeforce.Api.Infrastructure.Repositories;
 
 public class TenantRepository(ApplicationDbContext db) : ITenantRepository
 {

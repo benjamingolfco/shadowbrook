@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.GolferWaitlistEntryAggregate.Exceptions;
+namespace Teeforce.Domain.GolferWaitlistEntryAggregate.Exceptions;
 
 public class CannotExtendRemovedEntryException()
     : DomainException("Cannot extend window on a removed entry.");

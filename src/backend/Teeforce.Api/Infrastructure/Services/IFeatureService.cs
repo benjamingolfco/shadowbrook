@@ -1,4 +1,4 @@
-namespace Shadowbrook.Api.Infrastructure.Services;
+namespace Teeforce.Api.Infrastructure.Services;
 
 public interface IFeatureService
 {

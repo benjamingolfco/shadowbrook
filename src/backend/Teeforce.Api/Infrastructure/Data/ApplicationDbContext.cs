@@ -1,23 +1,23 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Features.Bookings;
-using Shadowbrook.Api.Features.Waitlist;
-using Shadowbrook.Api.Features.Waitlist.Policies;
-using Shadowbrook.Api.Infrastructure.Auth;
-using Shadowbrook.Api.Infrastructure.Dev;
-using Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.BookingAggregate;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseAggregate;
-using Shadowbrook.Domain.CourseWaitlistAggregate;
-using Shadowbrook.Domain.GolferAggregate;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.OrganizationAggregate;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
-using Shadowbrook.Domain.TenantAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Teeforce.Api.Features.Bookings;
+using Teeforce.Api.Features.Waitlist;
+using Teeforce.Api.Features.Waitlist.Policies;
+using Teeforce.Api.Infrastructure.Auth;
+using Teeforce.Api.Infrastructure.Dev;
+using Teeforce.Api.Infrastructure.EntityTypeConfigurations;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.BookingAggregate;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseAggregate;
+using Teeforce.Domain.CourseWaitlistAggregate;
+using Teeforce.Domain.GolferAggregate;
+using Teeforce.Domain.GolferWaitlistEntryAggregate;
+using Teeforce.Domain.OrganizationAggregate;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
+using Teeforce.Domain.TenantAggregate;
+using Teeforce.Domain.WaitlistOfferAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.Data;
+namespace Teeforce.Api.Infrastructure.Data;
 
 public class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,

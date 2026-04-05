@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.GolferAggregate;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.GolferAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.Repositories;
+namespace Teeforce.Api.Infrastructure.Repositories;
 
 public class GolferRepository(ApplicationDbContext db) : IGolferRepository
 {

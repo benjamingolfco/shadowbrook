@@ -1,9 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
-using Shadowbrook.Api.Features.Waitlist.Endpoints;
-using Shadowbrook.Api.Infrastructure.Dev;
+using Teeforce.Api.Features.Waitlist.Endpoints;
+using Teeforce.Api.Infrastructure.Dev;
 
-namespace Shadowbrook.Api.IntegrationTests.Policies;
+namespace Teeforce.Api.IntegrationTests.Policies;
 
 [Collection("Integration")]
 [IntegrationTest]

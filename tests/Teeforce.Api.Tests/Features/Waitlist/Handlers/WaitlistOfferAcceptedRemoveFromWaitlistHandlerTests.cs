@@ -1,13 +1,13 @@
 using NSubstitute;
-using Shadowbrook.Api.Features.Waitlist.Handlers;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseWaitlistAggregate;
-using Shadowbrook.Domain.GolferAggregate;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate.Events;
-using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
+using Teeforce.Api.Features.Waitlist.Handlers;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseWaitlistAggregate;
+using Teeforce.Domain.GolferAggregate;
+using Teeforce.Domain.GolferWaitlistEntryAggregate;
+using Teeforce.Domain.GolferWaitlistEntryAggregate.Events;
+using Teeforce.Domain.WaitlistOfferAggregate.Events;
 
-namespace Shadowbrook.Api.Tests.Features.Waitlist.Handlers;
+namespace Teeforce.Api.Tests.Features.Waitlist.Handlers;
 
 public class WaitlistOfferAcceptedRemoveFromWaitlistHandlerTests
 {

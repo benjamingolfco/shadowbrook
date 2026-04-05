@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using NSubstitute;
-using Shadowbrook.Api.Features.Waitlist.Endpoints;
-using Shadowbrook.Api.Infrastructure.Services;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
+using Teeforce.Api.Features.Waitlist.Endpoints;
+using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
 
-namespace Shadowbrook.Api.Tests.Features.Waitlist.Endpoints;
+namespace Teeforce.Api.Tests.Features.Waitlist.Endpoints;
 
 public class CreateOpeningDuplicateGuardTests
 {

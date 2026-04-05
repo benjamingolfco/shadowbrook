@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.GolferWaitlistEntryAggregate.Events;
+namespace Teeforce.Domain.GolferWaitlistEntryAggregate.Events;
 
 public record WalkUpEntryWindowExtended : IDomainEvent
 {

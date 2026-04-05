@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Shadowbrook.Api.Infrastructure.Data;
+using Teeforce.Api.Infrastructure.Data;
 
 #nullable disable
 
-namespace Shadowbrook.Api.Migrations
+namespace Teeforce.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
@@ -23,7 +23,7 @@ namespace Shadowbrook.Api.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Shadowbrook.Api.Features.Waitlist.Policies.TeeTimeOpeningExpirationPolicy", b =>
+            modelBuilder.Entity("Teeforce.Api.Features.Waitlist.Policies.TeeTimeOpeningExpirationPolicy", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -33,7 +33,7 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("TeeTimeOpeningExpirationPolicies", (string)null);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Api.Features.Waitlist.Policies.TeeTimeOpeningOfferPolicy", b =>
+            modelBuilder.Entity("Teeforce.Api.Features.Waitlist.Policies.TeeTimeOpeningOfferPolicy", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -52,7 +52,7 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("TeeTimeOpeningOfferPolicies", (string)null);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Api.Features.Waitlist.Policies.WaitlistOfferResponsePolicy", b =>
+            modelBuilder.Entity("Teeforce.Api.Features.Waitlist.Policies.WaitlistOfferResponsePolicy", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -65,7 +65,7 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("WaitlistOfferResponsePolicies", (string)null);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Api.Infrastructure.Dev.DevSmsMessage", b =>
+            modelBuilder.Entity("Teeforce.Api.Infrastructure.Dev.DevSmsMessage", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -97,7 +97,7 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("DevSmsMessages", (string)null);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.AppUserAggregate.AppUser", b =>
+            modelBuilder.Entity("Teeforce.Domain.AppUserAggregate.AppUser", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -154,7 +154,7 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("AppUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.BookingAggregate.Booking", b =>
+            modelBuilder.Entity("Teeforce.Domain.BookingAggregate.Booking", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -188,7 +188,7 @@ namespace Shadowbrook.Api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "TeeTime", "Shadowbrook.Domain.BookingAggregate.Booking.TeeTime#TeeTime", b1 =>
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "TeeTime", "Teeforce.Domain.BookingAggregate.Booking.TeeTime#TeeTime", b1 =>
                         {
                             b1.IsRequired();
 
@@ -204,7 +204,7 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("Bookings", (string)null);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.CourseAggregate.Course", b =>
+            modelBuilder.Entity("Teeforce.Domain.CourseAggregate.Course", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -290,7 +290,7 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("Courses", (string)null);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.CourseWaitlistAggregate.CourseWaitlist", b =>
+            modelBuilder.Entity("Teeforce.Domain.CourseWaitlistAggregate.CourseWaitlist", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -333,7 +333,7 @@ namespace Shadowbrook.Api.Migrations
                     b.UseTphMappingStrategy();
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.GolferAggregate.Golfer", b =>
+            modelBuilder.Entity("Teeforce.Domain.GolferAggregate.Golfer", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -376,7 +376,7 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("Golfers", (string)null);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.GolferWaitlistEntryAggregate.GolferWaitlistEntry", b =>
+            modelBuilder.Entity("Teeforce.Domain.GolferWaitlistEntryAggregate.GolferWaitlistEntry", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -437,7 +437,7 @@ namespace Shadowbrook.Api.Migrations
                     b.UseTphMappingStrategy();
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.OrganizationAggregate.Organization", b =>
+            modelBuilder.Entity("Teeforce.Domain.OrganizationAggregate.Organization", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -468,7 +468,7 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("Organizations", (string)null);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.TeeTimeOpeningAggregate.TeeTimeOpening", b =>
+            modelBuilder.Entity("Teeforce.Domain.TeeTimeOpeningAggregate.TeeTimeOpening", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -514,7 +514,7 @@ namespace Shadowbrook.Api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "TeeTime", "Shadowbrook.Domain.TeeTimeOpeningAggregate.TeeTimeOpening.TeeTime#TeeTime", b1 =>
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "TeeTime", "Teeforce.Domain.TeeTimeOpeningAggregate.TeeTimeOpening.TeeTime#TeeTime", b1 =>
                         {
                             b1.IsRequired();
 
@@ -530,7 +530,7 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("TeeTimeOpenings", (string)null);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.TenantAggregate.Tenant", b =>
+            modelBuilder.Entity("Teeforce.Domain.TenantAggregate.Tenant", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -578,7 +578,7 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("Tenants", (string)null);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.WaitlistOfferAggregate.WaitlistOffer", b =>
+            modelBuilder.Entity("Teeforce.Domain.WaitlistOfferAggregate.WaitlistOffer", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -659,16 +659,16 @@ namespace Shadowbrook.Api.Migrations
                     b.ToTable("WaitlistOffers", (string)null);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.CourseWaitlistAggregate.OnlineWaitlist", b =>
+            modelBuilder.Entity("Teeforce.Domain.CourseWaitlistAggregate.OnlineWaitlist", b =>
                 {
-                    b.HasBaseType("Shadowbrook.Domain.CourseWaitlistAggregate.CourseWaitlist");
+                    b.HasBaseType("Teeforce.Domain.CourseWaitlistAggregate.CourseWaitlist");
 
                     b.HasDiscriminator().HasValue("Online");
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.CourseWaitlistAggregate.WalkUpWaitlist", b =>
+            modelBuilder.Entity("Teeforce.Domain.CourseWaitlistAggregate.WalkUpWaitlist", b =>
                 {
-                    b.HasBaseType("Shadowbrook.Domain.CourseWaitlistAggregate.CourseWaitlist");
+                    b.HasBaseType("Teeforce.Domain.CourseWaitlistAggregate.CourseWaitlist");
 
                     b.Property<DateTimeOffset?>("ClosedAt")
                         .HasColumnType("datetimeoffset");
@@ -691,70 +691,70 @@ namespace Shadowbrook.Api.Migrations
                     b.HasDiscriminator().HasValue("WalkUp");
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.GolferWaitlistEntryAggregate.OnlineGolferWaitlistEntry", b =>
+            modelBuilder.Entity("Teeforce.Domain.GolferWaitlistEntryAggregate.OnlineGolferWaitlistEntry", b =>
                 {
-                    b.HasBaseType("Shadowbrook.Domain.GolferWaitlistEntryAggregate.GolferWaitlistEntry");
+                    b.HasBaseType("Teeforce.Domain.GolferWaitlistEntryAggregate.GolferWaitlistEntry");
 
                     b.HasDiscriminator().HasValue(false);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.GolferWaitlistEntryAggregate.WalkUpGolferWaitlistEntry", b =>
+            modelBuilder.Entity("Teeforce.Domain.GolferWaitlistEntryAggregate.WalkUpGolferWaitlistEntry", b =>
                 {
-                    b.HasBaseType("Shadowbrook.Domain.GolferWaitlistEntryAggregate.GolferWaitlistEntry");
+                    b.HasBaseType("Teeforce.Domain.GolferWaitlistEntryAggregate.GolferWaitlistEntry");
 
                     b.HasDiscriminator().HasValue(true);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.AppUserAggregate.AppUser", b =>
+            modelBuilder.Entity("Teeforce.Domain.AppUserAggregate.AppUser", b =>
                 {
-                    b.HasOne("Shadowbrook.Domain.OrganizationAggregate.Organization", null)
+                    b.HasOne("Teeforce.Domain.OrganizationAggregate.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.CourseAggregate.Course", b =>
+            modelBuilder.Entity("Teeforce.Domain.CourseAggregate.Course", b =>
                 {
-                    b.HasOne("Shadowbrook.Domain.OrganizationAggregate.Organization", null)
+                    b.HasOne("Teeforce.Domain.OrganizationAggregate.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.CourseWaitlistAggregate.CourseWaitlist", b =>
+            modelBuilder.Entity("Teeforce.Domain.CourseWaitlistAggregate.CourseWaitlist", b =>
                 {
-                    b.HasOne("Shadowbrook.Domain.CourseAggregate.Course", null)
+                    b.HasOne("Teeforce.Domain.CourseAggregate.Course", null)
                         .WithMany()
                         .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.GolferWaitlistEntryAggregate.GolferWaitlistEntry", b =>
+            modelBuilder.Entity("Teeforce.Domain.GolferWaitlistEntryAggregate.GolferWaitlistEntry", b =>
                 {
-                    b.HasOne("Shadowbrook.Domain.CourseWaitlistAggregate.CourseWaitlist", null)
+                    b.HasOne("Teeforce.Domain.CourseWaitlistAggregate.CourseWaitlist", null)
                         .WithMany()
                         .HasForeignKey("CourseWaitlistId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Shadowbrook.Domain.GolferAggregate.Golfer", null)
+                    b.HasOne("Teeforce.Domain.GolferAggregate.Golfer", null)
                         .WithMany()
                         .HasForeignKey("GolferId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.TeeTimeOpeningAggregate.TeeTimeOpening", b =>
+            modelBuilder.Entity("Teeforce.Domain.TeeTimeOpeningAggregate.TeeTimeOpening", b =>
                 {
-                    b.HasOne("Shadowbrook.Domain.CourseAggregate.Course", null)
+                    b.HasOne("Teeforce.Domain.CourseAggregate.Course", null)
                         .WithMany()
                         .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsMany("Shadowbrook.Domain.TeeTimeOpeningAggregate.ClaimedSlot", "ClaimedSlots", b1 =>
+                    b.OwnsMany("Teeforce.Domain.TeeTimeOpeningAggregate.ClaimedSlot", "ClaimedSlots", b1 =>
                         {
                             b1.Property<Guid>("TeeTimeOpeningId")
                                 .HasColumnType("uniqueidentifier");
@@ -782,9 +782,9 @@ namespace Shadowbrook.Api.Migrations
                     b.Navigation("ClaimedSlots");
                 });
 
-            modelBuilder.Entity("Shadowbrook.Domain.WaitlistOfferAggregate.WaitlistOffer", b =>
+            modelBuilder.Entity("Teeforce.Domain.WaitlistOfferAggregate.WaitlistOffer", b =>
                 {
-                    b.HasOne("Shadowbrook.Domain.TeeTimeOpeningAggregate.TeeTimeOpening", null)
+                    b.HasOne("Teeforce.Domain.TeeTimeOpeningAggregate.TeeTimeOpening", null)
                         .WithMany()
                         .HasForeignKey("OpeningId")
                         .OnDelete(DeleteBehavior.Cascade)

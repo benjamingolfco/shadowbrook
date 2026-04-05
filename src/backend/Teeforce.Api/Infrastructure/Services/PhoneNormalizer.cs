@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace Shadowbrook.Api.Infrastructure.Services;
+namespace Teeforce.Api.Infrastructure.Services;
 
 public static partial class PhoneNormalizer
 {

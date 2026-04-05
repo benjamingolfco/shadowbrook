@@ -1,14 +1,14 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Auth;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.OrganizationAggregate;
-using Shadowbrook.Domain.Services;
+using Teeforce.Api.Infrastructure.Auth;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.OrganizationAggregate;
+using Teeforce.Domain.Services;
 using Wolverine.Http;
 
-namespace Shadowbrook.Api.Features.Organizations;
+namespace Teeforce.Api.Features.Organizations;
 
 public static class OrganizationEndpoints
 {

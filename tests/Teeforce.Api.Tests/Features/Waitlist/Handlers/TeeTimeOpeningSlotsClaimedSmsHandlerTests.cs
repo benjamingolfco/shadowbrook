@@ -1,12 +1,12 @@
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Shadowbrook.Api.Features.Waitlist.Handlers;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseAggregate;
-using Shadowbrook.Domain.GolferAggregate;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
+using Teeforce.Api.Features.Waitlist.Handlers;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseAggregate;
+using Teeforce.Domain.GolferAggregate;
+using Teeforce.Domain.TeeTimeOpeningAggregate.Events;
 
-namespace Shadowbrook.Api.Tests.Features.Waitlist.Handlers;
+namespace Teeforce.Api.Tests.Features.Waitlist.Handlers;
 
 public class TeeTimeOpeningSlotsClaimedSmsHandlerTests
 {
@@ -72,7 +72,7 @@ public class TeeTimeOpeningSlotsClaimedSmsHandlerTests
     public async Task Handle_Success_SendsSmsToGolferPhoneWithConfirmationContent()
     {
         var golfer = Golfer.Create("+15559876543", "Bob", "Green");
-        var course = Course.Create(Guid.NewGuid(), "Shadowbrook Golf Club", "America/Chicago");
+        var course = Course.Create(Guid.NewGuid(), "Teeforce Golf Club", "America/Chicago");
         var evt = BuildEvent(golferId: golfer.Id, courseId: course.Id);
 
         this.golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
@@ -82,7 +82,7 @@ public class TeeTimeOpeningSlotsClaimedSmsHandlerTests
 
         await this.sms.Received(1).SendAsync(
             "+15559876543",
-            Arg.Is<string>(m => m.Contains("Shadowbrook Golf Club") && m.Contains("confirmed")),
+            Arg.Is<string>(m => m.Contains("Teeforce Golf Club") && m.Contains("confirmed")),
             Arg.Any<CancellationToken>());
     }
 }

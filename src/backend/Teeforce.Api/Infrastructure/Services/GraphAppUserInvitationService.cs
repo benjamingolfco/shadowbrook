@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
-using Shadowbrook.Api.Infrastructure.Configuration;
-using Shadowbrook.Domain.Services;
+using Teeforce.Api.Infrastructure.Configuration;
+using Teeforce.Domain.Services;
 
-namespace Shadowbrook.Api.Infrastructure.Services;
+namespace Teeforce.Api.Infrastructure.Services;
 
 public class GraphAppUserInvitationService(
     GraphServiceClient graphClient,

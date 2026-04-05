@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.WaitlistOfferAggregate.Events;
+namespace Teeforce.Domain.WaitlistOfferAggregate.Events;
 
 public record WaitlistOfferStale : IDomainEvent
 {

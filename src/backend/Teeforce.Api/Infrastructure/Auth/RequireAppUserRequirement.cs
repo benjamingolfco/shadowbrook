@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 
-namespace Shadowbrook.Api.Infrastructure.Auth;
+namespace Teeforce.Api.Infrastructure.Auth;
 
 public class RequireAppUserRequirement : IAuthorizationRequirement { }

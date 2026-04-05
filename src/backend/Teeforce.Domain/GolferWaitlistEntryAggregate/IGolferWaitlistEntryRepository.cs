@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.GolferWaitlistEntryAggregate;
+namespace Teeforce.Domain.GolferWaitlistEntryAggregate;
 
 public interface IGolferWaitlistEntryRepository : IRepository<GolferWaitlistEntry>
 {

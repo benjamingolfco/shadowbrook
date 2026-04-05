@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.WaitlistOfferAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.Repositories;
+namespace Teeforce.Api.Infrastructure.Repositories;
 
 public class WaitlistOfferRepository(ApplicationDbContext db) : IWaitlistOfferRepository
 {

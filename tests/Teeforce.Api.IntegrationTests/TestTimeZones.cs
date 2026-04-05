@@ -1,4 +1,4 @@
-namespace Shadowbrook.Api.IntegrationTests;
+namespace Teeforce.Api.IntegrationTests;
 
 public static class TestTimeZones
 {

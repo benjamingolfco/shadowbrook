@@ -1,8 +1,8 @@
-using Shadowbrook.Domain.BookingAggregate.Events;
-using Shadowbrook.Domain.BookingAggregate.Exceptions;
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.BookingAggregate.Events;
+using Teeforce.Domain.BookingAggregate.Exceptions;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.BookingAggregate;
+namespace Teeforce.Domain.BookingAggregate;
 
 public class Booking : Entity
 {

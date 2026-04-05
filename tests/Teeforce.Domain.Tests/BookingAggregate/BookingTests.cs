@@ -1,8 +1,8 @@
-using Shadowbrook.Domain.BookingAggregate;
-using Shadowbrook.Domain.BookingAggregate.Events;
-using Shadowbrook.Domain.BookingAggregate.Exceptions;
+using Teeforce.Domain.BookingAggregate;
+using Teeforce.Domain.BookingAggregate.Events;
+using Teeforce.Domain.BookingAggregate.Exceptions;
 
-namespace Shadowbrook.Domain.Tests.BookingAggregate;
+namespace Teeforce.Domain.Tests.BookingAggregate;
 
 public class BookingTests
 {

@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.CourseWaitlistAggregate.Exceptions;
+namespace Teeforce.Domain.CourseWaitlistAggregate.Exceptions;
 
 public class WaitlistAlreadyExistsException(WaitlistStatus existingStatus)
     : DomainException(existingStatus == WaitlistStatus.Open

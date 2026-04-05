@@ -1,9 +1,9 @@
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate.Events;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.GolferWaitlistEntryAggregate.Events;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
+using Teeforce.Domain.WaitlistOfferAggregate;
 
-namespace Shadowbrook.Domain.GolferWaitlistEntryAggregate;
+namespace Teeforce.Domain.GolferWaitlistEntryAggregate;
 
 public abstract class GolferWaitlistEntry : Entity
 {

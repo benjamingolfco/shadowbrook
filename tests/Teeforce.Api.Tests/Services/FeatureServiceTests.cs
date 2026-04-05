@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Configuration;
-using Shadowbrook.Api.Features.FeatureFlags;
-using Shadowbrook.Api.Infrastructure.Services;
+using Teeforce.Api.Features.FeatureFlags;
+using Teeforce.Api.Infrastructure.Services;
 
-namespace Shadowbrook.Api.Tests.Services;
+namespace Teeforce.Api.Tests.Services;
 
 public class FeatureServiceTests
 {

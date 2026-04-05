@@ -1,12 +1,12 @@
 using NSubstitute;
-using Shadowbrook.Api.Features.Auth.Handlers;
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.AppUserAggregate.Events;
-using Shadowbrook.Domain.AppUserAggregate.Exceptions;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.Services;
+using Teeforce.Api.Features.Auth.Handlers;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.AppUserAggregate.Events;
+using Teeforce.Domain.AppUserAggregate.Exceptions;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.Services;
 
-namespace Shadowbrook.Api.Tests.Features.Auth.Handlers;
+namespace Teeforce.Api.Tests.Features.Auth.Handlers;
 
 public class CompleteIdentitySetupHandlerTests
 {

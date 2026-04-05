@@ -1,11 +1,11 @@
 using Microsoft.Extensions.Logging;
-using Shadowbrook.Domain.BookingAggregate;
-using Shadowbrook.Domain.BookingAggregate.Events;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseAggregate;
-using Shadowbrook.Domain.GolferAggregate;
+using Teeforce.Domain.BookingAggregate;
+using Teeforce.Domain.BookingAggregate.Events;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseAggregate;
+using Teeforce.Domain.GolferAggregate;
 
-namespace Shadowbrook.Api.Features.Bookings.Handlers;
+namespace Teeforce.Api.Features.Bookings.Handlers;
 
 public static class BookingCancelledSmsHandler
 {

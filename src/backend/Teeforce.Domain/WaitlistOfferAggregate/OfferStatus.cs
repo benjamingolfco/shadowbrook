@@ -1,4 +1,4 @@
-namespace Shadowbrook.Domain.WaitlistOfferAggregate;
+namespace Teeforce.Domain.WaitlistOfferAggregate;
 
 public enum OfferStatus
 {

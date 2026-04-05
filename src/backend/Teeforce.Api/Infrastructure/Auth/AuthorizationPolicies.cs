@@ -1,4 +1,4 @@
-namespace Shadowbrook.Api.Infrastructure.Auth;
+namespace Teeforce.Api.Infrastructure.Auth;
 
 public static class AuthorizationPolicies
 {

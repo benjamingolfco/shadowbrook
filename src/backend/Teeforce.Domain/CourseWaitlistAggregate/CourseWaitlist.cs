@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.CourseWaitlistAggregate;
+namespace Teeforce.Domain.CourseWaitlistAggregate;
 
 public abstract class CourseWaitlist : Entity
 {

@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.Services;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.Services;
 
-namespace Shadowbrook.Api.Infrastructure.Services;
+namespace Teeforce.Api.Infrastructure.Services;
 
 public class AppUserEmailUniquenessChecker(ApplicationDbContext db) : IAppUserEmailUniquenessChecker
 {

@@ -1,12 +1,12 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
-using Shadowbrook.Api.Features.Waitlist.Handlers;
-using Shadowbrook.Api.Features.Waitlist.Policies;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate.Events;
+using Teeforce.Api.Features.Waitlist.Handlers;
+using Teeforce.Api.Features.Waitlist.Policies;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.TeeTimeOpeningAggregate.Events;
 
-namespace Shadowbrook.Api.Tests.Features.Waitlist.Policies;
+namespace Teeforce.Api.Tests.Features.Waitlist.Policies;
 
 public class TeeTimeOpeningExpirationPolicyTests
 {

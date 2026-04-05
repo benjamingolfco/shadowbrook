@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Respawn;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.Services;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.Services;
 using Testcontainers.MsSql;
 using Wolverine;
 
-namespace Shadowbrook.Api.IntegrationTests;
+namespace Teeforce.Api.IntegrationTests;
 
 public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {

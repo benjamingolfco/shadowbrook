@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Shadowbrook.Domain.AppUserAggregate.Exceptions;
-using Shadowbrook.Domain.BookingAggregate.Exceptions;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseWaitlistAggregate.Exceptions;
-using Shadowbrook.Domain.GolferWaitlistEntryAggregate.Exceptions;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate.Exceptions;
-using Shadowbrook.Domain.WaitlistOfferAggregate.Exceptions;
+using Teeforce.Domain.AppUserAggregate.Exceptions;
+using Teeforce.Domain.BookingAggregate.Exceptions;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseWaitlistAggregate.Exceptions;
+using Teeforce.Domain.GolferWaitlistEntryAggregate.Exceptions;
+using Teeforce.Domain.TeeTimeOpeningAggregate.Exceptions;
+using Teeforce.Domain.WaitlistOfferAggregate.Exceptions;
 
-namespace Shadowbrook.Api.Infrastructure.Middleware;
+namespace Teeforce.Api.Infrastructure.Middleware;
 
 public static class DomainExceptionHandler
 {

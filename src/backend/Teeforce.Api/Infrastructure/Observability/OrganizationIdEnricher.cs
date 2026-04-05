@@ -1,9 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Serilog.Core;
 using Serilog.Events;
-using Shadowbrook.Api.Infrastructure.Auth;
+using Teeforce.Api.Infrastructure.Auth;
 
-namespace Shadowbrook.Api.Infrastructure.Observability;
+namespace Teeforce.Api.Infrastructure.Observability;
 
 public class OrganizationIdEnricher(IHttpContextAccessor httpContextAccessor) : ILogEventEnricher
 {

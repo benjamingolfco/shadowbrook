@@ -1,13 +1,13 @@
 using Microsoft.Extensions.Options;
-using Shadowbrook.Api.Infrastructure.Configuration;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.CourseAggregate;
-using Shadowbrook.Domain.GolferAggregate;
-using Shadowbrook.Domain.TeeTimeOpeningAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate;
-using Shadowbrook.Domain.WaitlistOfferAggregate.Events;
+using Teeforce.Api.Infrastructure.Configuration;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseAggregate;
+using Teeforce.Domain.GolferAggregate;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
+using Teeforce.Domain.WaitlistOfferAggregate;
+using Teeforce.Domain.WaitlistOfferAggregate.Events;
 
-namespace Shadowbrook.Api.Features.Waitlist.Handlers;
+namespace Teeforce.Api.Features.Waitlist.Handlers;
 
 public static class WaitlistOfferCreatedSendSmsHandler
 {

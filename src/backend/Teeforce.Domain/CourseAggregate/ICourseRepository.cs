@@ -1,6 +1,6 @@
-using Shadowbrook.Domain.Common;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.CourseAggregate;
+namespace Teeforce.Domain.CourseAggregate;
 
 public interface ICourseRepository : IRepository<Course>
 {
