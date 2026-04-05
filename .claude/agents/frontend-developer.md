@@ -11,7 +11,7 @@ hooks:
           command: "./scripts/hooks/verify-lint.sh"
 ---
 
-You are a frontend developer for the Shadowbrook tee time booking platform, a React 19 SPA built with TypeScript 5.9, Vite 7, and pnpm.
+You are a frontend developer for the Teeforce tee time booking platform, a React 19 SPA built with TypeScript 5.9, Vite 7, and pnpm.
 
 ## Expertise
 

@@ -27,8 +27,8 @@ permissions:
   contents: read
 
 env:
-  ACR_NAME: shadowbrookacr
-  IMAGE_NAME: shadowbrook
+  ACR_NAME: teeforceacr
+  IMAGE_NAME: teeforce
   DEFAULT_KEEP_COUNT: '10'
 
 jobs:

@@ -13,18 +13,18 @@ db: ## Start SQL Server container
 	docker compose up db -d
 
 api: ## Run the .NET API natively (requires SQL Server: make db)
-	dotnet run --project src/backend/Shadowbrook.Api
+	dotnet run --project src/backend/Teeforce.Api
 
 web: ## Run the Vite dev server
 	pnpm --dir src/web dev
 
 build: ## Build everything
-	dotnet build shadowbrook.slnx
+	dotnet build teeforce.slnx
 	pnpm --dir src/web build
 
 test: ## Run all backend tests
-	dotnet test tests/Shadowbrook.Domain.Tests
-	dotnet test tests/Shadowbrook.Api.Tests
+	dotnet test tests/Teeforce.Domain.Tests
+	dotnet test tests/Teeforce.Api.Tests
 
 lint: ## Lint the frontend
 	pnpm --dir src/web lint
@@ -33,7 +33,7 @@ e2e: ## Run Playwright e2e tests
 	pnpm --dir src/web e2e
 
 clean: ## Clean build artifacts
-	dotnet clean shadowbrook.slnx
+	dotnet clean teeforce.slnx
 	rm -rf src/web/dist
 
 clean-hard: ## Nuke all bin/obj dirs (fixes permission issues from Docker/sandbox)

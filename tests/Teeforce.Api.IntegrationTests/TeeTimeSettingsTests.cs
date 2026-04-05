@@ -1,0 +1,108 @@
+using System.Net;
+using System.Net.Http.Json;
+
+namespace Teeforce.Api.IntegrationTests;
+
+[Collection("Integration")]
+[IntegrationTest]
+public class TeeTimeSettingsTests(TestWebApplicationFactory factory) : IAsyncLifetime
+{
+    private HttpClient client = null!;
+
+    public async Task InitializeAsync()
+    {
+        await factory.ResetDatabaseAsync();
+        await factory.SeedTestAdminAsync();
+        this.client = factory.CreateAuthenticatedClient();
+    }
+
+    public Task DisposeAsync() => Task.CompletedTask;
+
+    private async Task<Guid> CreateCourse()
+    {
+        var tenantId = await CreateTestTenantAsync();
+        var response = await this.client.PostAsJsonAsync("/courses", new { Name = "Test Course", OrganizationId = tenantId, TimeZoneId = TestTimeZones.Chicago });
+        var course = await response.Content.ReadFromJsonAsync<CourseIdResponse>();
+        return course!.Id;
+    }
+
+    private async Task<Guid> CreateTestTenantAsync()
+    {
+        var response = await this.client.PostAsJsonAsync("/tenants", new
+        {
+            OrganizationName = $"Test Tenant {Guid.NewGuid()}",
+            ContactName = "Test Contact",
+            ContactEmail = "test@tenant.com",
+            ContactPhone = "555-0000"
+        });
+
+        var tenant = await response.Content.ReadFromJsonAsync<TenantIdResponse>();
+        return tenant!.Id;
+    }
+
+    [Fact]
+    public async Task UpdateTeeTimeSettings_ReturnsOk()
+    {
+        var courseId = await CreateCourse();
+
+        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
+        {
+            TeeTimeIntervalMinutes = 10,
+            FirstTeeTime = "07:00",
+            LastTeeTime = "18:00"
+        });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<TeeTimeSettingsResponse>();
+        Assert.NotNull(body);
+        Assert.Equal(10, body!.TeeTimeIntervalMinutes);
+        Assert.Equal("07:00:00", body.FirstTeeTime);
+        Assert.Equal("18:00:00", body.LastTeeTime);
+    }
+
+    [Fact]
+    public async Task UpdateTeeTimeSettings_CourseNotFound_ReturnsNotFound()
+    {
+        var response = await this.client.PutAsJsonAsync($"/courses/{Guid.NewGuid()}/tee-time-settings", new
+        {
+            TeeTimeIntervalMinutes = 10,
+            FirstTeeTime = "07:00",
+            LastTeeTime = "18:00"
+        });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetTeeTimeSettings_AfterUpdate_ReturnsSettings()
+    {
+        var courseId = await CreateCourse();
+
+        await this.client.PutAsJsonAsync($"/courses/{courseId}/tee-time-settings", new
+        {
+            TeeTimeIntervalMinutes = 8,
+            FirstTeeTime = "06:30",
+            LastTeeTime = "17:30"
+        });
+
+        var response = await this.client.GetAsync($"/courses/{courseId}/tee-time-settings");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<TeeTimeSettingsResponse>();
+        Assert.Equal(8, body!.TeeTimeIntervalMinutes);
+        Assert.Equal("06:30:00", body.FirstTeeTime);
+        Assert.Equal("17:30:00", body.LastTeeTime);
+    }
+
+    [Fact]
+    public async Task GetTeeTimeSettings_NotConfigured_ReturnsEmptyObject()
+    {
+        var courseId = await CreateCourse();
+
+        var response = await this.client.GetAsync($"/courses/{courseId}/tee-time-settings");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+}

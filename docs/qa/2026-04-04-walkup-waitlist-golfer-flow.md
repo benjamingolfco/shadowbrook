@@ -1,6 +1,6 @@
 ## QA Report — Walk-Up Waitlist Golfer Flow (Manual Simulation)
 
-**Environment:** https://white-stone-00610060f.1.azurestaticapps.net / https://shadowbrook-app-test.happypond-1a892999.eastus2.azurecontainerapps.io
+**Environment:** https://white-stone-00610060f.1.azurestaticapps.net / https://teeforce-app-test.happypond-1a892999.eastus2.azurecontainerapps.io
 **Date:** 2026-04-04
 **Result:** PARTIAL — Steps 1–4 verified; Steps 5–8 not reachable in this session (no operator-created opening)
 

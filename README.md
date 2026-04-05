@@ -1,7 +1,7 @@
-# Shadowbrook
+# Teeforce
 
-[![Deploy Test](https://github.com/benjamingolfco/shadowbrook/actions/workflows/deploy-test.yml/badge.svg)](https://github.com/benjamingolfco/shadowbrook/actions/workflows/deploy-test.yml)
-[![E2E Tests](https://github.com/benjamingolfco/shadowbrook/actions/workflows/e2e.yml/badge.svg)](https://github.com/benjamingolfco/shadowbrook/actions/workflows/e2e.yml)
+[![Deploy Test](https://github.com/benjamingolfco/teeforce/actions/workflows/deploy-test.yml/badge.svg)](https://github.com/benjamingolfco/teeforce/actions/workflows/deploy-test.yml)
+[![E2E Tests](https://github.com/benjamingolfco/teeforce/actions/workflows/e2e.yml/badge.svg)](https://github.com/benjamingolfco/teeforce/actions/workflows/e2e.yml)
 
 Tee time booking platform for golf courses.
 
@@ -18,7 +18,7 @@ Tee time booking platform for golf courses.
 ## Test Environment
 
 - **Frontend:** https://white-stone-00610060f.1.azurestaticapps.net
-- **API:** https://shadowbrook-app-test.happypond-1a892999.eastus2.azurecontainerapps.io
+- **API:** https://teeforce-app-test.happypond-1a892999.eastus2.azurecontainerapps.io
 
 ## Tech Stack
 
@@ -51,7 +51,7 @@ Runs on `http://localhost:5173` by default.
 
 ```bash
 # API
-dotnet build shadowbrook.slnx
+dotnet build teeforce.slnx
 
 # Web
 cd src/web && pnpm build

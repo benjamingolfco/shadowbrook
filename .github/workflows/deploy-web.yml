@@ -48,8 +48,8 @@ jobs:
         id: api-url
         run: |
           FQDN=$(az containerapp show \
-            --name shadowbrook-app-${{ inputs.environment }} \
-            --resource-group shadowbrook-${{ inputs.environment }}-rg \
+            --name teeforce-app-${{ inputs.environment }} \
+            --resource-group teeforce-${{ inputs.environment }}-rg \
             --query properties.configuration.ingress.fqdn \
             --output tsv)
           echo "url=https://$FQDN" >> "$GITHUB_OUTPUT"

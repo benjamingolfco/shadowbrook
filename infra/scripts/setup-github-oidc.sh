@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Shadowbrook - Set up GitHub Actions OIDC authentication
+# Teeforce - Set up GitHub Actions OIDC authentication
 # Usage: ./setup-github-oidc.sh
 #
 # Creates (or updates) an Entra app registration with federated credentials
@@ -9,7 +9,7 @@ set -euo pipefail
 # sets the required GitHub repo secrets.
 #
 # What it does:
-#   1. Creates app registration "shadowbrook-github-actions" (idempotent)
+#   1. Creates app registration "teeforce-github-actions" (idempotent)
 #   2. Creates service principal for the app (idempotent)
 #   3. Adds federated credentials for main branch, PRs, and environment (idempotent)
 #   4. Grants Contributor on shared + test resource groups (idempotent)
@@ -23,8 +23,8 @@ set -euo pipefail
 #
 # Idempotent — safe to re-run after subscription transfer or credential rotation.
 
-REPO="benjamingolfco/shadowbrook"
-APP_NAME="shadowbrook-github-actions"
+REPO="benjamingolfco/teeforce"
+APP_NAME="teeforce-github-actions"
 SUBSCRIPTION_ID="37109c89-82e6-4907-8cd1-ca80800d0730"
 TENANT_ID=$(az account show --query tenantId -o tsv)
 
@@ -130,9 +130,9 @@ grant_role() {
   fi
 }
 
-SHARED_RG="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/shadowbrook-shared-rg"
-TEST_RG="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/shadowbrook-test-rg"
-ACR_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/shadowbrook-shared-rg/providers/Microsoft.ContainerRegistry/registries/shadowbrookacr"
+SHARED_RG="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/teeforce-shared-rg"
+TEST_RG="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/teeforce-test-rg"
+ACR_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/teeforce-shared-rg/providers/Microsoft.ContainerRegistry/registries/teeforceacr"
 
 grant_role "Contributor" "$SHARED_RG" "Contributor on shared-rg"
 grant_role "Contributor" "$TEST_RG" "Contributor on test-rg"
@@ -159,8 +159,8 @@ echo "    Tenant ID:        ${TENANT_ID}"
 echo "    Subscription ID:  ${SUBSCRIPTION_ID}"
 echo ""
 echo "    RBAC:"
-echo "      Contributor on shadowbrook-shared-rg"
-echo "      Contributor on shadowbrook-test-rg"
-echo "      AcrPush on shadowbrookacr"
+echo "      Contributor on teeforce-shared-rg"
+echo "      Contributor on teeforce-test-rg"
+echo "      AcrPush on teeforceacr"
 echo ""
 echo "    To add more environments, add resource groups to this script."

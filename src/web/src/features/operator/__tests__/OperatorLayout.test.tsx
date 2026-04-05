@@ -49,7 +49,7 @@ describe('OperatorLayout', () => {
     expect(screen.getByText('Pine Valley Golf Club')).toBeInTheDocument();
   });
 
-  it('shows Shadowbrook when user has no organization', () => {
+  it('shows Teeforce when user has no organization', () => {
     mockUseAuth.mockReturnValue({
       user: {
         id: '1',
@@ -73,7 +73,7 @@ describe('OperatorLayout', () => {
     });
 
     render(<OperatorLayout />);
-    expect(screen.getByText('Shadowbrook')).toBeInTheDocument();
+    expect(screen.getByText('Teeforce')).toBeInTheDocument();
   });
 
   it('applies truncate class and title attribute for long organization names', () => {

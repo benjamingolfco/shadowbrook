@@ -1,6 +1,6 @@
 # GitHub Actions Workflow Setup
 
-Steps to enable CI/CD workflows for Shadowbrook.
+Steps to enable CI/CD workflows for Teeforce.
 
 ## Prerequisites
 
@@ -14,7 +14,7 @@ GitHub Actions authenticates to Azure via OIDC — no stored credentials.
 
 ```bash
 # Create the app registration
-az ad app create --display-name "shadowbrook-github-actions"
+az ad app create --display-name "teeforce-github-actions"
 
 # Note the appId from the output — this is your AZURE_CLIENT_ID
 APP_ID=<appId from output>
@@ -35,7 +35,7 @@ One credential per trigger type (PR, push to main, manual dispatch).
 az ad app federated-credential create --id $APP_ID --parameters '{
   "name": "github-pr",
   "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:benjamingolfco/shadowbrook:pull_request",
+  "subject": "repo:benjamingolfco/teeforce:pull_request",
   "audiences": ["api://AzureADTokenExchange"]
 }'
 
@@ -43,7 +43,7 @@ az ad app federated-credential create --id $APP_ID --parameters '{
 az ad app federated-credential create --id $APP_ID --parameters '{
   "name": "github-main",
   "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:benjamingolfco/shadowbrook:ref:refs/heads/main",
+  "subject": "repo:benjamingolfco/teeforce:ref:refs/heads/main",
   "audiences": ["api://AzureADTokenExchange"]
 }'
 
@@ -51,7 +51,7 @@ az ad app federated-credential create --id $APP_ID --parameters '{
 az ad app federated-credential create --id $APP_ID --parameters '{
   "name": "github-dispatch",
   "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:benjamingolfco/shadowbrook:ref:refs/heads/main",
+  "subject": "repo:benjamingolfco/teeforce:ref:refs/heads/main",
   "audiences": ["api://AzureADTokenExchange"]
 }'
 ```
@@ -67,16 +67,16 @@ SUBSCRIPTION_ID=$(az account show --query id --output tsv)
 az role assignment create \
   --assignee $APP_ID \
   --role Contributor \
-  --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/shadowbrook-dev-rg
+  --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/teeforce-dev-rg
 
 # Contributor on shared resource group (for Bicep infra deployments)
 az role assignment create \
   --assignee $APP_ID \
   --role Contributor \
-  --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/shadowbrook-shared-rg
+  --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/teeforce-shared-rg
 
 # AcrPush on the container registry (for building/pushing images)
-ACR_ID=$(az acr show --name shadowbrookacr --query id --output tsv)
+ACR_ID=$(az acr show --name teeforceacr --query id --output tsv)
 az role assignment create \
   --assignee $APP_ID \
   --role AcrPush \
@@ -87,8 +87,8 @@ az role assignment create \
 
 ```bash
 az staticwebapp secrets list \
-  --name shadowbrook-swa-dev \
-  --resource-group shadowbrook-dev-rg \
+  --name teeforce-swa-dev \
+  --resource-group teeforce-dev-rg \
   --query properties.apiKey \
   --output tsv
 ```
@@ -175,7 +175,7 @@ The `AZURE_STATIC_WEB_APPS_API_TOKEN` secret is missing or expired. Regenerate f
 The container may need more time to start. Check logs:
 ```bash
 az containerapp logs show \
-  --name shadowbrook-app-dev \
-  --resource-group shadowbrook-dev-rg \
+  --name teeforce-app-dev \
+  --resource-group teeforce-dev-rg \
   --follow
 ```

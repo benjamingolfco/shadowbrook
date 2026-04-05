@@ -16,30 +16,30 @@
 
 | Action | Path | Responsibility |
 |--------|------|----------------|
-| Create | `src/backend/Shadowbrook.Domain/Services/IAppUserInvitationService.cs` | Domain service interface |
-| Modify | `src/backend/Shadowbrook.Domain/AppUserAggregate/AppUser.cs` | Add `InviteSentAt` property and `Invite()` method |
-| Create | `src/backend/Shadowbrook.Api/Infrastructure/Configuration/GraphSettings.cs` | Strongly-typed Graph config |
-| Create | `src/backend/Shadowbrook.Api/Infrastructure/Services/GraphAppUserInvitationService.cs` | Graph API implementation |
-| Create | `src/backend/Shadowbrook.Api/Infrastructure/Services/NoOpAppUserInvitationService.cs` | Dev no-op implementation |
-| Modify | `src/backend/Shadowbrook.Api/Program.cs` | Register GraphSettings, invitation service, NuGet usings |
-| Modify | `src/backend/Shadowbrook.Api/Shadowbrook.Api.csproj` | Add Microsoft.Graph and Azure.Identity packages |
-| Create | `src/backend/Shadowbrook.Api/Features/AppUsers/Handlers/AppUserCreated/SendEntraInvitationHandler.cs` | Wolverine event handler |
-| Modify | `src/backend/Shadowbrook.Api/Infrastructure/EntityTypeConfigurations/AppUserConfiguration.cs` | Map `InviteSentAt` column |
+| Create | `src/backend/Teeforce.Domain/Services/IAppUserInvitationService.cs` | Domain service interface |
+| Modify | `src/backend/Teeforce.Domain/AppUserAggregate/AppUser.cs` | Add `InviteSentAt` property and `Invite()` method |
+| Create | `src/backend/Teeforce.Api/Infrastructure/Configuration/GraphSettings.cs` | Strongly-typed Graph config |
+| Create | `src/backend/Teeforce.Api/Infrastructure/Services/GraphAppUserInvitationService.cs` | Graph API implementation |
+| Create | `src/backend/Teeforce.Api/Infrastructure/Services/NoOpAppUserInvitationService.cs` | Dev no-op implementation |
+| Modify | `src/backend/Teeforce.Api/Program.cs` | Register GraphSettings, invitation service, NuGet usings |
+| Modify | `src/backend/Teeforce.Api/Teeforce.Api.csproj` | Add Microsoft.Graph and Azure.Identity packages |
+| Create | `src/backend/Teeforce.Api/Features/AppUsers/Handlers/AppUserCreated/SendEntraInvitationHandler.cs` | Wolverine event handler |
+| Modify | `src/backend/Teeforce.Api/Infrastructure/EntityTypeConfigurations/AppUserConfiguration.cs` | Map `InviteSentAt` column |
 | Create | EF migration (auto-generated) | Add `InviteSentAt` column to AppUsers table |
-| Create | `tests/Shadowbrook.Domain.Tests/AppUserAggregate/AppUserInviteTests.cs` | Domain unit tests for `Invite()` |
-| Create | `tests/Shadowbrook.Api.Tests/Features/AppUsers/Handlers/SendEntraInvitationHandlerTests.cs` | Handler unit tests |
+| Create | `tests/Teeforce.Domain.Tests/AppUserAggregate/AppUserInviteTests.cs` | Domain unit tests for `Invite()` |
+| Create | `tests/Teeforce.Api.Tests/Features/AppUsers/Handlers/SendEntraInvitationHandlerTests.cs` | Handler unit tests |
 
 ---
 
 ### Task 1: Domain Service Interface
 
 **Files:**
-- Create: `src/backend/Shadowbrook.Domain/Services/IAppUserInvitationService.cs`
+- Create: `src/backend/Teeforce.Domain/Services/IAppUserInvitationService.cs`
 
 - [ ] **Step 1: Create the interface**
 
 ```csharp
-namespace Shadowbrook.Domain.Services;
+namespace Teeforce.Domain.Services;
 
 public interface IAppUserInvitationService
 {
@@ -49,13 +49,13 @@ public interface IAppUserInvitationService
 
 - [ ] **Step 2: Verify it compiles**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && dotnet build src/backend/Shadowbrook.Domain/Shadowbrook.Domain.csproj`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && dotnet build src/backend/Teeforce.Domain/Teeforce.Domain.csproj`
 Expected: Build succeeded
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/backend/Shadowbrook.Domain/Services/IAppUserInvitationService.cs
+git add src/backend/Teeforce.Domain/Services/IAppUserInvitationService.cs
 git commit -m "feat(domain): add IAppUserInvitationService interface
 
 Returns the Entra object ID of the invited user.
@@ -68,19 +68,19 @@ Closes #334"
 ### Task 2: AppUser Aggregate — Add `InviteSentAt` and `Invite()` Method
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Domain/AppUserAggregate/AppUser.cs`
-- Create: `tests/Shadowbrook.Domain.Tests/AppUserAggregate/AppUserInviteTests.cs`
+- Modify: `src/backend/Teeforce.Domain/AppUserAggregate/AppUser.cs`
+- Create: `tests/Teeforce.Domain.Tests/AppUserAggregate/AppUserInviteTests.cs`
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `tests/Shadowbrook.Domain.Tests/AppUserAggregate/AppUserInviteTests.cs`:
+Create `tests/Teeforce.Domain.Tests/AppUserAggregate/AppUserInviteTests.cs`:
 
 ```csharp
 using NSubstitute;
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.Services;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.Services;
 
-namespace Shadowbrook.Domain.Tests.AppUserAggregate;
+namespace Teeforce.Domain.Tests.AppUserAggregate;
 
 public class AppUserInviteTests
 {
@@ -142,16 +142,16 @@ public class AppUserInviteTests
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && dotnet test tests/Shadowbrook.Domain.Tests/Shadowbrook.Domain.Tests.csproj --filter "FullyQualifiedName~AppUserInviteTests"`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && dotnet test tests/Teeforce.Domain.Tests/Teeforce.Domain.Tests.csproj --filter "FullyQualifiedName~AppUserInviteTests"`
 Expected: Compilation error — `AppUser` has no `Invite` method or `InviteSentAt` property
 
 - [ ] **Step 3: Implement the domain changes**
 
-Modify `src/backend/Shadowbrook.Domain/AppUserAggregate/AppUser.cs`:
+Modify `src/backend/Teeforce.Domain/AppUserAggregate/AppUser.cs`:
 
 Add using at top:
 ```csharp
-using Shadowbrook.Domain.Services;
+using Teeforce.Domain.Services;
 ```
 
 Add property after `CreatedAt`:
@@ -176,22 +176,22 @@ Add method after `CompleteIdentitySetup`:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && dotnet test tests/Shadowbrook.Domain.Tests/Shadowbrook.Domain.Tests.csproj --filter "FullyQualifiedName~AppUserInviteTests"`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && dotnet test tests/Teeforce.Domain.Tests/Teeforce.Domain.Tests.csproj --filter "FullyQualifiedName~AppUserInviteTests"`
 Expected: 4 passed, 0 failed
 
 - [ ] **Step 5: Run all domain tests to verify no regressions**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && dotnet test tests/Shadowbrook.Domain.Tests/Shadowbrook.Domain.Tests.csproj`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && dotnet test tests/Teeforce.Domain.Tests/Teeforce.Domain.Tests.csproj`
 Expected: All 122+ tests pass
 
 - [ ] **Step 6: Run dotnet format**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && dotnet format shadowbrook.slnx`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && dotnet format teeforce.slnx`
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/backend/Shadowbrook.Domain/AppUserAggregate/AppUser.cs tests/Shadowbrook.Domain.Tests/AppUserAggregate/AppUserInviteTests.cs
+git add src/backend/Teeforce.Domain/AppUserAggregate/AppUser.cs tests/Teeforce.Domain.Tests/AppUserAggregate/AppUserInviteTests.cs
 git commit -m "feat(domain): add Invite method and InviteSentAt to AppUser
 
 Invite calls IAppUserInvitationService, captures the returned Entra
@@ -204,24 +204,24 @@ if already invited or identity already set."
 ### Task 3: NuGet Packages and GraphSettings Config
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Api/Shadowbrook.Api.csproj`
-- Create: `src/backend/Shadowbrook.Api/Infrastructure/Configuration/GraphSettings.cs`
+- Modify: `src/backend/Teeforce.Api/Teeforce.Api.csproj`
+- Create: `src/backend/Teeforce.Api/Infrastructure/Configuration/GraphSettings.cs`
 
 - [ ] **Step 1: Add NuGet packages**
 
 Run:
 ```bash
-cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation
-dotnet add src/backend/Shadowbrook.Api/Shadowbrook.Api.csproj package Microsoft.Graph
-dotnet add src/backend/Shadowbrook.Api/Shadowbrook.Api.csproj package Azure.Identity
+cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation
+dotnet add src/backend/Teeforce.Api/Teeforce.Api.csproj package Microsoft.Graph
+dotnet add src/backend/Teeforce.Api/Teeforce.Api.csproj package Azure.Identity
 ```
 
 - [ ] **Step 2: Create GraphSettings config class**
 
-Create `src/backend/Shadowbrook.Api/Infrastructure/Configuration/GraphSettings.cs`:
+Create `src/backend/Teeforce.Api/Infrastructure/Configuration/GraphSettings.cs`:
 
 ```csharp
-namespace Shadowbrook.Api.Infrastructure.Configuration;
+namespace Teeforce.Api.Infrastructure.Configuration;
 
 public class GraphSettings
 {
@@ -234,13 +234,13 @@ public class GraphSettings
 
 - [ ] **Step 3: Verify it compiles**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && dotnet build src/backend/Shadowbrook.Api/Shadowbrook.Api.csproj`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && dotnet build src/backend/Teeforce.Api/Teeforce.Api.csproj`
 Expected: Build succeeded
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/backend/Shadowbrook.Api/Shadowbrook.Api.csproj src/backend/Shadowbrook.Api/Infrastructure/Configuration/GraphSettings.cs
+git add src/backend/Teeforce.Api/Teeforce.Api.csproj src/backend/Teeforce.Api/Infrastructure/Configuration/GraphSettings.cs
 git commit -m "chore: add Microsoft.Graph and Azure.Identity packages, GraphSettings config"
 ```
 
@@ -249,17 +249,17 @@ git commit -m "chore: add Microsoft.Graph and Azure.Identity packages, GraphSett
 ### Task 4: Infrastructure Service Implementations
 
 **Files:**
-- Create: `src/backend/Shadowbrook.Api/Infrastructure/Services/NoOpAppUserInvitationService.cs`
-- Create: `src/backend/Shadowbrook.Api/Infrastructure/Services/GraphAppUserInvitationService.cs`
+- Create: `src/backend/Teeforce.Api/Infrastructure/Services/NoOpAppUserInvitationService.cs`
+- Create: `src/backend/Teeforce.Api/Infrastructure/Services/GraphAppUserInvitationService.cs`
 
 - [ ] **Step 1: Create the NoOp implementation**
 
-Create `src/backend/Shadowbrook.Api/Infrastructure/Services/NoOpAppUserInvitationService.cs`:
+Create `src/backend/Teeforce.Api/Infrastructure/Services/NoOpAppUserInvitationService.cs`:
 
 ```csharp
-using Shadowbrook.Domain.Services;
+using Teeforce.Domain.Services;
 
-namespace Shadowbrook.Api.Infrastructure.Services;
+namespace Teeforce.Api.Infrastructure.Services;
 
 public class NoOpAppUserInvitationService(ILogger<NoOpAppUserInvitationService> logger) : IAppUserInvitationService
 {
@@ -274,17 +274,17 @@ public class NoOpAppUserInvitationService(ILogger<NoOpAppUserInvitationService> 
 
 - [ ] **Step 2: Create the Graph implementation**
 
-Create `src/backend/Shadowbrook.Api/Infrastructure/Services/GraphAppUserInvitationService.cs`:
+Create `src/backend/Teeforce.Api/Infrastructure/Services/GraphAppUserInvitationService.cs`:
 
 ```csharp
 using Azure.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
-using Shadowbrook.Api.Infrastructure.Configuration;
-using Shadowbrook.Domain.Services;
+using Teeforce.Api.Infrastructure.Configuration;
+using Teeforce.Domain.Services;
 
-namespace Shadowbrook.Api.Infrastructure.Services;
+namespace Teeforce.Api.Infrastructure.Services;
 
 public class GraphAppUserInvitationService(
     GraphServiceClient graphClient,
@@ -316,13 +316,13 @@ public class GraphAppUserInvitationService(
 
 - [ ] **Step 3: Verify it compiles**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && dotnet build src/backend/Shadowbrook.Api/Shadowbrook.Api.csproj`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && dotnet build src/backend/Teeforce.Api/Teeforce.Api.csproj`
 Expected: Build succeeded
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/backend/Shadowbrook.Api/Infrastructure/Services/NoOpAppUserInvitationService.cs src/backend/Shadowbrook.Api/Infrastructure/Services/GraphAppUserInvitationService.cs
+git add src/backend/Teeforce.Api/Infrastructure/Services/NoOpAppUserInvitationService.cs src/backend/Teeforce.Api/Infrastructure/Services/GraphAppUserInvitationService.cs
 git commit -m "feat: add Graph and NoOp implementations of IAppUserInvitationService
 
 GraphAppUserInvitationService calls POST /invitations via Microsoft Graph SDK.
@@ -334,7 +334,7 @@ NoOpAppUserInvitationService logs and returns a fake ID for local dev."
 ### Task 5: DI Registration in Program.cs
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Api/Program.cs`
+- Modify: `src/backend/Teeforce.Api/Program.cs`
 
 - [ ] **Step 1: Add usings and register services**
 
@@ -342,7 +342,7 @@ Add usings at the top of `Program.cs`:
 ```csharp
 using Azure.Identity;
 using Microsoft.Graph;
-using Shadowbrook.Domain.Services;
+using Teeforce.Domain.Services;
 ```
 
 Add config binding after the existing `Configure<AppSettings>` line (line 72):
@@ -370,17 +370,17 @@ else
 
 - [ ] **Step 2: Verify it compiles**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && dotnet build src/backend/Shadowbrook.Api/Shadowbrook.Api.csproj`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && dotnet build src/backend/Teeforce.Api/Teeforce.Api.csproj`
 Expected: Build succeeded
 
 - [ ] **Step 3: Run dotnet format**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && dotnet format shadowbrook.slnx`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && dotnet format teeforce.slnx`
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/backend/Shadowbrook.Api/Program.cs
+git add src/backend/Teeforce.Api/Program.cs
 git commit -m "feat: register IAppUserInvitationService with Graph/NoOp selection
 
 Selects GraphAppUserInvitationService when Graph:ClientId is configured,
@@ -393,21 +393,21 @@ managed identity in prod, ClientSecretCredential as fallback."
 ### Task 6: Wolverine Event Handler
 
 **Files:**
-- Create: `src/backend/Shadowbrook.Api/Features/AppUsers/Handlers/AppUserCreated/SendEntraInvitationHandler.cs`
-- Create: `tests/Shadowbrook.Api.Tests/Features/AppUsers/Handlers/SendEntraInvitationHandlerTests.cs`
+- Create: `src/backend/Teeforce.Api/Features/AppUsers/Handlers/AppUserCreated/SendEntraInvitationHandler.cs`
+- Create: `tests/Teeforce.Api.Tests/Features/AppUsers/Handlers/SendEntraInvitationHandlerTests.cs`
 
 - [ ] **Step 1: Write the failing handler tests**
 
-Create `tests/Shadowbrook.Api.Tests/Features/AppUsers/Handlers/SendEntraInvitationHandlerTests.cs`:
+Create `tests/Teeforce.Api.Tests/Features/AppUsers/Handlers/SendEntraInvitationHandlerTests.cs`:
 
 ```csharp
 using NSubstitute;
-using Shadowbrook.Api.Features.AppUsers.Handlers.AppUserCreated;
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.AppUserAggregate.Events;
-using Shadowbrook.Domain.Services;
+using Teeforce.Api.Features.AppUsers.Handlers.AppUserCreated;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.AppUserAggregate.Events;
+using Teeforce.Domain.Services;
 
-namespace Shadowbrook.Api.Tests.Features.AppUsers.Handlers;
+namespace Teeforce.Api.Tests.Features.AppUsers.Handlers;
 
 public class SendEntraInvitationHandlerTests
 {
@@ -432,24 +432,24 @@ public class SendEntraInvitationHandlerTests
 }
 ```
 
-Note: The event variable name `evt` uses `AppUserCreatedEvent` as a placeholder — the actual type is `Shadowbrook.Domain.AppUserAggregate.Events.AppUserCreated`. Adjust the using/type name when implementing to match the real event record. The test uses `GetByIdAsync` because `GetRequiredByIdAsync` is an extension method on `IRepository<T>` — stub the underlying `GetByIdAsync` to return the user so the extension works.
+Note: The event variable name `evt` uses `AppUserCreatedEvent` as a placeholder — the actual type is `Teeforce.Domain.AppUserAggregate.Events.AppUserCreated`. Adjust the using/type name when implementing to match the real event record. The test uses `GetByIdAsync` because `GetRequiredByIdAsync` is an extension method on `IRepository<T>` — stub the underlying `GetByIdAsync` to return the user so the extension works.
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && dotnet test tests/Shadowbrook.Api.Tests/Shadowbrook.Api.Tests.csproj --filter "FullyQualifiedName~SendEntraInvitationHandlerTests"`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && dotnet test tests/Teeforce.Api.Tests/Teeforce.Api.Tests.csproj --filter "FullyQualifiedName~SendEntraInvitationHandlerTests"`
 Expected: Compilation error — `SendEntraInvitationHandler` does not exist
 
 - [ ] **Step 3: Create the handler**
 
-Create `src/backend/Shadowbrook.Api/Features/AppUsers/Handlers/AppUserCreated/SendEntraInvitationHandler.cs`:
+Create `src/backend/Teeforce.Api/Features/AppUsers/Handlers/AppUserCreated/SendEntraInvitationHandler.cs`:
 
 ```csharp
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.AppUserAggregate.Events;
-using Shadowbrook.Domain.Common;
-using Shadowbrook.Domain.Services;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.AppUserAggregate.Events;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.Services;
 
-namespace Shadowbrook.Api.Features.AppUsers.Handlers.AppUserCreated;
+namespace Teeforce.Api.Features.AppUsers.Handlers.AppUserCreated;
 
 public static class SendEntraInvitationHandler
 {
@@ -469,17 +469,17 @@ Note: The `Events.AppUserCreated` qualified name avoids ambiguity with the `AppU
 
 - [ ] **Step 4: Fix the test to use correct types and verify it compiles**
 
-Update the test to use the actual `AppUserCreated` event type from `Shadowbrook.Domain.AppUserAggregate.Events`:
+Update the test to use the actual `AppUserCreated` event type from `Teeforce.Domain.AppUserAggregate.Events`:
 
 ```csharp
 using NSubstitute;
-using Shadowbrook.Api.Features.AppUsers.Handlers.AppUserCreated;
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.AppUserAggregate.Events;
-using Shadowbrook.Domain.Services;
-using AppUserCreatedEvent = Shadowbrook.Domain.AppUserAggregate.Events.AppUserCreated;
+using Teeforce.Api.Features.AppUsers.Handlers.AppUserCreated;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.AppUserAggregate.Events;
+using Teeforce.Domain.Services;
+using AppUserCreatedEvent = Teeforce.Domain.AppUserAggregate.Events.AppUserCreated;
 
-namespace Shadowbrook.Api.Tests.Features.AppUsers.Handlers;
+namespace Teeforce.Api.Tests.Features.AppUsers.Handlers;
 
 public class SendEntraInvitationHandlerTests
 {
@@ -506,17 +506,17 @@ public class SendEntraInvitationHandlerTests
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && dotnet test tests/Shadowbrook.Api.Tests/Shadowbrook.Api.Tests.csproj --filter "FullyQualifiedName~SendEntraInvitationHandlerTests"`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && dotnet test tests/Teeforce.Api.Tests/Teeforce.Api.Tests.csproj --filter "FullyQualifiedName~SendEntraInvitationHandlerTests"`
 Expected: 1 passed, 0 failed
 
 - [ ] **Step 6: Run dotnet format**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && dotnet format shadowbrook.slnx`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && dotnet format teeforce.slnx`
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/backend/Shadowbrook.Api/Features/AppUsers/Handlers/AppUserCreated/SendEntraInvitationHandler.cs tests/Shadowbrook.Api.Tests/Features/AppUsers/Handlers/SendEntraInvitationHandlerTests.cs
+git add src/backend/Teeforce.Api/Features/AppUsers/Handlers/AppUserCreated/SendEntraInvitationHandler.cs tests/Teeforce.Api.Tests/Features/AppUsers/Handlers/SendEntraInvitationHandlerTests.cs
 git commit -m "feat: add SendEntraInvitationHandler for AppUserCreated event
 
 Wolverine handler loads AppUser and calls Invite() which sends the
@@ -528,7 +528,7 @@ Entra invitation and captures the identity ID."
 ### Task 7: EF Configuration and Migration
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Api/Infrastructure/EntityTypeConfigurations/AppUserConfiguration.cs`
+- Modify: `src/backend/Teeforce.Api/Infrastructure/EntityTypeConfigurations/AppUserConfiguration.cs`
 - Auto-generated: EF migration files
 
 - [ ] **Step 1: Add InviteSentAt to EF configuration**
@@ -541,7 +541,7 @@ In `AppUserConfiguration.cs`, add after the `builder.Property(u => u.CreatedAt);
 
 - [ ] **Step 2: Verify it compiles**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && dotnet build src/backend/Shadowbrook.Api/Shadowbrook.Api.csproj`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && dotnet build src/backend/Teeforce.Api/Teeforce.Api.csproj`
 Expected: Build succeeded
 
 - [ ] **Step 3: Generate the EF migration**
@@ -549,24 +549,24 @@ Expected: Build succeeded
 Run:
 ```bash
 export PATH="$PATH:/home/aaron/.dotnet/tools"
-cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation
-dotnet ef migrations add AddAppUserInviteSentAt --project src/backend/Shadowbrook.Api
+cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation
+dotnet ef migrations add AddAppUserInviteSentAt --project src/backend/Teeforce.Api
 ```
-Expected: Migration files created in `src/backend/Shadowbrook.Api/Infrastructure/Data/Migrations/`
+Expected: Migration files created in `src/backend/Teeforce.Api/Infrastructure/Data/Migrations/`
 
 - [ ] **Step 4: Verify no pending model changes**
 
 Run:
 ```bash
-cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation
-dotnet ef migrations has-pending-model-changes --project src/backend/Shadowbrook.Api
+cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation
+dotnet ef migrations has-pending-model-changes --project src/backend/Teeforce.Api
 ```
 Expected: No pending model changes
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/backend/Shadowbrook.Api/Infrastructure/EntityTypeConfigurations/AppUserConfiguration.cs src/backend/Shadowbrook.Api/Infrastructure/Data/Migrations/
+git add src/backend/Teeforce.Api/Infrastructure/EntityTypeConfigurations/AppUserConfiguration.cs src/backend/Teeforce.Api/Infrastructure/Data/Migrations/
 git commit -m "feat: add InviteSentAt column to AppUsers table
 
 EF Core migration adds nullable DateTimeOffset column for tracking
@@ -579,24 +579,24 @@ when the Entra invitation was sent."
 
 - [ ] **Step 1: Build the full solution**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && dotnet build src/backend/Shadowbrook.Api/Shadowbrook.Api.csproj && dotnet build tests/Shadowbrook.Domain.Tests/Shadowbrook.Domain.Tests.csproj && dotnet build tests/Shadowbrook.Api.Tests/Shadowbrook.Api.Tests.csproj`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && dotnet build src/backend/Teeforce.Api/Teeforce.Api.csproj && dotnet build tests/Teeforce.Domain.Tests/Teeforce.Domain.Tests.csproj && dotnet build tests/Teeforce.Api.Tests/Teeforce.Api.Tests.csproj`
 Expected: All projects build successfully
 
 - [ ] **Step 2: Run all domain tests**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && dotnet test tests/Shadowbrook.Domain.Tests/Shadowbrook.Domain.Tests.csproj`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && dotnet test tests/Teeforce.Domain.Tests/Teeforce.Domain.Tests.csproj`
 Expected: All tests pass (122+ existing + 4 new)
 
 - [ ] **Step 3: Run all API unit tests**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && dotnet test tests/Shadowbrook.Api.Tests/Shadowbrook.Api.Tests.csproj`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && dotnet test tests/Teeforce.Api.Tests/Teeforce.Api.Tests.csproj`
 Expected: All tests pass
 
 - [ ] **Step 4: Run make dev to verify runtime startup**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && make dev`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && make dev`
 Expected: API starts on :5221 without errors, logs show "NoOp invitation" messages if seed admin users are created
 
 - [ ] **Step 5: Run dotnet format one final time**
 
-Run: `cd /home/aaron/dev/orgs/benjamingolfco/shadowbrook/.worktrees/issue-334-graph-invitation && dotnet format shadowbrook.slnx`
+Run: `cd /home/aaron/dev/orgs/benjamingolfco/teeforce/.worktrees/issue-334-graph-invitation && dotnet format teeforce.slnx`

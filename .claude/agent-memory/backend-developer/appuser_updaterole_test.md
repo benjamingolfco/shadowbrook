@@ -8,7 +8,7 @@ type: reference
 
 Added unit test `UpdateRole_UpdatesRoleAndOrganizationId` to verify the `AppUser.UpdateRole` method correctly updates both the user's role and organization ID.
 
-**Test Location:** `/tests/Shadowbrook.Domain.Tests/AppUserAggregate/AppUserTests.cs`
+**Test Location:** `/tests/Teeforce.Domain.Tests/AppUserAggregate/AppUserTests.cs`
 
 **Test Details:**
 - Creates a test user with Operator role

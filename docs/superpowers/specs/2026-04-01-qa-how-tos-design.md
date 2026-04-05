@@ -19,7 +19,7 @@ Extend the `local-qa-cycle` skill so the QA agent builds up a library of reusabl
 ```markdown
 ---
 name: how-tos:{flow-name}
-description: Use when you need to {do X} in the Shadowbrook app running locally
+description: Use when you need to {do X} in the Teeforce app running locally
 ---
 
 # {Flow Name}

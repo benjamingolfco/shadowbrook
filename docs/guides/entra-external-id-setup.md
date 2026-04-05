@@ -1,10 +1,10 @@
 # Entra ID Setup Guide
 
-This guide walks through the Azure portal configuration required to set up authentication for Shadowbrook using Microsoft Entra ID.
+This guide walks through the Azure portal configuration required to set up authentication for Teeforce using Microsoft Entra ID.
 
 ## Architecture
 
-Shadowbrook uses two types of Entra tenants for different audiences:
+Teeforce uses two types of Entra tenants for different audiences:
 
 | Tenant | Type | Audience | Purpose |
 |--------|------|----------|---------|
@@ -48,7 +48,7 @@ The workforce tenant is for controlled access — only users you explicitly invi
 1. In the [Entra admin center](https://entra.microsoft.com), switch to the workforce tenant via **Settings** icon > **Directories + subscriptions**.
 2. Navigate to **Entra ID** > **App registrations** > **New registration**.
 3. Fill in the details:
-   - **Name:** `Shadowbrook API (Non-Prod)`
+   - **Name:** `Teeforce API (Non-Prod)`
    - **Supported account types:** Accounts in this organizational directory only
 4. Leave Redirect URI blank — APIs don't need one.
 5. Click **Register**.
@@ -62,8 +62,8 @@ The workforce tenant is for controlled access — only users you explicitly invi
 3. Click **Add a scope** and fill in:
    - **Scope name:** `access_as_user`
    - **Who can consent:** Admins and users
-   - **Admin consent display name:** `Access Shadowbrook API`
-   - **Admin consent description:** `Allow the application to access Shadowbrook API on behalf of the signed-in user.`
+   - **Admin consent display name:** `Access Teeforce API`
+   - **Admin consent description:** `Allow the application to access Teeforce API on behalf of the signed-in user.`
    - **State:** Enabled
 4. Click **Add scope**.
 
@@ -73,7 +73,7 @@ The workforce tenant is for controlled access — only users you explicitly invi
 
 1. Navigate to **Entra ID** > **App registrations** > **New registration**.
 2. Fill in the details:
-   - **Name:** `Shadowbrook SPA (Non-Prod)`
+   - **Name:** `Teeforce SPA (Non-Prod)`
    - **Supported account types:** Accounts in this organizational directory only
 3. Click **Register**.
 4. Note the **Application (client) ID**.
@@ -82,12 +82,12 @@ The workforce tenant is for controlled access — only users you explicitly invi
    - Select **Single-page application**.
    - Redirect URI: `http://localhost:3000`
    - Click **Configure**.
-6. Add production redirect URIs as needed (e.g., `https://app.shadowbrook.golf`).
+6. Add production redirect URIs as needed (e.g., `https://app.teeforce.golf`).
 
 ### Grant API Permission
 
 1. In the SPA app registration, navigate to **Manage** > **API permissions** > **Add a permission**.
-2. Select the **My APIs** tab and choose **Shadowbrook API (Non-Prod)**.
+2. Select the **My APIs** tab and choose **Teeforce API (Non-Prod)**.
 3. Select **Delegated permissions**, check `access_as_user`, and click **Add permissions**.
 4. Click **Grant admin consent for Benjamin Golf Co** and confirm.
 
@@ -102,11 +102,11 @@ This suppresses the consent prompt so users don't see a "this app wants to acces
 
 ---
 
-## Step 4: Configure the Shadowbrook Application
+## Step 4: Configure the Teeforce Application
 
 ### Backend (`appsettings.json` or environment variables)
 
-Update `src/backend/Shadowbrook.Api/appsettings.json`:
+Update `src/backend/Teeforce.Api/appsettings.json`:
 
 ```json
 "AzureAd": {
@@ -144,7 +144,7 @@ VITE_API_SCOPE=api://<api-client-id>/access_as_user
 
 ## Step 5: Invite Users
 
-Shadowbrook uses invite-only access. Users must be explicitly added to the tenant.
+Teeforce uses invite-only access. Users must be explicitly added to the tenant.
 
 ### Invite an Operator or Developer
 
@@ -168,7 +168,7 @@ Only assigned users can sign in. This provides defense-in-depth beyond the singl
 
 ## Step 6: Create the First Admin User
 
-Shadowbrook auto-provisions users on first login with the `Staff` role. To elevate an account to `Admin`:
+Teeforce auto-provisions users on first login with the `Staff` role. To elevate an account to `Admin`:
 
 1. Start the app and navigate to `http://localhost:3000`.
 2. Sign in via the Entra login page — this creates the user in the `AppUsers` table with the `Staff` role.

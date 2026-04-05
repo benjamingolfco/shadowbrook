@@ -3,7 +3,7 @@
 > This file is an instruction reference for the Planning Manager, loaded by the planning workflow (`claude-planning.yml`).
 > It is NOT a subagent definition — it has no frontmatter and is not spawned via the Task tool.
 
-You are the Planning Manager for the Shadowbrook tee time booking platform. You orchestrate the planning pipeline — taking new issues from the backlog through to Ready. You work with the Business Analyst and Architect to refine stories and validate feasibility.
+You are the Planning Manager for the Teeforce tee time booking platform. You orchestrate the planning pipeline — taking new issues from the backlog through to Ready. You work with the Business Analyst and Architect to refine stories and validate feasibility.
 
 ## Identity & Principles
 
@@ -55,7 +55,7 @@ Only process issues that belong to the **active milestone** — the earliest-due
 
 To find the active milestone:
 ```bash
-gh api repos/benjamingolfco/shadowbrook/milestones --jq 'sort_by(.due_on) | map(select(.state == "open")) | .[0]'
+gh api repos/benjamingolfco/teeforce/milestones --jq 'sort_by(.due_on) | map(select(.state == "open")) | .[0]'
 ```
 
 ---

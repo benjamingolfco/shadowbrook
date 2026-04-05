@@ -1,4 +1,4 @@
-name: Shadowbrook Implementation
+name: Teeforce Implementation
 
 on:
   workflow_dispatch:
@@ -96,7 +96,7 @@ jobs:
           for ISSUE_NUM in $ACTIONABLE; do
             echo "::group::Checking dependencies for #$ISSUE_NUM"
 
-            if ! BLOCKERS=$(gh api "repos/benjamingolfco/shadowbrook/issues/$ISSUE_NUM/dependencies/blocked_by" 2>&1); then
+            if ! BLOCKERS=$(gh api "repos/benjamingolfco/teeforce/issues/$ISSUE_NUM/dependencies/blocked_by" 2>&1); then
               echo "::warning::Failed to fetch dependencies for #$ISSUE_NUM: $BLOCKERS — treating as unblocked"
               BLOCKERS='[]'
             fi
@@ -107,7 +107,7 @@ jobs:
             else
               echo "#$ISSUE_NUM is unblocked — dispatching"
               gh workflow run claude-implementation.yml \
-                --repo benjamingolfco/shadowbrook \
+                --repo benjamingolfco/teeforce \
                 -f issue_number="$ISSUE_NUM"
               DISPATCHED=$((DISPATCHED + 1))
             fi
@@ -160,7 +160,7 @@ jobs:
           claude_args: |
             --model claude-sonnet-4-5-20250929 --allowedTools "Bash" "Read" "Write" "Edit" "Glob" "Grep" "Task"
           prompt: |
-            You are the Sprint Manager for the Shadowbrook agent pipeline.
+            You are the Sprint Manager for the Teeforce agent pipeline.
 
             ## Context
             Event: ${{ github.event_name }}
@@ -223,7 +223,7 @@ jobs:
             When you discover newly-unblocked issues (e.g., during merge cascade),
             trigger a separate workflow run for each:
             ```
-            gh workflow run claude-implementation.yml --repo benjamingolfco/shadowbrook -f issue_number={N}
+            gh workflow run claude-implementation.yml --repo benjamingolfco/teeforce -f issue_number={N}
             ```
             This runs each issue in its own parallel workflow.
 

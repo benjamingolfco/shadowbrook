@@ -14,7 +14,7 @@ param logAnalyticsWorkspaceCustomerId string
 @secure()
 param logAnalyticsSharedKey string
 
-var containerAppEnvName = 'shadowbrook-env-${environment}'
+var containerAppEnvName = 'teeforce-env-${environment}'
 
 resource containerAppEnv 'Microsoft.App/managedEnvironments@2025-01-01' = {
   name: containerAppEnvName

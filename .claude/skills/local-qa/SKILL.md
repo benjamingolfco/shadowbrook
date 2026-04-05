@@ -74,7 +74,7 @@ The QA agent maintains a library of reusable how-to skills in `.claude/skills/ho
 ```markdown
 ---
 name: how-tos:{flow-name}
-description: Use when you need to {do X} in the Shadowbrook app running locally
+description: Use when you need to {do X} in the Teeforce app running locally
 ---
 
 # {Flow Name}
@@ -108,7 +108,7 @@ First, read `.local/test-credentials.md` from the repo root to get test account 
 Dispatch a `qa-tester` subagent with this prompt (include the credentials content):
 
 ```
-You are doing exploratory QA on the Shadowbrook tee time booking app running at http://localhost:3000 (API at http://localhost:5221).
+You are doing exploratory QA on the Teeforce tee time booking app running at http://localhost:3000 (API at http://localhost:5221).
 
 ## Test Credentials
 
@@ -229,7 +229,7 @@ If no blocking issues: skip to Step 9.
 For each blocking bug, dispatch an `Explore` subagent (subagent_type: `general-purpose`) to investigate:
 
 ```
-A QA tester found this bug in the Shadowbrook app:
+A QA tester found this bug in the Teeforce app:
 
 **Bug:** {title}
 **Page:** {url}
@@ -256,7 +256,7 @@ Report back with:
 Dispatch an `architect` subagent:
 
 ```
-You are planning a bug fix in the Shadowbrook app. Work in the worktree at: {worktree_path}
+You are planning a bug fix in the Teeforce app. Work in the worktree at: {worktree_path}
 
 ## Bug
 {title}: {one-line summary}
@@ -284,7 +284,7 @@ Determine which developer to dispatch based on the files involved:
 Dispatch the appropriate developer subagent:
 
 ```
-You are fixing a bug in the Shadowbrook app. Work in the worktree at: {worktree_path}
+You are fixing a bug in the Teeforce app. Work in the worktree at: {worktree_path}
 
 ## Bug
 {title}: {one-line summary}
@@ -295,9 +295,9 @@ You are fixing a bug in the Shadowbrook app. Work in the worktree at: {worktree_
 ## Your Task
 
 1. Follow the architect's plan — write/modify tests first, verify they fail, then implement the fix
-2. Run `dotnet build shadowbrook.slnx` to verify compilation (for backend changes)
+2. Run `dotnet build teeforce.slnx` to verify compilation (for backend changes)
 3. Run relevant tests to verify they pass
-4. Run `dotnet format shadowbrook.slnx` to fix style (for backend changes)
+4. Run `dotnet format teeforce.slnx` to fix style (for backend changes)
 5. For TypeScript changes: run `pnpm --dir src/web lint` and `pnpm --dir src/web test`
 
 Do NOT commit — changes will be committed after review.
@@ -308,7 +308,7 @@ Do NOT commit — changes will be committed after review.
 Dispatch a `reviewer` subagent:
 
 ```
-You are reviewing a bug fix in the Shadowbrook app. Work in the worktree at: {worktree_path}
+You are reviewing a bug fix in the Teeforce app. Work in the worktree at: {worktree_path}
 
 ## Bug
 {title}: {one-line summary}

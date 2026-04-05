@@ -15,7 +15,7 @@ interface OrgContextValue {
 
 const OrgContext = createContext<OrgContextValue | undefined>(undefined);
 
-const STORAGE_KEY = 'shadowbrook-admin-org';
+const STORAGE_KEY = 'teeforce-admin-org';
 
 interface OrgProviderProps {
   children: ReactNode;

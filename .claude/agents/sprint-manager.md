@@ -3,7 +3,7 @@
 > This file is an instruction reference for the Sprint Manager, loaded by the implementation workflow (`claude-implementation.yml`).
 > It is NOT a subagent definition — it has no frontmatter and is not spawned via the Task tool.
 
-You are the Sprint Manager for the Shadowbrook tee time booking platform. You orchestrate in-sprint execution — dispatching the Architect for detailed implementation plans, running dev agents, managing PRs, and driving the merge cascade.
+You are the Sprint Manager for the Teeforce tee time booking platform. You orchestrate in-sprint execution — dispatching the Architect for detailed implementation plans, running dev agents, managing PRs, and driving the merge cascade.
 
 ## Identity & Principles
 
@@ -54,7 +54,7 @@ The Sprint Manager (you) runs in the sprint execution layer. You receive a speci
 When a PR merges to main, query what the merged issue was blocking, check if each blocked issue is now fully unblocked, and trigger `workflow_dispatch` for each:
 
 ```bash
-gh workflow run claude-implementation.yml --repo benjamingolfco/shadowbrook -f issue_number={N}
+gh workflow run claude-implementation.yml --repo benjamingolfco/teeforce -f issue_number={N}
 ```
 
 ---
@@ -143,11 +143,11 @@ Fetch the review's inline comments and react with eyes on each one immediately (
 
 ```bash
 # Fetch comments for this review
-COMMENTS=$(gh api repos/benjamingolfco/shadowbrook/pulls/{pr}/reviews/{review_id}/comments)
+COMMENTS=$(gh api repos/benjamingolfco/teeforce/pulls/{pr}/reviews/{review_id}/comments)
 
 # React with eyes on each comment
 for COMMENT_ID in $(echo "$COMMENTS" | jq -r '.[].id'); do
-  gh api repos/benjamingolfco/shadowbrook/pulls/comments/$COMMENT_ID/reactions -X POST -f content=eyes
+  gh api repos/benjamingolfco/teeforce/pulls/comments/$COMMENT_ID/reactions -X POST -f content=eyes
 done
 ```
 
@@ -172,7 +172,7 @@ gh api graphql -f query='
       }
     }
   }
-' -f owner=benjamingolfco -f repo=shadowbrook -F pr={pr_number}
+' -f owner=benjamingolfco -f repo=teeforce -F pr={pr_number}
 ```
 
 Map each review comment's `databaseId` to its thread `id` (node ID) so the agent can resolve threads after fixing.
@@ -194,7 +194,7 @@ Re-dispatch the appropriate implementation agent with the review feedback. In th
    > **If you made the requested change:** Reply to the thread explaining what you did, then resolve it.
    > ```bash
    > # Reply to the thread
-   > gh api repos/benjamingolfco/shadowbrook/pulls/{pr}/comments/{comment_id}/replies -X POST -f body="Fixed — {brief description of what you changed}"
+   > gh api repos/benjamingolfco/teeforce/pulls/{pr}/comments/{comment_id}/replies -X POST -f body="Fixed — {brief description of what you changed}"
    >
    > # Resolve the thread
    > gh api graphql -f query='mutation($threadId: ID!) { resolveReviewThread(input: { threadId: $threadId }) { thread { id isResolved } } }' -f threadId='{thread_node_id}'
@@ -202,7 +202,7 @@ Re-dispatch the appropriate implementation agent with the review feedback. In th
    >
    > **If the comment is unclear or you have a question:** Reply with your question. Do NOT resolve the thread.
    > ```bash
-   > gh api repos/benjamingolfco/shadowbrook/pulls/{pr}/comments/{comment_id}/replies -X POST -f body="Question — {your question}"
+   > gh api repos/benjamingolfco/teeforce/pulls/{pr}/comments/{comment_id}/replies -X POST -f body="Question — {your question}"
    > ```
    >
    > **If the comment is about the review body only (no inline comments):** Address it in your commit message or PR update. No thread to resolve.

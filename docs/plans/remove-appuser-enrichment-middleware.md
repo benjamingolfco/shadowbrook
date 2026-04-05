@@ -33,7 +33,7 @@ Replace the middleware with two ASP.NET Core extension points, then decouple the
 
 ### Step 1: Create `AppUserClaimsTransformation`
 
-**Create:** `src/backend/Shadowbrook.Api/Infrastructure/Auth/AppUserClaimsTransformation.cs`
+**Create:** `src/backend/Teeforce.Api/Infrastructure/Auth/AppUserClaimsTransformation.cs`
 
 This implements `IClaimsTransformation` (from `Microsoft.AspNetCore.Authentication`). ASP.NET Core calls `TransformAsync` on every authenticated request after the authentication handler runs. The cache makes repeated calls cheap.
 
@@ -80,13 +80,13 @@ The `ExtractEmail` helper also moves here (private static method, same logic).
 
 ### Step 2: Create `RequireAppUserRequirement` and `RequireAppUserHandler`
 
-**Create:** `src/backend/Shadowbrook.Api/Infrastructure/Auth/RequireAppUserRequirement.cs`
+**Create:** `src/backend/Teeforce.Api/Infrastructure/Auth/RequireAppUserRequirement.cs`
 
 ```csharp
 public class RequireAppUserRequirement : IAuthorizationRequirement { }
 ```
 
-**Create:** `src/backend/Shadowbrook.Api/Infrastructure/Auth/RequireAppUserHandler.cs`
+**Create:** `src/backend/Teeforce.Api/Infrastructure/Auth/RequireAppUserHandler.cs`
 
 ```csharp
 public class RequireAppUserHandler : AuthorizationHandler<RequireAppUserRequirement>
@@ -109,7 +109,7 @@ public class RequireAppUserHandler : AuthorizationHandler<RequireAppUserRequirem
 
 **Important:** This handler does NOT write the `{ "reason": "no_account" }` response body directly. Instead, a custom `IAuthorizationMiddlewareResultHandler` inspects `FailedRequirements` to produce the JSON response.
 
-**Create:** `src/backend/Shadowbrook.Api/Infrastructure/Auth/AppUserAuthorizationResultHandler.cs`
+**Create:** `src/backend/Teeforce.Api/Infrastructure/Auth/AppUserAuthorizationResultHandler.cs`
 
 ```csharp
 public class AppUserAuthorizationResultHandler : IAuthorizationMiddlewareResultHandler
@@ -140,7 +140,7 @@ public class AppUserAuthorizationResultHandler : IAuthorizationMiddlewareResultH
 
 ### Step 3: Register new services in Program.cs
 
-**Modify:** `src/backend/Shadowbrook.Api/Program.cs`
+**Modify:** `src/backend/Teeforce.Api/Program.cs`
 
 #### 3a. Register `IClaimsTransformation`
 
@@ -182,28 +182,28 @@ The pipeline becomes: `UseCors() -> UseAuthentication() -> UseAuthorization()`. 
 
 #### 4a. Modify domain entity
 
-**Modify:** `src/backend/Shadowbrook.Domain/AppUserAggregate/AppUser.cs`
+**Modify:** `src/backend/Teeforce.Domain/AppUserAggregate/AppUser.cs`
 
 - Delete the `LastLoginAt` property
 - Delete the `RecordLogin()` method
 
 #### 4b. Modify EF configuration
 
-**Modify:** `src/backend/Shadowbrook.Api/Infrastructure/EntityTypeConfigurations/AppUserConfiguration.cs`
+**Modify:** `src/backend/Teeforce.Api/Infrastructure/EntityTypeConfigurations/AppUserConfiguration.cs`
 
 - Delete the line: `builder.Property(u => u.LastLoginAt);`
 
 #### 4c. Add EF migration
 
 ```bash
-dotnet ef migrations add RemoveLastLoginAt --project src/backend/Shadowbrook.Api
+dotnet ef migrations add RemoveLastLoginAt --project src/backend/Teeforce.Api
 ```
 
 This generates a migration that drops the `LastLoginAt` column from the `AppUsers` table.
 
 #### 4d. Remove domain tests
 
-**Modify:** `tests/Shadowbrook.Domain.Tests/AppUserAggregate/AppUserTests.cs`
+**Modify:** `tests/Teeforce.Domain.Tests/AppUserAggregate/AppUserTests.cs`
 
 - Delete the `RecordLogin_UpdatesLastLoginAt` test entirely (behavior is removed, not changed)
 - Remove `Assert.Null(user.LastLoginAt)` from `CreateAdmin_SetsAdminRoleAndNullOrganizationId`
@@ -213,7 +213,7 @@ This generates a migration that drops the `LastLoginAt` column from the `AppUser
 
 ### Step 5: Simplify `DevAuthHandler`
 
-**Modify:** `src/backend/Shadowbrook.Api/Infrastructure/Auth/DevAuthHandler.cs`
+**Modify:** `src/backend/Teeforce.Api/Infrastructure/Auth/DevAuthHandler.cs`
 
 Remove the entire AppUser lookup and claim enrichment block (lines 33-52). After this change, `DevAuthHandler` only:
 
@@ -235,13 +235,13 @@ public class DevAuthHandler(
 
 Remove the `using` statements that are no longer needed:
 - `Microsoft.EntityFrameworkCore`
-- `Shadowbrook.Api.Infrastructure.Data`
+- `Teeforce.Api.Infrastructure.Data`
 
 **`role` claim consistency note:** After this change, DevAuth will produce `role` claims via `IClaimsTransformation` instead of the custom middleware. Previously, only the middleware added `role` claims for DevAuth users. This is a correctness improvement (DevAuth now matches the production auth path exactly), not a regression. Flag this for smoke testing -- verify that DevAuth users get the correct role claims through the new pipeline.
 
 ### Step 6: Update `AuthEndpoints` cache invalidation
 
-**Modify:** `src/backend/Shadowbrook.Api/Features/Auth/AuthEndpoints.cs`
+**Modify:** `src/backend/Teeforce.Api/Features/Auth/AuthEndpoints.cs`
 
 Line 174 references `AppUserEnrichmentMiddleware.CacheKey(appUser.IdentityId)`. Update to reference the new class:
 
@@ -249,17 +249,17 @@ Line 174 references `AppUserEnrichmentMiddleware.CacheKey(appUser.IdentityId)`. 
 cache.Remove(AppUserClaimsTransformation.CacheKey(appUser.IdentityId));
 ```
 
-Also update the `using` statement if the namespace changes (it stays in `Shadowbrook.Api.Infrastructure.Auth`, so no change needed).
+Also update the `using` statement if the namespace changes (it stays in `Teeforce.Api.Infrastructure.Auth`, so no change needed).
 
 ### Step 7: Delete `AppUserEnrichmentMiddleware`
 
-**Delete:** `src/backend/Shadowbrook.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs`
+**Delete:** `src/backend/Teeforce.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs`
 
 ### Step 8: Rewrite middleware tests as transformation + authorization tests
 
-**Delete or rename:** `tests/Shadowbrook.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs`
+**Delete or rename:** `tests/Teeforce.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs`
 
-**Create:** `tests/Shadowbrook.Api.Tests/Auth/AppUserClaimsTransformationTests.cs`
+**Create:** `tests/Teeforce.Api.Tests/Auth/AppUserClaimsTransformationTests.cs`
 
 Port the existing test scenarios, adapted for the `IClaimsTransformation` interface:
 
@@ -278,14 +278,14 @@ Test setup changes:
 - Call `TransformAsync(principal)` and inspect the returned `ClaimsPrincipal`
 - No `HttpContext`, no `RequestDelegate`, no middleware pipeline
 
-**Create:** `tests/Shadowbrook.Api.Tests/Auth/RequireAppUserHandlerTests.cs`
+**Create:** `tests/Teeforce.Api.Tests/Auth/RequireAppUserHandlerTests.cs`
 
 | Test | Behavior |
 |------|----------|
 | `UserWithAppUserIdClaim_Succeeds` | Handler calls `context.Succeed(requirement)` |
 | `UserWithoutAppUserIdClaim_Fails` | Handler calls `context.Fail()` -- verify requirement appears in `FailedRequirements` |
 
-**Create:** `tests/Shadowbrook.Api.Tests/Auth/AppUserAuthorizationResultHandlerTests.cs`
+**Create:** `tests/Teeforce.Api.Tests/Auth/AppUserAuthorizationResultHandlerTests.cs`
 
 | Test | Behavior |
 |------|----------|
@@ -300,7 +300,7 @@ Phase 2 introduces a read-model interface so the claims transformation never tou
 
 ### Step 9: Create `IAppUserClaimsProvider` and `AppUserClaimsData`
 
-**Create:** `src/backend/Shadowbrook.Api/Infrastructure/Auth/IAppUserClaimsProvider.cs`
+**Create:** `src/backend/Teeforce.Api/Infrastructure/Auth/IAppUserClaimsProvider.cs`
 
 This is a lightweight read-model interface. It lives in the API layer's `Infrastructure/Auth/` because it serves the authentication/authorization concern specifically -- it is not a domain interface.
 
@@ -322,7 +322,7 @@ public record AppUserClaimsData(
 
 ### Step 10: Create `AppUserClaimsProvider` implementation
 
-**Create:** `src/backend/Shadowbrook.Api/Infrastructure/Auth/AppUserClaimsProvider.cs`
+**Create:** `src/backend/Teeforce.Api/Infrastructure/Auth/AppUserClaimsProvider.cs`
 
 ```csharp
 public class AppUserClaimsProvider(ApplicationDbContext db) : IAppUserClaimsProvider
@@ -352,7 +352,7 @@ public class AppUserClaimsProvider(ApplicationDbContext db) : IAppUserClaimsProv
 
 ### Step 11: Register `IAppUserClaimsProvider`
 
-**Modify:** `src/backend/Shadowbrook.Api/Program.cs`
+**Modify:** `src/backend/Teeforce.Api/Program.cs`
 
 Add near the other scoped service registrations:
 
@@ -364,7 +364,7 @@ This step compiles independently -- the provider is registered but not yet consu
 
 ### Step 12: Refactor `AppUserClaimsTransformation` to use `IAppUserClaimsProvider`
 
-**Modify:** `src/backend/Shadowbrook.Api/Infrastructure/Auth/AppUserClaimsTransformation.cs`
+**Modify:** `src/backend/Teeforce.Api/Infrastructure/Auth/AppUserClaimsTransformation.cs`
 
 Replace `ApplicationDbContext` dependency with `IAppUserClaimsProvider`. The constructor becomes:
 
@@ -423,11 +423,11 @@ enrichmentData = new EnrichmentData(data.AppUserId, data.OrganizationId, data.Ro
 
 Remove the following `using` statements from the file:
 - `Microsoft.EntityFrameworkCore`
-- `Shadowbrook.Api.Infrastructure.Data`
+- `Teeforce.Api.Infrastructure.Data`
 
 ### Step 13: Update `AppUserClaimsTransformationTests`
 
-**Modify:** `tests/Shadowbrook.Api.Tests/Auth/AppUserClaimsTransformationTests.cs`
+**Modify:** `tests/Teeforce.Api.Tests/Auth/AppUserClaimsTransformationTests.cs`
 
 Replace `InMemoryDbContext` setup with `NSubstitute` mock of `IAppUserClaimsProvider`. This is a significant simplification.
 
@@ -460,20 +460,20 @@ private AppUserClaimsTransformation CreateTransformation(
 
 **Remove these imports from test file:**
 - `Microsoft.EntityFrameworkCore`
-- `Shadowbrook.Api.Infrastructure.Data`
-- `Shadowbrook.Domain.AppUserAggregate` (no longer creating `AppUser` entities)
-- `Shadowbrook.Domain.OrganizationAggregate` (no longer creating `Organization` entities)
+- `Teeforce.Api.Infrastructure.Data`
+- `Teeforce.Domain.AppUserAggregate` (no longer creating `AppUser` entities)
+- `Teeforce.Domain.OrganizationAggregate` (no longer creating `Organization` entities)
 
 **Add import:**
-- `Shadowbrook.Api.Infrastructure.Auth` (for `AppUserClaimsData`)
+- `Teeforce.Api.Infrastructure.Auth` (for `AppUserClaimsData`)
 
 ### Step 14: `CompleteIdentitySetupHandler` stays as-is
 
-**No changes** to `src/backend/Shadowbrook.Api/Features/Auth/Handlers/CompleteIdentitySetup/Handler.cs`.
+**No changes** to `src/backend/Teeforce.Api/Features/Auth/Handlers/CompleteIdentitySetup/Handler.cs`.
 
 The handler still uses `IAppUserRepository` to load the full `AppUser` aggregate, call `CompleteIdentitySetup()`, and let Wolverine's transactional middleware save. It runs in its own scope and transaction, decoupled from the claims transformation.
 
-**No changes** to `tests/Shadowbrook.Api.Tests/Features/Auth/Handlers/CompleteIdentitySetupHandlerTests.cs`. The handler tests exercise the handler in isolation -- they are unaffected by how the command is dispatched.
+**No changes** to `tests/Teeforce.Api.Tests/Features/Auth/Handlers/CompleteIdentitySetupHandlerTests.cs`. The handler tests exercise the handler in isolation -- they are unaffected by how the command is dispatched.
 
 ---
 
@@ -483,14 +483,14 @@ Run in order after each step:
 
 ```bash
 # 1. Build
-dotnet build shadowbrook.slnx
+dotnet build teeforce.slnx
 
 # 2. Format
-dotnet format shadowbrook.slnx
+dotnet format teeforce.slnx
 
 # 3. Run auth tests
-dotnet test tests/Shadowbrook.Api.Tests/ --filter "FullyQualifiedName~Auth"
-dotnet test tests/Shadowbrook.Domain.Tests/ --filter "FullyQualifiedName~AppUser"
+dotnet test tests/Teeforce.Api.Tests/ --filter "FullyQualifiedName~Auth"
+dotnet test tests/Teeforce.Domain.Tests/ --filter "FullyQualifiedName~AppUser"
 
 # 4. Full test suite
 make test
@@ -569,11 +569,11 @@ make dev
 - [ ] Refactor `AppUserClaimsTransformationTests`: replace `CreateInMemoryDbContext()` with `Substitute.For<IAppUserClaimsProvider>()` mock
 - [ ] Update email-match test: remove `bus.When(...).Do(...)` callback, change assertion to `bus.Received(1).PublishAsync(...)`, verify claims from `AppUserClaimsData`
 - [ ] Update all other tests to use mock provider instead of seeded InMemory DB
-- [ ] Remove unused imports from test file (`Microsoft.EntityFrameworkCore`, `Shadowbrook.Api.Infrastructure.Data`, `Shadowbrook.Domain.AppUserAggregate`, `Shadowbrook.Domain.OrganizationAggregate`)
+- [ ] Remove unused imports from test file (`Microsoft.EntityFrameworkCore`, `Teeforce.Api.Infrastructure.Data`, `Teeforce.Domain.AppUserAggregate`, `Teeforce.Domain.OrganizationAggregate`)
 - [ ] Verify `CompleteIdentitySetupHandler` and its tests are unchanged (handler still uses `IAppUserRepository`)
-- [ ] Verify build: `dotnet build shadowbrook.slnx`
-- [ ] Verify format: `dotnet format shadowbrook.slnx`
-- [ ] Run auth tests: `dotnet test tests/Shadowbrook.Api.Tests/ --filter "FullyQualifiedName~Auth"`
+- [ ] Verify build: `dotnet build teeforce.slnx`
+- [ ] Verify format: `dotnet format teeforce.slnx`
+- [ ] Run auth tests: `dotnet test tests/Teeforce.Api.Tests/ --filter "FullyQualifiedName~Auth"`
 - [ ] Run full suite: `make test`
 - [ ] **Pre-merge check:** grep for bare `[Authorize]` endpoints without a named policy and remediate or document
 - [ ] Smoke test with `make dev` (including DevAuth role claim verification)

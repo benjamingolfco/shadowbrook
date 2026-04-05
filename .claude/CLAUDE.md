@@ -1,4 +1,4 @@
-# Shadowbrook — Tee Time Booking Platform
+# Teeforce — Tee Time Booking Platform
 
 ## Project Principles
 
@@ -43,15 +43,15 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - Infra: Azure (Container Apps, Static Web Apps, SQL Database, Log Analytics, App Insights)
 
 ## Project Structure
-- src/backend/Shadowbrook.Domain/ — Domain model (aggregates, entities, events, repository interfaces, domain services — zero dependencies)
-- src/backend/Shadowbrook.Api/ — .NET Web API (minimal API endpoints, Infrastructure/ for EF, repositories, event dispatch, services)
-- tests/Shadowbrook.Domain.Tests/ — Pure domain unit tests (no DB, no HTTP)
-- tests/Shadowbrook.Api.Tests/ — xUnit tests: unit tests (validators, handlers, utilities) + integration tests (TestWebApplicationFactory with SQL Server via Testcontainers)
+- src/backend/Teeforce.Domain/ — Domain model (aggregates, entities, events, repository interfaces, domain services — zero dependencies)
+- src/backend/Teeforce.Api/ — .NET Web API (minimal API endpoints, Infrastructure/ for EF, repositories, event dispatch, services)
+- tests/Teeforce.Domain.Tests/ — Pure domain unit tests (no DB, no HTTP)
+- tests/Teeforce.Api.Tests/ — xUnit tests: unit tests (validators, handlers, utilities) + integration tests (TestWebApplicationFactory with SQL Server via Testcontainers)
 - src/web/ — React SPA
 - docs/ — Documentation
 - docs/plans/ — Design docs and implementation plans
 - infra/ — Azure deployment config (Bicep modules, deploy scripts, parameter files)
-- src/backend/Shadowbrook.Api/Infrastructure/Observability/ — Serilog enrichers (OrganizationIdEnricher)
+- src/backend/Teeforce.Api/Infrastructure/Observability/ — Serilog enrichers (OrganizationIdEnricher)
 
 ## Code Conventions
 - C#: `.editorconfig` at repo root defines style rules; see `.claude/rules/backend/backend-conventions.md` for full conventions
@@ -60,16 +60,16 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - Prefer existing patterns in the codebase over introducing new ones
 
 ## Workflow
-- Run `dotnet build shadowbrook.slnx` after C# changes to verify compilation
-- Run `dotnet format shadowbrook.slnx` after C# changes to fix IDE style warnings (braces, `this.` qualification, naming, etc.)
+- Run `dotnet build teeforce.slnx` after C# changes to verify compilation
+- Run `dotnet format teeforce.slnx` after C# changes to fix IDE style warnings (braces, `this.` qualification, naming, etc.)
 - Run `pnpm --dir src/web lint` after TypeScript changes
 - Run `pnpm --dir src/web test` after frontend component changes
 - **Testing pyramid: unit tests first, integration tests second.** Test behavior at the cheapest layer possible — validators, handlers, domain logic should all be unit tested without spinning up a DB or HTTP server. Integration tests are for DB-dependent behavior, middleware, and E2E flows only. See `.claude/rules/backend/backend-conventions.md` for backend-specific patterns; the same principle applies to frontend (component tests before browser tests).
 - **Test integrity: assertions are specifications.** Test assertions define expected system behavior and are protected. When a test fails after a code change, assume the code is wrong first — fix the implementation, not the test. Only modify existing assertions or remove tests when the intended behavior has changed per the acceptance criteria. Adding new assertions or new tests is always encouraged. Test scaffolding (setup, arrangement, dependency wiring, property renames) may be updated freely to match code changes. When modifying assertions or removing tests, post a justification on the PR explaining what behavior changed and why.
 - Prefer running single tests over full suites for speed
 - `dotnet-ef` tool path: `export PATH="$PATH:/home/aaron/.dotnet/tools"`
-- Add migration: `dotnet ef migrations add <Name> --project src/backend/Shadowbrook.Api`
-- Check pending: `dotnet ef migrations has-pending-model-changes --project src/backend/Shadowbrook.Api`
+- Add migration: `dotnet ef migrations add <Name> --project src/backend/Teeforce.Api`
+- Check pending: `dotnet ef migrations has-pending-model-changes --project src/backend/Teeforce.Api`
 - See `.claude/rules/backend/ef-migrations.md` for full migration conventions
 
 ## Branching

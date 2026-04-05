@@ -12,7 +12,7 @@ concurrency:
 
 env:
   E2E_BASE_URL: https://white-stone-00610060f.1.azurestaticapps.net
-  E2E_API_URL: https://shadowbrook-app-test.happypond-1a892999.eastus2.azurecontainerapps.io
+  E2E_API_URL: https://teeforce-app-test.placeholder.azurecontainerapps.io # TODO: Update after Azure redeployment
 
 jobs:
   e2e:

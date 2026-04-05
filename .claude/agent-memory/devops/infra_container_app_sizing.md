@@ -4,7 +4,7 @@ description: Why 0.25vCPU/0.5Gi OOMs and what the minimum viable tier is for thi
 type: project
 ---
 
-The test Container App (`shadowbrook-app-test`) was OOM-killed at 0.25 vCPU / 0.5Gi with `minReplicas: 0`.
+The test Container App (`teeforce-app-test`) was OOM-killed at 0.25 vCPU / 0.5Gi with `minReplicas: 0`.
 
 **Why:** WolverineFx performs Roslyn-based code generation at startup (handler discovery, compiled pipelines). Combined with EF Core model initialization and OpenTelemetry SDK startup, the peak memory spike during cold starts exceeds 0.5Gi. Scale-to-zero means every inactivity period triggers this cold-start OOM cycle.
 

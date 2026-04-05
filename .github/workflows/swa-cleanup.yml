@@ -27,8 +27,8 @@ permissions:
   pull-requests: read
 
 env:
-  SWA_NAME: shadowbrook-web-test
-  RESOURCE_GROUP: shadowbrook-test-rg
+  SWA_NAME: teeforce-web-test
+  RESOURCE_GROUP: teeforce-test-rg
 
 jobs:
   cleanup:

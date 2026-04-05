@@ -5,7 +5,7 @@
 
 ## Overview
 
-A `/stress-test` skill that launches parallel AI agents to exercise the Shadowbrook system with realistic concurrent usage. One operator agent and N golfer agents interact with the UI via Playwright browsers while an observer agent monitors App Insights for errors, warnings, and flow gaps. The goal is to flush out race conditions, eventual consistency issues, and concurrency bugs — not raw throughput.
+A `/stress-test` skill that launches parallel AI agents to exercise the Teeforce system with realistic concurrent usage. One operator agent and N golfer agents interact with the UI via Playwright browsers while an observer agent monitors App Insights for errors, warnings, and flow gaps. The goal is to flush out race conditions, eventual consistency issues, and concurrency bugs — not raw throughput.
 
 ## Invocation
 
@@ -28,7 +28,7 @@ A `/stress-test` skill that launches parallel AI agents to exercise the Shadowbr
 
 | Env | Frontend | API |
 |-----|----------|-----|
-| `test` | `https://white-stone-00610060f.1.azurestaticapps.net` | `https://shadowbrook-app-test.happypond-1a892999.eastus2.azurecontainerapps.io` |
+| `test` | `https://white-stone-00610060f.1.azurestaticapps.net` | `https://teeforce-app-test.happypond-1a892999.eastus2.azurecontainerapps.io` |
 | `local` | `http://localhost:3000` | `http://localhost:5221` |
 
 ## Agent Architecture

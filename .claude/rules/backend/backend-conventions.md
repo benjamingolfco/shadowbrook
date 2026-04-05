@@ -25,7 +25,7 @@ paths:
 The API project uses **feature folders** — endpoints, event handlers, validators, and DTOs for a feature live together. Shared infrastructure stays in horizontal layers.
 
 ```
-Shadowbrook.Api/
+Teeforce.Api/
   Features/
     Tenants/                              ← feature folder
       Endpoints/
@@ -76,11 +76,11 @@ Shadowbrook.Api/
 - Handlers are grouped by the event/command they handle (subfolder per event)
 - Place a handler in the feature that **consumes** the event — the feature whose state or concern the handler modifies (e.g., `BookingCreated/ClaimHandler` lives in `Waitlist/` because it modifies opening state, even though it reacts to `BookingCreated`)
 - Shared infrastructure (DbContext, repositories, EF configs, services) stays in `Infrastructure/`
-- Domain model stays in `Shadowbrook.Domain/` — feature folders are API-layer only
+- Domain model stays in `Teeforce.Domain/` — feature folders are API-layer only
 
 ## API Patterns
 
-- Wolverine HTTP endpoints in `src/backend/Shadowbrook.Api/Features/` using `[WolverineGet]`, `[WolverinePost]`, etc.
+- Wolverine HTTP endpoints in `src/backend/Teeforce.Api/Features/` using `[WolverineGet]`, `[WolverinePost]`, etc.
 - Endpoints are `public static` methods on classes, discovered by convention — no manual route registration
 - Inline DTOs as records within endpoint files
 - `Results.*` return pattern (`Results.Ok()`, `Results.BadRequest()`, `Results.NotFound()`) with `IResult` return type
@@ -132,7 +132,7 @@ public static async Task Handle(IOptions<AppSettings> appSettings, ...)
 
 ### Core Principles
 
-- Domain model lives in `Shadowbrook.Domain` (zero dependencies — no EF, no ASP.NET)
+- Domain model lives in `Teeforce.Domain` (zero dependencies — no EF, no ASP.NET)
 - Domain models are pure write/behavior — never add properties or methods to serve read/display concerns
 - If the domain model makes it hard to query data for display, create a separate read model (CQRS-lite)
 - EF entity type configurations in `Infrastructure/EntityTypeConfigurations/`
@@ -189,7 +189,7 @@ The rule is: **the record lives with the code that has the `Handle` method for i
 
 **No silent returns — hard rule:**
 - Every early return in a handler MUST either throw or log a warning before returning. Silent failures in event handlers are invisible in production.
-- **ID lookups throw:** When looking up an entity by an ID from an event/command, use `GetRequiredByIdAsync(id)` — it throws `EntityNotFoundException` if not found. Extension methods for all repositories are in `Shadowbrook.Domain.Common.RepositoryExtensions`. Never write `GetByIdAsync(...) ?? throw` inline — always use `GetRequiredByIdAsync`.
+- **ID lookups throw:** When looking up an entity by an ID from an event/command, use `GetRequiredByIdAsync(id)` — it throws `EntityNotFoundException` if not found. Extension methods for all repositories are in `Teeforce.Domain.Common.RepositoryExtensions`. Never write `GetByIdAsync(...) ?? throw` inline — always use `GetRequiredByIdAsync`.
 - **Query-based lookups log + return:** When searching by criteria (e.g., "find active opening for this course/date"), null means "no match" — a valid business case. Log a warning and return.
 - Use `ILogger logger` as a parameter (Wolverine injects it). Use `LogWarning` with `{PropertyName}` placeholders.
 - Domain aggregates that are intentionally idempotent (e.g., `Expire()`, `Remove()`, `Reject()`) may use silent returns — but domain methods that should never be called in an invalid state must throw `DomainException` subclasses.
@@ -246,7 +246,7 @@ For operations spanning multiple aggregates, use sequential event chains instead
 - Value objects are defined by their attributes, not by identity — no `Id`, no inheritance from `Entity`
 - Immutable: all properties are `get`-only, set through the constructor
 - Implement `IEquatable<T>` with `Equals`, `GetHashCode`, and a private parameterless constructor for EF
-- Value objects live in `Shadowbrook.Domain/Common/` (shared) or in an aggregate folder if aggregate-specific
+- Value objects live in `Teeforce.Domain/Common/` (shared) or in an aggregate folder if aggregate-specific
 - Map in EF Core using `ComplexProperty` (not `OwnsOne`) — this is the modern EF Core 10 approach
 - Use `HasColumnName` inside `ComplexProperty` to control column names (default is `{Nav}_{Prop}`)
 - Events carry flat fields, not value objects — events are data contracts across boundaries
@@ -304,14 +304,14 @@ builder.ComplexProperty(o => o.TeeTime, t =>
 
 Unit tests first, integration tests second. Test at the cheapest layer that can prove the behavior.
 
-**Unit tests** (`Shadowbrook.Api.Tests` — no DB, no HTTP, no container):
+**Unit tests** (`Teeforce.Api.Tests` — no DB, no HTTP, no container):
 - Domain aggregates and services — pure behavior, state transitions, event raising
 - FluentValidation validators — call `validator.Validate()` directly
 - Wolverine message handlers — call `Handle()` with NSubstitute stubs
 - Wolverine policies (sagas) — call `Start()` / `Handle()` directly with constructed events
 - Infrastructure utilities (e.g., `PhoneNormalizer`, `CourseTime`)
 
-**Integration tests** (`Shadowbrook.Api.IntegrationTests` — TestWebApplicationFactory + SQL Server container):
+**Integration tests** (`Teeforce.Api.IntegrationTests` — TestWebApplicationFactory + SQL Server container):
 - Flow-based scenario tests (dependent steps telling a user story)
 - DB-dependent behavior (unique constraints, query filters, tenant isolation)
 - Middleware behavior (tenant claim, course-exists)
@@ -325,10 +325,10 @@ See `.claude/rules/backend/integration-test-conventions.md` for the scenario tes
 ### Test Organization
 
 ```
-tests/Shadowbrook.Domain.Tests/
+tests/Teeforce.Domain.Tests/
   {Aggregate}Aggregate/              ← domain unit tests
 
-tests/Shadowbrook.Api.Tests/
+tests/Teeforce.Api.Tests/
   Features/
     Waitlist/
       Handlers/                      ← Wolverine handler unit tests
@@ -344,7 +344,7 @@ tests/Shadowbrook.Api.Tests/
       Handlers/
   Services/                          ← utility unit tests
 
-tests/Shadowbrook.Api.IntegrationTests/
+tests/Teeforce.Api.IntegrationTests/
   *Tests.cs                          ← scenario-based integration tests
   TestWebApplicationFactory.cs       ← shared test server + SQL container
   TestSetup.cs                       ← shared setup helpers

@@ -20,7 +20,7 @@ Log a warning. Cache the inactive status so repeated requests don't hit the DB.
 
 ### 1. Modify `AppUserEnrichmentMiddleware.cs`
 
-**File:** `src/backend/Shadowbrook.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs`
+**File:** `src/backend/Teeforce.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs`
 
 #### a. Add `ILogger<AppUserEnrichmentMiddleware>` parameter
 
@@ -106,7 +106,7 @@ This matches the existing error response pattern from `DomainExceptionHandler`
 
 ### 2. Update existing test
 
-**File:** `tests/Shadowbrook.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs`
+**File:** `tests/Teeforce.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs`
 
 #### a. Update `InactiveUser_IsNotEnriched` test
 
@@ -202,5 +202,5 @@ LogWarning("Deactivated user attempted access. IdentityId: {IdentityId}", oid)
 - [ ] Update existing `InactiveUser_IsNotEnriched` test for new behavior (403, next not called)
 - [ ] Add test for cached inactive status returning 403 without DB hit
 - [ ] Update all other test methods to pass logger parameter
-- [ ] Verify compilation with `dotnet build shadowbrook.slnx`
-- [ ] Run tests with `dotnet test tests/Shadowbrook.Api.Tests --filter AppUserEnrichmentMiddleware`
+- [ ] Verify compilation with `dotnet build teeforce.slnx`
+- [ ] Run tests with `dotnet test tests/Teeforce.Api.Tests --filter AppUserEnrichmentMiddleware`

@@ -1,13 +1,13 @@
 ---
 paths:
-  - "tests/Shadowbrook.Api.IntegrationTests/**/*.cs"
+  - "tests/Teeforce.Api.IntegrationTests/**/*.cs"
 ---
 
 # Integration Test Conventions
 
 ## Project Structure
 
-Integration tests live in `tests/Shadowbrook.Api.IntegrationTests/`. Unit tests live in `tests/Shadowbrook.Api.Tests/`.
+Integration tests live in `tests/Teeforce.Api.IntegrationTests/`. Unit tests live in `tests/Teeforce.Api.Tests/`.
 
 An integration test is anything that needs the real HTTP pipeline, SQL Server (Testcontainers), or `TestWebApplicationFactory`. If it uses NSubstitute or calls methods directly without HTTP, it's a unit test.
 
@@ -41,8 +41,8 @@ Every scenario class needs all three:
 [Collection("Integration")]                           // shares TestWebApplicationFactory
 [IntegrationTest]                                      // CI category filtering
 [TestCaseOrderer(
-    "Shadowbrook.Api.IntegrationTests.StepOrderer",
-    "Shadowbrook.Api.IntegrationTests")]               // guarantees step order
+    "Teeforce.Api.IntegrationTests.StepOrderer",
+    "Teeforce.Api.IntegrationTests")]               // guarantees step order
 public class MyScenarioTests(TestWebApplicationFactory factory) : IAsyncLifetime
 ```
 

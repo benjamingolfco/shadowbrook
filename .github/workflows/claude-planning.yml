@@ -1,4 +1,4 @@
-name: Shadowbrook Planning
+name: Teeforce Planning
 
 on:
   workflow_dispatch:
@@ -47,7 +47,7 @@ jobs:
           claude_args: |
             --model ${{ github.event_name == 'schedule' && 'claude-sonnet-4-5-20250929' || 'claude-opus-4-6' }} --allowedTools "Bash" "Read" "Write" "Edit" "Glob" "Grep" "Task"
           prompt: |
-            You are the Planning Manager for the Shadowbrook agent pipeline.
+            You are the Planning Manager for the Teeforce agent pipeline.
 
             ## Context
             Event: ${{ github.event_name }}

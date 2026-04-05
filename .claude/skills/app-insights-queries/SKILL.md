@@ -28,8 +28,8 @@ Queries below that reference `requests` or `dependencies` will return empty resu
 ## Prerequisites
 
 - Logged in to Azure CLI: `az login`
-- App Insights resource name: replace `{appInsightsName}` with the actual resource (e.g., `shadowbrook-insights-test`)
-- Resource group: replace `{resourceGroup}` with the actual resource group (e.g., `shadowbrook-test-rg`)
+- App Insights resource name: replace `{appInsightsName}` with the actual resource (e.g., `teeforce-insights-test`)
+- Resource group: replace `{resourceGroup}` with the actual resource group (e.g., `teeforce-test-rg`)
 - Time range: replace `{timespan}` with an ISO 8601 duration (e.g., `PT1H` = last 1 hour, `PT30M` = last 30 minutes, `P1D` = last 1 day)
 
 ## Running Queries

@@ -23,7 +23,7 @@ When an issue number is provided:
 
 1. **Fetch the issue:**
    ```bash
-   gh issue view {number} --repo benjamingolfco/shadowbrook
+   gh issue view {number} --repo benjamingolfco/teeforce
    ```
 
 2. **Find the Issue Plan comment** — look for the pinned comment containing `## Issue Plan`. Extract:
@@ -53,7 +53,7 @@ When an issue number is provided:
 
 6. **Post the report on the issue:**
    ```bash
-   gh issue comment {number} --repo benjamingolfco/shadowbrook --body "{report}"
+   gh issue comment {number} --repo benjamingolfco/teeforce --body "{report}"
    ```
    Prefix the comment with the QA role icon:
    ```markdown
@@ -67,28 +67,28 @@ When an issue number is provided:
    **All ACs pass:**
    - Check for open sub-issues:
      ```bash
-     gh api repos/benjamingolfco/shadowbrook/issues/{number}/sub_issues --jq '[.[] | select(.state == "open")] | length'
+     gh api repos/benjamingolfco/teeforce/issues/{number}/sub_issues --jq '[.[] | select(.state == "open")] | length'
      ```
    - If open sub-issues exist: tell the user "All ACs pass but {N} sub-issue(s) are still open. Leaving in QA."
    - If no open sub-issues: move issue to Done and close it
      ```bash
      # Move to Done status (update option ID after creating QA status)
      gh project item-edit --project-id {id} --id {item_id} --field-id PVTSSF_lADOD3a3vs4BOVqOzg9EexU --single-select-option-id b9a85561
-     gh issue close {number} --repo benjamingolfco/shadowbrook
+     gh issue close {number} --repo benjamingolfco/teeforce
      ```
    - Tell the user the result
 
    **Failures found:**
    - For each failure, offer to create a bug issue:
      ```bash
-     gh api repos/benjamingolfco/shadowbrook/issues -X POST \
+     gh api repos/benjamingolfco/teeforce/issues -X POST \
        -f title="{suggested bug title}" \
        -f body="Filed from QA validation of #{number}.\n\n**Expected:** {expected}\n**Actual:** {actual}\n\n**Screenshot:** {path}" \
        -f type="Bug"
      ```
    - Link each bug as a sub-issue of the parent story:
      ```bash
-     gh api repos/benjamingolfco/shadowbrook/issues/{parent}/sub_issues -X POST -F sub_issue_id={bug_id}
+     gh api repos/benjamingolfco/teeforce/issues/{parent}/sub_issues -X POST -F sub_issue_id={bug_id}
      ```
    - Leave the parent issue in QA status
    - Tell the user: "{N} bug(s) filed and linked to #{number}. Issue stays in QA."

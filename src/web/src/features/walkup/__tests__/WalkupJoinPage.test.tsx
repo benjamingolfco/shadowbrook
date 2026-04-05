@@ -81,10 +81,10 @@ describe('WalkupJoinPage', () => {
       expect(screen.queryByText('Join Waitlist')).not.toBeInTheDocument();
     });
 
-    it('shows Shadowbrook wordmark', () => {
+    it('shows Teeforce wordmark', () => {
       render(<WalkupJoinPage />);
 
-      expect(screen.getByRole('heading', { name: 'Shadowbrook', level: 1 })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Teeforce', level: 1 })).toBeInTheDocument();
     });
 
     it('transitions to join form after successful code verification', async () => {

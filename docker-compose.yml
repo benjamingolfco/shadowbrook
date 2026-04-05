@@ -16,24 +16,24 @@ services:
       start_period: 30s
 
   api:
-    container_name: shadowbrook-api
+    container_name: teeforce-api
     build:
       context: .
-      dockerfile: src/backend/Shadowbrook.Api/Dockerfile
+      dockerfile: src/backend/Teeforce.Api/Dockerfile
       target: dev
     ports:
       - "5221:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
-      ConnectionStrings__DefaultConnection: "Server=db;Database=Shadowbrook;User Id=sa;Password=Dev@Password123!;TrustServerCertificate=True"
+      ConnectionStrings__DefaultConnection: "Server=db;Database=Teeforce;User Id=sa;Password=Dev@Password123!;TrustServerCertificate=True"
       Cors__AllowedOrigins__0: "http://localhost:3000"
       Auth__UseDevAuth: "true"
     volumes:
       - ./src/backend:/app
-      - api_obj:/app/Shadowbrook.Api/obj
-      - api_bin:/app/Shadowbrook.Api/bin
-      - domain_obj:/app/Shadowbrook.Domain/obj
-      - domain_bin:/app/Shadowbrook.Domain/bin
+      - api_obj:/app/Teeforce.Api/obj
+      - api_bin:/app/Teeforce.Api/bin
+      - domain_obj:/app/Teeforce.Domain/obj
+      - domain_bin:/app/Teeforce.Domain/bin
     depends_on:
       db:
         condition: service_healthy

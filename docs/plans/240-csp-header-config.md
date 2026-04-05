@@ -10,7 +10,7 @@ Derive the auth domain from `AzureAd:Instance` (already configured). No new conf
 
 ## Changes
 
-**Modify: `src/backend/Shadowbrook.Api/Program.cs`**
+**Modify: `src/backend/Teeforce.Api/Program.cs`**
 
 In the CSP middleware (lines 172-183):
 

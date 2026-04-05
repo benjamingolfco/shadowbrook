@@ -8,14 +8,14 @@ param environment string
 @description('Azure region for the managed identity')
 param location string
 
-var name = 'id-shadowbrook-${environment}'
+var name = 'id-teeforce-${environment}'
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
   name: name
   location: location
   tags: {
     environment: environment
-    workload: 'shadowbrook'
+    workload: 'teeforce'
   }
 }
 

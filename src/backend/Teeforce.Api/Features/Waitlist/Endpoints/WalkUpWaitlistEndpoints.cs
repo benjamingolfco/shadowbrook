@@ -1,0 +1,364 @@
+using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Teeforce.Api.Infrastructure.Auth;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseWaitlistAggregate;
+using Teeforce.Domain.GolferAggregate;
+using Teeforce.Domain.GolferWaitlistEntryAggregate;
+using Teeforce.Domain.TeeTimeOpeningAggregate;
+using Wolverine.Http;
+
+namespace Teeforce.Api.Features.Waitlist.Endpoints;
+
+public static class WalkUpWaitlistEndpoints
+{
+    [WolverinePost("/courses/{courseId}/walkup-waitlist/open")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
+    public static async Task<IResult> OpenWaitlist(
+        Guid courseId,
+        ICourseContext courseContext,
+        ICourseWaitlistRepository repo,
+        IShortCodeGenerator shortCodeGenerator,
+        ITimeProvider timeProvider)
+    {
+        var today = courseContext.Today;
+
+        var waitlist = await Domain.CourseWaitlistAggregate.WalkUpWaitlist.OpenAsync(
+            courseId, today, shortCodeGenerator, repo, timeProvider);
+
+        repo.Add(waitlist);
+
+        var response = ToResponse(waitlist);
+        return Results.Created($"/courses/{courseId}/walkup-waitlist/today", response);
+    }
+
+    [WolverinePost("/courses/{courseId}/walkup-waitlist/close")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
+    public static async Task<IResult> CloseWaitlist(
+        Guid courseId,
+        ICourseContext courseContext,
+        ICourseWaitlistRepository repo,
+        ITimeProvider timeProvider)
+    {
+        var today = courseContext.Today;
+
+        var waitlist = await repo.GetOpenByCourseDateAsync(courseId, today);
+
+        if (waitlist is null)
+        {
+            return Results.NotFound(new { error = "No open walk-up waitlist found for today." });
+        }
+
+        waitlist.Close(timeProvider);
+
+        return Results.Ok(ToResponse(waitlist));
+    }
+
+    [WolverinePost("/courses/{courseId}/walkup-waitlist/reopen")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
+    public static async Task<IResult> ReopenWaitlist(
+        Guid courseId,
+        ICourseContext courseContext,
+        ICourseWaitlistRepository repo)
+    {
+        var today = courseContext.Today;
+
+        var waitlist = await repo.GetByCourseDateAsync(courseId, today);
+
+        if (waitlist is null)
+        {
+            return Results.NotFound(new { error = "No walk-up waitlist found for today." });
+        }
+
+        waitlist.Reopen();
+
+        return Results.Ok(ToResponse(waitlist));
+    }
+
+    [WolverineGet("/courses/{courseId}/walkup-waitlist/today")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
+    public static async Task<IResult> GetToday(
+        Guid courseId,
+        ICourseContext courseContext,
+        ApplicationDbContext db,
+        ICourseWaitlistRepository repo)
+    {
+        var today = courseContext.Today;
+
+        var waitlist = await repo.GetByCourseDateAsync(courseId, today);
+
+        var waitlistResponse = waitlist is not null ? ToResponse(waitlist) : null;
+
+        var entries = waitlist is not null
+            ? (await db.GolferWaitlistEntries
+                .Where(e => e.CourseWaitlistId == waitlist.Id && e.RemovedAt == null)
+                .Join(db.Golfers.IgnoreQueryFilters(),
+                    e => e.GolferId, g => g.Id,
+                    (e, g) => new WalkUpWaitlistEntryResponse(e.Id, g.FirstName + " " + g.LastName, e.GroupSize, e.JoinedAt))
+                .ToListAsync())
+                .OrderBy(e => e.JoinedAt)
+                .ToList()
+            : new List<WalkUpWaitlistEntryResponse>();
+
+        var dayStart = today.ToDateTime(TimeOnly.MinValue);
+        var dayEnd = today.AddDays(1).ToDateTime(TimeOnly.MinValue);
+        var openingEntities = await db.TeeTimeOpenings
+            .Include(o => o.ClaimedSlots)
+            .Where(o => o.CourseId == courseId && o.TeeTime.Value >= dayStart && o.TeeTime.Value < dayEnd)
+            .ToListAsync();
+
+        var golferIds = openingEntities
+            .SelectMany(o => o.ClaimedSlots)
+            .Select(cs => cs.GolferId)
+            .Distinct()
+            .ToList();
+
+        var golferNames = golferIds.Count > 0
+            ? await db.Golfers.IgnoreQueryFilters()
+                .Where(g => golferIds.Contains(g.Id))
+                .ToDictionaryAsync(g => g.Id, g => g.FirstName + " " + g.LastName)
+            : new Dictionary<Guid, string>();
+
+        var openings = openingEntities
+            .OrderBy(o => o.TeeTime.Time)
+            .Select(o => new WalkUpWaitlistOpeningResponse(
+                o.Id,
+                o.TeeTime.Value,
+                o.SlotsAvailable,
+                o.SlotsRemaining,
+                o.Status.ToString(),
+                o.ClaimedSlots
+                    .Select(cs => new FilledGolferResponse(
+                        cs.GolferId,
+                        golferNames.GetValueOrDefault(cs.GolferId, "Unknown"),
+                        cs.GroupSize))
+                    .ToList()))
+            .ToList();
+
+        return Results.Ok(new WalkUpWaitlistTodayResponse(waitlistResponse, entries, openings));
+    }
+
+    [WolverinePost("/courses/{courseId}/tee-time-openings")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
+    public static async Task<IResult> CreateOpening(
+        Guid courseId,
+        CreateTeeTimeOpeningRequest request,
+        ITeeTimeOpeningRepository openingRepo,
+        ICourseContext courseContext,
+        ITimeProvider timeProvider)
+    {
+        var teeTime = new TeeTime(DateOnly.FromDateTime(request.TeeTime), TimeOnly.FromDateTime(request.TeeTime));
+        var courseNow = new TeeTime(courseContext.Today, courseContext.Now);
+
+        if (teeTime.Value < courseNow.Value)
+        {
+            return Results.Problem(detail: "Tee time must be in the future.", statusCode: 422);
+        }
+
+        var existing = await openingRepo.GetActiveByCourseTeeTimeAsync(courseId, teeTime);
+
+        if (existing is not null)
+        {
+            var isFull = existing.SlotsAvailable >= 4;
+            var errorMessage = isFull
+                ? $"A tee time opening for this time already exists with {existing.SlotsAvailable} slots."
+                : $"An opening already exists for this time with {existing.SlotsAvailable} slot(s). Would you like to add more slots to it?";
+
+            return Results.Conflict(new
+            {
+                error = errorMessage,
+                existingSlotsAvailable = existing.SlotsAvailable,
+                existingSlotsRemaining = existing.SlotsRemaining,
+                existingOpeningId = existing.Id,
+                isFull
+            });
+        }
+
+        var opening = TeeTimeOpening.Create(courseId, teeTime.Date, teeTime.Time, request.SlotsAvailable, operatorOwned: true, timeProvider);
+        openingRepo.Add(opening);
+
+        return Results.Created(
+            $"/courses/{courseId}/tee-time-openings/{opening.Id}",
+            new WalkUpWaitlistOpeningResponse(opening.Id, opening.TeeTime.Value, opening.SlotsAvailable, opening.SlotsRemaining, opening.Status.ToString(), []));
+    }
+
+    [WolverinePost("/courses/{courseId}/tee-time-openings/{openingId}/cancel")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
+    public static async Task<IResult> CancelOpening(
+        Guid courseId,
+        Guid openingId,
+        ITeeTimeOpeningRepository openingRepo,
+        ITimeProvider timeProvider)
+    {
+        var opening = await openingRepo.GetByIdAsync(openingId);
+
+        if (opening is null)
+        {
+            return Results.NotFound(new { error = "Tee time opening not found." });
+        }
+
+        if (opening.CourseId != courseId)
+        {
+            return Results.NotFound(new { error = "Tee time opening not found." });
+        }
+
+        opening.Cancel(timeProvider);
+
+        return Results.Ok(new WalkUpWaitlistOpeningResponse(
+            opening.Id,
+            opening.TeeTime.Value,
+            opening.SlotsAvailable,
+            opening.SlotsRemaining,
+            opening.Status.ToString(),
+            []));
+    }
+
+    [WolverinePost("/courses/{courseId}/walkup-waitlist/entries")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
+    public static async Task<IResult> AddGolferToWaitlist(
+        Guid courseId,
+        AddGolferToWaitlistRequest request,
+        ApplicationDbContext db,
+        ICourseContext courseContext,
+        ICourseWaitlistRepository repo,
+        IGolferWaitlistEntryRepository entryRepo,
+        IGolferRepository golferRepo,
+        ITimeProvider timeProvider)
+    {
+        var today = courseContext.Today;
+        var normalizedPhone = PhoneNormalizer.Normalize(request.Phone);
+
+        var waitlist = await repo.GetOpenByCourseDateAsync(courseId, today);
+
+        if (waitlist is null)
+        {
+            return Results.NotFound(new { error = "No open walk-up waitlist found for today." });
+        }
+
+        var courseName = await db.Courses
+            .Where(c => c.Id == courseId)
+            .Select(c => c.Name)
+            .FirstAsync();
+
+        // Golfer lookup-or-create
+        var golfer = await golferRepo.GetByPhoneAsync(normalizedPhone!);
+
+        if (golfer is null)
+        {
+            golfer = Golfer.Create(normalizedPhone!, request.FirstName, request.LastName);
+            golferRepo.Add(golfer);
+
+            try
+            {
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // Race condition: another request created the golfer concurrently
+                db.Entry(golfer).State = EntityState.Detached;
+                golfer = await golferRepo.GetByPhoneAsync(normalizedPhone!);
+
+                if (golfer is null)
+                {
+                    return Results.Problem("Unable to create or retrieve golfer record.", statusCode: 500);
+                }
+            }
+        }
+
+        var entry = await waitlist.Join(golfer, entryRepo, timeProvider, courseContext.TimeZoneId, request.GroupSize ?? 1);
+        entryRepo.Add(entry);
+
+        var submittedName = $"{request.FirstName.Trim()} {request.LastName.Trim()}";
+
+        return Results.Created(
+            $"/courses/{courseId}/walkup-waitlist/entries/{entry.Id}",
+            new AddGolferToWaitlistResponse(
+                entry.Id,
+                submittedName,
+                golfer.Phone,
+                entry.GroupSize,
+                courseName));
+    }
+
+    private static WalkUpWaitlistResponse ToResponse(Domain.CourseWaitlistAggregate.WalkUpWaitlist w) =>
+        new(w.Id, w.CourseId, w.ShortCode, w.Date.ToString("yyyy-MM-dd"), w.Status.ToString(), w.OpenedAt, w.ClosedAt);
+}
+
+public record AddGolferToWaitlistRequest(string FirstName, string LastName, string Phone, int? GroupSize);
+
+public class AddGolferToWaitlistRequestValidator : AbstractValidator<AddGolferToWaitlistRequest>
+{
+    public AddGolferToWaitlistRequestValidator()
+    {
+        RuleFor(x => x.FirstName)
+            .NotEmpty().WithMessage("First name is required.");
+
+        RuleFor(x => x.LastName)
+            .NotEmpty().WithMessage("Last name is required.");
+
+        RuleFor(x => x.Phone)
+            .Must(PhoneNormalizer.IsValid).WithMessage("A valid US phone number is required.");
+
+        RuleFor(x => x.GroupSize)
+            .InclusiveBetween(1, 4).WithMessage("Group size must be between 1 and 4.")
+            .When(x => x.GroupSize.HasValue);
+    }
+}
+
+public record AddGolferToWaitlistResponse(
+    Guid EntryId,
+    string GolferName,
+    string GolferPhone,
+    int GroupSize,
+    string CourseName);
+
+public record CreateTeeTimeOpeningRequest(DateTime TeeTime, int SlotsAvailable);
+
+public class CreateTeeTimeOpeningRequestValidator : AbstractValidator<CreateTeeTimeOpeningRequest>
+{
+    public CreateTeeTimeOpeningRequestValidator()
+    {
+        RuleFor(x => x.TeeTime)
+            .NotEmpty().WithMessage("Tee time is required.");
+
+        RuleFor(x => x.SlotsAvailable)
+            .InclusiveBetween(1, 4)
+            .WithMessage("Slots available must be between 1 and 4.");
+    }
+}
+
+public record FilledGolferResponse(
+    Guid GolferId,
+    string GolferName,
+    int GroupSize);
+
+public record WalkUpWaitlistOpeningResponse(
+    Guid Id,
+    DateTime TeeTime,
+    int SlotsAvailable,
+    int SlotsRemaining,
+    string Status,
+    List<FilledGolferResponse> FilledGolfers);
+
+public record WalkUpWaitlistResponse(
+    Guid Id,
+    Guid CourseId,
+    string ShortCode,
+    string Date,
+    string Status,
+    DateTimeOffset OpenedAt,
+    DateTimeOffset? ClosedAt);
+
+public record WalkUpWaitlistTodayResponse(
+    WalkUpWaitlistResponse? Waitlist,
+    List<WalkUpWaitlistEntryResponse> Entries,
+    List<WalkUpWaitlistOpeningResponse> Openings);
+
+public record WalkUpWaitlistEntryResponse(
+    Guid Id,
+    string GolferName,
+    int GroupSize,
+    DateTimeOffset JoinedAt);

@@ -4,7 +4,7 @@ description: Runtime stage uses aspnet:10.0-noble-chiseled; no curl, no shell, n
 type: project
 ---
 
-The production runtime stage in `src/backend/Shadowbrook.Api/Dockerfile` was switched from `mcr.microsoft.com/dotnet/aspnet:10.0` (Debian, ~215MB) to `mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled` (~100MB) on 2026-03-26.
+The production runtime stage in `src/backend/Teeforce.Api/Dockerfile` was switched from `mcr.microsoft.com/dotnet/aspnet:10.0` (Debian, ~215MB) to `mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled` (~100MB) on 2026-03-26.
 
 **Implications for future Dockerfile edits:**
 - No shell (`/bin/sh`, `/bin/bash`) available in runtime stage — do not add RUN commands after FROM

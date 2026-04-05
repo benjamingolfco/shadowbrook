@@ -69,10 +69,10 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore shadowbrook.slnx
+        run: dotnet restore teeforce.slnx
 
       - name: Build
-        run: dotnet build shadowbrook.slnx --no-restore
+        run: dotnet build teeforce.slnx --no-restore
 
       - name: Restore .NET tools
         run: dotnet tool restore
@@ -80,20 +80,20 @@ jobs:
       - name: Check for pending model changes
         run: |
           OUTPUT=$(dotnet ef migrations has-pending-model-changes \
-              --project src/backend/Shadowbrook.Api \
+              --project src/backend/Teeforce.Api \
               --no-build 2>&1)
           echo "$OUTPUT"
           if echo "$OUTPUT" | grep -qi "pending model changes"; then
             echo ""
             echo "::error::Entity model has changed without a corresponding migration."
-            echo "::error::Run: dotnet ef migrations add <Name> --project src/backend/Shadowbrook.Api"
+            echo "::error::Run: dotnet ef migrations add <Name> --project src/backend/Teeforce.Api"
             exit 1
           fi
 
       - name: Validate migration chain
         run: |
           if ! dotnet ef migrations script \
-              --project src/backend/Shadowbrook.Api \
+              --project src/backend/Teeforce.Api \
               --idempotent \
               --no-build \
               --output /tmp/migration-script.sql 2>&1; then
@@ -111,7 +111,7 @@ jobs:
       - name: Check migration predecessor against main
         run: |
           NEW_MIGRATIONS=$(git diff --name-only origin/main...HEAD \
-            -- 'src/backend/Shadowbrook.Api/Migrations/*.cs' \
+            -- 'src/backend/Teeforce.Api/Migrations/*.cs' \
             | grep -v 'Designer\.cs$' \
             | grep -v 'ApplicationDbContextModelSnapshot\.cs$' || true)
 
@@ -123,7 +123,7 @@ jobs:
           echo "New migrations detected:"
           echo "$NEW_MIGRATIONS"
 
-          MAIN_SNAPSHOT=$(git show origin/main:src/backend/Shadowbrook.Api/Migrations/ApplicationDbContextModelSnapshot.cs 2>/dev/null || true)
+          MAIN_SNAPSHOT=$(git show origin/main:src/backend/Teeforce.Api/Migrations/ApplicationDbContextModelSnapshot.cs 2>/dev/null || true)
           MAIN_HEAD=$(echo "$MAIN_SNAPSHOT" | grep -oP '(?<=\[Migration\(")[^"]+' | tail -1 || true)
           echo "Main migration head: ${MAIN_HEAD:-none}"
 
@@ -143,7 +143,7 @@ jobs:
           done
 
       - name: Unit Tests
-        run: dotnet test shadowbrook.slnx --no-build --filter "Category!=Integration" --logger trx --results-directory TestResults
+        run: dotnet test teeforce.slnx --no-build --filter "Category!=Integration" --logger trx --results-directory TestResults
 
       - name: Upload test results
         if: ${{ !cancelled() }}
@@ -171,13 +171,13 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore shadowbrook.slnx
+        run: dotnet restore teeforce.slnx
 
       - name: Build
-        run: dotnet build shadowbrook.slnx --no-restore
+        run: dotnet build teeforce.slnx --no-restore
 
       - name: Integration Tests
-        run: dotnet test shadowbrook.slnx --no-build --filter "Category=Integration" --logger trx --results-directory TestResults
+        run: dotnet test teeforce.slnx --no-build --filter "Category=Integration" --logger trx --results-directory TestResults
 
       - name: Upload test results
         if: ${{ !cancelled() }}

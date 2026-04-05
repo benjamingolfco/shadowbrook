@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Reset Shadowbrook database
+# Reset Teeforce database
 # Drops the Azure SQL database so the container app recreates it via EF migrations on next startup.
 #
 # Usage: ./reset-db.sh [environment]
 #   environment: test (default), staging, prod
 
 ENVIRONMENT="${1:-test}"
-SQL_SERVER="shadowbrook-sql-${ENVIRONMENT}"
-DATABASE="shadowbrook-db-${ENVIRONMENT}"
-RESOURCE_GROUP="shadowbrook-${ENVIRONMENT}-rg"
+SQL_SERVER="teeforce-sql-${ENVIRONMENT}"
+DATABASE="teeforce-db-${ENVIRONMENT}"
+RESOURCE_GROUP="teeforce-${ENVIRONMENT}-rg"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -44,4 +44,4 @@ az sql db create \
   --max-size 2GB
 
 echo -e "${GREEN}[INFO]${NC} Database reset complete. Restart the container app to apply migrations:"
-echo "  az containerapp revision restart --name shadowbrook-app-${ENVIRONMENT} --resource-group ${RESOURCE_GROUP} --revision \$(az containerapp revision list --name shadowbrook-app-${ENVIRONMENT} --resource-group ${RESOURCE_GROUP} --query '[0].name' -o tsv)"
+echo "  az containerapp revision restart --name teeforce-app-${ENVIRONMENT} --resource-group ${RESOURCE_GROUP} --revision \$(az containerapp revision list --name teeforce-app-${ENVIRONMENT} --resource-group ${RESOURCE_GROUP} --query '[0].name' -o tsv)"

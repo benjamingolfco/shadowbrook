@@ -31,10 +31,10 @@ jobs:
     outputs:
       app-url: ${{ steps.get-url.outputs.url }}
     env:
-      RESOURCE_GROUP: shadowbrook-${{ inputs.environment }}-rg
-      ACR_NAME: shadowbrookacr
-      IMAGE_NAME: shadowbrook
-      CONTAINER_APP_NAME: shadowbrook-app-${{ inputs.environment }}
+      RESOURCE_GROUP: teeforce-${{ inputs.environment }}-rg
+      ACR_NAME: teeforceacr
+      IMAGE_NAME: teeforce
+      CONTAINER_APP_NAME: teeforce-app-${{ inputs.environment }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -51,7 +51,7 @@ jobs:
           az acr build \
             --registry ${{ env.ACR_NAME }} \
             --image ${{ env.IMAGE_NAME }}:${{ inputs.image-tag }} \
-            --file src/backend/Shadowbrook.Api/Dockerfile \
+            --file src/backend/Teeforce.Api/Dockerfile \
             .
 
       - name: Deploy to Container App

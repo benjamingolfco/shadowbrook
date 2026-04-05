@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Shadowbrook - Deploy Bicep infrastructure
+# Teeforce - Deploy Bicep infrastructure
 # Usage: ./deploy.sh <environment> [--what-if]
 #
 # Two-phase subscription-level deployment:
-#   1. Shared infrastructure (ACR) — creates shadowbrook-shared-rg
-#   2. Environment infrastructure  — creates shadowbrook-{env}-rg
+#   1. Shared infrastructure (ACR) — creates teeforce-shared-rg
+#   2. Environment infrastructure  — creates teeforce-{env}-rg
 #
 # Bicep is the single source of truth — resource groups are created
 # by the templates, not by this script.
@@ -30,7 +30,7 @@ fi
 
 SUBSCRIPTION_ID="37109c89-82e6-4907-8cd1-ca80800d0730"  # benjamingolfco
 LOCATION="eastus2"
-ACR_NAME="shadowbrookacr"
+ACR_NAME="teeforceacr"
 
 # Ensure we're deploying to the correct subscription
 az account set --subscription "$SUBSCRIPTION_ID"
@@ -38,26 +38,26 @@ az account set --subscription "$SUBSCRIPTION_ID"
 # Step 1: Deploy shared infrastructure (creates RG + ACR)
 echo "==> Deploying shared infrastructure..."
 az deployment sub create \
-  --name "shadowbrook-shared" \
+  --name "teeforce-shared" \
   --location "$LOCATION" \
   --parameters "$BICEP_DIR/parameters.shared.bicepparam" \
   $WHAT_IF_FLAG
 
 # Step 1b: Seed ACR with a placeholder image if the repository doesn't exist yet
 if [ -z "$WHAT_IF_FLAG" ]; then
-  if ! az acr repository show --name "$ACR_NAME" --repository shadowbrook &>/dev/null; then
+  if ! az acr repository show --name "$ACR_NAME" --repository teeforce &>/dev/null; then
     echo "==> Seeding ACR with placeholder image..."
     az acr import --name "$ACR_NAME" \
       --source mcr.microsoft.com/dotnet/samples:aspnetapp \
-      --image shadowbrook:latest
+      --image teeforce:latest
   else
-    echo "==> ACR already has shadowbrook repository, skipping seed"
+    echo "==> ACR already has teeforce repository, skipping seed"
   fi
 fi
 
 # Step 2: Preserve running container image (avoid clobbering with placeholder)
-CONTAINER_APP_NAME="shadowbrook-app-${ENVIRONMENT}"
-RESOURCE_GROUP="shadowbrook-${ENVIRONMENT}-rg"
+CONTAINER_APP_NAME="teeforce-app-${ENVIRONMENT}"
+RESOURCE_GROUP="teeforce-${ENVIRONMENT}-rg"
 IMAGE_TAG=$(az containerapp show \
   --name "$CONTAINER_APP_NAME" \
   --resource-group "$RESOURCE_GROUP" \
@@ -68,7 +68,7 @@ echo "==> Using image tag: $IMAGE_TAG"
 # Step 3: Deploy environment infrastructure (creates RG + all env resources)
 echo "==> Deploying $ENVIRONMENT environment..."
 az deployment sub create \
-  --name "shadowbrook-${ENVIRONMENT}" \
+  --name "teeforce-${ENVIRONMENT}" \
   --location "$LOCATION" \
   --parameters "$BICEP_DIR/parameters.${ENVIRONMENT}.bicepparam" \
   --parameters imageTag="$IMAGE_TAG" \

@@ -14,37 +14,37 @@
 
 | Action | File | Responsibility |
 |--------|------|---------------|
-| Modify | `src/backend/Shadowbrook.Domain/AppUserAggregate/AppUser.cs` | Remove DisplayName, add FirstName/LastName, nullable IdentityId, CompleteIdentitySetup, raise events |
-| Create | `src/backend/Shadowbrook.Domain/AppUserAggregate/Events/AppUserCreated.cs` | Domain event for user creation |
-| Create | `src/backend/Shadowbrook.Domain/AppUserAggregate/Events/AppUserSetupCompleted.cs` | Domain event for identity linking |
-| Create | `src/backend/Shadowbrook.Domain/AppUserAggregate/Exceptions/IdentityAlreadyLinkedException.cs` | Domain exception for mismatched OID |
-| Modify | `src/backend/Shadowbrook.Api/Infrastructure/EntityTypeConfigurations/AppUserConfiguration.cs` | Update schema: nullable IdentityId, drop DisplayName, add FirstName/LastName, filtered unique index |
-| Create | `src/backend/Shadowbrook.Api/Features/Auth/Handlers/CompleteIdentitySetup/Handler.cs` | Wolverine handler for CompleteIdentitySetupCommand |
-| Modify | `src/backend/Shadowbrook.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs` | Email fallback lookup, InvokeAsync linking, 403 no_account response |
-| Modify | `src/backend/Shadowbrook.Api/Features/Auth/AuthEndpoints.cs` | Update DTOs, validators, endpoint logic |
-| Modify | `src/backend/Shadowbrook.Api/Infrastructure/Middleware/DomainExceptionHandler.cs` | Add IdentityAlreadyLinkedException mapping |
-| Modify | `src/backend/Shadowbrook.Api/Program.cs` | Add seed admin startup logic |
-| Modify | `tests/Shadowbrook.Domain.Tests/AppUserAggregate/AppUserTests.cs` | Update existing tests, add CompleteIdentitySetup tests |
-| Create | `tests/Shadowbrook.Api.Tests/Features/Auth/Handlers/CompleteIdentitySetupHandlerTests.cs` | Handler unit tests |
-| Modify | `tests/Shadowbrook.Api.Tests/Features/Auth/Validators/CreateUserRequestValidatorTests.cs` | Update for new request shape |
-| Modify | `tests/Shadowbrook.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs` | Update for new middleware flow |
+| Modify | `src/backend/Teeforce.Domain/AppUserAggregate/AppUser.cs` | Remove DisplayName, add FirstName/LastName, nullable IdentityId, CompleteIdentitySetup, raise events |
+| Create | `src/backend/Teeforce.Domain/AppUserAggregate/Events/AppUserCreated.cs` | Domain event for user creation |
+| Create | `src/backend/Teeforce.Domain/AppUserAggregate/Events/AppUserSetupCompleted.cs` | Domain event for identity linking |
+| Create | `src/backend/Teeforce.Domain/AppUserAggregate/Exceptions/IdentityAlreadyLinkedException.cs` | Domain exception for mismatched OID |
+| Modify | `src/backend/Teeforce.Api/Infrastructure/EntityTypeConfigurations/AppUserConfiguration.cs` | Update schema: nullable IdentityId, drop DisplayName, add FirstName/LastName, filtered unique index |
+| Create | `src/backend/Teeforce.Api/Features/Auth/Handlers/CompleteIdentitySetup/Handler.cs` | Wolverine handler for CompleteIdentitySetupCommand |
+| Modify | `src/backend/Teeforce.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs` | Email fallback lookup, InvokeAsync linking, 403 no_account response |
+| Modify | `src/backend/Teeforce.Api/Features/Auth/AuthEndpoints.cs` | Update DTOs, validators, endpoint logic |
+| Modify | `src/backend/Teeforce.Api/Infrastructure/Middleware/DomainExceptionHandler.cs` | Add IdentityAlreadyLinkedException mapping |
+| Modify | `src/backend/Teeforce.Api/Program.cs` | Add seed admin startup logic |
+| Modify | `tests/Teeforce.Domain.Tests/AppUserAggregate/AppUserTests.cs` | Update existing tests, add CompleteIdentitySetup tests |
+| Create | `tests/Teeforce.Api.Tests/Features/Auth/Handlers/CompleteIdentitySetupHandlerTests.cs` | Handler unit tests |
+| Modify | `tests/Teeforce.Api.Tests/Features/Auth/Validators/CreateUserRequestValidatorTests.cs` | Update for new request shape |
+| Modify | `tests/Teeforce.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs` | Update for new middleware flow |
 
 ---
 
 ### Task 1: Domain Events and Exception
 
 **Files:**
-- Create: `src/backend/Shadowbrook.Domain/AppUserAggregate/Events/AppUserCreated.cs`
-- Create: `src/backend/Shadowbrook.Domain/AppUserAggregate/Events/AppUserSetupCompleted.cs`
-- Create: `src/backend/Shadowbrook.Domain/AppUserAggregate/Exceptions/IdentityAlreadyLinkedException.cs`
+- Create: `src/backend/Teeforce.Domain/AppUserAggregate/Events/AppUserCreated.cs`
+- Create: `src/backend/Teeforce.Domain/AppUserAggregate/Events/AppUserSetupCompleted.cs`
+- Create: `src/backend/Teeforce.Domain/AppUserAggregate/Exceptions/IdentityAlreadyLinkedException.cs`
 
 - [ ] **Step 1: Create AppUserCreated event**
 
 ```csharp
-// src/backend/Shadowbrook.Domain/AppUserAggregate/Events/AppUserCreated.cs
-using Shadowbrook.Domain.Common;
+// src/backend/Teeforce.Domain/AppUserAggregate/Events/AppUserCreated.cs
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.AppUserAggregate.Events;
+namespace Teeforce.Domain.AppUserAggregate.Events;
 
 public record AppUserCreated : IDomainEvent
 {
@@ -59,10 +59,10 @@ public record AppUserCreated : IDomainEvent
 - [ ] **Step 2: Create AppUserSetupCompleted event**
 
 ```csharp
-// src/backend/Shadowbrook.Domain/AppUserAggregate/Events/AppUserSetupCompleted.cs
-using Shadowbrook.Domain.Common;
+// src/backend/Teeforce.Domain/AppUserAggregate/Events/AppUserSetupCompleted.cs
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.AppUserAggregate.Events;
+namespace Teeforce.Domain.AppUserAggregate.Events;
 
 public record AppUserSetupCompleted : IDomainEvent
 {
@@ -76,10 +76,10 @@ public record AppUserSetupCompleted : IDomainEvent
 - [ ] **Step 3: Create IdentityAlreadyLinkedException**
 
 ```csharp
-// src/backend/Shadowbrook.Domain/AppUserAggregate/Exceptions/IdentityAlreadyLinkedException.cs
-using Shadowbrook.Domain.Common;
+// src/backend/Teeforce.Domain/AppUserAggregate/Exceptions/IdentityAlreadyLinkedException.cs
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.AppUserAggregate.Exceptions;
+namespace Teeforce.Domain.AppUserAggregate.Exceptions;
 
 public class IdentityAlreadyLinkedException()
     : DomainException("This user is already linked to a different identity.");
@@ -87,13 +87,13 @@ public class IdentityAlreadyLinkedException()
 
 - [ ] **Step 4: Verify it compiles**
 
-Run: `dotnet build shadowbrook.slnx --verbosity quiet`
+Run: `dotnet build teeforce.slnx --verbosity quiet`
 Expected: Build succeeded, 0 errors
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/backend/Shadowbrook.Domain/AppUserAggregate/Events/ src/backend/Shadowbrook.Domain/AppUserAggregate/Exceptions/IdentityAlreadyLinkedException.cs
+git add src/backend/Teeforce.Domain/AppUserAggregate/Events/ src/backend/Teeforce.Domain/AppUserAggregate/Exceptions/IdentityAlreadyLinkedException.cs
 git commit -m "feat(domain): add AppUser domain events and IdentityAlreadyLinkedException"
 ```
 
@@ -102,22 +102,22 @@ git commit -m "feat(domain): add AppUser domain events and IdentityAlreadyLinked
 ### Task 2: Update AppUser Domain Model
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Domain/AppUserAggregate/AppUser.cs`
+- Modify: `src/backend/Teeforce.Domain/AppUserAggregate/AppUser.cs`
 
 - [ ] **Step 1: Write failing tests for new factory methods and CompleteIdentitySetup**
 
-Add these tests to `tests/Shadowbrook.Domain.Tests/AppUserAggregate/AppUserTests.cs`. First, update the existing tests whose signatures change — `CreateAdmin` and `CreateOperator` no longer take `identityId` or `displayName`, and `IsActive` starts as `false`:
+Add these tests to `tests/Teeforce.Domain.Tests/AppUserAggregate/AppUserTests.cs`. First, update the existing tests whose signatures change — `CreateAdmin` and `CreateOperator` no longer take `identityId` or `displayName`, and `IsActive` starts as `false`:
 
 ```csharp
 // Replace the existing CreateAdmin test
 [Fact]
 public void CreateAdmin_SetsAdminRoleAndNullOrganizationId()
 {
-    var user = AppUser.CreateAdmin("admin@shadowbrook.com");
+    var user = AppUser.CreateAdmin("admin@benjamingolfco.onmicrosoft.com");
 
     Assert.NotEqual(Guid.Empty, user.Id);
     Assert.Null(user.IdentityId);
-    Assert.Equal("admin@shadowbrook.com", user.Email);
+    Assert.Equal("admin@benjamingolfco.onmicrosoft.com", user.Email);
     Assert.Null(user.FirstName);
     Assert.Null(user.LastName);
     Assert.Equal(AppUserRole.Admin, user.Role);
@@ -180,7 +180,7 @@ Now add tests for `CompleteIdentitySetup`:
 
 ```csharp
 // Add using at top of file
-using Shadowbrook.Domain.AppUserAggregate.Events;
+using Teeforce.Domain.AppUserAggregate.Events;
 
 [Fact]
 public void CompleteIdentitySetup_SetsIdentityAndActivates()
@@ -279,7 +279,7 @@ public void AssignToOrganization_SetsOperatorRoleAndOrganizationId()
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/Shadowbrook.Domain.Tests --filter AppUserTests --verbosity quiet`
+Run: `dotnet test tests/Teeforce.Domain.Tests --filter AppUserTests --verbosity quiet`
 Expected: FAIL — `CreateAdmin` and `CreateOperator` don't match new signatures, `CompleteIdentitySetup` doesn't exist
 
 - [ ] **Step 3: Update AppUser entity**
@@ -287,12 +287,12 @@ Expected: FAIL — `CreateAdmin` and `CreateOperator` don't match new signatures
 Replace the entire `AppUser.cs` with:
 
 ```csharp
-// src/backend/Shadowbrook.Domain/AppUserAggregate/AppUser.cs
-using Shadowbrook.Domain.AppUserAggregate.Events;
-using Shadowbrook.Domain.AppUserAggregate.Exceptions;
-using Shadowbrook.Domain.Common;
+// src/backend/Teeforce.Domain/AppUserAggregate/AppUser.cs
+using Teeforce.Domain.AppUserAggregate.Events;
+using Teeforce.Domain.AppUserAggregate.Exceptions;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Domain.AppUserAggregate;
+namespace Teeforce.Domain.AppUserAggregate;
 
 public class AppUser : Entity
 {
@@ -408,13 +408,13 @@ public class AppUser : Entity
 
 - [ ] **Step 4: Run domain tests to verify they pass**
 
-Run: `dotnet test tests/Shadowbrook.Domain.Tests --filter AppUserTests --verbosity quiet`
+Run: `dotnet test tests/Teeforce.Domain.Tests --filter AppUserTests --verbosity quiet`
 Expected: All tests pass
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/backend/Shadowbrook.Domain/AppUserAggregate/AppUser.cs tests/Shadowbrook.Domain.Tests/AppUserAggregate/AppUserTests.cs
+git add src/backend/Teeforce.Domain/AppUserAggregate/AppUser.cs tests/Teeforce.Domain.Tests/AppUserAggregate/AppUserTests.cs
 git commit -m "feat(domain): update AppUser for invite flow — nullable IdentityId, CompleteIdentitySetup, domain events"
 ```
 
@@ -423,8 +423,8 @@ git commit -m "feat(domain): update AppUser for invite flow — nullable Identit
 ### Task 3: Update EF Configuration and Domain Exception Handler
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Api/Infrastructure/EntityTypeConfigurations/AppUserConfiguration.cs`
-- Modify: `src/backend/Shadowbrook.Api/Infrastructure/Middleware/DomainExceptionHandler.cs`
+- Modify: `src/backend/Teeforce.Api/Infrastructure/EntityTypeConfigurations/AppUserConfiguration.cs`
+- Modify: `src/backend/Teeforce.Api/Infrastructure/Middleware/DomainExceptionHandler.cs`
 
 - [ ] **Step 1: Update AppUserConfiguration**
 
@@ -433,10 +433,10 @@ Replace the contents of `AppUserConfiguration.cs`:
 ```csharp
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.OrganizationAggregate;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.OrganizationAggregate;
 
-namespace Shadowbrook.Api.Infrastructure.EntityTypeConfigurations;
+namespace Teeforce.Api.Infrastructure.EntityTypeConfigurations;
 
 public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
 {
@@ -472,11 +472,11 @@ Key changes: `IdentityId` no longer `.IsRequired()`, unique index has `.HasFilte
 
 - [ ] **Step 2: Add IdentityAlreadyLinkedException to DomainExceptionHandler**
 
-In `src/backend/Shadowbrook.Api/Infrastructure/Middleware/DomainExceptionHandler.cs`, add the using and the mapping:
+In `src/backend/Teeforce.Api/Infrastructure/Middleware/DomainExceptionHandler.cs`, add the using and the mapping:
 
 Add to the using block:
 ```csharp
-using Shadowbrook.Domain.AppUserAggregate.Exceptions;
+using Teeforce.Domain.AppUserAggregate.Exceptions;
 ```
 
 This using already exists (for `EmptyOrganizationIdException`). Add the new exception to the switch expression, mapping it to 409 Conflict:
@@ -489,13 +489,13 @@ Add this line right after the `EmptyOrganizationIdException` line in the switch.
 
 - [ ] **Step 3: Verify it compiles**
 
-Run: `dotnet build shadowbrook.slnx --verbosity quiet`
+Run: `dotnet build teeforce.slnx --verbosity quiet`
 Expected: Build will have errors from `AuthEndpoints.cs` and `AppUserEnrichmentMiddleware.cs` referencing `DisplayName` and old factory signatures. That's expected — those files are updated in Tasks 4 and 5. Verify by checking the errors are only in those files.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/backend/Shadowbrook.Api/Infrastructure/EntityTypeConfigurations/AppUserConfiguration.cs src/backend/Shadowbrook.Api/Infrastructure/Middleware/DomainExceptionHandler.cs
+git add src/backend/Teeforce.Api/Infrastructure/EntityTypeConfigurations/AppUserConfiguration.cs src/backend/Teeforce.Api/Infrastructure/Middleware/DomainExceptionHandler.cs
 git commit -m "feat: update EF config for nullable IdentityId and add IdentityAlreadyLinkedException handler"
 ```
 
@@ -504,18 +504,18 @@ git commit -m "feat: update EF config for nullable IdentityId and add IdentityAl
 ### Task 4: Update Auth Endpoints, DTOs, and Validators
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Api/Features/Auth/AuthEndpoints.cs`
-- Modify: `tests/Shadowbrook.Api.Tests/Features/Auth/Validators/CreateUserRequestValidatorTests.cs`
+- Modify: `src/backend/Teeforce.Api/Features/Auth/AuthEndpoints.cs`
+- Modify: `tests/Teeforce.Api.Tests/Features/Auth/Validators/CreateUserRequestValidatorTests.cs`
 
 - [ ] **Step 1: Update validator tests for new request shape**
 
-Replace `tests/Shadowbrook.Api.Tests/Features/Auth/Validators/CreateUserRequestValidatorTests.cs`:
+Replace `tests/Teeforce.Api.Tests/Features/Auth/Validators/CreateUserRequestValidatorTests.cs`:
 
 ```csharp
 using FluentValidation.TestHelper;
-using Shadowbrook.Api.Features.Auth;
+using Teeforce.Api.Features.Auth;
 
-namespace Shadowbrook.Api.Tests.Features.Auth.Validators;
+namespace Teeforce.Api.Tests.Features.Auth.Validators;
 
 public class CreateUserRequestValidatorTests
 {
@@ -563,7 +563,7 @@ public class CreateUserRequestValidatorTests
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/Shadowbrook.Api.Tests --filter CreateUserRequestValidatorTests --verbosity quiet`
+Run: `dotnet test tests/Teeforce.Api.Tests --filter CreateUserRequestValidatorTests --verbosity quiet`
 Expected: FAIL — `CreateUserRequest` constructor signature doesn't match
 
 - [ ] **Step 3: Update AuthEndpoints.cs**
@@ -716,18 +716,18 @@ var response = new UserListResponse(
 
 - [ ] **Step 4: Run validator tests to verify they pass**
 
-Run: `dotnet test tests/Shadowbrook.Api.Tests --filter CreateUserRequestValidatorTests --verbosity quiet`
+Run: `dotnet test tests/Teeforce.Api.Tests --filter CreateUserRequestValidatorTests --verbosity quiet`
 Expected: All tests pass
 
 - [ ] **Step 5: Verify full solution compiles**
 
-Run: `dotnet build shadowbrook.slnx --verbosity quiet`
+Run: `dotnet build teeforce.slnx --verbosity quiet`
 Expected: Errors only in `AppUserEnrichmentMiddleware.cs` and its tests (updated in Task 5)
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/backend/Shadowbrook.Api/Features/Auth/AuthEndpoints.cs tests/Shadowbrook.Api.Tests/Features/Auth/Validators/CreateUserRequestValidatorTests.cs
+git add src/backend/Teeforce.Api/Features/Auth/AuthEndpoints.cs tests/Teeforce.Api.Tests/Features/Auth/Validators/CreateUserRequestValidatorTests.cs
 git commit -m "feat: update auth endpoints and validators for invite flow — remove IdentityId/DisplayName from requests"
 ```
 
@@ -736,21 +736,21 @@ git commit -m "feat: update auth endpoints and validators for invite flow — re
 ### Task 5: CompleteIdentitySetup Handler
 
 **Files:**
-- Create: `src/backend/Shadowbrook.Api/Features/Auth/Handlers/CompleteIdentitySetup/Handler.cs`
-- Create: `tests/Shadowbrook.Api.Tests/Features/Auth/Handlers/CompleteIdentitySetupHandlerTests.cs`
+- Create: `src/backend/Teeforce.Api/Features/Auth/Handlers/CompleteIdentitySetup/Handler.cs`
+- Create: `tests/Teeforce.Api.Tests/Features/Auth/Handlers/CompleteIdentitySetupHandlerTests.cs`
 
 - [ ] **Step 1: Write handler test**
 
 ```csharp
-// tests/Shadowbrook.Api.Tests/Features/Auth/Handlers/CompleteIdentitySetupHandlerTests.cs
+// tests/Teeforce.Api.Tests/Features/Auth/Handlers/CompleteIdentitySetupHandlerTests.cs
 using NSubstitute;
-using Shadowbrook.Api.Features.Auth.Handlers;
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.AppUserAggregate.Events;
-using Shadowbrook.Domain.AppUserAggregate.Exceptions;
-using Shadowbrook.Domain.Common;
+using Teeforce.Api.Features.Auth.Handlers;
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.AppUserAggregate.Events;
+using Teeforce.Domain.AppUserAggregate.Exceptions;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Api.Tests.Features.Auth.Handlers;
+namespace Teeforce.Api.Tests.Features.Auth.Handlers;
 
 public class CompleteIdentitySetupHandlerTests
 {
@@ -820,17 +820,17 @@ public class CompleteIdentitySetupHandlerTests
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `dotnet test tests/Shadowbrook.Api.Tests --filter CompleteIdentitySetupHandlerTests --verbosity quiet`
+Run: `dotnet test tests/Teeforce.Api.Tests --filter CompleteIdentitySetupHandlerTests --verbosity quiet`
 Expected: FAIL — handler doesn't exist
 
 - [ ] **Step 3: Create the handler**
 
 ```csharp
-// src/backend/Shadowbrook.Api/Features/Auth/Handlers/CompleteIdentitySetup/Handler.cs
-using Shadowbrook.Domain.AppUserAggregate;
-using Shadowbrook.Domain.Common;
+// src/backend/Teeforce.Api/Features/Auth/Handlers/CompleteIdentitySetup/Handler.cs
+using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.Common;
 
-namespace Shadowbrook.Api.Features.Auth.Handlers;
+namespace Teeforce.Api.Features.Auth.Handlers;
 
 public record CompleteIdentitySetupCommand(Guid AppUserId, string IdentityId, string FirstName, string LastName);
 
@@ -847,13 +847,13 @@ public static class CompleteIdentitySetupHandler
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/Shadowbrook.Api.Tests --filter CompleteIdentitySetupHandlerTests --verbosity quiet`
+Run: `dotnet test tests/Teeforce.Api.Tests --filter CompleteIdentitySetupHandlerTests --verbosity quiet`
 Expected: All tests pass
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/backend/Shadowbrook.Api/Features/Auth/Handlers/CompleteIdentitySetup/Handler.cs tests/Shadowbrook.Api.Tests/Features/Auth/Handlers/CompleteIdentitySetupHandlerTests.cs
+git add src/backend/Teeforce.Api/Features/Auth/Handlers/CompleteIdentitySetup/Handler.cs tests/Teeforce.Api.Tests/Features/Auth/Handlers/CompleteIdentitySetupHandlerTests.cs
 git commit -m "feat: add CompleteIdentitySetup Wolverine handler"
 ```
 
@@ -862,8 +862,8 @@ git commit -m "feat: add CompleteIdentitySetup Wolverine handler"
 ### Task 6: Update AppUserEnrichmentMiddleware
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs`
-- Modify: `tests/Shadowbrook.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs`
+- Modify: `src/backend/Teeforce.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs`
+- Modify: `tests/Teeforce.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs`
 
 - [ ] **Step 1: Update middleware tests**
 
@@ -873,7 +873,7 @@ The middleware tests need significant rewriting. The middleware now:
 - Dispatches `CompleteIdentitySetupCommand` via `IMessageBus.InvokeAsync`
 - Returns 403 with `{ reason: "no_account" }` for unknown users
 
-Replace `tests/Shadowbrook.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs`:
+Replace `tests/Teeforce.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs`:
 
 ```csharp
 using System.Security.Claims;
@@ -883,13 +883,13 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using NSubstitute;
-using Shadowbrook.Api.Features.Auth.Handlers;
-using Shadowbrook.Api.Infrastructure.Auth;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.AppUserAggregate;
+using Teeforce.Api.Features.Auth.Handlers;
+using Teeforce.Api.Infrastructure.Auth;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.AppUserAggregate;
 using Wolverine;
 
-namespace Shadowbrook.Api.Tests.Auth;
+namespace Teeforce.Api.Tests.Auth;
 
 public class AppUserEnrichmentMiddlewareTests
 {
@@ -961,7 +961,7 @@ public class AppUserEnrichmentMiddlewareTests
         var bus = Substitute.For<IMessageBus>();
 
         var oid = Guid.NewGuid().ToString();
-        var org = Shadowbrook.Domain.OrganizationAggregate.Organization.Create("Acme Golf");
+        var org = Teeforce.Domain.OrganizationAggregate.Organization.Create("Acme Golf");
         db.Organizations.Add(org);
         var appUser = AppUser.CreateOperator("op@example.com", org.Id);
         appUser.CompleteIdentitySetup(oid, "Op", "User");
@@ -1090,23 +1090,23 @@ public class AppUserEnrichmentMiddlewareTests
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/Shadowbrook.Api.Tests --filter AppUserEnrichmentMiddlewareTests --verbosity quiet`
+Run: `dotnet test tests/Teeforce.Api.Tests --filter AppUserEnrichmentMiddlewareTests --verbosity quiet`
 Expected: FAIL — middleware signature and behavior don't match
 
 - [ ] **Step 3: Update the middleware**
 
-Replace `src/backend/Shadowbrook.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs`:
+Replace `src/backend/Teeforce.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs`:
 
 ```csharp
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Shadowbrook.Api.Features.Auth.Handlers;
-using Shadowbrook.Api.Infrastructure.Data;
-using Shadowbrook.Domain.AppUserAggregate;
+using Teeforce.Api.Features.Auth.Handlers;
+using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.AppUserAggregate;
 using Wolverine;
 
-namespace Shadowbrook.Api.Infrastructure.Auth;
+namespace Teeforce.Api.Infrastructure.Auth;
 
 public class AppUserEnrichmentMiddleware(RequestDelegate next, ILoggerFactory loggerFactory)
 {
@@ -1244,18 +1244,18 @@ public class AppUserEnrichmentMiddleware(RequestDelegate next, ILoggerFactory lo
 
 - [ ] **Step 4: Run middleware tests to verify they pass**
 
-Run: `dotnet test tests/Shadowbrook.Api.Tests --filter AppUserEnrichmentMiddlewareTests --verbosity quiet`
+Run: `dotnet test tests/Teeforce.Api.Tests --filter AppUserEnrichmentMiddlewareTests --verbosity quiet`
 Expected: All tests pass
 
 - [ ] **Step 5: Verify full solution compiles**
 
-Run: `dotnet build shadowbrook.slnx --verbosity quiet`
+Run: `dotnet build teeforce.slnx --verbosity quiet`
 Expected: Build succeeded, 0 errors
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/backend/Shadowbrook.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs tests/Shadowbrook.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs
+git add src/backend/Teeforce.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs tests/Teeforce.Api.Tests/Auth/AppUserEnrichmentMiddlewareTests.cs
 git commit -m "feat: update middleware for invite flow — email fallback, InvokeAsync linking, 403 no_account"
 ```
 
@@ -1264,8 +1264,8 @@ git commit -m "feat: update middleware for invite flow — email fallback, Invok
 ### Task 7: Seed Admin Startup Creation
 
 **Files:**
-- Modify: `src/backend/Shadowbrook.Api/Program.cs`
-- Modify: `src/backend/Shadowbrook.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs` (remove seed admin params)
+- Modify: `src/backend/Teeforce.Api/Program.cs`
+- Modify: `src/backend/Teeforce.Api/Infrastructure/Auth/AppUserEnrichmentMiddleware.cs` (remove seed admin params)
 
 - [ ] **Step 1: Add seed admin logic to Program.cs**
 
@@ -1297,8 +1297,8 @@ await using (var scope = app.Services.CreateAsyncScope())
 
 Add the necessary usings at the top of `Program.cs` if not already present:
 ```csharp
-using Shadowbrook.Api.Infrastructure.Auth;
-using Shadowbrook.Domain.AppUserAggregate;
+using Teeforce.Api.Infrastructure.Auth;
+using Teeforce.Domain.AppUserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 ```
@@ -1311,22 +1311,22 @@ The middleware `InvokeAsync` signature is already updated in Task 6 to not inclu
 
 - [ ] **Step 3: Verify it compiles**
 
-Run: `dotnet build shadowbrook.slnx --verbosity quiet`
+Run: `dotnet build teeforce.slnx --verbosity quiet`
 Expected: Build succeeded
 
 - [ ] **Step 4: Run all tests**
 
-Run: `dotnet test tests/Shadowbrook.Domain.Tests --verbosity quiet && dotnet test tests/Shadowbrook.Api.Tests --verbosity quiet`
+Run: `dotnet test tests/Teeforce.Domain.Tests --verbosity quiet && dotnet test tests/Teeforce.Api.Tests --verbosity quiet`
 Expected: All tests pass
 
 - [ ] **Step 5: Run format**
 
-Run: `dotnet format shadowbrook.slnx`
+Run: `dotnet format teeforce.slnx`
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/backend/Shadowbrook.Api/Program.cs
+git add src/backend/Teeforce.Api/Program.cs
 git commit -m "feat: move seed admin creation from middleware to app startup"
 ```
 
@@ -1336,7 +1336,7 @@ git commit -m "feat: move seed admin creation from middleware to app startup"
 
 - [ ] **Step 1: Run full test suite**
 
-Run: `dotnet test tests/Shadowbrook.Domain.Tests --verbosity quiet && dotnet test tests/Shadowbrook.Api.Tests --verbosity quiet`
+Run: `dotnet test tests/Teeforce.Domain.Tests --verbosity quiet && dotnet test tests/Teeforce.Api.Tests --verbosity quiet`
 Expected: All tests pass
 
 - [ ] **Step 2: Run `make dev` to verify runtime startup**

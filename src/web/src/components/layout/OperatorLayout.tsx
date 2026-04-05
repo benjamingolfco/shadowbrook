@@ -101,9 +101,9 @@ export default function OperatorLayout() {
             ) : (
               <h1
                 className="max-w-[180px] truncate text-lg font-semibold font-[family-name:var(--font-heading)]"
-                title={user?.organization?.name ?? 'Shadowbrook'}
+                title={user?.organization?.name ?? 'Teeforce'}
               >
-                {user?.organization?.name ?? 'Shadowbrook'}
+                {user?.organization?.name ?? 'Teeforce'}
               </h1>
             )}
             <Badge variant={isAdmin ? 'default' : 'success'} className="text-[10px] px-1.5 py-0">

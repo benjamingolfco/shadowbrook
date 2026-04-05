@@ -1,38 +1,38 @@
-# Shadowbrook Infrastructure
+# Teeforce Infrastructure
 
-Azure infrastructure for the Shadowbrook tee time booking platform. **Bicep is the single source of truth** for all Azure resources.
+Azure infrastructure for the Teeforce tee time booking platform. **Bicep is the single source of truth** for all Azure resources.
 
 ## Architecture
 
-### Shared Resources (`shadowbrook-shared-rg`)
+### Shared Resources (`teeforce-shared-rg`)
 
 Resources deployed once and reused across all environments:
 
-- **Azure Container Registry**: `shadowbrookacr` — stores container images promoted across environments
+- **Azure Container Registry**: `teeforceacr` — stores container images promoted across environments
 
-### Per-Environment Resources (`shadowbrook-{env}-rg`)
+### Per-Environment Resources (`teeforce-{env}-rg`)
 
 - **Azure Container Apps**: Hosts .NET API container
 - **Azure Static Web Apps**: Hosts React SPA frontend (Free tier)
 - **Azure SQL Database**: Basic tier (5 DTU) for development data
 - **User-Assigned Managed Identity**: ACR pull access + SQL Server admin (Entra-only auth)
-- **Log Analytics Workspace**: `shadowbrook-logs-{env}` — shared log sink for App Insights and Container Apps
-- **Application Insights**: `shadowbrook-insights-{env}` — APM linked to Log Analytics workspace
+- **Log Analytics Workspace**: `teeforce-logs-{env}` — shared log sink for App Insights and Container Apps
+- **Application Insights**: `teeforce-insights-{env}` — APM linked to Log Analytics workspace
 
 **Estimated monthly cost:** ~$10-15 per environment
 
 ### Resource Naming Convention
 
-`shadowbrook-{resource}-{environment}`
+`teeforce-{resource}-{environment}`
 
 Examples (test environment):
-- `shadowbrookacr` - Container Registry (shared)
-- `shadowbrook-app-test` - Container App
-- `shadowbrook-sql-test` - SQL Server
-- `shadowbrook-db-test` - SQL Database
-- `id-shadowbrook-test` - Managed Identity
-- `shadowbrook-logs-test` - Log Analytics Workspace
-- `shadowbrook-insights-test` - Application Insights
+- `teeforceacr` - Container Registry (shared)
+- `teeforce-app-test` - Container App
+- `teeforce-sql-test` - SQL Server
+- `teeforce-db-test` - SQL Database
+- `id-teeforce-test` - Managed Identity
+- `teeforce-logs-test` - Log Analytics Workspace
+- `teeforce-insights-test` - Application Insights
 
 ### SQL Authentication
 
@@ -43,11 +43,11 @@ All environments use **Entra-only authentication** — the Container App's user-
 Both phases use subscription-level deployments (`az deployment sub create`). Bicep creates the resource groups — they are not created separately by scripts.
 
 **Phase 1 — Shared infrastructure:**
-1. **Resource group** — `shadowbrook-shared-rg`
+1. **Resource group** — `teeforce-shared-rg`
 2. **registry** — Azure Container Registry
 
 **Phase 2 — Environment infrastructure:**
-1. **Resource group** — `shadowbrook-{env}-rg`
+1. **Resource group** — `teeforce-{env}-rg`
 2. **managedIdentity** — User-assigned identity (independent)
 3. **staticWebApp** — SWA for React frontend (independent)
 4. **logAnalytics** — Log Analytics workspace (independent)
@@ -118,8 +118,8 @@ To delete the test environment and stop incurring costs:
 ./infra/scripts/teardown.sh --shared
 ```
 
-By default, teardown only deletes the environment resource group (`shadowbrook-test-rg`).
-The shared resource group (`shadowbrook-shared-rg`) with ACR is preserved since it's
+By default, teardown only deletes the environment resource group (`teeforce-test-rg`).
+The shared resource group (`teeforce-shared-rg`) with ACR is preserved since it's
 used across environments. Use the `--shared` flag to explicitly delete shared resources too.
 
 **Note:** Deletion is asynchronous and takes several minutes to complete.
@@ -168,7 +168,7 @@ Parameter files use `.bicepparam` format with `readEnvironmentVariable()` for se
 ### Container App not starting
 
 Check logs in Azure Portal:
-1. Navigate to Container Apps -> shadowbrook-app-test
+1. Navigate to Container Apps -> teeforce-app-test
 2. Click "Log stream" or "Logs"
 3. Look for startup errors
 
@@ -177,8 +177,8 @@ Check logs in Azure Portal:
 Verify connection string:
 ```bash
 az containerapp show \
-  --name shadowbrook-app-test \
-  --resource-group shadowbrook-test-rg \
+  --name teeforce-app-test \
+  --resource-group teeforce-test-rg \
   --query properties.template.containers[0].env
 ```
 
@@ -190,7 +190,7 @@ ACR lives. If issues persist, verify the role assignment:
 
 ```bash
 az role assignment list \
-  --scope $(az acr show --name shadowbrookacr --resource-group shadowbrook-shared-rg --query id -o tsv) \
+  --scope $(az acr show --name teeforceacr --resource-group teeforce-shared-rg --query id -o tsv) \
   --role AcrPull \
   --output table
 ```
@@ -207,8 +207,8 @@ To completely stop the environment without deleting resources:
 
 ```bash
 az containerapp update \
-  --name shadowbrook-app-test \
-  --resource-group shadowbrook-test-rg \
+  --name teeforce-app-test \
+  --resource-group teeforce-test-rg \
   --min-replicas 0 \
   --max-replicas 0
 ```
@@ -217,8 +217,8 @@ To restart:
 
 ```bash
 az containerapp update \
-  --name shadowbrook-app-test \
-  --resource-group shadowbrook-test-rg \
+  --name teeforce-app-test \
+  --resource-group teeforce-test-rg \
   --min-replicas 0 \
   --max-replicas 1
 ```
@@ -256,9 +256,9 @@ GET /tee-times [200, 145ms]
 
 | File | Purpose |
 |------|---------|
-| `src/backend/Shadowbrook.Api/Program.cs` | OTel + Serilog + health check registration |
-| `src/backend/Shadowbrook.Api/Infrastructure/Observability/OrganizationIdEnricher.cs` | Serilog enricher that adds `OrganizationId` from JWT claims |
-| `src/backend/Shadowbrook.Api/appsettings.json` | Serilog log level overrides (EF Core, ASP.NET Core, Wolverine) |
+| `src/backend/Teeforce.Api/Program.cs` | OTel + Serilog + health check registration |
+| `src/backend/Teeforce.Api/Infrastructure/Observability/OrganizationIdEnricher.cs` | Serilog enricher that adds `OrganizationId` from JWT claims |
+| `src/backend/Teeforce.Api/appsettings.json` | Serilog log level overrides (EF Core, ASP.NET Core, Wolverine) |
 | `infra/bicep/modules/log-analytics.bicep` | Log Analytics workspace (0.1 GB/day cap) |
 | `infra/bicep/modules/app-insights.bicep` | Application Insights linked to Log Analytics |
 | `infra/bicep/modules/container-app.bicep` | Injects `APPLICATIONINSIGHTS_CONNECTION_STRING`, defines health probes |
@@ -268,12 +268,12 @@ GET /tee-times [200, 145ms]
 ```bash
 # Stream live container logs
 az containerapp logs show \
-  --name shadowbrook-app-test \
-  --resource-group shadowbrook-test-rg \
+  --name teeforce-app-test \
+  --resource-group teeforce-test-rg \
   --follow
 
 # Check health endpoint
-curl https://shadowbrook-app-test.happypond-1a892999.eastus2.azurecontainerapps.io/health
+curl https://teeforce-app-test.happypond-1a892999.eastus2.azurecontainerapps.io/health
 ```
 
 In the Azure Portal:

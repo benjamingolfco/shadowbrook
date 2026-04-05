@@ -34,10 +34,10 @@ Orchestrate parallel AI agents (operator, golfers, observer) against a deployed 
 
 | Env | Frontend | API |
 |-----|----------|-----|
-| test | https://white-stone-00610060f.1.azurestaticapps.net | https://shadowbrook-app-test.happypond-1a892999.eastus2.azurecontainerapps.io |
+| test | https://white-stone-00610060f.1.azurestaticapps.net | https://teeforce-app-test.happypond-1a892999.eastus2.azurecontainerapps.io |
 | local | http://localhost:3000 | http://localhost:5221 |
 
-**App Insights (test env):** app name `shadowbrook-insights-test`, resource group `shadowbrook-test-rg`
+**App Insights (test env):** app name `teeforce-insights-test`, resource group `teeforce-test-rg`
 
 ## Feature Area Role Briefs
 
@@ -136,8 +136,8 @@ Now launch the operator (full session), observer, and all golfers simultaneously
 **Observer agent (background):**
 - `subagent_type`: `stress-test-observer` (fallback: `general-purpose`)
 - Prompt includes:
-  - App Insights app name: `shadowbrook-insights-test`
-  - App Insights resource group: `shadowbrook-test-rg`
+  - App Insights app name: `teeforce-insights-test`
+  - App Insights resource group: `teeforce-test-rg`
   - API base URL: `{api_url}`
   - Feature area being tested: `{feature-area}`
   - Session duration hint: `{timeout} minutes`

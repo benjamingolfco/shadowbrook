@@ -10,7 +10,7 @@ param location string
 @description('Resource ID of the Log Analytics workspace to link to')
 param logAnalyticsWorkspaceId string
 
-var appInsightsName = 'shadowbrook-insights-${environment}'
+var appInsightsName = 'teeforce-insights-${environment}'
 
 resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: appInsightsName
