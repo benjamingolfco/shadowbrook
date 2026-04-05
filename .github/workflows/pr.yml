@@ -7,7 +7,7 @@
 #
 # Required GitHub Secrets:
 #   - AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (OIDC login)
-#   - AZURE_STATIC_WEB_APPS_API_TOKEN (SWA deployment token)
+#   - AZURE_STATIC_WEB_APPS_API_TOKEN_TEST (SWA deployment token for test/preview)
 
 name: PR
 
@@ -260,7 +260,8 @@ jobs:
     with:
       environment: test
       action: upload
-    secrets: inherit
+    secrets:
+      swa-api-token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_TEST }}
 
   # ============================================================
   # Tear down SWA preview on PR close
@@ -271,4 +272,5 @@ jobs:
     with:
       environment: test
       action: close
-    secrets: inherit
+    secrets:
+      swa-api-token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_TEST }}

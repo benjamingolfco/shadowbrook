@@ -21,6 +21,10 @@ on:
         required: false
         type: string
         default: 'upload'
+    secrets:
+      swa-api-token:
+        description: 'Azure Static Web Apps deployment token for the target environment'
+        required: true
 
 jobs:
   deploy:
@@ -80,7 +84,7 @@ jobs:
         id: swa-deploy
         uses: Azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          azure_static_web_apps_api_token: ${{ secrets.swa-api-token }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: ${{ inputs.action }}
           app_location: src/web/dist

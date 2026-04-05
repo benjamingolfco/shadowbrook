@@ -7,7 +7,7 @@
 #
 # Required GitHub Secrets:
 #   - AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (OIDC login)
-#   - AZURE_STATIC_WEB_APPS_API_TOKEN (SWA deployment token)
+#   - AZURE_STATIC_WEB_APPS_API_TOKEN_TEST (SWA deployment token for test)
 
 name: Deploy Test
 
@@ -74,4 +74,5 @@ jobs:
     uses: ./.github/workflows/deploy-web.yml
     with:
       environment: test
-    secrets: inherit
+    secrets:
+      swa-api-token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_TEST }}
