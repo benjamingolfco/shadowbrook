@@ -1,6 +1,6 @@
-import { useParams, Link } from 'react-router';
+import { useParams, Link, useNavigate } from 'react-router';
 import { useState } from 'react';
-import { useUsers, useUpdateUser, useInviteUser } from '../hooks/useUsers';
+import { useUsers, useUpdateUser, useInviteUser, useDeleteUser } from '../hooks/useUsers';
 import { useOrganizations } from '../hooks/useOrganizations';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,17 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 export default function UserDetail() {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +35,8 @@ export default function UserDetail() {
   const { data: orgs, isLoading: isLoadingOrgs } = useOrganizations();
   const updateUser = useUpdateUser();
   const inviteUser = useInviteUser();
+  const navigate = useNavigate();
+  const deleteUser = useDeleteUser();
 
   const user = users?.find((u) => u.id === id);
 
@@ -76,6 +89,15 @@ export default function UserDetail() {
     updateUser.mutate({
       id: user.id,
       isActive: !user.isActive,
+    });
+  }
+
+  function handleDelete() {
+    if (!user) return;
+    deleteUser.mutate(user.id, {
+      onSuccess: () => {
+        void navigate('/admin/users');
+      },
     });
   }
 
@@ -206,6 +228,25 @@ export default function UserDetail() {
                   ? 'Resend Invite'
                   : 'Send Invite'}
             </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" disabled={deleteUser.isPending}>
+                  {deleteUser.isPending ? 'Deleting...' : 'Delete User'}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete user?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently remove the user from Entra ID. This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </CardContent>
       </Card>

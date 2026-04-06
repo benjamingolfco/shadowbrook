@@ -110,6 +110,7 @@ var useDevAuth = builder.Configuration.GetSection(AuthSettings.SectionName).Get<
 if (useDevAuth)
 {
     builder.Services.AddScoped<IAppUserInvitationService, NoOpAppUserInvitationService>();
+    builder.Services.AddScoped<IAppUserDeletionService, NoOpAppUserDeletionService>();
     builder.Services.AddScoped<IAppUserClaimsProvider, DevAppUserClaimsProvider>();
 }
 else
@@ -123,6 +124,7 @@ else
         });
     builder.Services.AddSingleton(_ => new GraphServiceClient(credential));
     builder.Services.AddScoped<IAppUserInvitationService, GraphAppUserInvitationService>();
+    builder.Services.AddScoped<IAppUserDeletionService, GraphAppUserDeletionService>();
     builder.Services.AddScoped<IAppUserClaimsProvider, AppUserClaimsProvider>();
 }
 builder.Services.AddScoped<IAppUserEmailUniquenessChecker, AppUserEmailUniquenessChecker>();

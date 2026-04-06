@@ -16,6 +16,8 @@ public class AppUser : Entity
     public bool IsActive { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? InviteSentAt { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTimeOffset? DeletedAt { get; private set; }
 
     private AppUser() { } // EF
 
@@ -147,4 +149,21 @@ public class AppUser : Entity
     public void Deactivate() => IsActive = false;
 
     public void Activate() => IsActive = true;
+
+    public void Delete()
+    {
+        if (IsDeleted)
+        {
+            return;
+        }
+
+        IsDeleted = true;
+        DeletedAt = DateTimeOffset.UtcNow;
+
+        AddDomainEvent(new AppUserDeleted
+        {
+            AppUserId = Id,
+            IdentityId = IdentityId,
+        });
+    }
 }
