@@ -131,9 +131,6 @@ builder.Services.AddScoped<ITimeProvider, Teeforce.Api.Infrastructure.Services.T
 builder.Services.AddScoped<CourseContext>();
 builder.Services.AddScoped<ICourseContext>(sp => sp.GetRequiredService<CourseContext>());
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();
-builder.Services.AddScoped<ISmsSender, NoOpSmsSender>();
-builder.Services.AddScoped<IEmailSender, NoOpEmailSender>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
