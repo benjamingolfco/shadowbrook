@@ -15,7 +15,7 @@ public class TelnyxSmsSender(
         var payload = new { from = options.Value.FromNumber, to = toPhoneNumber, text = message };
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "/v2/messages");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", options.Value.ApiKey);
+        // Authorization header is set by TelnyxAuthHandler in the HttpClient pipeline.
         request.Content = JsonContent.Create(payload);
 
         var response = await httpClient.SendAsync(request, ct);
