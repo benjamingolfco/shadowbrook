@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using Teeforce.Api.Infrastructure.Configuration;
+using Teeforce.Api.Infrastructure.Services;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.CourseAggregate;
 using Teeforce.Domain.TeeTimeOpeningAggregate;
@@ -7,6 +8,14 @@ using Teeforce.Domain.WaitlistOfferAggregate;
 using Teeforce.Domain.WaitlistOfferAggregate.Events;
 
 namespace Teeforce.Api.Features.Waitlist.Handlers;
+
+public record WaitlistOfferNotification(string CourseName, TimeOnly TeeTime, Guid Token, string BaseUrl) : INotification;
+
+public class WaitlistOfferNotificationSmsFormatter : SmsFormatter<WaitlistOfferNotification>
+{
+    protected override string FormatMessage(WaitlistOfferNotification n) =>
+        $"{n.CourseName}: {n.TeeTime:h:mm tt} tee time available! Claim your spot: {n.BaseUrl}/book/walkup/{n.Token}";
+}
 
 public static class WaitlistOfferCreatedSendSmsHandler
 {
@@ -33,9 +42,7 @@ public static class WaitlistOfferCreatedSendSmsHandler
                 "App:FrontendUrl is not configured. SMS offer links require a valid frontend URL.");
         }
 
-        var message =
-            $"{courseName}: {opening.TeeTime.Time:h:mm tt} tee time available! Claim your spot: {baseUrl}/book/walkup/{offer.Token}";
-        await notificationService.Send(evt.GolferId, message, ct);
+        await notificationService.Send(evt.GolferId, new WaitlistOfferNotification(courseName, opening.TeeTime.Time, offer.Token, baseUrl), ct);
 
         offer.MarkNotified(timeProvider);
     }

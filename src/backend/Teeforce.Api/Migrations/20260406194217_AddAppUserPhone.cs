@@ -1,29 +1,28 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Teeforce.Api.Migrations
+namespace Teeforce.Api.Migrations;
+
+/// <inheritdoc />
+public partial class AddAppUserPhone : Migration
 {
     /// <inheritdoc />
-    public partial class AddAppUserPhone : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.AddColumn<string>(
-                name: "Phone",
-                table: "AppUsers",
-                type: "nvarchar(20)",
-                maxLength: 20,
-                nullable: true);
-        }
+        migrationBuilder.AddColumn<string>(
+            name: "Phone",
+            table: "AppUsers",
+            type: "nvarchar(20)",
+            maxLength: 20,
+            nullable: true);
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "Phone",
-                table: "AppUsers");
-        }
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropColumn(
+            name: "Phone",
+            table: "AppUsers");
     }
 }

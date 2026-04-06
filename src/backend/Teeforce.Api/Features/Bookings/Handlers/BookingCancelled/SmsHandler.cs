@@ -1,10 +1,19 @@
 using Microsoft.Extensions.Logging;
+using Teeforce.Api.Infrastructure.Services;
 using Teeforce.Domain.BookingAggregate;
 using Teeforce.Domain.BookingAggregate.Events;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.CourseAggregate;
 
 namespace Teeforce.Api.Features.Bookings.Handlers;
+
+public record BookingCancelledNotification(string CourseName, DateOnly Date, TimeOnly Time) : INotification;
+
+public class BookingCancelledNotificationSmsFormatter : SmsFormatter<BookingCancelledNotification>
+{
+    protected override string FormatMessage(BookingCancelledNotification n) =>
+        $"Your tee time at {n.CourseName} on {n.Date:MMMM d, yyyy} at {n.Time:h:mm tt} has been cancelled.";
+}
 
 public static class BookingCancelledSmsHandler
 {
@@ -32,7 +41,6 @@ public static class BookingCancelledSmsHandler
             return;
         }
 
-        var message = $"Your tee time at {course.Name} on {booking.TeeTime.Date:MMMM d, yyyy} at {booking.TeeTime.Time:h:mm tt} has been cancelled.";
-        await notificationService.Send(booking.GolferId, message, ct);
+        await notificationService.Send(booking.GolferId, new BookingCancelledNotification(course.Name, booking.TeeTime.Date, booking.TeeTime.Time), ct);
     }
 }

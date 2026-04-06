@@ -65,7 +65,7 @@ public class WaitlistOfferRejectedSmsHandlerTests
 
         await WaitlistOfferRejectedSmsHandler.Handle(evt, this.offerRepo, this.entryRepo, this.notificationService, this.logger, CancellationToken.None);
 
-        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<WaitlistOfferRejectedNotification>(), Arg.Any<CancellationToken>());
         await this.entryRepo.DidNotReceive().GetByIdAsync(Arg.Any<Guid>());
     }
 
@@ -87,7 +87,7 @@ public class WaitlistOfferRejectedSmsHandlerTests
 
         await WaitlistOfferRejectedSmsHandler.Handle(evt, this.offerRepo, this.entryRepo, this.notificationService, this.logger, CancellationToken.None);
 
-        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<WaitlistOfferRejectedNotification>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -107,7 +107,7 @@ public class WaitlistOfferRejectedSmsHandlerTests
 
         await this.notificationService.Received(1).Send(
             golferId,
-            Arg.Is<string>(m => m.Contains("no longer available")),
+            Arg.Any<WaitlistOfferRejectedNotification>(),
             Arg.Any<CancellationToken>());
     }
 }

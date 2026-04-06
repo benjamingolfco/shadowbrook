@@ -4,7 +4,9 @@ using JasperFx;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Graph;
 using Serilog;
+using Teeforce.Api.Features.Bookings.Handlers;
 using Teeforce.Api.Features.Dev;
+using Teeforce.Api.Features.Waitlist.Handlers;
 using Teeforce.Api.Infrastructure;
 using Teeforce.Api.Infrastructure.Auth;
 using Teeforce.Api.Infrastructure.Configuration;
@@ -92,7 +94,16 @@ builder.Host.AddWolverine(builder.Environment, builder.Configuration, connection
 
 // Notification service
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<DefaultEmailFormatter>();
 builder.Services.AddScoped<IEmailSender, NoOpEmailSender>();
+
+// SMS formatters — keyed by notification type
+builder.Services.AddKeyedScoped<ISmsFormatter, BookingConfirmedNotificationSmsFormatter>(typeof(BookingConfirmedNotification));
+builder.Services.AddKeyedScoped<ISmsFormatter, BookingCancelledNotificationSmsFormatter>(typeof(BookingCancelledNotification));
+builder.Services.AddKeyedScoped<ISmsFormatter, WaitlistOfferNotificationSmsFormatter>(typeof(WaitlistOfferNotification));
+builder.Services.AddKeyedScoped<ISmsFormatter, WaitlistOfferRejectedNotificationSmsFormatter>(typeof(WaitlistOfferRejectedNotification));
+builder.Services.AddKeyedScoped<ISmsFormatter, TeeTimeOpeningSlotsClaimedNotificationSmsFormatter>(typeof(TeeTimeOpeningSlotsClaimedNotification));
+builder.Services.AddKeyedScoped<ISmsFormatter, GolferJoinedWaitlistNotificationSmsFormatter>(typeof(GolferJoinedWaitlistNotification));
 
 // SMS channel — environment-dependent
 if (builder.Environment.IsDevelopment())

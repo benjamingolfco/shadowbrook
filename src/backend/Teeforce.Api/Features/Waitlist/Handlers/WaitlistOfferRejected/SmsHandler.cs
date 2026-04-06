@@ -1,10 +1,19 @@
 using Microsoft.Extensions.Logging;
+using Teeforce.Api.Infrastructure.Services;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.GolferWaitlistEntryAggregate;
 using Teeforce.Domain.WaitlistOfferAggregate;
 using Teeforce.Domain.WaitlistOfferAggregate.Events;
 
 namespace Teeforce.Api.Features.Waitlist.Handlers;
+
+public record WaitlistOfferRejectedNotification : INotification;
+
+public class WaitlistOfferRejectedNotificationSmsFormatter : SmsFormatter<WaitlistOfferRejectedNotification>
+{
+    protected override string FormatMessage(WaitlistOfferRejectedNotification n) =>
+        "Sorry, that tee time is no longer available.";
+}
 
 public static class WaitlistOfferRejectedSmsHandler
 {
@@ -32,7 +41,6 @@ public static class WaitlistOfferRejectedSmsHandler
             return;
         }
 
-        var message = "Sorry, that tee time is no longer available.";
-        await notificationService.Send(entry.GolferId, message, ct);
+        await notificationService.Send(entry.GolferId, new WaitlistOfferRejectedNotification(), ct);
     }
 }

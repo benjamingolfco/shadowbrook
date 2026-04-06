@@ -37,7 +37,7 @@ public class TeeTimeOpeningSlotsClaimedSmsHandlerTests
 
         await TeeTimeOpeningSlotsClaimedSmsHandler.Handle(evt, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
 
-        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<TeeTimeOpeningSlotsClaimedNotification>(), Arg.Any<CancellationToken>());
         this.logger.Received().Log(
             LogLevel.Warning,
             Arg.Any<EventId>(),
@@ -59,7 +59,7 @@ public class TeeTimeOpeningSlotsClaimedSmsHandlerTests
 
         await this.notificationService.Received(1).Send(
             golferId,
-            Arg.Is<string>(m => m.Contains("Teeforce Golf Club") && m.Contains("confirmed")),
+            Arg.Is<TeeTimeOpeningSlotsClaimedNotification>(n => n.CourseName == "Teeforce Golf Club"),
             Arg.Any<CancellationToken>());
     }
 }

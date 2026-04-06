@@ -49,7 +49,7 @@ public class BookingCancelledSmsHandlerTests
 
         await BookingCancelledSmsHandler.Handle(evt, this.bookingRepo, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
 
-        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<BookingCancelledNotification>(), Arg.Any<CancellationToken>());
         this.logger.Received().Log(
             LogLevel.Warning,
             Arg.Any<EventId>(),
@@ -73,7 +73,10 @@ public class BookingCancelledSmsHandlerTests
 
         await this.notificationService.Received(1).Send(
             golferId,
-            Arg.Is<string>(m => m.Contains("Teeforce Golf Club") && m.Contains("cancelled") && m.Contains("July 4, 2026") && m.Contains("8:00 AM")),
+            Arg.Is<BookingCancelledNotification>(n =>
+                n.CourseName == "Teeforce Golf Club" &&
+                n.Date == new DateOnly(2026, 7, 4) &&
+                n.Time == new TimeOnly(8, 0)),
             Arg.Any<CancellationToken>());
     }
 
@@ -84,7 +87,7 @@ public class BookingCancelledSmsHandlerTests
 
         await BookingCancelledSmsHandler.Handle(evt, this.bookingRepo, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
 
-        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<BookingCancelledNotification>(), Arg.Any<CancellationToken>());
         await this.bookingRepo.DidNotReceive().GetByIdAsync(Arg.Any<Guid>());
         this.logger.Received().Log(
             LogLevel.Warning,

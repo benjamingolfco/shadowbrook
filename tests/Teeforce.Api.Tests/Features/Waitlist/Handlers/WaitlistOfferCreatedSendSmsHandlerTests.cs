@@ -71,10 +71,10 @@ public class WaitlistOfferCreatedSendSmsHandlerTests
 
         await this.notificationService.Received(1).Send(
             offer.GolferId,
-            Arg.Is<string>(m =>
-                m.Contains("Pebble Beach") &&
-                m.Contains("8:30 AM") &&
-                m.Contains("https://test.example.com/book/walkup/")),
+            Arg.Is<WaitlistOfferNotification>(n =>
+                n.CourseName == "Pebble Beach" &&
+                n.TeeTime == new TimeOnly(8, 30) &&
+                n.BaseUrl == "https://test.example.com"),
             Arg.Any<CancellationToken>());
     }
 
@@ -96,7 +96,7 @@ public class WaitlistOfferCreatedSendSmsHandlerTests
                 evt, this.offerRepo, this.openingRepo, this.courseRepo, this.notificationService,
                 appSettings, this.timeProvider, CancellationToken.None));
 
-        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<WaitlistOfferNotification>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -117,7 +117,7 @@ public class WaitlistOfferCreatedSendSmsHandlerTests
 
         await this.notificationService.Received(1).Send(
             offer.GolferId,
-            Arg.Is<string>(m => m.StartsWith("Course:")),
+            Arg.Is<WaitlistOfferNotification>(n => n.CourseName == "Course"),
             Arg.Any<CancellationToken>());
     }
 }

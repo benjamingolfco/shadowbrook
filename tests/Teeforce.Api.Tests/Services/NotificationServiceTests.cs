@@ -1,22 +1,38 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Teeforce.Api.Infrastructure.Data;
 using Teeforce.Api.Infrastructure.Services;
 using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.Common;
 using Teeforce.Domain.GolferAggregate;
 using Teeforce.Domain.Services;
+using Wolverine;
 
 namespace Teeforce.Api.Tests.Services;
+
+public record FakeNotification(string Content) : INotification;
+
+public class FakeNotificationSmsFormatter : SmsFormatter<FakeNotification>
+{
+    protected override string FormatMessage(FakeNotification n) => $"SMS: {n.Content}";
+}
+
+public class FakeNotificationEmailFormatter : EmailFormatter<FakeNotification>
+{
+    protected override (string Subject, string Body) FormatMessage(FakeNotification n) =>
+        ("Test Subject", $"Email: {n.Content}");
+}
 
 public class NotificationServiceTests : IDisposable
 {
     private readonly ApplicationDbContext db;
-    private readonly ISmsSender smsSender;
-    private readonly IEmailSender emailSender;
+    private readonly IMessageBus messageBus;
     private readonly ILogger<NotificationService> logger;
-    private readonly NotificationService sut;
     private readonly IAppUserEmailUniquenessChecker emailChecker;
+    private readonly ServiceProvider serviceProvider;
+    private readonly NotificationService sut;
 
     public NotificationServiceTests()
     {
@@ -25,41 +41,68 @@ public class NotificationServiceTests : IDisposable
             .Options;
 
         this.db = new ApplicationDbContext(options, userContext: null);
-        this.smsSender = Substitute.For<ISmsSender>();
-        this.emailSender = Substitute.For<IEmailSender>();
+        this.messageBus = Substitute.For<IMessageBus>();
         this.logger = Substitute.For<ILogger<NotificationService>>();
         this.emailChecker = Substitute.For<IAppUserEmailUniquenessChecker>();
         this.emailChecker.IsEmailInUse(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
 
-        this.sut = new NotificationService(this.smsSender, this.emailSender, this.db, this.logger);
+        var services = new ServiceCollection();
+        services.AddKeyedScoped<ISmsFormatter, FakeNotificationSmsFormatter>(typeof(FakeNotification));
+        services.AddKeyedScoped<IEmailFormatter, FakeNotificationEmailFormatter>(typeof(FakeNotification));
+        services.AddScoped<DefaultEmailFormatter>();
+        services.AddScoped<ILogger<DefaultEmailFormatter>>(_ => Substitute.For<ILogger<DefaultEmailFormatter>>());
+        this.serviceProvider = services.BuildServiceProvider();
+
+        this.sut = new NotificationService(this.db, this.messageBus, this.serviceProvider, this.logger);
     }
 
-    public void Dispose() => this.db.Dispose();
-
-    [Fact]
-    public async Task Send_GolferWithPhone_SendsSms()
+    public void Dispose()
     {
-        var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
-        this.db.Golfers.Add(golfer);
-        await this.db.SaveChangesAsync();
-
-        await this.sut.Send(golfer.Id, "Your tee time is confirmed.");
-
-        await this.smsSender.Received(1).Send("+15551234567", "Your tee time is confirmed.", Arg.Any<CancellationToken>());
-        await this.emailSender.DidNotReceive().Send(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        this.db.Dispose();
+        this.serviceProvider.Dispose();
     }
 
     [Fact]
-    public async Task Send_NoGolferButAppUserWithEmail_SendsEmail()
+    public async Task Send_AppUserWithPhone_PublishesDeliverSms()
     {
-        var user = await AppUser.CreateAdmin("golfer@example.com", this.emailChecker);
+        var user = await AppUser.CreateAdmin("jane@example.com", this.emailChecker);
+        typeof(AppUser).GetProperty("Phone")!.SetValue(user, "+15551234567");
         this.db.AppUsers.Add(user);
         await this.db.SaveChangesAsync();
 
-        await this.sut.Send(user.Id, "You have been invited.");
+        await this.sut.Send(user.Id, new FakeNotification("hello"));
 
-        await this.emailSender.Received(1).Send("golfer@example.com", "Teeforce Notification", "You have been invited.", Arg.Any<CancellationToken>());
-        await this.smsSender.DidNotReceive().Send(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await this.messageBus.Received(1).PublishAsync(
+            Arg.Is<DeliverSms>(cmd => cmd.PhoneNumber == "+15551234567" && cmd.Message == "SMS: hello"),
+            Arg.Any<DeliveryOptions?>());
+    }
+
+    [Fact]
+    public async Task Send_AppUserWithEmailOnly_PublishesDeliverEmail()
+    {
+        var user = await AppUser.CreateAdmin("jane@example.com", this.emailChecker);
+        this.db.AppUsers.Add(user);
+        await this.db.SaveChangesAsync();
+
+        await this.sut.Send(user.Id, new FakeNotification("hello"));
+
+        await this.messageBus.Received(1).PublishAsync(
+            Arg.Is<DeliverEmail>(cmd => cmd.EmailAddress == "jane@example.com" && cmd.Subject == "Test Subject" && cmd.Body == "Email: hello"),
+            Arg.Any<DeliveryOptions?>());
+    }
+
+    [Fact]
+    public async Task Send_NoAppUserButGolferWithPhone_PublishesDeliverSms()
+    {
+        var golfer = Golfer.Create("+15559876543", "Bob", "Green");
+        this.db.Golfers.Add(golfer);
+        await this.db.SaveChangesAsync();
+
+        await this.sut.Send(golfer.Id, new FakeNotification("hello"));
+
+        await this.messageBus.Received(1).PublishAsync(
+            Arg.Is<DeliverSms>(cmd => cmd.PhoneNumber == "+15559876543" && cmd.Message == "SMS: hello"),
+            Arg.Any<DeliveryOptions?>());
     }
 
     [Fact]
@@ -67,36 +110,29 @@ public class NotificationServiceTests : IDisposable
     {
         var unknownId = Guid.CreateVersion7();
 
-        await this.sut.Send(unknownId, "Test message.");
+        await this.sut.Send(unknownId, new FakeNotification("hello"));
 
-        await this.smsSender.DidNotReceive().Send(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
-        await this.emailSender.DidNotReceive().Send(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await this.messageBus.DidNotReceive().PublishAsync(Arg.Any<DeliverSms>(), Arg.Any<DeliveryOptions?>());
+        await this.messageBus.DidNotReceive().PublishAsync(Arg.Any<DeliverEmail>(), Arg.Any<DeliveryOptions?>());
         this.logger.Received(1).Log(
             LogLevel.Warning,
             Arg.Any<EventId>(),
             Arg.Any<object>(),
-            Arg.Any<Exception>(),
+            Arg.Any<Exception?>(),
             Arg.Any<Func<object, Exception?, string>>());
     }
 
     [Fact]
-    public async Task Send_GolferWithPhoneAndAppUserWithEmail_PrefersSms()
+    public async Task Send_AppUserWithPhoneAndEmail_PrefersSms()
     {
-        var sharedId = Guid.CreateVersion7();
-
-        var golfer = Golfer.Create("+15551112222", "Alice", "Brown");
-        var golferEntry = this.db.Golfers.Add(golfer);
-        golferEntry.Property("Id").CurrentValue = sharedId;
-
-        var user = await AppUser.CreateAdmin("alice@example.com", this.emailChecker);
-        var userEntry = this.db.AppUsers.Add(user);
-        userEntry.Property("Id").CurrentValue = sharedId;
-
+        var user = await AppUser.CreateAdmin("jane@example.com", this.emailChecker);
+        typeof(AppUser).GetProperty("Phone")!.SetValue(user, "+15551234567");
+        this.db.AppUsers.Add(user);
         await this.db.SaveChangesAsync();
 
-        await this.sut.Send(sharedId, "Priority message.");
+        await this.sut.Send(user.Id, new FakeNotification("hello"));
 
-        await this.smsSender.Received(1).Send("+15551112222", "Priority message.", Arg.Any<CancellationToken>());
-        await this.emailSender.DidNotReceive().Send(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await this.messageBus.Received(1).PublishAsync(Arg.Any<DeliverSms>(), Arg.Any<DeliveryOptions?>());
+        await this.messageBus.DidNotReceive().PublishAsync(Arg.Any<DeliverEmail>(), Arg.Any<DeliveryOptions?>());
     }
 }
