@@ -98,12 +98,12 @@ builder.Services.AddScoped<DefaultEmailFormatter>();
 builder.Services.AddScoped<IEmailSender, NoOpEmailSender>();
 
 // SMS formatters — keyed by notification type
-builder.Services.AddKeyedScoped<ISmsFormatter, BookingConfirmedNotificationSmsFormatter>(typeof(BookingConfirmedNotification));
-builder.Services.AddKeyedScoped<ISmsFormatter, BookingCancelledNotificationSmsFormatter>(typeof(BookingCancelledNotification));
-builder.Services.AddKeyedScoped<ISmsFormatter, WaitlistOfferNotificationSmsFormatter>(typeof(WaitlistOfferNotification));
-builder.Services.AddKeyedScoped<ISmsFormatter, WaitlistOfferRejectedNotificationSmsFormatter>(typeof(WaitlistOfferRejectedNotification));
-builder.Services.AddKeyedScoped<ISmsFormatter, TeeTimeOpeningSlotsClaimedNotificationSmsFormatter>(typeof(TeeTimeOpeningSlotsClaimedNotification));
-builder.Services.AddKeyedScoped<ISmsFormatter, GolferJoinedWaitlistNotificationSmsFormatter>(typeof(GolferJoinedWaitlistNotification));
+builder.Services.AddKeyedScoped<ISmsFormatter, BookingConfirmationSmsFormatter>(typeof(BookingConfirmation));
+builder.Services.AddKeyedScoped<ISmsFormatter, BookingCancellationSmsFormatter>(typeof(BookingCancellation));
+builder.Services.AddKeyedScoped<ISmsFormatter, WaitlistJoinedSmsFormatter>(typeof(WaitlistJoined));
+builder.Services.AddKeyedScoped<ISmsFormatter, WaitlistOfferAvailableSmsFormatter>(typeof(WaitlistOfferAvailable));
+builder.Services.AddKeyedScoped<ISmsFormatter, WaitlistOfferExpiredSmsFormatter>(typeof(WaitlistOfferExpired));
+builder.Services.AddKeyedScoped<ISmsFormatter, WalkupConfirmationSmsFormatter>(typeof(WalkupConfirmation));
 
 // SMS channel — environment-dependent
 if (builder.Environment.IsDevelopment())

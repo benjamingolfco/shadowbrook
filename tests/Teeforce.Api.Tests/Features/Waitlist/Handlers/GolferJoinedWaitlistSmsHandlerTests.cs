@@ -72,7 +72,7 @@ public class GolferJoinedWaitlistSmsHandlerTests : IDisposable
 
         await this.notificationService.Received(1).Send(
             golferId,
-            Arg.Is<GolferJoinedWaitlistNotification>(n => n.CourseName == "Riverside Links"),
+            Arg.Is<WaitlistJoined>(n => n.CourseName == "Riverside Links"),
             Arg.Any<CancellationToken>());
     }
 
@@ -84,6 +84,6 @@ public class GolferJoinedWaitlistSmsHandlerTests : IDisposable
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             GolferJoinedWaitlistSmsHandler.Handle(evt, this.notificationService, this.db, CancellationToken.None));
 
-        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<GolferJoinedWaitlistNotification>(), Arg.Any<CancellationToken>());
+        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<WaitlistJoined>(), Arg.Any<CancellationToken>());
     }
 }

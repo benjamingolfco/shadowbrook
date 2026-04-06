@@ -67,7 +67,7 @@ public class BookingCreatedConfirmationSmsHandlerTests : IDisposable
 
         await this.notificationService.Received(1).Send(
             golferId,
-            Arg.Is<BookingConfirmedNotification>(n =>
+            Arg.Is<BookingConfirmation>(n =>
                 n.CourseName == "Teeforce Golf Club" &&
                 n.Date == new DateOnly(2026, 7, 4) &&
                 n.Time == new TimeOnly(9, 0)),
@@ -84,6 +84,6 @@ public class BookingCreatedConfirmationSmsHandlerTests : IDisposable
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             BookingCreatedConfirmationSmsHandler.Handle(evt, this.bookingRepo, this.db, this.notificationService, CancellationToken.None));
 
-        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<BookingConfirmedNotification>(), Arg.Any<CancellationToken>());
+        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<BookingConfirmation>(), Arg.Any<CancellationToken>());
     }
 }
