@@ -10,6 +10,9 @@ public class NotificationService(
     ApplicationDbContext db,
     ILogger<NotificationService> logger) : INotificationService
 {
+    public Task Send<T>(Guid appUserId, T notification, CancellationToken ct = default) where T : INotification
+        => Task.CompletedTask;
+
     public async Task Send(Guid appUserId, string message, CancellationToken ct = default)
     {
         var phone = await db.Golfers
