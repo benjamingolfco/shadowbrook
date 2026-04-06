@@ -1,5 +1,4 @@
 using Teeforce.Domain.Common;
-using Teeforce.Domain.GolferAggregate;
 using Teeforce.Domain.GolferWaitlistEntryAggregate;
 using Teeforce.Domain.WaitlistOfferAggregate;
 using Teeforce.Domain.WaitlistOfferAggregate.Events;
@@ -12,8 +11,7 @@ public static class WaitlistOfferRejectedSmsHandler
         WaitlistOfferRejected domainEvent,
         IWaitlistOfferRepository offerRepository,
         IGolferWaitlistEntryRepository entryRepository,
-        IGolferRepository golferRepository,
-        ITextMessageService textMessageService,
+        INotificationService notificationService,
         CancellationToken ct)
     {
         var offer = await offerRepository.GetRequiredByIdAsync(domainEvent.WaitlistOfferId);
@@ -32,9 +30,7 @@ public static class WaitlistOfferRejectedSmsHandler
             return;
         }
 
-        var golfer = await golferRepository.GetRequiredByIdAsync(entry.GolferId);
-
         var message = "Sorry, that tee time is no longer available.";
-        await textMessageService.SendAsync(golfer.Phone, message, ct);
+        await notificationService.Send(entry.GolferId, message, ct);
     }
 }

@@ -3,7 +3,6 @@ using Teeforce.Domain.BookingAggregate;
 using Teeforce.Domain.BookingAggregate.Events;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.CourseAggregate;
-using Teeforce.Domain.GolferAggregate;
 
 namespace Teeforce.Api.Features.Bookings.Handlers;
 
@@ -12,9 +11,8 @@ public static class BookingCancelledSmsHandler
     public static async Task Handle(
         BookingCancelled evt,
         IBookingRepository bookingRepository,
-        IGolferRepository golferRepository,
         ICourseRepository courseRepository,
-        ITextMessageService textMessageService,
+        INotificationService notificationService,
         ILogger logger,
         CancellationToken ct)
     {
@@ -25,13 +23,6 @@ public static class BookingCancelledSmsHandler
         }
 
         var booking = await bookingRepository.GetRequiredByIdAsync(evt.BookingId);
-        var golfer = await golferRepository.GetByIdAsync(booking.GolferId);
-
-        if (golfer is null)
-        {
-            logger.LogWarning("Golfer {GolferId} not found for BookingCancelled event {EventId}, skipping SMS", booking.GolferId, evt.EventId);
-            return;
-        }
 
         var course = await courseRepository.GetByIdAsync(booking.CourseId);
 
@@ -42,6 +33,6 @@ public static class BookingCancelledSmsHandler
         }
 
         var message = $"Your tee time at {course.Name} on {booking.TeeTime.Date:MMMM d, yyyy} at {booking.TeeTime.Time:h:mm tt} has been cancelled.";
-        await textMessageService.SendAsync(golfer.Phone, message, ct);
+        await notificationService.Send(booking.GolferId, message, ct);
     }
 }

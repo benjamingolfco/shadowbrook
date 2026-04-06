@@ -2,7 +2,6 @@ using Microsoft.Extensions.Options;
 using Teeforce.Api.Infrastructure.Configuration;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.CourseAggregate;
-using Teeforce.Domain.GolferAggregate;
 using Teeforce.Domain.TeeTimeOpeningAggregate;
 using Teeforce.Domain.WaitlistOfferAggregate;
 using Teeforce.Domain.WaitlistOfferAggregate.Events;
@@ -15,16 +14,14 @@ public static class WaitlistOfferCreatedSendSmsHandler
         WaitlistOfferCreated evt,
         IWaitlistOfferRepository offerRepository,
         ITeeTimeOpeningRepository openingRepository,
-        IGolferRepository golferRepository,
         ICourseRepository courseRepository,
-        ITextMessageService textMessageService,
+        INotificationService notificationService,
         IOptions<AppSettings> appSettings,
         ITimeProvider timeProvider,
         CancellationToken ct)
     {
         var offer = await offerRepository.GetRequiredByIdAsync(evt.WaitlistOfferId);
         var opening = await openingRepository.GetRequiredByIdAsync(evt.OpeningId);
-        var golfer = await golferRepository.GetRequiredByIdAsync(evt.GolferId);
 
         var course = await courseRepository.GetByIdAsync(opening.CourseId);
         var courseName = course?.Name ?? "Course";
@@ -38,7 +35,7 @@ public static class WaitlistOfferCreatedSendSmsHandler
 
         var message =
             $"{courseName}: {opening.TeeTime.Time:h:mm tt} tee time available! Claim your spot: {baseUrl}/book/walkup/{offer.Token}";
-        await textMessageService.SendAsync(golfer.Phone, message, ct);
+        await notificationService.Send(evt.GolferId, message, ct);
 
         offer.MarkNotified(timeProvider);
     }

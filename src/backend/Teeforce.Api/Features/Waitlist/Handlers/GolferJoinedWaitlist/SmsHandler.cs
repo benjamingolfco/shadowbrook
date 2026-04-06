@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Teeforce.Api.Infrastructure.Data;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.CourseWaitlistAggregate.Events;
-using Teeforce.Domain.GolferAggregate;
 
 namespace Teeforce.Api.Features.Waitlist.Handlers;
 
@@ -10,13 +9,10 @@ public static class GolferJoinedWaitlistSmsHandler
 {
     public static async Task Handle(
         GolferJoinedWaitlist domainEvent,
-        ITextMessageService textMessageService,
-        IGolferRepository golferRepository,
+        INotificationService notificationService,
         ApplicationDbContext db,
         CancellationToken ct)
     {
-        var golfer = await golferRepository.GetRequiredByIdAsync(domainEvent.GolferId);
-
         var courseName = await db.CourseWaitlists
             .IgnoreQueryFilters()
             .Where(w => w.Id == domainEvent.CourseWaitlistId)
@@ -25,6 +21,6 @@ public static class GolferJoinedWaitlistSmsHandler
             ?? throw new InvalidOperationException($"CourseWaitlist {domainEvent.CourseWaitlistId} or its course not found for event {nameof(GolferJoinedWaitlist)}.");
 
         var message = $"You're on the waitlist at {courseName}. Keep your phone handy - we'll text you when a spot opens up!";
-        await textMessageService.SendAsync(golfer.Phone, message, ct);
+        await notificationService.Send(domainEvent.GolferId, message, ct);
     }
 }

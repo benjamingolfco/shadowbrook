@@ -3,7 +3,6 @@ using Teeforce.Api.Infrastructure.Data;
 using Teeforce.Domain.BookingAggregate;
 using Teeforce.Domain.BookingAggregate.Events;
 using Teeforce.Domain.Common;
-using Teeforce.Domain.GolferAggregate;
 
 namespace Teeforce.Api.Features.Bookings.Handlers;
 
@@ -11,14 +10,11 @@ public static class BookingCreatedConfirmationSmsHandler
 {
     public static async Task Handle(
         BookingCreated domainEvent,
-        IGolferRepository golferRepository,
         IBookingRepository bookingRepository,
         ApplicationDbContext db,
-        ITextMessageService textMessageService,
+        INotificationService notificationService,
         CancellationToken ct)
     {
-        var golfer = await golferRepository.GetRequiredByIdAsync(domainEvent.GolferId);
-
         var courseName = await db.Courses
             .IgnoreQueryFilters()
             .Where(c => c.Id == domainEvent.CourseId)
@@ -29,6 +25,6 @@ public static class BookingCreatedConfirmationSmsHandler
         var booking = await bookingRepository.GetRequiredByIdAsync(domainEvent.BookingId);
 
         var message = $"You're booked! {courseName} at {booking.TeeTime.Time:h:mm tt} on {booking.TeeTime.Date:MMMM d, yyyy}. See you on the course!";
-        await textMessageService.SendAsync(golfer.Phone, message, ct);
+        await notificationService.Send(domainEvent.GolferId, message, ct);
     }
 }
