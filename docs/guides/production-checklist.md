@@ -37,7 +37,9 @@ Checklist for standing up a new environment (staging, production). Derived from 
 
 - [ ] Run `grant-graph-permissions.sh {env}` — grants `User.Invite.All` and Guest Inviter directory role to managed identity (must run after Bicep deploy creates new identity)
 - [ ] `App__FrontendUrl` set correctly (invitation redirect URL)
-- [ ] Verify invitation creates user in correct tenant
+- [ ] `id.benjamingolfco.com` subdomain verified on Entra tenant (see [custom domain setup](custom-domain-setup.md)) and set as primary domain. The root domain (`benjamingolfco.com`) is on GoDaddy's tenant for email; if that changes, consolidate to the root domain.
+- [ ] Send invite links via own notification service instead of Azure email (#373) — Azure B2B invite emails are sent from Microsoft's shared IP pool and are silently dropped by Gmail. This is a known, long-standing issue with no fix. Must use `sendInvitationMessage: false` and deliver the `inviteRedeemUrl` ourselves.
+- [ ] Verify invitation creates user in correct tenant and invite link is delivered
 
 ## GitHub Actions CI/CD
 
