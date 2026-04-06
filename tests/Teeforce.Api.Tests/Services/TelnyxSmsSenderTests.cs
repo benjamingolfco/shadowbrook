@@ -12,11 +12,10 @@ public class TelnyxSmsSenderTests
 {
     private static TelnyxSmsSender CreateSender(
         HttpMessageHandler handler,
-        string apiKey = "test-api-key",
         string fromNumber = "+10001112222")
     {
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.telnyx.com") };
-        var options = Options.Create(new TelnyxOptions { ApiKey = apiKey, FromNumber = fromNumber });
+        var options = Options.Create(new TelnyxOptions { FromNumber = fromNumber });
         var logger = Substitute.For<ILogger<TelnyxSmsSender>>();
         return new TelnyxSmsSender(httpClient, options, logger);
     }
