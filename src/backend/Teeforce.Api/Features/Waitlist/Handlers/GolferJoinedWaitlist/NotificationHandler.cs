@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
-using Teeforce.Api.Infrastructure.Data;
 using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseAggregate;
+using Teeforce.Domain.CourseWaitlistAggregate;
 using Teeforce.Domain.CourseWaitlistAggregate.Events;
 
 namespace Teeforce.Api.Features.Waitlist.Handlers;
@@ -10,16 +10,13 @@ public static class GolferJoinedWaitlistNotificationHandler
     public static async Task Handle(
         GolferJoinedWaitlist domainEvent,
         INotificationService notificationService,
-        ApplicationDbContext db,
+        ICourseWaitlistRepository courseWaitlistRepository,
+        ICourseRepository courseRepository,
         CancellationToken ct)
     {
-        var courseName = await db.CourseWaitlists
-            .IgnoreQueryFilters()
-            .Where(w => w.Id == domainEvent.CourseWaitlistId)
-            .Join(db.Courses.IgnoreQueryFilters(), w => w.CourseId, c => c.Id, (w, c) => c.Name)
-            .FirstOrDefaultAsync(ct)
-            ?? throw new InvalidOperationException($"CourseWaitlist {domainEvent.CourseWaitlistId} or its course not found for event {nameof(GolferJoinedWaitlist)}.");
+        var waitlist = await courseWaitlistRepository.GetRequiredByIdAsync(domainEvent.CourseWaitlistId);
+        var course = await courseRepository.GetRequiredByIdAsync(waitlist.CourseId);
 
-        await notificationService.Send(domainEvent.GolferId, new WaitlistJoined(courseName), ct);
+        await notificationService.Send(domainEvent.GolferId, new WaitlistJoined(course.Name), ct);
     }
 }

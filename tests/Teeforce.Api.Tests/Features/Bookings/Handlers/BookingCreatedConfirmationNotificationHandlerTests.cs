@@ -1,7 +1,5 @@
-using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using Teeforce.Api.Features.Bookings.Handlers;
-using Teeforce.Api.Infrastructure.Data;
 using Teeforce.Domain.BookingAggregate;
 using Teeforce.Domain.BookingAggregate.Events;
 using Teeforce.Domain.Common;
@@ -9,22 +7,11 @@ using Teeforce.Domain.CourseAggregate;
 
 namespace Teeforce.Api.Tests.Features.Bookings.Handlers;
 
-public class BookingCreatedConfirmationNotificationHandlerTests : IDisposable
+public class BookingCreatedConfirmationNotificationHandlerTests
 {
-    private readonly ApplicationDbContext db;
+    private readonly ICourseRepository courseRepository = Substitute.For<ICourseRepository>();
     private readonly IBookingRepository bookingRepo = Substitute.For<IBookingRepository>();
     private readonly INotificationService notificationService = Substitute.For<INotificationService>();
-
-    public BookingCreatedConfirmationNotificationHandlerTests()
-    {
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(Guid.CreateVersion7().ToString())
-            .Options;
-
-        this.db = new ApplicationDbContext(options, userContext: null);
-    }
-
-    public void Dispose() => this.db.Dispose();
 
     private static Booking BuildBooking(Guid? bookingId = null, Guid? courseId = null, Guid? golferId = null)
     {
@@ -58,12 +45,11 @@ public class BookingCreatedConfirmationNotificationHandlerTests : IDisposable
         var booking = BuildBooking(courseId: course.Id, golferId: golferId);
         var evt = BuildEvent(booking.Id, course.Id, golferId);
 
-        this.db.Courses.Add(course);
-        await this.db.SaveChangesAsync();
-
+        this.courseRepository.GetByIdAsync(course.Id).Returns(course);
         this.bookingRepo.GetByIdAsync(booking.Id).Returns(booking);
 
-        await BookingCreatedConfirmationNotificationHandler.Handle(evt, this.bookingRepo, this.db, this.notificationService, CancellationToken.None);
+        await BookingCreatedConfirmationNotificationHandler.Handle(
+            evt, this.bookingRepo, this.courseRepository, this.notificationService, CancellationToken.None);
 
         await this.notificationService.Received(1).Send(
             golferId,
@@ -75,14 +61,17 @@ public class BookingCreatedConfirmationNotificationHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Handle_CourseNotFound_ThrowsInvalidOperationException()
+    public async Task Handle_CourseNotFound_ThrowsEntityNotFoundException()
     {
         var courseId = Guid.NewGuid();
         var booking = BuildBooking(courseId: courseId);
         var evt = BuildEvent(booking.Id, courseId, Guid.NewGuid());
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            BookingCreatedConfirmationNotificationHandler.Handle(evt, this.bookingRepo, this.db, this.notificationService, CancellationToken.None));
+        this.courseRepository.GetByIdAsync(courseId).Returns((Course?)null);
+
+        await Assert.ThrowsAsync<EntityNotFoundException>(() =>
+            BookingCreatedConfirmationNotificationHandler.Handle(
+                evt, this.bookingRepo, this.courseRepository, this.notificationService, CancellationToken.None));
 
         await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<BookingConfirmation>(), Arg.Any<CancellationToken>());
     }

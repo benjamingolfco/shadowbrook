@@ -1,7 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Teeforce.Api.Features.Waitlist.Handlers;
-using Teeforce.Api.Infrastructure.Data;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.CourseAggregate;
 using Teeforce.Domain.CourseWaitlistAggregate;
@@ -9,21 +8,11 @@ using Teeforce.Domain.CourseWaitlistAggregate.Events;
 
 namespace Teeforce.Api.Tests.Features.Waitlist.Handlers;
 
-public class GolferJoinedWaitlistNotificationHandlerTests : IDisposable
+public class GolferJoinedWaitlistNotificationHandlerTests
 {
-    private readonly ApplicationDbContext db;
+    private readonly ICourseWaitlistRepository courseWaitlistRepository = Substitute.For<ICourseWaitlistRepository>();
+    private readonly ICourseRepository courseRepository = Substitute.For<ICourseRepository>();
     private readonly INotificationService notificationService = Substitute.For<INotificationService>();
-
-    public GolferJoinedWaitlistNotificationHandlerTests()
-    {
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(Guid.CreateVersion7().ToString())
-            .Options;
-
-        this.db = new ApplicationDbContext(options, userContext: null);
-    }
-
-    public void Dispose() => this.db.Dispose();
 
     private static GolferJoinedWaitlist BuildEvent(Guid waitlistId, Guid golferId) =>
         new()
@@ -33,42 +22,35 @@ public class GolferJoinedWaitlistNotificationHandlerTests : IDisposable
             GolferId = golferId
         };
 
-    private static async Task<(Course course, WalkUpWaitlist waitlist)> SeedCourseAndWaitlistAsync(
-        ApplicationDbContext db,
-        Guid? courseId = null)
-    {
-        var course = Course.Create(courseId ?? Guid.NewGuid(), "Riverside Links", "America/Chicago");
-        var timeProvider = Substitute.For<ITimeProvider>();
-        timeProvider.GetCurrentTimestamp().Returns(DateTimeOffset.UtcNow);
-
-        var shortCodeGenerator = Substitute.For<IShortCodeGenerator>();
-        shortCodeGenerator.GenerateAsync(Arg.Any<DateOnly>()).Returns("XYZ99");
-
-        var waitlistRepo = Substitute.For<ICourseWaitlistRepository>();
-        var waitlist = await WalkUpWaitlist.OpenAsync(
-            course.Id,
-            new DateOnly(2026, 7, 4),
-            shortCodeGenerator,
-            waitlistRepo,
-            timeProvider);
-
-        waitlist.ClearDomainEvents();
-
-        db.Courses.Add(course);
-        db.CourseWaitlists.Add(waitlist);
-        await db.SaveChangesAsync();
-
-        return (course, waitlist);
-    }
-
     [Fact]
     public async Task Handle_Success_SendsNotificationMentioningCourseName()
     {
         var golferId = Guid.CreateVersion7();
-        var (course, waitlist) = await SeedCourseAndWaitlistAsync(this.db);
+        var courseId = Guid.CreateVersion7();
+        var waitlistId = Guid.CreateVersion7();
+
+        var course = Course.Create(courseId, "Riverside Links", "America/Chicago");
+
+        var waitlistRepo = Substitute.For<ICourseWaitlistRepository>();
+        var timeProvider = Substitute.For<ITimeProvider>();
+        timeProvider.GetCurrentTimestamp().Returns(DateTimeOffset.UtcNow);
+        var shortCodeGenerator = Substitute.For<IShortCodeGenerator>();
+        shortCodeGenerator.GenerateAsync(Arg.Any<DateOnly>()).Returns("XYZ99");
+        var waitlist = await WalkUpWaitlist.OpenAsync(
+            courseId,
+            new DateOnly(2026, 7, 4),
+            shortCodeGenerator,
+            waitlistRepo,
+            timeProvider);
+        waitlist.ClearDomainEvents();
+
+        this.courseWaitlistRepository.GetByIdAsync(waitlist.Id).Returns(waitlist);
+        this.courseRepository.GetByIdAsync(courseId).Returns(course);
+
         var evt = BuildEvent(waitlist.Id, golferId);
 
-        await GolferJoinedWaitlistNotificationHandler.Handle(evt, this.notificationService, this.db, CancellationToken.None);
+        await GolferJoinedWaitlistNotificationHandler.Handle(
+            evt, this.notificationService, this.courseWaitlistRepository, this.courseRepository, CancellationToken.None);
 
         await this.notificationService.Received(1).Send(
             golferId,
@@ -77,12 +59,16 @@ public class GolferJoinedWaitlistNotificationHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Handle_CourseWaitlistNotFound_ThrowsInvalidOperationException()
+    public async Task Handle_CourseWaitlistNotFound_ThrowsEntityNotFoundException()
     {
-        var evt = BuildEvent(Guid.NewGuid(), Guid.NewGuid());
+        var waitlistId = Guid.NewGuid();
+        var evt = BuildEvent(waitlistId, Guid.NewGuid());
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            GolferJoinedWaitlistNotificationHandler.Handle(evt, this.notificationService, this.db, CancellationToken.None));
+        this.courseWaitlistRepository.GetByIdAsync(waitlistId).Returns((CourseWaitlist?)null);
+
+        await Assert.ThrowsAsync<EntityNotFoundException>(() =>
+            GolferJoinedWaitlistNotificationHandler.Handle(
+                evt, this.notificationService, this.courseWaitlistRepository, this.courseRepository, CancellationToken.None));
 
         await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<WaitlistJoined>(), Arg.Any<CancellationToken>());
     }
