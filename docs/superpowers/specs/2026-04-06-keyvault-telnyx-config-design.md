@@ -22,11 +22,13 @@ The notification service branch introduces `TelnyxSmsSender` with `TelnyxOptions
 
 New module: `infra/bicep/modules/key-vault.bicep`
 
+- API version: `Microsoft.KeyVault/vaults@2024-11-01`
+- Role assignment: `Microsoft.Authorization/roleAssignments@2022-04-01` (matches existing `acr-role-assignment.bicep`)
 - Resource name: `kv-teeforce-{environment}`
 - RBAC authorization (not access policies) — aligns with Azure best practices
 - Soft delete enabled (Azure default, cannot opt out)
-- Grants the existing Container App managed identity the `Key Vault Secrets User` role so the Container App can read secrets at runtime
-- The operator deploying the infra needs `Key Vault Secrets Officer` role (or equivalent) to set secrets manually
+- Grants the existing Container App managed identity the `Key Vault Secrets User` role (`4633458b-17de-408a-b874-0445c86b69e6`) so the Container App can read secrets at runtime
+- Role assignment uses `principalType: 'ServicePrincipal'` — matches the existing `acr-role-assignment.bicep` pattern
 
 **Naming:** KV names are globally unique across Azure. `kv-teeforce-test` (17 chars) is within the 3–24 character limit. If the name is taken, fall back to `kv-teeforce-{environment}-{suffix}` with a short unique identifier.
 
