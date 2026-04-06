@@ -18,6 +18,7 @@ Resources deployed once and reused across all environments:
 - **User-Assigned Managed Identity**: ACR pull access + SQL Server admin (Entra-only auth)
 - **Log Analytics Workspace**: `teeforce-logs-{env}` — shared log sink for App Insights and Container Apps
 - **Application Insights**: `teeforce-insights-{env}` — APM linked to Log Analytics workspace
+- **Azure Key Vault**: `kv-teeforce-{env}` — stores external service secrets (Telnyx API key, etc.)
 
 **Estimated monthly cost:** ~$10-15 per environment
 
@@ -33,6 +34,7 @@ Examples (test environment):
 - `id-teeforce-test` - Managed Identity
 - `teeforce-logs-test` - Log Analytics Workspace
 - `teeforce-insights-test` - Application Insights
+- `kv-teeforce-test` - Key Vault
 
 ### SQL Authentication
 
@@ -54,8 +56,9 @@ Both phases use subscription-level deployments (`az deployment sub create`). Bic
 5. **database** — Azure SQL with Entra-only auth (depends on managedIdentity)
 6. **appInsights** — Application Insights (depends on logAnalytics)
 7. **containerAppEnv** — Container Apps Environment (depends on logAnalytics)
-8. **acrRoleAssignment** — AcrPull role (depends on managedIdentity, deployed to shared RG)
-9. **containerApp** — Container App (depends on acrRoleAssignment, containerAppEnv, database, appInsights)
+8. **keyVault** — Key Vault for external service secrets (depends on managedIdentity)
+9. **acrRoleAssignment** — AcrPull role (depends on managedIdentity, deployed to shared RG)
+10. **containerApp** — Container App (depends on acrRoleAssignment, containerAppEnv, database, appInsights, keyVault)
 
 The environment deployment references the shared ACR cross-resource-group via Bicep's
 `existing` resource + `scope: resourceGroup(...)` pattern.
@@ -106,6 +109,25 @@ Preview changes without deploying:
 ./infra/scripts/deploy.sh test --what-if
 ```
 
+### Key Vault Secrets (First-Time Setup)
+
+After deploying infrastructure to a new environment for the first time, seed the Key Vault secrets that the Container App references. The Container App validates Key Vault references at deploy time, so secrets must exist before the Container App can start.
+
+```bash
+# Seed Telnyx secrets (replace with real values when available)
+az keyvault secret set --vault-name kv-teeforce-test --name telnyx-api-key --value placeholder
+az keyvault secret set --vault-name kv-teeforce-test --name telnyx-from-number --value placeholder
+```
+
+After initial setup, update secrets with real values:
+
+```bash
+az keyvault secret set --vault-name kv-teeforce-test --name telnyx-api-key --value <YOUR_API_KEY>
+az keyvault secret set --vault-name kv-teeforce-test --name telnyx-from-number --value <YOUR_FROM_NUMBER>
+```
+
+Subsequent infra deploys do not require manual intervention — secrets persist in Key Vault.
+
 ## Teardown
 
 To delete the test environment and stop incurring costs:
@@ -144,7 +166,8 @@ infra/bicep/
     ├── container-app.bicep           # Container App (API)
     ├── static-web-app.bicep          # Azure Static Web Apps (React frontend)
     ├── log-analytics.bicep           # Log Analytics workspace
-    └── app-insights.bicep            # Application Insights
+    ├── app-insights.bicep            # Application Insights
+    └── key-vault.bicep               # Azure Key Vault + Secrets User role assignment
 ```
 
 Parameter files use `.bicepparam` format with `readEnvironmentVariable()` for secrets — no credentials are stored in source control.
