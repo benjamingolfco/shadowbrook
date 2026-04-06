@@ -203,4 +203,34 @@ public class AppUserTests
         var createdEvent = user.DomainEvents.OfType<AppUserCreated>().Single();
         Assert.True(createdEvent.ShouldSendInvite);
     }
+
+    [Fact]
+    public async Task Delete_SetsIsDeletedAndDeletedAtAndRaisesEvent()
+    {
+        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
+        user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
+        user.ClearDomainEvents();
+
+        user.Delete();
+
+        Assert.True(user.IsDeleted);
+        Assert.NotNull(user.DeletedAt);
+        Assert.True(user.DeletedAt >= DateTimeOffset.UtcNow.AddSeconds(-2));
+        var deletedEvent = user.DomainEvents.OfType<AppUserDeleted>().Single();
+        Assert.Equal(user.Id, deletedEvent.AppUserId);
+        Assert.Equal("entra-oid-123", deletedEvent.IdentityId);
+    }
+
+    [Fact]
+    public async Task Delete_WithoutIdentityId_EventHasNullIdentityId()
+    {
+        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
+        user.ClearDomainEvents();
+
+        user.Delete();
+
+        Assert.True(user.IsDeleted);
+        var deletedEvent = user.DomainEvents.OfType<AppUserDeleted>().Single();
+        Assert.Null(deletedEvent.IdentityId);
+    }
 }
