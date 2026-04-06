@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.GolferWaitlistEntryAggregate;
 using Teeforce.Domain.WaitlistOfferAggregate;
@@ -12,21 +13,22 @@ public static class WaitlistOfferRejectedSmsHandler
         IWaitlistOfferRepository offerRepository,
         IGolferWaitlistEntryRepository entryRepository,
         INotificationService notificationService,
+        ILogger logger,
         CancellationToken ct)
     {
         var offer = await offerRepository.GetRequiredByIdAsync(domainEvent.WaitlistOfferId);
 
         if (offer.NotifiedAt is null)
         {
-            // Golfer was never texted about this offer — no SMS to send
+            logger.LogWarning("Offer {WaitlistOfferId} was never notified, skipping rejection SMS", domainEvent.WaitlistOfferId);
             return;
         }
 
         var entry = await entryRepository.GetRequiredByIdAsync(domainEvent.GolferWaitlistEntryId);
 
-        // Skip if golfer was already removed from the waitlist
         if (entry.RemovedAt is not null)
         {
+            logger.LogWarning("Golfer waitlist entry {EntryId} already removed, skipping rejection SMS", domainEvent.GolferWaitlistEntryId);
             return;
         }
 

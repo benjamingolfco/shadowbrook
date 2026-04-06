@@ -11,7 +11,7 @@ public class DatabaseSmsSender(ApplicationDbContext db, ILogger<DatabaseSmsSende
     {
         var sms = new DevSmsMessage
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             From = SystemPhoneNumber,
             To = toPhoneNumber,
             Body = message,
@@ -29,7 +29,7 @@ public class DatabaseSmsSender(ApplicationDbContext db, ILogger<DatabaseSmsSende
     {
         var sms = new DevSmsMessage
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             From = fromPhoneNumber,
             To = SystemPhoneNumber,
             Body = message,

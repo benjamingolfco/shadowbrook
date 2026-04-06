@@ -18,7 +18,7 @@ public class NotificationService(
             .Select(g => g.Phone)
             .FirstOrDefaultAsync(ct);
 
-        if (phone is not null)
+        if (!string.IsNullOrEmpty(phone))
         {
             await smsSender.Send(phone, message, ct);
             return;
@@ -30,7 +30,7 @@ public class NotificationService(
             .Select(u => u.Email)
             .FirstOrDefaultAsync(ct);
 
-        if (email is not null)
+        if (!string.IsNullOrEmpty(email))
         {
             await emailSender.Send(email, "Teeforce Notification", message, ct);
             return;
