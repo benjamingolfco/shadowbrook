@@ -225,6 +225,25 @@ public static class AuthEndpoints
         return Results.Ok(response);
     }
 
+    [WolverineDelete("/auth/users/{id}")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
+    public static async Task<IResult> DeleteUser(
+        Guid id,
+        [NotBody] ApplicationDbContext db)
+    {
+        var appUser = await db.AppUsers
+            .FirstOrDefaultAsync(u => u.Id == id);
+
+        if (appUser is null)
+        {
+            return Results.NotFound();
+        }
+
+        appUser.Delete();
+
+        return Results.NoContent();
+    }
+
 }
 
 public sealed record MeResponse(
