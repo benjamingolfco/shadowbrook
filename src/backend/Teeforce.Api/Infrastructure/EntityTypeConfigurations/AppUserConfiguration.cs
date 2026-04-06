@@ -16,6 +16,7 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
         builder.HasIndex(u => u.IdentityId).IsUnique().HasFilter("[IdentityId] IS NOT NULL");
         builder.Property(u => u.IdentityId).IsRequired(false).HasMaxLength(100);
         builder.Property(u => u.Email).IsRequired().HasMaxLength(320);
+        builder.Property(u => u.Phone).IsRequired(false).HasMaxLength(20);
         builder.Property(u => u.FirstName).IsRequired(false).HasMaxLength(100);
         builder.Property(u => u.LastName).IsRequired(false).HasMaxLength(100);
         builder.Property(u => u.Role).HasConversion<string>().HasMaxLength(20);
