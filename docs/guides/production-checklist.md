@@ -68,10 +68,16 @@ Checklist for standing up a new environment (staging, production). Derived from 
 - [ ] Daily cap set on Log Analytics to control costs
 - [ ] Health endpoint (`/health`) accessible and returning 200
 
-## SMS (Notifications)
+## SMS (Telnyx)
 
-- [ ] Twilio (or SMS provider) credentials configured
-- [ ] `ITextMessageService` implementation registered (not NoOp)
+- [ ] Telnyx account created and upgraded to Paid tier (add payment method to unlock credits)
+- [ ] Account verified to Level 2 (required for 10DLC, toll-free verification, higher throughput)
+- [ ] Phone number purchased — toll-free recommended (~$2/mo, better throughput than local long code)
+- [ ] Messaging profile created with webhook URL pointing to API (for delivery receipts / inbound)
+- [ ] Phone number assigned to messaging profile
+- [ ] 10DLC brand + campaign registered (required for US A2P SMS on local numbers) — or toll-free verification submitted (simpler alternative)
+- [ ] Telnyx API key stored in environment config (not in source)
+- [ ] `ITextMessageService` Telnyx implementation registered (not NoOp)
 
 ## Pre-Launch Verification
 
