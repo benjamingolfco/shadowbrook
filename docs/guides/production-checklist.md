@@ -35,7 +35,7 @@ Checklist for standing up a new environment (staging, production). Derived from 
 
 ## Graph API (User Invitations)
 
-- [ ] Run `grant-graph-permissions.sh {env}` — grants `User.Invite.All` to managed identity (must run after Bicep deploy creates new identity)
+- [ ] Run `grant-graph-permissions.sh {env}` — grants `User.Invite.All` and Guest Inviter directory role to managed identity (must run after Bicep deploy creates new identity)
 - [ ] `App__FrontendUrl` set correctly (invitation redirect URL)
 - [ ] Verify invitation creates user in correct tenant
 
