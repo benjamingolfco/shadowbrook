@@ -47,6 +47,14 @@ Checklist for standing up a new environment (staging, production). Derived from 
 - [ ] Set SWA deployment token: `az staticwebapp secrets list --name teeforce-web-{env} ... | gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN_{ENV}`
 - [ ] Deploy workflows tested end-to-end
 
+## Domain Takeover (deferred)
+
+- [ ] Release `benjamingolfco.com` from GoDaddy's auto-created Entra tenant (`NETORG18575244.onmicrosoft.com`) — either remove via GoDaddy's M365 admin portal, perform an [admin takeover](https://learn.microsoft.com/en-us/entra/identity/users/domains-admin-takeover), or contact Microsoft support
+- [ ] Add `benjamingolfco.com` to Benjamin Golf Co tenant and verify via TXT record
+- [ ] Set `benjamingolfco.com` as default domain (replaces `id.benjamingolfco.com`)
+- [ ] Update user UPNs from `@id.benjamingolfco.com` to `@benjamingolfco.com`
+- [ ] Remove `id.benjamingolfco.com` subdomain (optional cleanup)
+
 ## DNS & Custom Domain
 
 - [ ] Custom domain added to Static Web App (frontend)
