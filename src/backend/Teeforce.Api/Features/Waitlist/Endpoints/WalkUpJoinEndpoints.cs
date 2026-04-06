@@ -136,6 +136,7 @@ public class VerifyCodeRequestValidator : AbstractValidator<VerifyCodeRequest>
     public VerifyCodeRequestValidator()
     {
         RuleFor(x => x.Code)
+            .Cascade(CascadeMode.Stop)
             .NotEmpty().WithMessage("Code is required.")
             .Length(4).WithMessage("Code must be exactly 4 digits.")
             .Must(c => c.All(char.IsDigit)).WithMessage("Code must be exactly 4 digits.");
