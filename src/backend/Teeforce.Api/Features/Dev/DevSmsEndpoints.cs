@@ -49,9 +49,9 @@ public static class DevSmsEndpoints
             return Results.Ok(messages);
         }).WithSummary("Get SMS conversation for a golfer by ID");
 
-        group.MapPost("/inbound", async (InboundSmsRequest request, DatabaseTextMessageService smsService) =>
+        group.MapPost("/inbound", async (InboundSmsRequest request, DatabaseSmsSender smsSender) =>
         {
-            await smsService.AddInboundAsync(request.FromPhoneNumber, request.Message);
+            await smsSender.AddInbound(request.FromPhoneNumber, request.Message);
             return Results.Ok();
         }).WithSummary("Simulate an inbound SMS from a golfer");
 

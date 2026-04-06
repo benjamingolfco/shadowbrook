@@ -127,7 +127,7 @@ public class DevSmsEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
             db.DevSmsMessages.Add(new DevSmsMessage
             {
                 Id = Guid.CreateVersion7(),
-                From = DatabaseTextMessageService.SystemPhoneNumber,
+                From = DatabaseSmsSender.SystemPhoneNumber,
                 To = "+15551112222",
                 Body = "You're booked!",
                 Direction = SmsDirection.Outbound,
@@ -137,7 +137,7 @@ public class DevSmsEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
             db.DevSmsMessages.Add(new DevSmsMessage
             {
                 Id = Guid.CreateVersion7(),
-                From = DatabaseTextMessageService.SystemPhoneNumber,
+                From = DatabaseSmsSender.SystemPhoneNumber,
                 To = "+15559999999",
                 Body = "Different golfer",
                 Direction = SmsDirection.Outbound,
