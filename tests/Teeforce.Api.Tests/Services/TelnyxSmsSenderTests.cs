@@ -25,10 +25,8 @@ public class TelnyxSmsSenderTests
     public async Task Send_PostsCorrectPayloadToTelnyxApi()
     {
         string? capturedBody = null;
-        string? capturedAuth = null;
         var handler = new FakeHandler(req =>
         {
-            capturedAuth = req.Headers.Authorization?.ToString();
             capturedBody = req.Content!.ReadAsStringAsync().Result;
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -39,7 +37,6 @@ public class TelnyxSmsSenderTests
         var sender = CreateSender(handler);
         await sender.Send("+15559876543", "Hello from Teeforce", CancellationToken.None);
 
-        Assert.Equal("Bearer test-api-key", capturedAuth);
         Assert.NotNull(capturedBody);
         var doc = JsonDocument.Parse(capturedBody);
         Assert.Equal("+10001112222", doc.RootElement.GetProperty("from").GetString());

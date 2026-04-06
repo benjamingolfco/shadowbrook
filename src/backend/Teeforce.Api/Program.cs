@@ -15,6 +15,7 @@ using Teeforce.Api.Infrastructure.Middleware;
 using Teeforce.Api.Infrastructure.Observability;
 using Teeforce.Api.Infrastructure.Repositories;
 using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure.Services.Notifications.Sms.Http;
 using Teeforce.Domain.AppUserAggregate;
 using Teeforce.Domain.BookingAggregate;
 using Teeforce.Domain.Common;
@@ -117,7 +118,10 @@ if (builder.Environment.IsDevelopment())
 else
 {
     builder.Services.Configure<TelnyxOptions>(builder.Configuration.GetSection("Telnyx"));
-    builder.Services.AddHttpClient<TelnyxSmsSender>(client => client.BaseAddress = new Uri("https://api.telnyx.com"));
+    builder.Services.AddTransient<TelnyxAuthHandler>(); // Must be transient — HttpClient factory requirement
+    builder.Services
+        .AddHttpClient<TelnyxSmsSender>(client => client.BaseAddress = new Uri("https://api.telnyx.com"))
+        .AddHttpMessageHandler<TelnyxAuthHandler>();
     builder.Services.AddScoped<ISmsSender, TelnyxSmsSender>();
 }
 builder.Services.AddSingleton<IFeatureService, FeatureService>();
