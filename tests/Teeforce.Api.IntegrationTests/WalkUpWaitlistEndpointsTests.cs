@@ -510,11 +510,11 @@ public class WalkUpWaitlistEndpointsTests(TestWebApplicationFactory factory) : I
 
         var body = await response.Content.ReadFromJsonAsync<DuplicateOpeningResponse>();
         Assert.NotNull(body);
-        Assert.Equal("A tee time opening for this time already exists with 4 slots.", body!.Error);
+        Assert.Equal("An opening already exists for this time with 4 slot(s). Would you like to add more slots to it?", body!.Error);
         Assert.Equal(4, body.ExistingSlotsAvailable);
         Assert.Equal(4, body.ExistingSlotsRemaining);
         Assert.Equal(firstBody!.Id, body.ExistingOpeningId);
-        Assert.True(body.IsFull);
+        Assert.False(body.IsFull);
     }
 
     [Fact]

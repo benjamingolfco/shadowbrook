@@ -35,15 +35,25 @@ Checklist for standing up a new environment (staging, production). Derived from 
 
 ## Graph API (User Invitations)
 
-- [ ] Run `grant-graph-permissions.sh {env}` — grants `User.Invite.All` to managed identity (must run after Bicep deploy creates new identity)
+- [ ] Run `grant-graph-permissions.sh {env}` — grants `User.Invite.All` and Guest Inviter directory role to managed identity (must run after Bicep deploy creates new identity)
 - [ ] `App__FrontendUrl` set correctly (invitation redirect URL)
-- [ ] Verify invitation creates user in correct tenant
+- [ ] `id.benjamingolfco.com` subdomain verified on Entra tenant (see [custom domain setup](custom-domain-setup.md)) and set as primary domain. The root domain (`benjamingolfco.com`) is on GoDaddy's tenant for email; if that changes, consolidate to the root domain.
+- [ ] Send invite links via own notification service instead of Azure email (#373) — Azure B2B invite emails are sent from Microsoft's shared IP pool and are silently dropped by Gmail. This is a known, long-standing issue with no fix. Must use `sendInvitationMessage: false` and deliver the `inviteRedeemUrl` ourselves.
+- [ ] Verify invitation creates user in correct tenant and invite link is delivered
 
 ## GitHub Actions CI/CD
 
 - [ ] Run `setup-github-oidc.sh` — creates app registration, service principal, federated credentials, RBAC, and GitHub secrets
 - [ ] Set SWA deployment token: `az staticwebapp secrets list --name teeforce-web-{env} ... | gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN_{ENV}`
 - [ ] Deploy workflows tested end-to-end
+
+## Domain Takeover (deferred)
+
+- [ ] Release `benjamingolfco.com` from GoDaddy's auto-created Entra tenant (`NETORG18575244.onmicrosoft.com`) — either remove via GoDaddy's M365 admin portal, perform an [admin takeover](https://learn.microsoft.com/en-us/entra/identity/users/domains-admin-takeover), or contact Microsoft support
+- [ ] Add `benjamingolfco.com` to Benjamin Golf Co tenant and verify via TXT record
+- [ ] Set `benjamingolfco.com` as default domain (replaces `id.benjamingolfco.com`)
+- [ ] Update user UPNs from `@id.benjamingolfco.com` to `@benjamingolfco.com`
+- [ ] Remove `id.benjamingolfco.com` subdomain (optional cleanup)
 
 ## DNS & Custom Domain
 
@@ -58,10 +68,16 @@ Checklist for standing up a new environment (staging, production). Derived from 
 - [ ] Daily cap set on Log Analytics to control costs
 - [ ] Health endpoint (`/health`) accessible and returning 200
 
-## SMS (Notifications)
+## SMS (Telnyx)
 
-- [ ] Twilio (or SMS provider) credentials configured
-- [ ] `ITextMessageService` implementation registered (not NoOp)
+- [ ] Telnyx account created and upgraded to Paid tier (add payment method to unlock credits)
+- [ ] Account verified to Level 2 (required for 10DLC, toll-free verification, higher throughput)
+- [ ] Phone number purchased — toll-free recommended (~$2/mo, better throughput than local long code)
+- [ ] Messaging profile created with webhook URL pointing to API (for delivery receipts / inbound)
+- [ ] Phone number assigned to messaging profile
+- [ ] 10DLC brand + campaign registered (required for US A2P SMS on local numbers) — or toll-free verification submitted (simpler alternative)
+- [ ] Telnyx API key stored in environment config (not in source)
+- [ ] `ITextMessageService` Telnyx implementation registered (not NoOp)
 
 ## Pre-Launch Verification
 

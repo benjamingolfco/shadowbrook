@@ -60,28 +60,24 @@ public class AppUserInviteTests
     }
 
     [Fact]
-    public async Task Invite_WhenAlreadyInvited_IsNoOp()
+    public async Task Invite_WhenAlreadyInvited_ResendsInvitation()
     {
         var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
         this.invitationService.SendInvitationAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns("entra-object-id-123");
         await user.Invite(this.invitationService, CancellationToken.None);
+        var firstInviteSentAt = user.InviteSentAt;
+        user.ClearDomainEvents();
 
-        await user.Invite(this.invitationService, CancellationToken.None);
-
-        await this.invitationService.Received(1).SendInvitationAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task Invite_WhenIdentityAlreadySet_IsNoOp()
-    {
-        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
-        user.CompleteIdentitySetup("existing-oid", "Jane", "Smith");
         this.invitationService.SendInvitationAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns("different-oid");
-
+            .Returns("entra-object-id-456");
         await user.Invite(this.invitationService, CancellationToken.None);
 
-        await this.invitationService.DidNotReceive().SendInvitationAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await this.invitationService.Received(2).SendInvitationAsync("admin@example.com", Arg.Any<CancellationToken>());
+        Assert.Equal("entra-object-id-456", user.IdentityId);
+        Assert.NotNull(user.InviteSentAt);
+        Assert.True(user.InviteSentAt >= firstInviteSentAt);
+        var evt = Assert.Single(user.DomainEvents);
+        Assert.IsType<AppUserInvited>(evt);
     }
 }

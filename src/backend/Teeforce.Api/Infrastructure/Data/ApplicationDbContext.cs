@@ -79,6 +79,9 @@ public class ApplicationDbContext(
         modelBuilder.Entity<Course>()
             .HasQueryFilter(c => CurrentOrganizationId == null || c.OrganizationId == CurrentOrganizationId);
 
+        modelBuilder.Entity<AppUser>()
+            .HasQueryFilter(u => !u.IsDeleted);
+
         // Apply domain entity configurations
         modelBuilder.ApplyConfiguration(new OrganizationConfiguration());
         modelBuilder.ApplyConfiguration(new AppUserConfiguration());

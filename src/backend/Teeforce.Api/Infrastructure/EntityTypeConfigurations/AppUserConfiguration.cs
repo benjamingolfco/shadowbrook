@@ -23,6 +23,8 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
         builder.Property(u => u.IsActive);
         builder.Property(u => u.CreatedAt);
         builder.Property(u => u.InviteSentAt).IsRequired(false);
+        builder.Property(u => u.IsDeleted).HasDefaultValue(false);
+        builder.Property(u => u.DeletedAt).IsRequired(false);
 
         builder.HasOne<Organization>()
             .WithMany()

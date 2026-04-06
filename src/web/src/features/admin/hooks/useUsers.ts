@@ -27,7 +27,18 @@ export function useCreateUser() {
       email: string;
       role: string;
       organizationId: string | null;
+      sendInvite: boolean;
     }) => api.post<UserListItem>('/auth/users', data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+    },
+  });
+}
+
+export function useInviteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.post<UserListItem>(`/auth/users/${id}/invite`, {}),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
     },
@@ -43,6 +54,16 @@ export function useUpdateUser() {
       role?: string;
       organizationId?: string | null;
     }) => api.put<UserListItem>(`/auth/users/${id}`, data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+    },
+  });
+}
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/auth/users/${id}`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
     },

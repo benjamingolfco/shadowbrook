@@ -122,8 +122,8 @@ public static class AuthEndpoints
         var role = Enum.Parse<AppUserRole>(request.Role, ignoreCase: true);
 
         var appUser = role == AppUserRole.Admin
-            ? await AppUser.CreateAdmin(request.Email, emailChecker)
-            : await AppUser.CreateOperator(request.Email, request.OrganizationId!.Value, emailChecker);
+            ? await AppUser.CreateAdmin(request.Email, emailChecker, request.SendInvite)
+            : await AppUser.CreateOperator(request.Email, request.OrganizationId!.Value, emailChecker, request.SendInvite);
 
         db.AppUsers.Add(appUser);
 
@@ -194,6 +194,57 @@ public static class AuthEndpoints
         return Results.Ok(response);
     }
 
+    [WolverinePost("/auth/users/{id}/invite")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
+    public static async Task<IResult> InviteUser(
+        Guid id,
+        [NotBody] ApplicationDbContext db,
+        [NotBody] IAppUserInvitationService invitationService,
+        CancellationToken ct)
+    {
+        var appUser = await db.AppUsers
+            .FirstOrDefaultAsync(u => u.Id == id, ct);
+
+        if (appUser is null)
+        {
+            return Results.NotFound();
+        }
+
+        await appUser.Invite(invitationService, ct);
+
+        var response = new UserListResponse(
+            appUser.Id,
+            appUser.Email,
+            appUser.FirstName,
+            appUser.LastName,
+            appUser.Role.ToString(),
+            appUser.OrganizationId,
+            appUser.IsActive,
+            appUser.InviteSentAt);
+
+        return Results.Ok(response);
+    }
+
+    [WolverineDelete("/auth/users/{id}")]
+    [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
+    public static async Task<IResult> DeleteUser(
+        Guid id,
+        [NotBody] ApplicationDbContext db,
+        CancellationToken ct)
+    {
+        var appUser = await db.AppUsers
+            .FirstOrDefaultAsync(u => u.Id == id, ct);
+
+        if (appUser is null)
+        {
+            return Results.NotFound();
+        }
+
+        appUser.Delete();
+
+        return Results.NoContent();
+    }
+
 }
 
 public sealed record MeResponse(
@@ -224,7 +275,8 @@ public sealed record UserListResponse(
 public sealed record CreateUserRequest(
     string Email,
     string Role,
-    Guid? OrganizationId);
+    Guid? OrganizationId,
+    bool SendInvite = false);
 
 public sealed record UpdateUserRequest(bool? IsActive, string? Role, Guid? OrganizationId);
 

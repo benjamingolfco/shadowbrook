@@ -17,12 +17,15 @@ public class AppUser : Entity
     public bool IsActive { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? InviteSentAt { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTimeOffset? DeletedAt { get; private set; }
 
     private AppUser() { } // EF
 
     public static async Task<AppUser> CreateAdmin(
         string email,
         IAppUserEmailUniquenessChecker emailChecker,
+        bool sendInvite = false,
         CancellationToken ct = default)
     {
         if (await emailChecker.IsEmailInUse(email.Trim(), ct))
@@ -45,6 +48,7 @@ public class AppUser : Entity
             AppUserId = user.Id,
             Email = user.Email,
             Role = user.Role,
+            ShouldSendInvite = sendInvite,
         });
 
         return user;
@@ -54,6 +58,7 @@ public class AppUser : Entity
         string email,
         Guid organizationId,
         IAppUserEmailUniquenessChecker emailChecker,
+        bool sendInvite = false,
         CancellationToken ct = default)
     {
         if (organizationId == Guid.Empty)
@@ -81,6 +86,7 @@ public class AppUser : Entity
             AppUserId = user.Id,
             Email = user.Email,
             Role = user.Role,
+            ShouldSendInvite = sendInvite,
         });
 
         return user;
@@ -129,11 +135,6 @@ public class AppUser : Entity
 
     public async Task Invite(IAppUserInvitationService invitationService, CancellationToken ct)
     {
-        if (IdentityId is not null || InviteSentAt is not null)
-        {
-            return;
-        }
-
         var identityId = await invitationService.SendInvitationAsync(Email, ct);
         IdentityId = identityId;
         InviteSentAt = DateTimeOffset.UtcNow;
@@ -149,4 +150,21 @@ public class AppUser : Entity
     public void Deactivate() => IsActive = false;
 
     public void Activate() => IsActive = true;
+
+    public void Delete()
+    {
+        if (IsDeleted)
+        {
+            return;
+        }
+
+        IsDeleted = true;
+        DeletedAt = DateTimeOffset.UtcNow;
+
+        AddDomainEvent(new AppUserDeleted
+        {
+            AppUserId = Id,
+            IdentityId = IdentityId,
+        });
+    }
 }

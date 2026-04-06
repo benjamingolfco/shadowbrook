@@ -30,6 +30,8 @@ public class AppUserTests
         Assert.False(user.IsActive);
         Assert.True(user.CreatedAt >= DateTimeOffset.UtcNow.AddSeconds(-2));
         Assert.Contains(user.DomainEvents, e => e is AppUserCreated);
+        var createdEvent = user.DomainEvents.OfType<AppUserCreated>().Single();
+        Assert.False(createdEvent.ShouldSendInvite);
     }
 
     [Fact]
@@ -48,6 +50,8 @@ public class AppUserTests
         Assert.False(user.IsActive);
         Assert.True(user.CreatedAt >= DateTimeOffset.UtcNow.AddSeconds(-2));
         Assert.Contains(user.DomainEvents, e => e is AppUserCreated);
+        var createdEvent = user.DomainEvents.OfType<AppUserCreated>().Single();
+        Assert.False(createdEvent.ShouldSendInvite);
     }
 
     [Fact]
@@ -180,5 +184,66 @@ public class AppUserTests
 
         Assert.Throws<IdentityAlreadyLinkedException>(
             () => user.CompleteIdentitySetup("different-oid", "Jane", "Smith"));
+    }
+
+    [Fact]
+    public async Task CreateAdmin_WithSendInvite_SetsEventFlag()
+    {
+        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker(), sendInvite: true);
+
+        var createdEvent = user.DomainEvents.OfType<AppUserCreated>().Single();
+        Assert.True(createdEvent.ShouldSendInvite);
+    }
+
+    [Fact]
+    public async Task CreateOperator_WithSendInvite_SetsEventFlag()
+    {
+        var user = await AppUser.CreateOperator("op@example.com", Guid.CreateVersion7(), NewChecker(), sendInvite: true);
+
+        var createdEvent = user.DomainEvents.OfType<AppUserCreated>().Single();
+        Assert.True(createdEvent.ShouldSendInvite);
+    }
+
+    [Fact]
+    public async Task Delete_SetsIsDeletedAndDeletedAtAndRaisesEvent()
+    {
+        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
+        user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
+        user.ClearDomainEvents();
+
+        user.Delete();
+
+        Assert.True(user.IsDeleted);
+        Assert.NotNull(user.DeletedAt);
+        Assert.True(user.DeletedAt >= DateTimeOffset.UtcNow.AddSeconds(-2));
+        var deletedEvent = user.DomainEvents.OfType<AppUserDeleted>().Single();
+        Assert.Equal(user.Id, deletedEvent.AppUserId);
+        Assert.Equal("entra-oid-123", deletedEvent.IdentityId);
+    }
+
+    [Fact]
+    public async Task Delete_WithoutIdentityId_EventHasNullIdentityId()
+    {
+        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
+        user.ClearDomainEvents();
+
+        user.Delete();
+
+        Assert.True(user.IsDeleted);
+        var deletedEvent = user.DomainEvents.OfType<AppUserDeleted>().Single();
+        Assert.Null(deletedEvent.IdentityId);
+    }
+
+    [Fact]
+    public async Task Delete_AlreadyDeleted_IsIdempotent()
+    {
+        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
+        user.Delete();
+        user.ClearDomainEvents();
+
+        user.Delete();
+
+        Assert.Empty(user.DomainEvents);
+        Assert.True(user.IsDeleted);
     }
 }

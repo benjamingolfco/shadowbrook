@@ -128,8 +128,13 @@ export default function OrgDetail() {
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Courses</CardTitle>
+          {id && (
+            <Button variant="outline" size="sm" asChild>
+              <Link to={`/admin/courses/new?organizationId=${id}`}>Register Course</Link>
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
@@ -166,8 +171,13 @@ export default function OrgDetail() {
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Users</CardTitle>
+          {id && (
+            <Button variant="outline" size="sm" asChild>
+              <Link to={`/admin/users/new?organizationId=${id}`}>Create User</Link>
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (

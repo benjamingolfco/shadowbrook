@@ -80,7 +80,7 @@ public class CreateOpeningDuplicateGuardTests
     }
 
     [Fact]
-    public async Task CreateOpening_ExistingWith4Slots_ReturnsConflictWithIsFullTrue()
+    public async Task CreateOpening_ExistingWith4SlotsRemaining_ReturnsConflictWithIsFullFalse()
     {
         var courseId = Guid.NewGuid();
         var request = new CreateTeeTimeOpeningRequest(FutureTeeTime, 2);
@@ -109,9 +109,51 @@ public class CreateOpeningDuplicateGuardTests
         Assert.NotNull(valueResult);
         var response = GetAnonymousObjectProperties(valueResult.Value!);
 
-        Assert.Equal("A tee time opening for this time already exists with 4 slots.", response["error"]);
+        Assert.Equal("An opening already exists for this time with 4 slot(s). Would you like to add more slots to it?", response["error"]);
         Assert.Equal(4, response["existingSlotsAvailable"]);
         Assert.Equal(4, response["existingSlotsRemaining"]);
+        Assert.Equal(existing.Id, response["existingOpeningId"]);
+        Assert.Equal(false, response["isFull"]);
+    }
+
+    [Fact]
+    public async Task CreateOpening_ExistingFullyClaimedOpening_ReturnsConflictWithIsFullTrue()
+    {
+        var courseId = Guid.NewGuid();
+        var request = new CreateTeeTimeOpeningRequest(FutureTeeTime, 2);
+
+        var existing = TeeTimeOpening.Create(
+            courseId,
+            DateOnly.FromDateTime(FutureTeeTime),
+            TimeOnly.FromDateTime(FutureTeeTime),
+            2,
+            true,
+            this.timeProvider);
+
+        // Claim all slots so SlotsRemaining == 0
+        var claimResult = existing.TryClaim(Guid.NewGuid(), Guid.NewGuid(), 2, this.timeProvider);
+        Assert.True(claimResult.Success);
+        Assert.Equal(0, existing.SlotsRemaining);
+
+        this.openingRepo.GetActiveByCourseTeeTimeAsync(
+            courseId,
+            Arg.Is<TeeTime>(t => t.Date == DateOnly.FromDateTime(FutureTeeTime) && t.Time == TimeOnly.FromDateTime(FutureTeeTime)))
+            .Returns(existing);
+
+        var result = await WalkUpWaitlistEndpoints.CreateOpening(courseId, request, this.openingRepo, this.courseContext, this.timeProvider);
+
+        Assert.IsAssignableFrom<IResult>(result);
+        var statusCodeResult = result as IStatusCodeHttpResult;
+        Assert.NotNull(statusCodeResult);
+        Assert.Equal(409, statusCodeResult.StatusCode);
+
+        var valueResult = result as IValueHttpResult;
+        Assert.NotNull(valueResult);
+        var response = GetAnonymousObjectProperties(valueResult.Value!);
+
+        Assert.Equal("A tee time opening for this time already exists with 2 slots.", response["error"]);
+        Assert.Equal(2, response["existingSlotsAvailable"]);
+        Assert.Equal(0, response["existingSlotsRemaining"]);
         Assert.Equal(existing.Id, response["existingOpeningId"]);
         Assert.Equal(true, response["isFull"]);
     }

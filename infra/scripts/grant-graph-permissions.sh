@@ -69,6 +69,26 @@ az rest --method POST \
   }" \
   --output none
 
+# 5. Activate the Guest Inviter directory role (idempotent — fails harmlessly if already active)
+GUEST_INVITER_TEMPLATE_ID="95e79109-95c0-4d8e-aee3-d01accf2d47b"
+echo "  Activating Guest Inviter directory role..."
+GUEST_INVITER_ROLE_ID=$(az rest --method POST \
+  --uri "https://graph.microsoft.com/v1.0/directoryRoles" \
+  --body "{\"roleTemplateId\": \"${GUEST_INVITER_TEMPLATE_ID}\"}" \
+  --query id -o tsv 2>/dev/null || \
+  az rest --method GET \
+    --uri "https://graph.microsoft.com/v1.0/directoryRoles" \
+    --query "value[?roleTemplateId=='${GUEST_INVITER_TEMPLATE_ID}'].id" -o tsv)
+
+echo "  Guest Inviter Role ID: ${GUEST_INVITER_ROLE_ID}"
+
+# 6. Assign Guest Inviter role to the managed identity
+echo "  Assigning Guest Inviter role to ${IDENTITY_NAME}..."
+az rest --method POST \
+  --uri "https://graph.microsoft.com/v1.0/directoryRoles/${GUEST_INVITER_ROLE_ID}/members/\$ref" \
+  --body "{\"@odata.id\": \"https://graph.microsoft.com/v1.0/servicePrincipals/${MI_PRINCIPAL_ID}\"}" \
+  --output none
+
 echo ""
-echo "==> Done. User.Invite.All granted to ${IDENTITY_NAME}."
+echo "==> Done. User.Invite.All and Guest Inviter role granted to ${IDENTITY_NAME}."
 echo "    Verify in Entra ID > Enterprise applications > ${IDENTITY_NAME} > Permissions"

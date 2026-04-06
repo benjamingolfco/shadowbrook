@@ -26,4 +26,11 @@ public class VerifyCodeRequestValidatorTests
     [InlineData("12ab")]
     public void InvalidFormat_Fails(string code) =>
         Assert.False(this.validator.Validate(new VerifyCodeRequest(code)).IsValid);
+
+    [Fact]
+    public void NullCode_Fails()
+    {
+        var result = this.validator.Validate(new VerifyCodeRequest(null!));
+        Assert.False(result.IsValid);
+    }
 }
