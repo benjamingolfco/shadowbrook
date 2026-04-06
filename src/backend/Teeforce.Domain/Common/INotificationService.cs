@@ -2,5 +2,5 @@ namespace Teeforce.Domain.Common;
 
 public interface INotificationService
 {
-    Task Send(Guid appUserId, string message, CancellationToken ct = default);
+    Task Send<T>(Guid appUserId, T notification, CancellationToken ct = default) where T : INotification;
 }
