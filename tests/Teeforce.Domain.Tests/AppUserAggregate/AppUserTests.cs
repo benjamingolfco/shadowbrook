@@ -233,4 +233,17 @@ public class AppUserTests
         var deletedEvent = user.DomainEvents.OfType<AppUserDeleted>().Single();
         Assert.Null(deletedEvent.IdentityId);
     }
+
+    [Fact]
+    public async Task Delete_AlreadyDeleted_IsIdempotent()
+    {
+        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
+        user.Delete();
+        user.ClearDomainEvents();
+
+        user.Delete();
+
+        Assert.Empty(user.DomainEvents);
+        Assert.True(user.IsDeleted);
+    }
 }

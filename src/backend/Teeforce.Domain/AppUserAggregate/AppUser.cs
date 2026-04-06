@@ -152,6 +152,11 @@ public class AppUser : Entity
 
     public void Delete()
     {
+        if (IsDeleted)
+        {
+            return;
+        }
+
         IsDeleted = true;
         DeletedAt = DateTimeOffset.UtcNow;
 

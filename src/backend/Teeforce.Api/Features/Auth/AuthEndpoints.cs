@@ -229,10 +229,11 @@ public static class AuthEndpoints
     [Authorize(Policy = AuthorizationPolicies.RequireUsersManage)]
     public static async Task<IResult> DeleteUser(
         Guid id,
-        [NotBody] ApplicationDbContext db)
+        [NotBody] ApplicationDbContext db,
+        CancellationToken ct)
     {
         var appUser = await db.AppUsers
-            .FirstOrDefaultAsync(u => u.Id == id);
+            .FirstOrDefaultAsync(u => u.Id == id, ct);
 
         if (appUser is null)
         {
