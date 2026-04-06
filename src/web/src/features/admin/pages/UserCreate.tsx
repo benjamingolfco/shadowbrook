@@ -1,4 +1,4 @@
-import { useNavigate, Link } from 'react-router';
+import { useNavigate, Link, useSearchParams } from 'react-router';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
@@ -51,6 +51,8 @@ type UserFormData = z.infer<typeof userSchema>;
 
 export default function UserCreate() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const preselectedOrgId = searchParams.get('organizationId') ?? '';
   const { data: orgs, isLoading: isLoadingOrgs } = useOrganizations();
   const createUser = useCreateUser();
 
@@ -59,7 +61,7 @@ export default function UserCreate() {
     defaultValues: {
       email: '',
       role: 'Operator',
-      organizationId: '',
+      organizationId: preselectedOrgId,
       sendInvite: false,
     },
   });

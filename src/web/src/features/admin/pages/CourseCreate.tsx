@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
-import { useNavigate, Link } from 'react-router';
+import { useNavigate, Link, useSearchParams } from 'react-router';
 import { getBrowserTimeZone } from '@/lib/course-time';
 import { api } from '@/lib/api-client';
 import type { Course } from '@/types/course';
@@ -42,12 +42,14 @@ type CourseFormData = z.infer<typeof courseSchema>;
 export default function CourseCreate() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const preselectedOrgId = searchParams.get('organizationId') ?? '';
   const { data: organizations, isLoading: isLoadingOrgs, error: orgsError } = useOrganizations();
 
   const form = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
-      organizationId: '',
+      organizationId: preselectedOrgId,
       name: '',
       timeZoneId: getBrowserTimeZone(),
       streetAddress: '',
