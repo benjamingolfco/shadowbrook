@@ -42,18 +42,18 @@ Teeforce.Api/
         WaitlistOfferEndpoints.cs
       Handlers/                           ← grouped by triggering event/command
         GolferJoinedWaitlist/
-          SmsHandler.cs
+          NotificationHandler.cs
           WakeUpOfferPolicyHandler.cs
         TeeTimeOpeningFilled/
           RejectOffersHandler.cs
         TeeTimeOpeningCancelled/
           RejectOffersHandler.cs
         TeeTimeOpeningSlotsClaimed/
-          SmsHandler.cs                   ← confirmation SMS to golfer
+          NotificationHandler.cs          ← confirmation notification to golfer
         WaitlistOfferAccepted/
           RemoveFromWaitlistHandler.cs
         WaitlistOfferRejected/
-          SmsHandler.cs
+          NotificationHandler.cs
       Policies/                           ← Wolverine sagas
         TeeTimeOpeningExpirationPolicy.cs
         TeeTimeOpeningOfferPolicy.cs

@@ -10,7 +10,7 @@ using Teeforce.Domain.WaitlistOfferAggregate.Events;
 
 namespace Teeforce.Api.Tests.Features.Waitlist.Handlers;
 
-public class WaitlistOfferRejectedSmsHandlerTests
+public class WaitlistOfferRejectedNotificationHandlerTests
 {
     private readonly IWaitlistOfferRepository offerRepo = Substitute.For<IWaitlistOfferRepository>();
     private readonly IGolferWaitlistEntryRepository entryRepo = Substitute.For<IGolferWaitlistEntryRepository>();
@@ -20,7 +20,7 @@ public class WaitlistOfferRejectedSmsHandlerTests
     private readonly IShortCodeGenerator shortCodeGen = Substitute.For<IShortCodeGenerator>();
     private readonly ICourseWaitlistRepository waitlistRepo = Substitute.For<ICourseWaitlistRepository>();
 
-    public WaitlistOfferRejectedSmsHandlerTests()
+    public WaitlistOfferRejectedNotificationHandlerTests()
     {
         this.timeProvider.GetCurrentTimestamp().Returns(DateTimeOffset.UtcNow);
         this.timeProvider.GetCurrentTimeByTimeZone(Arg.Any<string>()).Returns(new TimeOnly(10, 0));
@@ -63,7 +63,7 @@ public class WaitlistOfferRejectedSmsHandlerTests
 
         this.offerRepo.GetByIdAsync(offer.Id).Returns(offer);
 
-        await WaitlistOfferRejectedSmsHandler.Handle(evt, this.offerRepo, this.entryRepo, this.notificationService, this.logger, CancellationToken.None);
+        await WaitlistOfferRejectedNotificationHandler.Handle(evt, this.offerRepo, this.entryRepo, this.notificationService, this.logger, CancellationToken.None);
 
         await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<WaitlistOfferExpired>(), Arg.Any<CancellationToken>());
         await this.entryRepo.DidNotReceive().GetByIdAsync(Arg.Any<Guid>());
@@ -85,7 +85,7 @@ public class WaitlistOfferRejectedSmsHandlerTests
         this.offerRepo.GetByIdAsync(offer.Id).Returns(offer);
         this.entryRepo.GetByIdAsync(offer.GolferWaitlistEntryId).Returns(entry);
 
-        await WaitlistOfferRejectedSmsHandler.Handle(evt, this.offerRepo, this.entryRepo, this.notificationService, this.logger, CancellationToken.None);
+        await WaitlistOfferRejectedNotificationHandler.Handle(evt, this.offerRepo, this.entryRepo, this.notificationService, this.logger, CancellationToken.None);
 
         await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<WaitlistOfferExpired>(), Arg.Any<CancellationToken>());
     }
@@ -103,7 +103,7 @@ public class WaitlistOfferRejectedSmsHandlerTests
         this.offerRepo.GetByIdAsync(offer.Id).Returns(offer);
         this.entryRepo.GetByIdAsync(offer.GolferWaitlistEntryId).Returns(entry);
 
-        await WaitlistOfferRejectedSmsHandler.Handle(evt, this.offerRepo, this.entryRepo, this.notificationService, this.logger, CancellationToken.None);
+        await WaitlistOfferRejectedNotificationHandler.Handle(evt, this.offerRepo, this.entryRepo, this.notificationService, this.logger, CancellationToken.None);
 
         await this.notificationService.Received(1).Send(
             golferId,

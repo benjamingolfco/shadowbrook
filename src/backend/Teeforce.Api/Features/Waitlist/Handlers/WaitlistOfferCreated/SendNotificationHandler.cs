@@ -8,7 +8,7 @@ using Teeforce.Domain.WaitlistOfferAggregate.Events;
 
 namespace Teeforce.Api.Features.Waitlist.Handlers;
 
-public static class WaitlistOfferCreatedSendSmsHandler
+public static class WaitlistOfferCreatedSendNotificationHandler
 {
     public static async Task Handle(
         WaitlistOfferCreated evt,
@@ -30,7 +30,7 @@ public static class WaitlistOfferCreatedSendSmsHandler
         if (string.IsNullOrEmpty(baseUrl))
         {
             throw new InvalidOperationException(
-                "App:FrontendUrl is not configured. SMS offer links require a valid frontend URL.");
+                "App:FrontendUrl is not configured. Notification offer links require a valid frontend URL.");
         }
 
         var claimUrl = $"{baseUrl}/book/walkup/{offer.Token}";

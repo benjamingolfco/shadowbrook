@@ -8,7 +8,7 @@ using Teeforce.Domain.CourseAggregate;
 
 namespace Teeforce.Api.Tests.Features.Waitlist.Handlers;
 
-public class BookingCancelledSmsHandlerTests
+public class BookingCancelledNotificationHandlerTests
 {
     private readonly IBookingRepository bookingRepo = Substitute.For<IBookingRepository>();
     private readonly ICourseRepository courseRepo = Substitute.For<ICourseRepository>();
@@ -47,7 +47,7 @@ public class BookingCancelledSmsHandlerTests
         this.bookingRepo.GetByIdAsync(booking.Id).Returns(booking);
         this.courseRepo.GetByIdAsync(booking.CourseId).Returns((Course?)null);
 
-        await BookingCancelledSmsHandler.Handle(evt, this.bookingRepo, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
+        await BookingCancelledNotificationHandler.Handle(evt, this.bookingRepo, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
 
         await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<BookingCancellation>(), Arg.Any<CancellationToken>());
         this.logger.Received().Log(
@@ -69,7 +69,7 @@ public class BookingCancelledSmsHandlerTests
         this.bookingRepo.GetByIdAsync(booking.Id).Returns(booking);
         this.courseRepo.GetByIdAsync(course.Id).Returns(course);
 
-        await BookingCancelledSmsHandler.Handle(evt, this.bookingRepo, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
+        await BookingCancelledNotificationHandler.Handle(evt, this.bookingRepo, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
 
         await this.notificationService.Received(1).Send(
             golferId,
@@ -85,7 +85,7 @@ public class BookingCancelledSmsHandlerTests
     {
         var evt = BuildEvent(previousStatus: BookingStatus.Pending);
 
-        await BookingCancelledSmsHandler.Handle(evt, this.bookingRepo, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
+        await BookingCancelledNotificationHandler.Handle(evt, this.bookingRepo, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
 
         await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<BookingCancellation>(), Arg.Any<CancellationToken>());
         await this.bookingRepo.DidNotReceive().GetByIdAsync(Arg.Any<Guid>());

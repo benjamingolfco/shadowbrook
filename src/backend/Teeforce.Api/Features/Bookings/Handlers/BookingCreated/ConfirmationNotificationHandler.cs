@@ -6,7 +6,7 @@ using Teeforce.Domain.Common;
 
 namespace Teeforce.Api.Features.Bookings.Handlers;
 
-public static class BookingCreatedConfirmationSmsHandler
+public static class BookingCreatedConfirmationNotificationHandler
 {
     public static async Task Handle(
         BookingCreated domainEvent,

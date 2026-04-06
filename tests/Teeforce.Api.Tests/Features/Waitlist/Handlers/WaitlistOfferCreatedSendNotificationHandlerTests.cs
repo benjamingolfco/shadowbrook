@@ -10,7 +10,7 @@ using Teeforce.Domain.WaitlistOfferAggregate.Events;
 
 namespace Teeforce.Api.Tests.Features.Waitlist.Handlers;
 
-public class WaitlistOfferCreatedSendSmsHandlerTests
+public class WaitlistOfferCreatedSendNotificationHandlerTests
 {
     private readonly IWaitlistOfferRepository offerRepo = Substitute.For<IWaitlistOfferRepository>();
     private readonly ITeeTimeOpeningRepository openingRepo = Substitute.For<ITeeTimeOpeningRepository>();
@@ -18,7 +18,7 @@ public class WaitlistOfferCreatedSendSmsHandlerTests
     private readonly INotificationService notificationService = Substitute.For<INotificationService>();
     private readonly ITimeProvider timeProvider = Substitute.For<ITimeProvider>();
 
-    public WaitlistOfferCreatedSendSmsHandlerTests()
+    public WaitlistOfferCreatedSendNotificationHandlerTests()
     {
         this.timeProvider.GetCurrentTimestamp().Returns(DateTimeOffset.UtcNow);
     }
@@ -65,7 +65,7 @@ public class WaitlistOfferCreatedSendSmsHandlerTests
 
         var appSettings = Options.Create(new AppSettings { FrontendUrl = "https://test.example.com" });
 
-        await WaitlistOfferCreatedSendSmsHandler.Handle(
+        await WaitlistOfferCreatedSendNotificationHandler.Handle(
             evt, this.offerRepo, this.openingRepo, this.courseRepo, this.notificationService,
             appSettings, this.timeProvider, CancellationToken.None);
 
@@ -92,7 +92,7 @@ public class WaitlistOfferCreatedSendSmsHandlerTests
         var appSettings = Options.Create(new AppSettings { FrontendUrl = "" });
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            WaitlistOfferCreatedSendSmsHandler.Handle(
+            WaitlistOfferCreatedSendNotificationHandler.Handle(
                 evt, this.offerRepo, this.openingRepo, this.courseRepo, this.notificationService,
                 appSettings, this.timeProvider, CancellationToken.None));
 
@@ -111,7 +111,7 @@ public class WaitlistOfferCreatedSendSmsHandlerTests
 
         var appSettings = Options.Create(new AppSettings { FrontendUrl = "https://test.example.com" });
 
-        await WaitlistOfferCreatedSendSmsHandler.Handle(
+        await WaitlistOfferCreatedSendNotificationHandler.Handle(
             evt, this.offerRepo, this.openingRepo, this.courseRepo, this.notificationService,
             appSettings, this.timeProvider, CancellationToken.None);
 

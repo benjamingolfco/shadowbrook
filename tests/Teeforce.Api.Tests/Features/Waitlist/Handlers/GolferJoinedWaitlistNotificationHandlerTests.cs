@@ -9,12 +9,12 @@ using Teeforce.Domain.CourseWaitlistAggregate.Events;
 
 namespace Teeforce.Api.Tests.Features.Waitlist.Handlers;
 
-public class GolferJoinedWaitlistSmsHandlerTests : IDisposable
+public class GolferJoinedWaitlistNotificationHandlerTests : IDisposable
 {
     private readonly ApplicationDbContext db;
     private readonly INotificationService notificationService = Substitute.For<INotificationService>();
 
-    public GolferJoinedWaitlistSmsHandlerTests()
+    public GolferJoinedWaitlistNotificationHandlerTests()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(Guid.CreateVersion7().ToString())
@@ -68,7 +68,7 @@ public class GolferJoinedWaitlistSmsHandlerTests : IDisposable
         var (course, waitlist) = await SeedCourseAndWaitlistAsync(this.db);
         var evt = BuildEvent(waitlist.Id, golferId);
 
-        await GolferJoinedWaitlistSmsHandler.Handle(evt, this.notificationService, this.db, CancellationToken.None);
+        await GolferJoinedWaitlistNotificationHandler.Handle(evt, this.notificationService, this.db, CancellationToken.None);
 
         await this.notificationService.Received(1).Send(
             golferId,
@@ -82,7 +82,7 @@ public class GolferJoinedWaitlistSmsHandlerTests : IDisposable
         var evt = BuildEvent(Guid.NewGuid(), Guid.NewGuid());
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            GolferJoinedWaitlistSmsHandler.Handle(evt, this.notificationService, this.db, CancellationToken.None));
+            GolferJoinedWaitlistNotificationHandler.Handle(evt, this.notificationService, this.db, CancellationToken.None));
 
         await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<WaitlistJoined>(), Arg.Any<CancellationToken>());
     }

@@ -6,7 +6,7 @@ using Teeforce.Domain.CourseAggregate;
 
 namespace Teeforce.Api.Features.Bookings.Handlers;
 
-public static class BookingCancelledSmsHandler
+public static class BookingCancelledNotificationHandler
 {
     public static async Task Handle(
         BookingCancelled evt,
@@ -18,7 +18,7 @@ public static class BookingCancelledSmsHandler
     {
         if (evt.PreviousStatus != BookingStatus.Confirmed)
         {
-            logger.LogWarning("Booking {BookingId} was cancelled from {PreviousStatus} status, skipping SMS (only confirmed bookings receive cancellation SMS)", evt.BookingId, evt.PreviousStatus);
+            logger.LogWarning("Booking {BookingId} was cancelled from {PreviousStatus} status, skipping notification (only confirmed bookings receive cancellation notification)", evt.BookingId, evt.PreviousStatus);
             return;
         }
 
@@ -28,7 +28,7 @@ public static class BookingCancelledSmsHandler
 
         if (course is null)
         {
-            logger.LogWarning("Course {CourseId} not found for BookingCancelled event {EventId}, skipping SMS", booking.CourseId, evt.EventId);
+            logger.LogWarning("Course {CourseId} not found for BookingCancelled event {EventId}, skipping notification", booking.CourseId, evt.EventId);
             return;
         }
 

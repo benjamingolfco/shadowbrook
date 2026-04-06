@@ -7,7 +7,7 @@ using Teeforce.Domain.TeeTimeOpeningAggregate.Events;
 
 namespace Teeforce.Api.Tests.Features.Waitlist.Handlers;
 
-public class TeeTimeOpeningSlotsClaimedSmsHandlerTests
+public class TeeTimeOpeningSlotsClaimedNotificationHandlerTests
 {
     private readonly ICourseRepository courseRepo = Substitute.For<ICourseRepository>();
     private readonly INotificationService notificationService = Substitute.For<INotificationService>();
@@ -35,7 +35,7 @@ public class TeeTimeOpeningSlotsClaimedSmsHandlerTests
         var evt = BuildEvent();
         this.courseRepo.GetByIdAsync(evt.CourseId).Returns((Course?)null);
 
-        await TeeTimeOpeningSlotsClaimedSmsHandler.Handle(evt, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
+        await TeeTimeOpeningSlotsClaimedNotificationHandler.Handle(evt, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
 
         await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<WalkupConfirmation>(), Arg.Any<CancellationToken>());
         this.logger.Received().Log(
@@ -55,7 +55,7 @@ public class TeeTimeOpeningSlotsClaimedSmsHandlerTests
 
         this.courseRepo.GetByIdAsync(course.Id).Returns(course);
 
-        await TeeTimeOpeningSlotsClaimedSmsHandler.Handle(evt, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
+        await TeeTimeOpeningSlotsClaimedNotificationHandler.Handle(evt, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
 
         await this.notificationService.Received(1).Send(
             golferId,

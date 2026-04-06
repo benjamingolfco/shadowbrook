@@ -5,7 +5,7 @@ using Teeforce.Domain.TeeTimeOpeningAggregate.Events;
 
 namespace Teeforce.Api.Features.Waitlist.Handlers;
 
-public static class TeeTimeOpeningSlotsClaimedSmsHandler
+public static class TeeTimeOpeningSlotsClaimedNotificationHandler
 {
     public static async Task Handle(
         TeeTimeOpeningSlotsClaimed evt,
@@ -18,7 +18,7 @@ public static class TeeTimeOpeningSlotsClaimedSmsHandler
 
         if (course is null)
         {
-            logger.LogWarning("Course {CourseId} not found for TeeTimeOpeningSlotsClaimed event {EventId}, skipping SMS", evt.CourseId, evt.EventId);
+            logger.LogWarning("Course {CourseId} not found for TeeTimeOpeningSlotsClaimed event {EventId}, skipping notification", evt.CourseId, evt.EventId);
             return;
         }
 

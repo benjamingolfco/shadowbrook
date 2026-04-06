@@ -6,7 +6,7 @@ using Teeforce.Domain.WaitlistOfferAggregate.Events;
 
 namespace Teeforce.Api.Features.Waitlist.Handlers;
 
-public static class WaitlistOfferRejectedSmsHandler
+public static class WaitlistOfferRejectedNotificationHandler
 {
     public static async Task Handle(
         WaitlistOfferRejected domainEvent,
@@ -20,7 +20,7 @@ public static class WaitlistOfferRejectedSmsHandler
 
         if (offer.NotifiedAt is null)
         {
-            logger.LogWarning("Offer {WaitlistOfferId} was never notified, skipping rejection SMS", domainEvent.WaitlistOfferId);
+            logger.LogWarning("Offer {WaitlistOfferId} was never notified, skipping rejection notification", domainEvent.WaitlistOfferId);
             return;
         }
 
@@ -28,7 +28,7 @@ public static class WaitlistOfferRejectedSmsHandler
 
         if (entry.RemovedAt is not null)
         {
-            logger.LogWarning("Golfer waitlist entry {EntryId} already removed, skipping rejection SMS", domainEvent.GolferWaitlistEntryId);
+            logger.LogWarning("Golfer waitlist entry {EntryId} already removed, skipping rejection notification", domainEvent.GolferWaitlistEntryId);
             return;
         }
 

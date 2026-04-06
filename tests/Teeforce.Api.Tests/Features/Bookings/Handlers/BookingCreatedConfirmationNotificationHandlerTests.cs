@@ -9,13 +9,13 @@ using Teeforce.Domain.CourseAggregate;
 
 namespace Teeforce.Api.Tests.Features.Bookings.Handlers;
 
-public class BookingCreatedConfirmationSmsHandlerTests : IDisposable
+public class BookingCreatedConfirmationNotificationHandlerTests : IDisposable
 {
     private readonly ApplicationDbContext db;
     private readonly IBookingRepository bookingRepo = Substitute.For<IBookingRepository>();
     private readonly INotificationService notificationService = Substitute.For<INotificationService>();
 
-    public BookingCreatedConfirmationSmsHandlerTests()
+    public BookingCreatedConfirmationNotificationHandlerTests()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(Guid.CreateVersion7().ToString())
@@ -63,7 +63,7 @@ public class BookingCreatedConfirmationSmsHandlerTests : IDisposable
 
         this.bookingRepo.GetByIdAsync(booking.Id).Returns(booking);
 
-        await BookingCreatedConfirmationSmsHandler.Handle(evt, this.bookingRepo, this.db, this.notificationService, CancellationToken.None);
+        await BookingCreatedConfirmationNotificationHandler.Handle(evt, this.bookingRepo, this.db, this.notificationService, CancellationToken.None);
 
         await this.notificationService.Received(1).Send(
             golferId,
@@ -82,7 +82,7 @@ public class BookingCreatedConfirmationSmsHandlerTests : IDisposable
         var evt = BuildEvent(booking.Id, courseId, Guid.NewGuid());
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            BookingCreatedConfirmationSmsHandler.Handle(evt, this.bookingRepo, this.db, this.notificationService, CancellationToken.None));
+            BookingCreatedConfirmationNotificationHandler.Handle(evt, this.bookingRepo, this.db, this.notificationService, CancellationToken.None));
 
         await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<BookingConfirmation>(), Arg.Any<CancellationToken>());
     }

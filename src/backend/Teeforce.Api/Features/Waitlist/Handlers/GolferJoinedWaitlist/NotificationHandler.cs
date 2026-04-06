@@ -5,7 +5,7 @@ using Teeforce.Domain.CourseWaitlistAggregate.Events;
 
 namespace Teeforce.Api.Features.Waitlist.Handlers;
 
-public static class GolferJoinedWaitlistSmsHandler
+public static class GolferJoinedWaitlistNotificationHandler
 {
     public static async Task Handle(
         GolferJoinedWaitlist domainEvent,
