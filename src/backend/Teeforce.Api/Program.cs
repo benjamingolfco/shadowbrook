@@ -90,9 +90,22 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Host.AddWolverine(builder.Environment, builder.Configuration, connectionString);
 
-builder.Services.AddSingleton<InMemoryTextMessageService>();
-builder.Services.AddScoped<DatabaseTextMessageService>();
-builder.Services.AddScoped<ITextMessageService>(sp => sp.GetRequiredService<DatabaseTextMessageService>());
+// Notification service
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IEmailSender, NoOpEmailSender>();
+
+// SMS channel — environment-dependent
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddScoped<DatabaseSmsSender>();
+    builder.Services.AddScoped<ISmsSender>(sp => sp.GetRequiredService<DatabaseSmsSender>());
+}
+else
+{
+    builder.Services.Configure<TelnyxOptions>(builder.Configuration.GetSection("Telnyx"));
+    builder.Services.AddHttpClient<TelnyxSmsSender>(client => client.BaseAddress = new Uri("https://api.telnyx.com"));
+    builder.Services.AddScoped<ISmsSender, TelnyxSmsSender>();
+}
 builder.Services.AddSingleton<IFeatureService, FeatureService>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<ITenantRepository, TenantRepository>();
