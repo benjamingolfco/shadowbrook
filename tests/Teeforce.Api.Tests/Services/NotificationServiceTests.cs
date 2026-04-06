@@ -14,14 +14,14 @@ namespace Teeforce.Api.Tests.Services;
 
 public record FakeNotification(string Content) : INotification;
 
-public class FakeNotificationSmsFormatter : SmsFormatter<FakeNotification>
+public class FakeNotificationSmsFormatter : ISmsFormatter<FakeNotification>
 {
-    protected override string FormatMessage(FakeNotification n) => $"SMS: {n.Content}";
+    public string Format(FakeNotification n) => $"SMS: {n.Content}";
 }
 
-public class FakeNotificationEmailFormatter : EmailFormatter<FakeNotification>
+public class FakeNotificationEmailFormatter : IEmailFormatter<FakeNotification>
 {
-    protected override (string Subject, string Body) FormatMessage(FakeNotification n) =>
+    public (string Subject, string Body) Format(FakeNotification n) =>
         ("Test Subject", $"Email: {n.Content}");
 }
 
@@ -47,10 +47,8 @@ public class NotificationServiceTests : IDisposable
         this.emailChecker.IsEmailInUse(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
 
         var services = new ServiceCollection();
-        services.AddKeyedScoped<ISmsFormatter, FakeNotificationSmsFormatter>(typeof(FakeNotification));
-        services.AddKeyedScoped<IEmailFormatter, FakeNotificationEmailFormatter>(typeof(FakeNotification));
-        services.AddScoped<DefaultEmailFormatter>();
-        services.AddScoped<ILogger<DefaultEmailFormatter>>(_ => Substitute.For<ILogger<DefaultEmailFormatter>>());
+        services.AddScoped<ISmsFormatter<FakeNotification>, FakeNotificationSmsFormatter>();
+        services.AddScoped<IEmailFormatter<FakeNotification>, FakeNotificationEmailFormatter>();
         this.serviceProvider = services.BuildServiceProvider();
 
         this.sut = new NotificationService(this.db, this.messageBus, this.serviceProvider, this.logger);

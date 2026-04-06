@@ -19,6 +19,7 @@ paths:
 - Always explicit accessibility modifiers
 - String interpolation over concatenation
 - Never use `Async` suffix on method names — the `Task<T>` return type already signals async behavior
+- When an interface and its implementation live in the same file, name the file after the implementation — never after the interface. (e.g., `DeliverSmsHandler.cs` containing both `DeliverSms` and `DeliverSmsHandler`, not `IDeliverSms.cs`.) If they live in separate files, the interface file is named after the interface as usual.
 
 ## Project Structure (Feature-Based)
 

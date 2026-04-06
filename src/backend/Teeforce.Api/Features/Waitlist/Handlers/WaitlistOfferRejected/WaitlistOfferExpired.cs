@@ -5,8 +5,8 @@ namespace Teeforce.Api.Features.Waitlist.Handlers;
 
 public record WaitlistOfferExpired : INotification;
 
-public class WaitlistOfferExpiredSmsFormatter : SmsFormatter<WaitlistOfferExpired>
+public class WaitlistOfferExpiredSmsFormatter : ISmsFormatter<WaitlistOfferExpired>
 {
-    protected override string FormatMessage(WaitlistOfferExpired n) =>
+    public string Format(WaitlistOfferExpired n) =>
         "Sorry, that tee time is no longer available.";
 }

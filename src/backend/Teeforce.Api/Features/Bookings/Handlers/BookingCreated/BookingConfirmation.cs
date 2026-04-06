@@ -5,8 +5,8 @@ namespace Teeforce.Api.Features.Bookings.Handlers;
 
 public record BookingConfirmation(string CourseName, DateOnly Date, TimeOnly Time) : INotification;
 
-public class BookingConfirmationSmsFormatter : SmsFormatter<BookingConfirmation>
+public class BookingConfirmationSmsFormatter : ISmsFormatter<BookingConfirmation>
 {
-    protected override string FormatMessage(BookingConfirmation n) =>
+    public string Format(BookingConfirmation n) =>
         $"You're booked! {n.CourseName} at {n.Time:h:mm tt} on {n.Date:MMMM d, yyyy}. See you on the course!";
 }

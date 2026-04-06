@@ -94,16 +94,19 @@ builder.Host.AddWolverine(builder.Environment, builder.Configuration, connection
 
 // Notification service
 builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<DefaultEmailFormatter>();
 builder.Services.AddScoped<IEmailSender, NoOpEmailSender>();
 
-// SMS formatters — keyed by notification type
-builder.Services.AddKeyedScoped<ISmsFormatter, BookingConfirmationSmsFormatter>(typeof(BookingConfirmation));
-builder.Services.AddKeyedScoped<ISmsFormatter, BookingCancellationSmsFormatter>(typeof(BookingCancellation));
-builder.Services.AddKeyedScoped<ISmsFormatter, WaitlistJoinedSmsFormatter>(typeof(WaitlistJoined));
-builder.Services.AddKeyedScoped<ISmsFormatter, WaitlistOfferAvailableSmsFormatter>(typeof(WaitlistOfferAvailable));
-builder.Services.AddKeyedScoped<ISmsFormatter, WaitlistOfferExpiredSmsFormatter>(typeof(WaitlistOfferExpired));
-builder.Services.AddKeyedScoped<ISmsFormatter, WalkupConfirmationSmsFormatter>(typeof(WalkupConfirmation));
+// Default email formatter — open generic, used as fallback when no IEmailFormatter<T>
+// is explicitly registered. Wraps the SMS formatter for the same notification type.
+builder.Services.AddScoped(typeof(IEmailFormatter<>), typeof(DefaultEmailFormatter<>));
+
+// SMS formatters
+builder.Services.AddScoped<ISmsFormatter<BookingConfirmation>, BookingConfirmationSmsFormatter>();
+builder.Services.AddScoped<ISmsFormatter<BookingCancellation>, BookingCancellationSmsFormatter>();
+builder.Services.AddScoped<ISmsFormatter<WaitlistJoined>, WaitlistJoinedSmsFormatter>();
+builder.Services.AddScoped<ISmsFormatter<WaitlistOfferAvailable>, WaitlistOfferAvailableSmsFormatter>();
+builder.Services.AddScoped<ISmsFormatter<WaitlistOfferExpired>, WaitlistOfferExpiredSmsFormatter>();
+builder.Services.AddScoped<ISmsFormatter<WalkupConfirmation>, WalkupConfirmationSmsFormatter>();
 
 // SMS channel — environment-dependent
 if (builder.Environment.IsDevelopment())

@@ -5,8 +5,8 @@ namespace Teeforce.Api.Features.Waitlist.Handlers;
 
 public record WaitlistOfferAvailable(string CourseName, TimeOnly Time, string ClaimUrl) : INotification;
 
-public class WaitlistOfferAvailableSmsFormatter : SmsFormatter<WaitlistOfferAvailable>
+public class WaitlistOfferAvailableSmsFormatter : ISmsFormatter<WaitlistOfferAvailable>
 {
-    protected override string FormatMessage(WaitlistOfferAvailable n) =>
+    public string Format(WaitlistOfferAvailable n) =>
         $"{n.CourseName}: {n.Time:h:mm tt} tee time available! Claim your spot: {n.ClaimUrl}";
 }

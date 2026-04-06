@@ -1,4 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Teeforce.Api.Infrastructure.Services;
@@ -8,9 +7,9 @@ namespace Teeforce.Api.Tests.Services;
 
 public record TestNotification(string Message) : INotification;
 
-public class TestSmsFormatter : SmsFormatter<TestNotification>
+public class TestSmsFormatter : ISmsFormatter<TestNotification>
 {
-    protected override string FormatMessage(TestNotification notification) => notification.Message;
+    public string Format(TestNotification notification) => notification.Message;
 }
 
 public class DefaultEmailFormatterTests
@@ -18,15 +17,10 @@ public class DefaultEmailFormatterTests
     [Fact]
     public void Format_UsesSmsFormatterTextAsBody()
     {
-        var services = new ServiceCollection();
-        services.AddKeyedScoped<ISmsFormatter, TestSmsFormatter>(typeof(TestNotification));
-        var sp = services.BuildServiceProvider();
-        var logger = Substitute.For<ILogger<DefaultEmailFormatter>>();
+        var logger = Substitute.For<ILogger<DefaultEmailFormatter<TestNotification>>>();
+        var sut = new DefaultEmailFormatter<TestNotification>(new TestSmsFormatter(), logger);
 
-        var sut = new DefaultEmailFormatter(sp, logger);
-        var notification = new TestNotification("Hello from SMS");
-
-        var (subject, body) = sut.Format(notification);
+        var (subject, body) = sut.Format(new TestNotification("Hello from SMS"));
 
         Assert.Equal("Teeforce Notification", subject);
         Assert.Equal("Hello from SMS", body);
@@ -35,12 +29,9 @@ public class DefaultEmailFormatterTests
     [Fact]
     public void Format_LogsInformationAboutFallback()
     {
-        var services = new ServiceCollection();
-        services.AddKeyedScoped<ISmsFormatter, TestSmsFormatter>(typeof(TestNotification));
-        var sp = services.BuildServiceProvider();
-        var logger = Substitute.For<ILogger<DefaultEmailFormatter>>();
+        var logger = Substitute.For<ILogger<DefaultEmailFormatter<TestNotification>>>();
+        var sut = new DefaultEmailFormatter<TestNotification>(new TestSmsFormatter(), logger);
 
-        var sut = new DefaultEmailFormatter(sp, logger);
         sut.Format(new TestNotification("test"));
 
         logger.Received(1).Log(

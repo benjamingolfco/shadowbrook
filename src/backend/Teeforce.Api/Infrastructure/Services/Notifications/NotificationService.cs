@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Teeforce.Api.Infrastructure.Data;
 using Teeforce.Domain.Common;
 using Wolverine;
@@ -37,7 +36,7 @@ public class NotificationService(
         // 2. Route and format
         if (!string.IsNullOrEmpty(phone))
         {
-            var smsFormatter = serviceProvider.GetRequiredKeyedService<ISmsFormatter>(typeof(T));
+            var smsFormatter = serviceProvider.GetRequiredService<ISmsFormatter<T>>();
             var message = smsFormatter.Format(notification);
             await messageBus.PublishAsync(new DeliverSms(phone, message));
             return;
@@ -45,8 +44,7 @@ public class NotificationService(
 
         if (!string.IsNullOrEmpty(email))
         {
-            var emailFormatter = serviceProvider.GetKeyedService<IEmailFormatter>(typeof(T))
-                ?? serviceProvider.GetRequiredService<DefaultEmailFormatter>();
+            var emailFormatter = serviceProvider.GetRequiredService<IEmailFormatter<T>>();
             var (subject, body) = emailFormatter.Format(notification);
             await messageBus.PublishAsync(new DeliverEmail(email, subject, body));
             return;
