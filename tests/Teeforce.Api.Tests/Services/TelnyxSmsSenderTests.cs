@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using Teeforce.Api.Infrastructure.Configuration;
-using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure.Sms;
 
 namespace Teeforce.Api.Tests.Services;
 

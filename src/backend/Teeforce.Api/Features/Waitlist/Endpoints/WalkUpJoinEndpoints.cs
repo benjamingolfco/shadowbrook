@@ -1,8 +1,9 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Teeforce.Api.Infrastructure;
 using Teeforce.Api.Infrastructure.Data;
-using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure.Time;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.CourseWaitlistAggregate;
 using Teeforce.Domain.GolferAggregate;

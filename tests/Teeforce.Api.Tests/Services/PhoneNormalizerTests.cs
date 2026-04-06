@@ -1,4 +1,4 @@
-using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure;
 
 namespace Teeforce.Api.Tests.Services;
 

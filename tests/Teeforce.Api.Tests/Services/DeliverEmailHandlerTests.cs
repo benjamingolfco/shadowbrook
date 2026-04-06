@@ -1,5 +1,6 @@
 using NSubstitute;
-using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure.Email;
+using Teeforce.Api.Infrastructure.Notifications;
 
 namespace Teeforce.Api.Tests.Services;
 

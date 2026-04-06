@@ -1,3 +1,4 @@
+using Teeforce.Api.Infrastructure.Notifications;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.CourseAggregate;
 using Teeforce.Domain.CourseWaitlistAggregate;

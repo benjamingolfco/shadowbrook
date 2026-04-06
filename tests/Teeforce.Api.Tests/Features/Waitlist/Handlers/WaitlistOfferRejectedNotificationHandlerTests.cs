@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Teeforce.Api.Features.Waitlist.Handlers;
+using Teeforce.Api.Infrastructure.Notifications;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.CourseWaitlistAggregate;
 using Teeforce.Domain.GolferAggregate;

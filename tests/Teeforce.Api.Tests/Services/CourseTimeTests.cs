@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Time.Testing;
-using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure.Time;
 
 namespace Teeforce.Api.Tests.Services;
 

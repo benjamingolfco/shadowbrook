@@ -1,5 +1,4 @@
-using Teeforce.Api.Infrastructure.Services;
-using Teeforce.Domain.Common;
+using Teeforce.Api.Infrastructure.Notifications;
 
 namespace Teeforce.Api.Features.Waitlist.Handlers;
 

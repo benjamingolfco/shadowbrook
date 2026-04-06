@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using NSubstitute;
 using Teeforce.Api.Features.Waitlist.Handlers;
 using Teeforce.Api.Infrastructure.Configuration;
+using Teeforce.Api.Infrastructure.Notifications;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.CourseAggregate;
 using Teeforce.Domain.TeeTimeOpeningAggregate;

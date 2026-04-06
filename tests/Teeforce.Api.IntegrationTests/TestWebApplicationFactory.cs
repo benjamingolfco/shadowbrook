@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Respawn;
 using Teeforce.Api.Infrastructure.Data;
-using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure.Sms;
 using Teeforce.Domain.AppUserAggregate;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.Services;

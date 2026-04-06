@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Teeforce.Api.Infrastructure.Data;
-using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure.Sms;
 
 namespace Teeforce.Api.Features.Dev;
 

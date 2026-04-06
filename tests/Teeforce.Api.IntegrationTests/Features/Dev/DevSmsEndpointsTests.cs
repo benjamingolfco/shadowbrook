@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Teeforce.Api.Infrastructure.Data;
 using Teeforce.Api.Infrastructure.Dev;
-using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure.Sms;
 using Teeforce.Domain.GolferAggregate;
 
 namespace Teeforce.Api.IntegrationTests.Features.Dev;

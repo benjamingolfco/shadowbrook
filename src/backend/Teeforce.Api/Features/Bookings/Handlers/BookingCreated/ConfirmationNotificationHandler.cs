@@ -1,3 +1,4 @@
+using Teeforce.Api.Infrastructure.Notifications;
 using Teeforce.Domain.BookingAggregate;
 using Teeforce.Domain.BookingAggregate.Events;
 using Teeforce.Domain.Common;
