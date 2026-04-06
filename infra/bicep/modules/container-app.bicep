@@ -39,6 +39,9 @@ param managedIdentityClientId string
 @description('Regex pattern for allowed CORS origins (e.g., PR staging URLs). When set, takes precedence over corsOrigin.')
 param corsOriginPattern string = ''
 
+@description('Name of the Key Vault containing external service secrets')
+param keyVaultName string
+
 var containerAppName = 'teeforce-app-${environment}'
 
 // Container App
@@ -75,6 +78,16 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
         {
           name: 'app-insights-connection-string'
           value: appInsightsConnectionString
+        }
+        {
+          name: 'telnyx-api-key'
+          keyVaultUrl: 'https://${keyVaultName}.vault.azure.net/secrets/telnyx-api-key'
+          identity: userAssignedIdentityId
+        }
+        {
+          name: 'telnyx-from-number'
+          keyVaultUrl: 'https://${keyVaultName}.vault.azure.net/secrets/telnyx-from-number'
+          identity: userAssignedIdentityId
         }
       ]
     }
@@ -115,6 +128,14 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
             {
               name: 'AzureAd__ManagedIdentityClientId'
               value: managedIdentityClientId
+            }
+            {
+              name: 'Telnyx__ApiKey'
+              secretRef: 'telnyx-api-key'
+            }
+            {
+              name: 'Telnyx__FromNumber'
+              secretRef: 'telnyx-from-number'
             }
           ]
           probes: [

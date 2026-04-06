@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Teeforce.Api.Infrastructure.Data;
 using Teeforce.Api.Infrastructure.Dev;
-using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure.Sms;
 using Teeforce.Domain.GolferAggregate;
 
 namespace Teeforce.Api.IntegrationTests.Features.Dev;
@@ -127,7 +127,7 @@ public class DevSmsEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
             db.DevSmsMessages.Add(new DevSmsMessage
             {
                 Id = Guid.CreateVersion7(),
-                From = DatabaseTextMessageService.SystemPhoneNumber,
+                From = DatabaseSmsSender.SystemPhoneNumber,
                 To = "+15551112222",
                 Body = "You're booked!",
                 Direction = SmsDirection.Outbound,
@@ -137,7 +137,7 @@ public class DevSmsEndpointsTests(TestWebApplicationFactory factory) : IAsyncLif
             db.DevSmsMessages.Add(new DevSmsMessage
             {
                 Id = Guid.CreateVersion7(),
-                From = DatabaseTextMessageService.SystemPhoneNumber,
+                From = DatabaseSmsSender.SystemPhoneNumber,
                 To = "+15559999999",
                 Body = "Different golfer",
                 Direction = SmsDirection.Outbound,

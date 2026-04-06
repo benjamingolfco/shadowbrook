@@ -139,6 +139,10 @@ namespace Teeforce.Api.Migrations
                     b.Property<Guid?>("OrganizationId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasMaxLength(20)

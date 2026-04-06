@@ -1,4 +1,4 @@
-using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure.Sms;
 
 namespace Teeforce.Api.Infrastructure.Dev;
 

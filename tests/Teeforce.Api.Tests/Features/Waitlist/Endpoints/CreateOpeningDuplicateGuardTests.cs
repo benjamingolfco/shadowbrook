@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using NSubstitute;
 using Teeforce.Api.Features.Waitlist.Endpoints;
-using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.TeeTimeOpeningAggregate;
 

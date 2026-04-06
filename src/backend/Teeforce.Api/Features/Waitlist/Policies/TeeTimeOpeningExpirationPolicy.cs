@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Teeforce.Api.Features.Waitlist.Handlers;
-using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure.Time;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.TeeTimeOpeningAggregate.Events;
 using Wolverine;

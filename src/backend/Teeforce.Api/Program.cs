@@ -4,15 +4,22 @@ using JasperFx;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Graph;
 using Serilog;
+using Teeforce.Api.Features.Bookings.Handlers;
 using Teeforce.Api.Features.Dev;
+using Teeforce.Api.Features.Waitlist.Handlers;
 using Teeforce.Api.Infrastructure;
+using Teeforce.Api.Infrastructure.AppUsers;
 using Teeforce.Api.Infrastructure.Auth;
 using Teeforce.Api.Infrastructure.Configuration;
 using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Api.Infrastructure.Email;
 using Teeforce.Api.Infrastructure.Middleware;
+using Teeforce.Api.Infrastructure.Notifications;
 using Teeforce.Api.Infrastructure.Observability;
 using Teeforce.Api.Infrastructure.Repositories;
-using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure.Sms;
+using Teeforce.Api.Infrastructure.Sms.Http;
+using Teeforce.Api.Infrastructure.Time;
 using Teeforce.Domain.AppUserAggregate;
 using Teeforce.Domain.BookingAggregate;
 using Teeforce.Domain.Common;
@@ -90,9 +97,37 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Host.AddWolverine(builder.Environment, builder.Configuration, connectionString);
 
-builder.Services.AddSingleton<InMemoryTextMessageService>();
-builder.Services.AddScoped<DatabaseTextMessageService>();
-builder.Services.AddScoped<ITextMessageService>(sp => sp.GetRequiredService<DatabaseTextMessageService>());
+// Notification service
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IEmailSender, NoOpEmailSender>();
+
+// Default email formatter — open generic, used as fallback when no IEmailFormatter<T>
+// is explicitly registered. Wraps the SMS formatter for the same notification type.
+builder.Services.AddScoped(typeof(IEmailFormatter<>), typeof(DefaultEmailFormatter<>));
+
+// SMS formatters
+builder.Services.AddScoped<ISmsFormatter<BookingConfirmation>, BookingConfirmationSmsFormatter>();
+builder.Services.AddScoped<ISmsFormatter<BookingCancellation>, BookingCancellationSmsFormatter>();
+builder.Services.AddScoped<ISmsFormatter<WaitlistJoined>, WaitlistJoinedSmsFormatter>();
+builder.Services.AddScoped<ISmsFormatter<WaitlistOfferAvailable>, WaitlistOfferAvailableSmsFormatter>();
+builder.Services.AddScoped<ISmsFormatter<WaitlistOfferExpired>, WaitlistOfferExpiredSmsFormatter>();
+builder.Services.AddScoped<ISmsFormatter<WalkupConfirmation>, WalkupConfirmationSmsFormatter>();
+
+// SMS channel — environment-dependent
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddScoped<DatabaseSmsSender>();
+    builder.Services.AddScoped<ISmsSender>(sp => sp.GetRequiredService<DatabaseSmsSender>());
+}
+else
+{
+    builder.Services.Configure<TelnyxOptions>(builder.Configuration.GetSection("Telnyx"));
+    builder.Services.AddTransient<TelnyxAuthHandler>(); // Must be transient — HttpClient factory requirement
+    builder.Services
+        .AddHttpClient<TelnyxSmsSender>(client => client.BaseAddress = new Uri("https://api.telnyx.com"))
+        .AddHttpMessageHandler<TelnyxAuthHandler>();
+    builder.Services.AddScoped<ISmsSender, TelnyxSmsSender>();
+}
 builder.Services.AddSingleton<IFeatureService, FeatureService>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<ITenantRepository, TenantRepository>();
@@ -129,7 +164,7 @@ else
 }
 builder.Services.AddScoped<IAppUserEmailUniquenessChecker, AppUserEmailUniquenessChecker>();
 builder.Services.AddScoped<ICourseTimeZoneProvider, CourseTimeZoneProvider>();
-builder.Services.AddScoped<ITimeProvider, Teeforce.Api.Infrastructure.Services.TimeZoneProvider>();
+builder.Services.AddScoped<ITimeProvider, TimeZoneProvider>();
 builder.Services.AddScoped<CourseContext>();
 builder.Services.AddScoped<ICourseContext>(sp => sp.GetRequiredService<CourseContext>());
 builder.Services.AddScoped<IShortCodeGenerator, ShortCodeGenerator>();

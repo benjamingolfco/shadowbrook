@@ -1,7 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Teeforce.Api.Infrastructure.Services;
-
 namespace Teeforce.Api.IntegrationTests;
 
 [Collection("Integration")]

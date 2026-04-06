@@ -13,8 +13,9 @@
 // 4. database          — Azure SQL with Entra-only auth (depends on managedIdentity)
 // 5. appInsights       — depends on logAnalytics
 // 6. containerAppEnv   — depends on logAnalytics (appLogsConfiguration)
-// 7. acrRoleAssignment — depends on managedIdentity (deployed to shared RG)
-// 8. containerApp      — depends on acrRoleAssignment, containerAppEnv, database, appInsights
+// 7. keyVault          — Key Vault for external service secrets (depends on managedIdentity)
+// 8. acrRoleAssignment — depends on managedIdentity (deployed to shared RG)
+// 9. containerApp      — depends on acrRoleAssignment, containerAppEnv, database, appInsights, keyVault
 
 targetScope = 'subscription'
 
@@ -125,6 +126,17 @@ module acrRoleAssignment 'modules/acr-role-assignment.bicep' = {
   }
 }
 
+// Key Vault for external service secrets (Telnyx, future providers)
+module keyVault 'modules/key-vault.bicep' = {
+  name: 'key-vault-deployment'
+  scope: environmentRg
+  params: {
+    environment: environment
+    location: location
+    managedIdentityPrincipalId: managedIdentity.outputs.principalId
+  }
+}
+
 // ============================================================================
 // Container Apps Environment (independent — can host multiple apps)
 // ============================================================================
@@ -164,6 +176,7 @@ module containerApp 'modules/container-app.bicep' = {
     // Match main hostname and PR staging URLs (e.g., <name>-123.<region>.<slot>.azurestaticapps.net)
     managedIdentityClientId: managedIdentity.outputs.clientId
     corsOriginPattern: '^https://${split(staticWebApp.outputs.defaultHostname, '.')[0]}(-\\d+)?\\..*\\.azurestaticapps\\.net$'
+    keyVaultName: keyVault.outputs.name
   }
 }
 

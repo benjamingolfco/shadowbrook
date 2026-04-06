@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Teeforce.Api.Infrastructure;
 using Teeforce.Api.Infrastructure.Auth;
 using Teeforce.Api.Infrastructure.Data;
-using Teeforce.Api.Infrastructure.Services;
 using Wolverine.Http;
 
 namespace Teeforce.Api.Features.FeatureFlags;

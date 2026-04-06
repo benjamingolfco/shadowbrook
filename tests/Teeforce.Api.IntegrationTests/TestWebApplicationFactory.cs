@@ -7,7 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Respawn;
 using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Api.Infrastructure.Sms;
 using Teeforce.Domain.AppUserAggregate;
+using Teeforce.Domain.Common;
 using Teeforce.Domain.Services;
 using Testcontainers.MsSql;
 using Wolverine;
@@ -117,6 +119,11 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
         {
             services.DisableAllExternalWolverineTransports();
             services.RunWolverineInSoloMode();
+
+            // Override ISmsSender — "Testing" environment falls through to TelnyxSmsSender in
+            // Program.cs, but integration tests need DatabaseSmsSender (no real credentials).
+            services.AddScoped<DatabaseSmsSender>();
+            services.AddScoped<ISmsSender>(sp => sp.GetRequiredService<DatabaseSmsSender>());
         });
 
         builder.UseEnvironment("Testing");

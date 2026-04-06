@@ -9,6 +9,7 @@ public class AppUser : Entity
 {
     public string? IdentityId { get; private set; }
     public string Email { get; private set; } = string.Empty;
+    public string? Phone { get; private set; }
     public string? FirstName { get; private set; }
     public string? LastName { get; private set; }
     public AppUserRole Role { get; private set; }

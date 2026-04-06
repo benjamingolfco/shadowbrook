@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Teeforce.Api.Features.FeatureFlags;
-using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Api.Infrastructure;
 
 namespace Teeforce.Api.Tests.Services;
 
