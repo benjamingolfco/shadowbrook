@@ -5,16 +5,14 @@ using Teeforce.Domain.BookingAggregate;
 using Teeforce.Domain.BookingAggregate.Events;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.CourseAggregate;
-using Teeforce.Domain.GolferAggregate;
 
 namespace Teeforce.Api.Tests.Features.Waitlist.Handlers;
 
 public class BookingCancelledSmsHandlerTests
 {
     private readonly IBookingRepository bookingRepo = Substitute.For<IBookingRepository>();
-    private readonly IGolferRepository golferRepo = Substitute.For<IGolferRepository>();
     private readonly ICourseRepository courseRepo = Substitute.For<ICourseRepository>();
-    private readonly ITextMessageService sms = Substitute.For<ITextMessageService>();
+    private readonly INotificationService notificationService = Substitute.For<INotificationService>();
     private readonly ILogger logger = Substitute.For<ILogger>();
 
     private static BookingCancelled BuildEvent(Guid? bookingId = null, BookingStatus? previousStatus = null)
@@ -41,39 +39,17 @@ public class BookingCancelledSmsHandlerTests
     }
 
     [Fact]
-    public async Task Handle_GolferNotFound_NoSmsAndLogsWarning()
+    public async Task Handle_CourseNotFound_NoNotificationAndLogsWarning()
     {
         var booking = BuildCancelledBooking();
         var evt = BuildEvent(bookingId: booking.Id);
 
         this.bookingRepo.GetByIdAsync(booking.Id).Returns(booking);
-        this.golferRepo.GetByIdAsync(booking.GolferId).Returns((Golfer?)null);
-
-        await BookingCancelledSmsHandler.Handle(evt, this.bookingRepo, this.golferRepo, this.courseRepo, this.sms, this.logger, CancellationToken.None);
-
-        await this.sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
-        this.logger.Received().Log(
-            LogLevel.Warning,
-            Arg.Any<EventId>(),
-            Arg.Any<object>(),
-            Arg.Any<Exception?>(),
-            Arg.Any<Func<object, Exception?, string>>());
-    }
-
-    [Fact]
-    public async Task Handle_CourseNotFound_NoSmsAndLogsWarning()
-    {
-        var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
-        var booking = BuildCancelledBooking(golferId: golfer.Id);
-        var evt = BuildEvent(bookingId: booking.Id);
-
-        this.bookingRepo.GetByIdAsync(booking.Id).Returns(booking);
-        this.golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
         this.courseRepo.GetByIdAsync(booking.CourseId).Returns((Course?)null);
 
-        await BookingCancelledSmsHandler.Handle(evt, this.bookingRepo, this.golferRepo, this.courseRepo, this.sms, this.logger, CancellationToken.None);
+        await BookingCancelledSmsHandler.Handle(evt, this.bookingRepo, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
 
-        await this.sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
         this.logger.Received().Log(
             LogLevel.Warning,
             Arg.Any<EventId>(),
@@ -83,33 +59,32 @@ public class BookingCancelledSmsHandlerTests
     }
 
     [Fact]
-    public async Task Handle_Success_SendsCancellationSms()
+    public async Task Handle_Success_SendsCancellationNotification()
     {
-        var golfer = Golfer.Create("+15559876543", "Bob", "Green");
+        var golferId = Guid.CreateVersion7();
         var course = Course.Create(Guid.NewGuid(), "Teeforce Golf Club", "America/Chicago");
-        var booking = BuildCancelledBooking(golferId: golfer.Id, courseId: course.Id);
+        var booking = BuildCancelledBooking(golferId: golferId, courseId: course.Id);
         var evt = BuildEvent(bookingId: booking.Id);
 
         this.bookingRepo.GetByIdAsync(booking.Id).Returns(booking);
-        this.golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
         this.courseRepo.GetByIdAsync(course.Id).Returns(course);
 
-        await BookingCancelledSmsHandler.Handle(evt, this.bookingRepo, this.golferRepo, this.courseRepo, this.sms, this.logger, CancellationToken.None);
+        await BookingCancelledSmsHandler.Handle(evt, this.bookingRepo, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
 
-        await this.sms.Received(1).SendAsync(
-            "+15559876543",
+        await this.notificationService.Received(1).Send(
+            golferId,
             Arg.Is<string>(m => m.Contains("Teeforce Golf Club") && m.Contains("cancelled") && m.Contains("July 4, 2026") && m.Contains("8:00 AM")),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task Handle_PendingBookingCancelled_NoSmsAndLogsWarning()
+    public async Task Handle_PendingBookingCancelled_NoNotificationAndLogsWarning()
     {
         var evt = BuildEvent(previousStatus: BookingStatus.Pending);
 
-        await BookingCancelledSmsHandler.Handle(evt, this.bookingRepo, this.golferRepo, this.courseRepo, this.sms, this.logger, CancellationToken.None);
+        await BookingCancelledSmsHandler.Handle(evt, this.bookingRepo, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
 
-        await this.sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
         await this.bookingRepo.DidNotReceive().GetByIdAsync(Arg.Any<Guid>());
         this.logger.Received().Log(
             LogLevel.Warning,

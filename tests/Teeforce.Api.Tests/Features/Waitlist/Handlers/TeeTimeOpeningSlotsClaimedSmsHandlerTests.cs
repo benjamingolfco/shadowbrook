@@ -3,16 +3,14 @@ using NSubstitute;
 using Teeforce.Api.Features.Waitlist.Handlers;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.CourseAggregate;
-using Teeforce.Domain.GolferAggregate;
 using Teeforce.Domain.TeeTimeOpeningAggregate.Events;
 
 namespace Teeforce.Api.Tests.Features.Waitlist.Handlers;
 
 public class TeeTimeOpeningSlotsClaimedSmsHandlerTests
 {
-    private readonly IGolferRepository golferRepo = Substitute.For<IGolferRepository>();
     private readonly ICourseRepository courseRepo = Substitute.For<ICourseRepository>();
-    private readonly ITextMessageService sms = Substitute.For<ITextMessageService>();
+    private readonly INotificationService notificationService = Substitute.For<INotificationService>();
     private readonly ILogger logger = Substitute.For<ILogger>();
 
     private static TeeTimeOpeningSlotsClaimed BuildEvent(
@@ -32,34 +30,14 @@ public class TeeTimeOpeningSlotsClaimedSmsHandlerTests
     }
 
     [Fact]
-    public async Task Handle_GolferNotFound_NoSmsAndLogsWarning()
+    public async Task Handle_CourseNotFound_NoNotificationAndLogsWarning()
     {
         var evt = BuildEvent();
-        this.golferRepo.GetByIdAsync(evt.GolferId).Returns((Golfer?)null);
-
-        await TeeTimeOpeningSlotsClaimedSmsHandler.Handle(evt, this.golferRepo, this.courseRepo, this.sms, this.logger, CancellationToken.None);
-
-        await this.sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
-        this.logger.Received().Log(
-            LogLevel.Warning,
-            Arg.Any<EventId>(),
-            Arg.Any<object>(),
-            Arg.Any<Exception?>(),
-            Arg.Any<Func<object, Exception?, string>>());
-    }
-
-    [Fact]
-    public async Task Handle_CourseNotFound_NoSmsAndLogsWarning()
-    {
-        var golfer = Golfer.Create("+15551234567", "Jane", "Smith");
-        var evt = BuildEvent(golferId: golfer.Id);
-
-        this.golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
         this.courseRepo.GetByIdAsync(evt.CourseId).Returns((Course?)null);
 
-        await TeeTimeOpeningSlotsClaimedSmsHandler.Handle(evt, this.golferRepo, this.courseRepo, this.sms, this.logger, CancellationToken.None);
+        await TeeTimeOpeningSlotsClaimedSmsHandler.Handle(evt, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
 
-        await this.sms.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await this.notificationService.DidNotReceive().Send(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
         this.logger.Received().Log(
             LogLevel.Warning,
             Arg.Any<EventId>(),
@@ -69,19 +47,18 @@ public class TeeTimeOpeningSlotsClaimedSmsHandlerTests
     }
 
     [Fact]
-    public async Task Handle_Success_SendsSmsToGolferPhoneWithConfirmationContent()
+    public async Task Handle_Success_SendsNotificationToGolferWithConfirmationContent()
     {
-        var golfer = Golfer.Create("+15559876543", "Bob", "Green");
+        var golferId = Guid.CreateVersion7();
         var course = Course.Create(Guid.NewGuid(), "Teeforce Golf Club", "America/Chicago");
-        var evt = BuildEvent(golferId: golfer.Id, courseId: course.Id);
+        var evt = BuildEvent(golferId: golferId, courseId: course.Id);
 
-        this.golferRepo.GetByIdAsync(golfer.Id).Returns(golfer);
         this.courseRepo.GetByIdAsync(course.Id).Returns(course);
 
-        await TeeTimeOpeningSlotsClaimedSmsHandler.Handle(evt, this.golferRepo, this.courseRepo, this.sms, this.logger, CancellationToken.None);
+        await TeeTimeOpeningSlotsClaimedSmsHandler.Handle(evt, this.courseRepo, this.notificationService, this.logger, CancellationToken.None);
 
-        await this.sms.Received(1).SendAsync(
-            "+15559876543",
+        await this.notificationService.Received(1).Send(
+            golferId,
             Arg.Is<string>(m => m.Contains("Teeforce Golf Club") && m.Contains("confirmed")),
             Arg.Any<CancellationToken>());
     }
