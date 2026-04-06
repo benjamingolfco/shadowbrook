@@ -162,7 +162,7 @@ public static class WalkUpWaitlistEndpoints
 
         if (existing is not null)
         {
-            var isFull = existing.SlotsAvailable >= 4;
+            var isFull = existing.SlotsRemaining == 0;
             var errorMessage = isFull
                 ? $"A tee time opening for this time already exists with {existing.SlotsAvailable} slots."
                 : $"An opening already exists for this time with {existing.SlotsAvailable} slot(s). Would you like to add more slots to it?";
