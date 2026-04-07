@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import {
   useSummary,
   useFillRates,
@@ -7,6 +8,8 @@ import {
 } from '../hooks/useAnalytics';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PageTopbar } from '@/components/layout/PageTopbar';
+import { StatTile } from '../components/StatTile';
 import {
   LineChart,
   Line,
@@ -19,42 +22,13 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-function StatCard({
-  label,
-  value,
-  loading,
-}: {
-  label: string;
-  value: number | undefined;
-  loading: boolean;
-}) {
+function ChartPanel({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <Skeleton className="h-8 w-24" />
-        ) : (
-          <p className="text-3xl font-bold">{value ?? '—'}</p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function ChartCard({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold">{title}</CardTitle>
+    <Card className="border-border-strong">
+      <CardHeader>
+        <CardTitle className="text-[11px] uppercase tracking-wider text-ink-muted font-normal">
+          {title}
+        </CardTitle>
       </CardHeader>
       <CardContent>{children}</CardContent>
     </Card>
@@ -63,10 +37,15 @@ function ChartCard({
 
 function EmptyChart() {
   return (
-    <div className="flex h-[300px] items-center justify-center text-muted-foreground text-sm">
+    <div className="flex h-[300px] items-center justify-center text-ink-muted text-sm">
       No data yet
     </div>
   );
+}
+
+function statValue(value: number | undefined, loading: boolean): ReactNode {
+  if (loading) return <Skeleton className="h-7 w-12 inline-block" />;
+  return value ?? '—';
 }
 
 export default function Dashboard() {
@@ -81,61 +60,61 @@ export default function Dashboard() {
   const popularTimesData = popularTimes.data ?? [];
 
   return (
-    <div className="space-y-6 p-6">
-      <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
+    <>
+      <PageTopbar
+        middle={<h1 className="font-display text-[18px] text-ink">Analytics Dashboard</h1>}
+      />
 
-      {/* Row 1: Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
+      {/* Summary tiles */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatTile
           label="Total Organizations"
-          value={summary.data?.totalOrganizations}
-          loading={summary.isLoading}
+          value={statValue(summary.data?.totalOrganizations, summary.isLoading)}
         />
-        <StatCard
+        <StatTile
           label="Total Courses"
-          value={summary.data?.totalCourses}
-          loading={summary.isLoading}
+          value={statValue(summary.data?.totalCourses, summary.isLoading)}
         />
-        <StatCard
+        <StatTile
           label="Active Users"
-          value={summary.data?.activeUsers}
-          loading={summary.isLoading}
+          value={statValue(summary.data?.activeUsers, summary.isLoading)}
         />
-        <StatCard
+        <StatTile
           label="Bookings Today"
-          value={summary.data?.bookingsToday}
-          loading={summary.isLoading}
+          value={statValue(summary.data?.bookingsToday, summary.isLoading)}
         />
       </div>
 
-      {/* Row 2: Fill Rates chart */}
-      <ChartCard title="Fill Rates (Last 7 Days)">
-        {fillRates.isLoading ? (
-          <Skeleton className="h-[300px] w-full" />
-        ) : fillRatesData.length === 0 ? (
-          <EmptyChart />
-        ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={fillRatesData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis unit="%" domain={[0, 100]} />
-              <Tooltip formatter={(v) => (v != null ? `${v}%` : '—')} />
-              <Line
-                type="monotone"
-                dataKey="fillPercentage"
-                name="Fill %"
-                stroke="#2563eb"
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-      </ChartCard>
+      {/* Fill Rates */}
+      <div className="mb-6">
+        <ChartPanel title="Fill Rates (Last 7 Days)">
+          {fillRates.isLoading ? (
+            <Skeleton className="h-[300px] w-full" />
+          ) : fillRatesData.length === 0 ? (
+            <EmptyChart />
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={fillRatesData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis unit="%" domain={[0, 100]} />
+                <Tooltip formatter={(v) => (v != null ? `${v}%` : '—')} />
+                <Line
+                  type="monotone"
+                  dataKey="fillPercentage"
+                  name="Fill %"
+                  stroke="var(--green)"
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </ChartPanel>
+      </div>
 
-      {/* Row 3: Booking Trends + Popular Times */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ChartCard title="Booking Trends (Last 30 Days)">
+      {/* Booking Trends + Popular Times */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <ChartPanel title="Booking Trends (Last 30 Days)">
           {bookingTrends.isLoading ? (
             <Skeleton className="h-[300px] w-full" />
           ) : bookingTrendsData.length === 0 ? (
@@ -151,15 +130,15 @@ export default function Dashboard() {
                   type="monotone"
                   dataKey="bookingCount"
                   name="Bookings"
-                  stroke="#16a34a"
+                  stroke="var(--green)"
                   dot={false}
                 />
               </LineChart>
             </ResponsiveContainer>
           )}
-        </ChartCard>
+        </ChartPanel>
 
-        <ChartCard title="Popular Times">
+        <ChartPanel title="Popular Times">
           {popularTimes.isLoading ? (
             <Skeleton className="h-[300px] w-full" />
           ) : popularTimesData.length === 0 ? (
@@ -171,39 +150,41 @@ export default function Dashboard() {
                 <XAxis dataKey="time" />
                 <YAxis allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="bookingCount" name="Bookings" fill="#9333ea" />
+                <Bar dataKey="bookingCount" name="Bookings" fill="var(--ink)" />
               </BarChart>
             </ResponsiveContainer>
           )}
-        </ChartCard>
+        </ChartPanel>
       </div>
 
-      {/* Row 4: Waitlist Stats */}
-      <div>
-        <h2 className="text-lg font-semibold mb-3">Waitlist Stats</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            label="Active Entries"
-            value={waitlistStats.data?.activeEntries}
-            loading={waitlistStats.isLoading}
-          />
-          <StatCard
-            label="Offers Sent"
-            value={waitlistStats.data?.offersSent}
-            loading={waitlistStats.isLoading}
-          />
-          <StatCard
-            label="Offers Accepted"
-            value={waitlistStats.data?.offersAccepted}
-            loading={waitlistStats.isLoading}
-          />
-          <StatCard
-            label="Offers Rejected"
-            value={waitlistStats.data?.offersRejected}
-            loading={waitlistStats.isLoading}
-          />
-        </div>
-      </div>
-    </div>
+      {/* Waitlist Stats panel */}
+      <Card className="border-border-strong">
+        <CardHeader>
+          <CardTitle className="text-[11px] uppercase tracking-wider text-ink-muted font-normal">
+            Waitlist Stats
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatTile
+              label="Active Entries"
+              value={statValue(waitlistStats.data?.activeEntries, waitlistStats.isLoading)}
+            />
+            <StatTile
+              label="Offers Sent"
+              value={statValue(waitlistStats.data?.offersSent, waitlistStats.isLoading)}
+            />
+            <StatTile
+              label="Offers Accepted"
+              value={statValue(waitlistStats.data?.offersAccepted, waitlistStats.isLoading)}
+            />
+            <StatTile
+              label="Offers Rejected"
+              value={statValue(waitlistStats.data?.offersRejected, waitlistStats.isLoading)}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 }
