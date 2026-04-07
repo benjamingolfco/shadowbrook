@@ -92,7 +92,7 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
           className="flex flex-wrap items-end gap-3"
         >
           <div className="space-y-1">
-            <Label htmlFor="tee-time-input" className="text-xs text-muted-foreground">
+            <Label htmlFor="tee-time-input" className="text-xs text-ink-muted">
               Time
             </Label>
             <Input
@@ -111,7 +111,7 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
           </div>
 
           <div className="space-y-1 shrink-0">
-            <Label className="text-xs text-muted-foreground">Slots</Label>
+            <Label className="text-xs text-ink-muted">Slots</Label>
             <div className="flex" role="radiogroup" aria-label="Slots">
               {[1, 2, 3, 4].map((n) => (
                 <button

@@ -92,7 +92,7 @@ export function WalkUpWaitlistTopbar({
         <button
           type="button"
           className="flex items-center gap-1.5 rounded-full px-1 text-[12px] hover:text-ink transition-colors"
-          aria-label={`${queueCount} golfers waiting. Show queue`}
+          aria-label={`${queueCount} golfers waiting`}
         >
           <span
             className={cn(

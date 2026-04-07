@@ -50,7 +50,7 @@ export function QueueDrawer({
                 <div
                   key={entry.id}
                   className={cn(
-                    'flex items-center gap-3 border-b border-border px-3 py-2 text-sm',
+                    'flex items-center gap-3 border-b border-border px-3 py-2 text-sm last:border-b-0',
                     removingEntryId === entry.id && 'opacity-40',
                   )}
                 >
