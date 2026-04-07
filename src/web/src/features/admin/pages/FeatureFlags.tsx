@@ -11,10 +11,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { PageTopbar } from '@/components/layout/PageTopbar';
 import type { Organization } from '@/types/organization';
 
 const FEATURE_KEYS = ['sms-notifications', 'dynamic-pricing', 'full-operator-app'] as const;
 type FeatureKey = (typeof FEATURE_KEYS)[number];
+
+const FEATURE_LABELS: Record<FeatureKey, string> = {
+  'sms-notifications': 'SMS Notifications',
+  'dynamic-pricing': 'Dynamic Pricing',
+  'full-operator-app': 'Full Operator App',
+};
 
 type OrgFlags = Record<string, Record<FeatureKey, boolean>>;
 
@@ -22,7 +29,6 @@ export default function FeatureFlags() {
   const { data: organizations, isLoading, error } = useOrganizations();
   const setOrgFeatures = useSetOrgFeatures();
 
-  // Local state: orgId -> featureKey -> boolean
   const [flags, setFlags] = useState<OrgFlags>({});
 
   function getFlag(orgId: string, key: FeatureKey): boolean {
@@ -36,72 +42,64 @@ export default function FeatureFlags() {
     setOrgFeatures.mutate({ orgId, flags: updated });
   }
 
-  if (isLoading) {
-    return (
-      <div className="p-6">
-        <p className="text-muted-foreground">Loading organizations...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-6">
-        <p className="text-destructive">
-          Error: {error instanceof Error ? error.message : 'Failed to load organizations'}
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Feature Flags</h1>
-        <p className="text-sm text-muted-foreground">Manage feature availability per organization</p>
-      </div>
+    <>
+      <PageTopbar
+        middle={<h1 className="font-display text-[18px] text-ink">Feature Flags</h1>}
+      />
 
-      <Card>
+      <Card className="border-border-strong">
         <CardHeader>
-          <CardTitle>Organization Features</CardTitle>
+          <CardTitle className="text-[11px] uppercase tracking-wider text-ink-muted font-normal">
+            Organization Features
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          {!organizations || organizations.length === 0 ? (
-            <p className="text-muted-foreground">No organizations found.</p>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <p className="text-ink-muted text-sm py-12 text-center">Loading organizations...</p>
+          ) : error ? (
+            <p className="text-destructive text-sm py-12 text-center">
+              Error: {error instanceof Error ? error.message : 'Failed to load organizations'}
+            </p>
+          ) : !organizations || organizations.length === 0 ? (
+            <p className="text-ink-muted text-sm py-12 text-center">No organizations found.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Organization</TableHead>
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-canvas">
+                  <TableHead className="text-[10px] uppercase tracking-wider text-ink-muted">
+                    Organization
+                  </TableHead>
+                  {FEATURE_KEYS.map((key) => (
+                    <TableHead
+                      key={key}
+                      className="text-[10px] uppercase tracking-wider text-ink-muted whitespace-nowrap"
+                    >
+                      {FEATURE_LABELS[key]}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {organizations.map((org: Organization) => (
+                  <TableRow key={org.id}>
+                    <TableCell className="font-medium">{org.name}</TableCell>
                     {FEATURE_KEYS.map((key) => (
-                      <TableHead key={key} className="whitespace-nowrap">
-                        {key}
-                      </TableHead>
+                      <TableCell key={key}>
+                        <Switch
+                          checked={getFlag(org.id, key)}
+                          onCheckedChange={(checked) => handleToggle(org.id, key, checked)}
+                          aria-label={`${key} for ${org.name}`}
+                        />
+                      </TableCell>
                     ))}
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {organizations.map((org: Organization) => (
-                    <TableRow key={org.id}>
-                      <TableCell className="font-medium">{org.name}</TableCell>
-                      {FEATURE_KEYS.map((key) => (
-                        <TableCell key={key}>
-                          <Switch
-                            checked={getFlag(org.id, key)}
-                            onCheckedChange={(checked) => handleToggle(org.id, key, checked)}
-                            aria-label={`${key} for ${org.name}`}
-                          />
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
-    </div>
+    </>
   );
 }
