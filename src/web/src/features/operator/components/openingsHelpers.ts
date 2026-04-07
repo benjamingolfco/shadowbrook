@@ -2,6 +2,8 @@ import type { StatusBadgeStatus } from '@/components/ui/status-badge';
 
 /**
  * Maps the openings API's status enum to the visual StatusBadge variants.
+ * The default fallback is 'expired' (faded/muted) so an unknown server-side
+ * status surfaces visually rather than silently rendering as Open.
  */
 export function mapOpeningStatus(status: string): StatusBadgeStatus {
   switch (status) {
@@ -14,7 +16,7 @@ export function mapOpeningStatus(status: string): StatusBadgeStatus {
     case 'Cancelled':
       return 'cancelled';
     default:
-      return 'open';
+      return 'expired';
   }
 }
 

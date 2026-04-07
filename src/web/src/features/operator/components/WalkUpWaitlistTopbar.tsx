@@ -23,6 +23,22 @@ export interface WalkUpWaitlistTopbarProps {
   onReopen?: () => void;
 }
 
+/**
+ * Renders the walk-up waitlist page topbar contributions (status chip + short
+ * code + queue trigger in the middle slot, overflow menu in the right slot)
+ * via PageTopbar portals.
+ *
+ * **Precondition:** This component must be rendered as a descendant of a
+ * `<Drawer>` from `@/components/ui/drawer`. The queue trigger uses
+ * `<DrawerTrigger asChild>` and looks up its drawer parent via React context.
+ * React context propagates through `createPortal`, so portaling the trigger
+ * into the AppShell topbar slot is fine — but the React tree (not the DOM
+ * tree) must include a `<Drawer>` ancestor.
+ *
+ * In `WalkUpWaitlist.tsx`, this is satisfied by wrapping
+ * `<WalkUpWaitlistTopbar>` in `<QueueDrawer>` (which post-restyle accepts
+ * children and provides the `<Drawer>` boundary).
+ */
 export function WalkUpWaitlistTopbar({
   status,
   shortCode,

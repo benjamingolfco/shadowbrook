@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils';
 import type { WaitlistOpeningEntry } from '@/types/waitlist';
 import { mapOpeningStatus, formatGolferNames } from './openingsHelpers';
 
+const GRID_COLS = '80px 110px 80px 1fr 40px';
+
 export interface OpeningsGridProps {
   openings: WaitlistOpeningEntry[];
   /** When true, the grid renders without cancel actions (Closed state). */
@@ -48,8 +50,8 @@ export function OpeningsGrid({
         <>
           {/* Sticky column header row */}
           <div
-            className="sticky top-0 grid border-b border-border bg-paper px-1 py-1.5 text-[10px] font-medium uppercase tracking-wider text-ink-muted"
-            style={{ gridTemplateColumns: '80px 110px 80px 1fr 40px' }}
+            className="sticky top-0 z-10 grid border-b border-border bg-white px-1 py-1.5 text-[10px] font-medium uppercase tracking-wider text-ink-muted"
+            style={{ gridTemplateColumns: GRID_COLS }}
           >
             <span>Time</span>
             <span>Status</span>
@@ -70,15 +72,15 @@ export function OpeningsGrid({
               return (
                 <div
                   key={opening.id}
-                  data-testid="opening-row"
+                  data-testid={`opening-row-${opening.id}`}
                   className={cn(
                     'grid items-center px-1 py-2.5 text-[13px] transition-colors',
                     isFaded ? 'bg-canvas text-ink-muted' : 'bg-paper text-ink',
                     isCancelling && 'opacity-40',
-                    'hover:bg-muted/40',
+                    'hover:bg-white',
                   )}
                   style={{
-                    gridTemplateColumns: '80px 110px 80px 1fr 40px',
+                    gridTemplateColumns: GRID_COLS,
                     boxShadow: isFilled ? 'inset 3px 0 0 var(--green)' : undefined,
                   }}
                 >
