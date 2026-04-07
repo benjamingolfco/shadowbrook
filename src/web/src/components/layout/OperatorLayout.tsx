@@ -1,28 +1,18 @@
-import { NavLink, Outlet, useNavigate } from 'react-router';
+import { Outlet, useNavigate } from 'react-router';
 import { useCallback } from 'react';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-} from '@/components/ui/sidebar';
+import { AppShell } from '@/components/layout/AppShell';
 import { Badge } from '@/components/ui/badge';
+import { ChevronsUpDown } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronsUpDown } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useCourseContext } from '@/features/operator/context/CourseContext';
 import { useOrgContext } from '@/features/operator/context/OrgContext';
-import UserMenu from '@/components/layout/UserMenu';
+import { operatorNav } from '@/features/operator/navigation';
 
 function OrgSwitcher() {
   const { organizations } = useAuth();
@@ -50,7 +40,7 @@ function OrgSwitcher() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex items-center gap-1 text-lg font-semibold font-[family-name:var(--font-heading)] hover:bg-accent rounded-md px-1 -mx-1"
+          className="flex items-center gap-1 text-lg font-semibold font-[family-name:var(--font-heading)] text-sidebar-foreground hover:bg-sidebar-accent rounded-md px-1 -mx-1"
         >
           <span className="max-w-[180px] truncate" title={org?.name ?? 'Select org'}>
             {org?.name ?? 'Select org'}
@@ -78,11 +68,33 @@ function OrgSwitcher() {
   );
 }
 
+function OperatorBrand() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin';
+
+  return (
+    <>
+      {isAdmin ? (
+        <OrgSwitcher />
+      ) : (
+        <h1
+          className="max-w-[180px] truncate text-lg font-semibold font-[family-name:var(--font-heading)] text-sidebar-foreground"
+          title={user?.organization?.name ?? 'Teeforce'}
+        >
+          {user?.organization?.name ?? 'Teeforce'}
+        </h1>
+      )}
+      <Badge variant={isAdmin ? 'default' : 'success'} className="text-[10px] px-1.5 py-0">
+        {isAdmin ? 'Admin' : 'Operator'}
+      </Badge>
+    </>
+  );
+}
+
 export default function OperatorLayout() {
   const { user } = useAuth();
   const { clearCourse } = useCourseContext();
   const navigate = useNavigate();
-  const isAdmin = user?.role === 'Admin';
 
   const handleSwitchCourse = useCallback(() => {
     clearCourse();
@@ -92,66 +104,13 @@ export default function OperatorLayout() {
   const showSwitchCourse = (user?.courses?.length ?? 0) > 1;
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2 py-2">
-            {isAdmin ? (
-              <OrgSwitcher />
-            ) : (
-              <h1
-                className="max-w-[180px] truncate text-lg font-semibold font-[family-name:var(--font-heading)]"
-                title={user?.organization?.name ?? 'Teeforce'}
-              >
-                {user?.organization?.name ?? 'Teeforce'}
-              </h1>
-            )}
-            <Badge variant={isAdmin ? 'default' : 'success'} className="text-[10px] px-1.5 py-0">
-              {isAdmin ? 'Admin' : 'Operator'}
-            </Badge>
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <NavLink to="/operator/tee-sheet">
-                  {({ isActive }) => (
-                    <span className={isActive ? 'font-semibold' : ''}>Tee Sheet</span>
-                  )}
-                </NavLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <NavLink to="/operator/waitlist">
-                  {({ isActive }) => (
-                    <span className={isActive ? 'font-semibold' : ''}>Waitlist</span>
-                  )}
-                </NavLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <NavLink to="/operator/settings">
-                  {({ isActive }) => (
-                    <span className={isActive ? 'font-semibold' : ''}>Settings</span>
-                  )}
-                </NavLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset>
-        <header className="flex h-12 items-center border-b px-4">
-          <SidebarTrigger className="md:hidden" />
-          <div className="ml-auto">
-            <UserMenu onSwitchCourse={showSwitchCourse ? handleSwitchCourse : undefined} />
-          </div>
-        </header>
-        <Outlet />
-      </SidebarInset>
-    </SidebarProvider>
+    <AppShell
+      variant="full"
+      navConfig={operatorNav}
+      brand={<OperatorBrand />}
+      onSwitchCourse={showSwitchCourse ? handleSwitchCourse : undefined}
+    >
+      <Outlet />
+    </AppShell>
   );
 }
