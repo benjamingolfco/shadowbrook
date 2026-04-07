@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { ReactNode } from 'react';
 import { render, screen, fireEvent, waitFor } from '@/test/test-utils';
 import WalkUpWaitlist from '../pages/WalkUpWaitlist';
 import { useCourseContext } from '../context/CourseContext';
@@ -31,7 +32,7 @@ vi.mock('../components/OpeningsGrid', () => ({
   ),
 }));
 vi.mock('../components/QueueDrawer', () => ({
-  QueueDrawer: ({ children }: { entries: unknown[]; children?: React.ReactNode }) => (
+  QueueDrawer: ({ children }: { entries: unknown[]; children?: ReactNode }) => (
     <div data-testid="queue-drawer">
       {children}
     </div>

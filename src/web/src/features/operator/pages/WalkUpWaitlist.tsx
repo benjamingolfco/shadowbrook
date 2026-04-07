@@ -108,8 +108,8 @@ export default function WalkUpWaitlist() {
   // ── Loading ──
   if (todayQuery.isLoading) {
     return (
-      <div className="p-6" aria-label="Loading walk-up waitlist">
-        <div className="max-w-[860px] space-y-6">
+      <div className="flex h-full items-center justify-center p-6" aria-label="Loading walk-up waitlist">
+        <div className="w-full max-w-[860px] space-y-6">
           <Skeleton className="h-[80px] w-full rounded-lg" />
           <Skeleton className="h-[200px] w-full rounded-lg" />
         </div>
@@ -200,10 +200,10 @@ export default function WalkUpWaitlist() {
           status={isClosed ? 'Closed' : 'Open'}
           shortCode={waitlist.shortCode}
           queueCount={entries.length}
-          onAddGolfer={!isClosed ? () => setAddGolferDialogOpen(true) : undefined}
-          onPrintSign={!isClosed ? () => setPrintDialogOpen(true) : undefined}
-          onClose={!isClosed ? () => setCloseDialogOpen(true) : undefined}
-          onReopen={isClosed ? () => setReopenDialogOpen(true) : undefined}
+          onAddGolfer={() => setAddGolferDialogOpen(true)}
+          onPrintSign={() => setPrintDialogOpen(true)}
+          onClose={() => setCloseDialogOpen(true)}
+          onReopen={() => setReopenDialogOpen(true)}
         />
       </QueueDrawer>
 
@@ -225,18 +225,18 @@ export default function WalkUpWaitlist() {
           />
 
           {closeMutation.isError && (
-            <p className="text-sm text-destructive">Couldn't close waitlist. Try again.</p>
+            <p className="text-sm text-destructive" role="alert">Couldn't close waitlist. Try again.</p>
           )}
           {reopenMutation.isError && (
-            <p className="text-sm text-destructive">Couldn't reopen waitlist. Try again.</p>
+            <p className="text-sm text-destructive" role="alert">Couldn't reopen waitlist. Try again.</p>
           )}
           {removeMutation.isError && (
-            <p className="text-sm text-destructive">
+            <p className="text-sm text-destructive" role="alert">
               Error removing golfer: {(removeMutation.error as Error).message}
             </p>
           )}
           {cancelMutation.isError && (
-            <p className="text-sm text-destructive">
+            <p className="text-sm text-destructive" role="alert">
               Error cancelling opening: {(cancelMutation.error as Error).message}
             </p>
           )}
