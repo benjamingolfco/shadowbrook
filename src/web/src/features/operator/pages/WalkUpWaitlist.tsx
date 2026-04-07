@@ -14,7 +14,6 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { PageRightRail } from '@/components/layout/PageRightRail';
 import {
   useWalkUpWaitlistToday,
   useOpenWalkUpWaitlist,
@@ -192,9 +191,9 @@ export default function WalkUpWaitlist() {
   }
 
   // ── States B/C/D/E: Active or Closed ──
-  // The queue lives in the right rail at ≥1200px and in a Sheet below. The page
-  // header only shows the waiting count at narrow widths, where it doubles as the
-  // Sheet trigger.
+  // At ≥1200px the queue sits inline as the right column of a 2-col grid,
+  // visually paired with the openings. Below 1200px the queue moves into
+  // a Sheet triggered by the page header's waiting count chip.
   const isClosed = waitlist.status === 'Closed';
   const isWaitlistOpen = !isClosed;
   const removingEntryId = removeMutation.isPending ? removalTarget?.id ?? null : null;
@@ -213,7 +212,7 @@ export default function WalkUpWaitlist() {
   return (
     <>
       <div className="p-6">
-        <div className="mx-auto max-w-[860px] space-y-6">
+        <div className="mx-auto max-w-[860px] space-y-6 min-[1200px]:max-w-[1180px]">
           <WalkUpWaitlistPageHeader
             status={isClosed ? 'Closed' : 'Open'}
             shortCode={waitlist.shortCode}
@@ -231,35 +230,45 @@ export default function WalkUpWaitlist() {
             </div>
           )}
 
-          <OpeningsGrid
-            openings={openings}
-            readOnly={isClosed}
-            onCancel={handleCancelClick}
-            cancellingId={cancelMutation.isPending ? cancellationTarget?.id ?? null : null}
-            headerAction={!isClosed && <PostTeeTimeForm courseId={courseId} />}
-          />
+          <div className="grid gap-8 min-[1200px]:grid-cols-[minmax(0,1fr)_288px]">
+            <div className="min-w-0 space-y-6">
+              <OpeningsGrid
+                openings={openings}
+                readOnly={isClosed}
+                onCancel={handleCancelClick}
+                cancellingId={cancelMutation.isPending ? cancellationTarget?.id ?? null : null}
+                headerAction={!isClosed && <PostTeeTimeForm courseId={courseId} />}
+              />
 
-          {closeMutation.isError && (
-            <p className="text-sm text-destructive" role="alert">Couldn't close waitlist. Try again.</p>
-          )}
-          {reopenMutation.isError && (
-            <p className="text-sm text-destructive" role="alert">Couldn't reopen waitlist. Try again.</p>
-          )}
-          {removeMutation.isError && (
-            <p className="text-sm text-destructive" role="alert">
-              Error removing golfer: {(removeMutation.error as Error).message}
-            </p>
-          )}
-          {cancelMutation.isError && (
-            <p className="text-sm text-destructive" role="alert">
-              Error cancelling opening: {(cancelMutation.error as Error).message}
-            </p>
-          )}
+              {closeMutation.isError && (
+                <p className="text-sm text-destructive" role="alert">Couldn't close waitlist. Try again.</p>
+              )}
+              {reopenMutation.isError && (
+                <p className="text-sm text-destructive" role="alert">Couldn't reopen waitlist. Try again.</p>
+              )}
+              {removeMutation.isError && (
+                <p className="text-sm text-destructive" role="alert">
+                  Error removing golfer: {(removeMutation.error as Error).message}
+                </p>
+              )}
+              {cancelMutation.isError && (
+                <p className="text-sm text-destructive" role="alert">
+                  Error cancelling opening: {(cancelMutation.error as Error).message}
+                </p>
+              )}
+            </div>
+
+            {isWide && (
+              <aside
+                data-testid="queue-rail"
+                className="border-l border-border bg-white"
+              >
+                {queuePanel}
+              </aside>
+            )}
+          </div>
         </div>
       </div>
-
-      {/* Wide: queue lives in the app shell right rail */}
-      {isWide && <PageRightRail>{queuePanel}</PageRightRail>}
 
       {/* Narrow: queue lives in a side sheet triggered from the page header */}
       {!isWide && (

@@ -19,15 +19,10 @@ import {
 vi.mock('../context/CourseContext');
 vi.mock('../hooks/useWalkUpWaitlist');
 vi.mock('../hooks/useWaitlist');
-// Pin the viewport to "wide" so the queue renders inline via the right rail.
+// Pin the viewport to "wide" so the queue renders inline beside the openings.
 // Narrow-viewport sheet behavior is exercised by the header's onOpenQueue test.
 vi.mock('@/hooks/use-media-query', () => ({
   useMediaQuery: () => true,
-}));
-vi.mock('@/components/layout/PageRightRail', () => ({
-  PageRightRail: ({ children }: { children: ReactNode }) => (
-    <div data-testid="page-right-rail">{children}</div>
-  ),
 }));
 vi.mock('../components/PostTeeTimeForm', () => ({
   PostTeeTimeForm: ({ courseId }: { courseId: string }) => (
@@ -460,7 +455,7 @@ describe('WalkUpWaitlist', () => {
       expect(screen.getByTestId('post-tee-time-form')).toBeInTheDocument();
     });
 
-    it('renders queue panel with entry count in the right rail', () => {
+    it('renders queue panel with entry count beside the openings', () => {
       mockUseWalkUpWaitlistToday.mockReturnValue({
         isLoading: false,
         isError: false,
@@ -470,7 +465,7 @@ describe('WalkUpWaitlist', () => {
 
       render(<WalkUpWaitlist />);
 
-      const rail = screen.getByTestId('page-right-rail');
+      const rail = screen.getByTestId('queue-rail');
       const panel = screen.getByTestId('queue-panel');
       expect(rail).toContainElement(panel);
       expect(panel).toHaveAttribute('data-count', '2');
