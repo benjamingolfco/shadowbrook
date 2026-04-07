@@ -3,16 +3,24 @@ import { render, screen } from '@/test/test-utils';
 import OperatorLayout from '@/components/layout/OperatorLayout';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useCourseContext } from '@/features/operator/context/CourseContext';
+import { useOrgContext } from '@/features/operator/context/OrgContext';
 
 vi.mock('@/features/auth/hooks/useAuth');
 vi.mock('@/features/operator/context/CourseContext');
+vi.mock('@/features/operator/context/OrgContext');
 
 const mockUseAuth = vi.mocked(useAuth);
 const mockUseCourseContext = vi.mocked(useCourseContext);
+const mockUseOrgContext = vi.mocked(useOrgContext);
 
 describe('OperatorLayout', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseOrgContext.mockReturnValue({
+      org: null,
+      selectOrg: vi.fn(),
+      clearOrg: vi.fn(),
+    });
     mockUseCourseContext.mockReturnValue({
       course: null,
       selectCourse: vi.fn(),

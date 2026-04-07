@@ -81,8 +81,19 @@ Tailwind CSS utility classes. No CSS modules, no styled-components, no inline st
 
 - Use shadcn/ui primitives from `@/components/ui/` for standard UI elements — never build custom interactive components (drawers, dialogs, dropdowns, popovers, tooltips) when a shadcn primitive exists. Custom components miss accessibility, animations, and dismiss behavior that shadcn handles out of the box.
 - Use `cn()` from `@/lib/utils` to merge conditional Tailwind classes
-- shadcn components are owned source files (not a node_module) — edit them freely
+- shadcn components are vendored source files but treated as read-only (see "Theming shadcn components" section)
 - Add new shadcn components via `pnpm dlx shadcn@latest add <component>`
+
+## Theming shadcn components
+
+shadcn UI primitives in `src/web/src/components/ui/` are vendored but treated as **read-only**. Theme them by updating CSS variables in `src/web/src/index.css` (`--background`, `--primary`, `--border`, `--radius`, `--sidebar`, etc.) — never by editing variant classes in the component files.
+
+When a design needs something the stock variants cannot express:
+
+- **New visual variant of an existing primitive** (e.g. a "warn" button) → create a wrapper component in `components/ui/` that composes the primitive with extra classes. Do not add variants to the primitive itself.
+- **New domain component** (e.g. `StatusBadge`, `StatusChip`) → new file in `components/ui/`, may compose shadcn primitives internally.
+
+Why: keeping primitives stock means upstream shadcn updates apply with `pnpm dlx shadcn add --overwrite`, no merge conflicts. Forks accumulate drift; wrappers and tokens don't.
 
 ## Routing
 

@@ -2,25 +2,17 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 import { useTeeSheet } from '@/features/operator/hooks/useTeeSheet';
 import { useCourseContext } from '../context/CourseContext';
-import { getCourseToday, getBrowserTimeZone, formatWallClockDate, formatWallClockTime } from '@/lib/course-time';
-import { Badge } from '@/components/ui/badge';
+import { getCourseToday, getBrowserTimeZone } from '@/lib/course-time';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { Input } from '@/components/ui/input';
+import { PageTopbar } from '@/components/layout/PageTopbar';
+import { TeeSheetTopbarTitle } from '../components/TeeSheetTopbarTitle';
+import { TeeSheetDateNav } from '../components/TeeSheetDateNav';
+import { TeeSheetGrid } from '../components/TeeSheetGrid';
 
 export default function TeeSheet() {
   const { course } = useCourseContext();
-  const [selectedDate, setSelectedDate] = useState<string>(() =>
-    getCourseToday(course?.timeZoneId ?? getBrowserTimeZone())
-  );
+  const timeZone = course?.timeZoneId ?? getBrowserTimeZone();
+  const [selectedDate, setSelectedDate] = useState<string>(() => getCourseToday(timeZone));
   const teeSheetQuery = useTeeSheet(course?.id, selectedDate);
 
   if (!course) {
@@ -33,26 +25,28 @@ export default function TeeSheet() {
     );
   }
 
-  return (
-    <div className="p-6">
-      <PageHeader title="Tee Sheet">
-        <p className="text-muted-foreground">View the day's tee time bookings</p>
-      </PageHeader>
+  const data = teeSheetQuery.data;
+  const anchorTeeTime = data && data.slots.length > 0 ? data.slots[0]!.teeTime : undefined;
+  const now = new Date().toISOString();
 
-      <div className="mt-6">
-        <div className="space-y-2">
-          <label htmlFor="date-input" className="text-sm font-medium">
-            Date
-          </label>
-          <Input
-            id="date-input"
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="max-w-xs"
+  return (
+    <>
+      <PageTopbar
+        left={
+          <TeeSheetTopbarTitle
+            courseName={data?.courseName ?? course.name}
+            selectedDate={selectedDate}
+            anchorTeeTime={anchorTeeTime}
           />
-        </div>
-      </div>
+        }
+        right={
+          <TeeSheetDateNav
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            courseTimeZoneId={course.timeZoneId}
+          />
+        }
+      />
 
       {teeSheetQuery.isError && (() => {
         const message = teeSheetQuery.error instanceof Error
@@ -60,9 +54,9 @@ export default function TeeSheet() {
           : 'Failed to load tee sheet';
         const isNotConfigured = message.toLowerCase().includes('not configured');
         return isNotConfigured ? (
-          <div className="mt-6 border rounded-lg p-6 text-center max-w-md">
-            <p className="font-medium">Configure your tee times to get started</p>
-            <p className="text-sm text-muted-foreground mt-1">
+          <div className="m-6 max-w-md rounded-md border border-border bg-white p-6 text-center">
+            <p className="font-medium text-ink">Configure your tee times to get started</p>
+            <p className="mt-1 text-sm text-ink-muted">
               Set your tee time interval, first tee time, and last tee time in Settings.
             </p>
             <Button asChild variant="default" size="sm" className="mt-4">
@@ -70,53 +64,11 @@ export default function TeeSheet() {
             </Button>
           </div>
         ) : (
-          <p className="mt-4 text-sm text-destructive">{message}</p>
+          <p className="m-6 text-sm text-destructive">{message}</p>
         );
       })()}
 
-      {teeSheetQuery.data && (
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold font-[family-name:var(--font-heading)]">
-            {teeSheetQuery.data.courseName} - {teeSheetQuery.data.slots.length > 0
-              ? formatWallClockDate(teeSheetQuery.data.slots[0]!.teeTime)
-              : selectedDate}
-          </h2>
-          <div className="mt-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Golfer</TableHead>
-                  <TableHead>Players</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {teeSheetQuery.data.slots.map((slot, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-semibold">
-                      {formatWallClockTime(slot.teeTime)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          slot.status === 'booked' ? 'success' : 'muted'
-                        }
-                      >
-                        {slot.status === 'booked' ? 'Booked' : 'Open'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{slot.golferName || '—'}</TableCell>
-                    <TableCell>
-                      {slot.status === 'booked' ? slot.playerCount : '—'}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      )}
-    </div>
+      {data && <TeeSheetGrid slots={data.slots} now={now} />}
+    </>
   );
 }
