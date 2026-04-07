@@ -27,7 +27,8 @@ services:
       ASPNETCORE_ENVIRONMENT: "Development"
       ConnectionStrings__DefaultConnection: "Server=db;Database=Teeforce;User Id=sa;Password=Dev@Password123!;TrustServerCertificate=True"
       Cors__AllowedOrigins__0: "http://localhost:3000"
-      Auth__UseDevAuth: "true"
+      # Auth__UseDevAuth intentionally not set here — manual dev uses real Entra auth.
+      # E2E tests need DevAuth on; set it via a docker-compose override or export before `make e2e`.
     volumes:
       - ./src/backend:/app
       - api_obj:/app/Teeforce.Api/obj
