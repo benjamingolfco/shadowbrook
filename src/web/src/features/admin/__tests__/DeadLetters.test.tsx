@@ -169,7 +169,7 @@ describe('DeadLetters', () => {
     expect(mutate).toHaveBeenCalledWith(['msg-1'], expect.any(Object));
   });
 
-  it('shows total count in subtitle', () => {
+  it('shows total count suffix on the topbar title', () => {
     mockUseDeadLetters.mockReturnValue({
       data: wrapResponse([sampleEnvelope]),
       isLoading: false,
@@ -177,6 +177,6 @@ describe('DeadLetters', () => {
     } as unknown as ReturnType<typeof useDeadLetters>);
 
     render(<DeadLetters />);
-    expect(screen.getByText('1 failed messages')).toBeInTheDocument();
+    expect(screen.getByText(/·\s*1/)).toBeInTheDocument();
   });
 });
