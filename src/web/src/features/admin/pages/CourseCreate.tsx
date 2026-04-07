@@ -23,6 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageTopbar } from '@/components/layout/PageTopbar';
+import { DetailTitle } from '../components/DetailTitle';
 import { useOrganizations } from '../hooks/useOrganizations';
 
 const courseSchema = z.object({
@@ -75,11 +78,17 @@ export default function CourseCreate() {
   }
 
   return (
-    <div className="p-6 max-w-2xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Register a Course</h1>
-      </div>
+    <>
+      <PageTopbar middle={<DetailTitle backTo="/admin/courses" title="Register a Course" />} />
 
+      <div className="max-w-2xl">
+      <Card className="border-border-strong">
+        <CardHeader>
+          <CardTitle className="text-[11px] uppercase tracking-wider text-ink-muted font-normal">
+            Course Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
@@ -248,7 +257,7 @@ export default function CourseCreate() {
             </div>
           )}
 
-          <div className="flex gap-4">
+          <div className="flex gap-3">
             <Button type="submit" disabled={createCourseMutation.isPending}>
               {createCourseMutation.isPending ? 'Registering...' : 'Register Course'}
             </Button>
@@ -262,6 +271,9 @@ export default function CourseCreate() {
           </div>
         </form>
       </Form>
-    </div>
+        </CardContent>
+      </Card>
+      </div>
+    </>
   );
 }

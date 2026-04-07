@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { NavConfig } from '@/components/layout/AppShell';
 
 export const adminNav: NavConfig = {
@@ -20,3 +21,7 @@ export const adminNav: NavConfig = {
     },
   ],
 };
+
+export const adminBrand: ReactNode = (
+  <span className="text-lg font-semibold font-[family-name:var(--font-heading)] text-sidebar-foreground">Teeforce</span>
+);

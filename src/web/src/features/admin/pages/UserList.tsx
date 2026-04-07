@@ -3,6 +3,7 @@ import { useUsers, useInviteUser } from '../hooks/useUsers';
 import { useOrganizations } from '../hooks/useOrganizations';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { PageTopbar } from '@/components/layout/PageTopbar';
 import {
   Table,
   TableBody,
@@ -26,49 +27,54 @@ export default function UserList() {
   const navigate = useNavigate();
   const inviteUser = useInviteUser();
 
+  const topbar = (
+    <PageTopbar
+      middle={<h1 className="font-[family-name:var(--font-heading)] text-[18px] text-ink">Users</h1>}
+      right={
+        <Button asChild>
+          <Link to="/admin/users/new">Create User</Link>
+        </Button>
+      }
+    />
+  );
+
   if (isLoading) {
     return (
-      <div className="p-6">
-        <p className="text-muted-foreground">Loading users...</p>
-      </div>
+      <>
+        {topbar}
+        <p className="text-ink-muted">Loading users...</p>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6">
+      <>
+        {topbar}
         <p className="text-destructive">
           Error: {error instanceof Error ? error.message : 'Failed to load users'}
         </p>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Users</h1>
-          <p className="text-sm text-muted-foreground">Platform Admin View</p>
-        </div>
-        <Button asChild>
-          <Link to="/admin/users/new">Create User</Link>
-        </Button>
-      </div>
+    <>
+      {topbar}
 
       {!users || users.length === 0 ? (
-        <p className="text-muted-foreground">No users yet.</p>
+        <p className="text-ink-muted text-sm py-12 text-center">No users yet.</p>
       ) : (
-        <div className="border rounded-md">
+        <div className="border border-border-strong rounded-md bg-white overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead className="hidden md:table-cell">Organization</TableHead>
-                <TableHead>Active</TableHead>
-                <TableHead className="hidden md:table-cell">Invite Sent</TableHead>
+              <TableRow className="bg-canvas">
+                <TableHead className="text-[10px] uppercase tracking-wider text-ink-muted">Name</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider text-ink-muted">Email</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider text-ink-muted">Role</TableHead>
+                <TableHead className="hidden md:table-cell text-[10px] uppercase tracking-wider text-ink-muted">Organization</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider text-ink-muted">Active</TableHead>
+                <TableHead className="hidden md:table-cell text-[10px] uppercase tracking-wider text-ink-muted">Invite Sent</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -87,12 +93,12 @@ export default function UserList() {
                   </TableCell>
                   <TableCell>
                     {user.isActive ? (
-                      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>
+                      <Badge>Active</Badge>
                     ) : (
                       <Badge variant="secondary">Inactive</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                  <TableCell className="hidden md:table-cell font-mono text-[12px] text-ink-muted">
                     {user.inviteSentAt
                       ? new Date(user.inviteSentAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
                       : '—'}
@@ -120,6 +126,6 @@ export default function UserList() {
           </Table>
         </div>
       )}
-    </div>
+    </>
   );
 }

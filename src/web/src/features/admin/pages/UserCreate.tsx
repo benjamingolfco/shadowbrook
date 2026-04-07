@@ -28,6 +28,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { PageTopbar } from '@/components/layout/PageTopbar';
+import { DetailTitle } from '../components/DetailTitle';
 
 const userSchema = z
   .object({
@@ -85,17 +87,15 @@ export default function UserCreate() {
   }
 
   return (
-    <div className="p-6 max-w-2xl">
-      <div className="mb-6 flex items-center gap-4">
-        <Button variant="outline" size="sm" asChild>
-          <Link to="/admin/users">Back</Link>
-        </Button>
-        <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Create User</h1>
-      </div>
+    <>
+      <PageTopbar middle={<DetailTitle backTo="/admin/users" title="Create User" />} />
 
-      <Card>
+      <div className="max-w-2xl">
+      <Card className="border-border-strong">
         <CardHeader>
-          <CardTitle>User Details</CardTitle>
+          <CardTitle className="text-[11px] uppercase tracking-wider text-ink-muted font-normal">
+            User Details
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -203,7 +203,7 @@ export default function UserCreate() {
                 </p>
               )}
 
-              <div className="flex gap-4">
+              <div className="flex gap-3">
                 <Button type="submit" disabled={createUser.isPending}>
                   {createUser.isPending ? 'Creating...' : 'Create User'}
                 </Button>
@@ -215,6 +215,7 @@ export default function UserCreate() {
           </Form>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 }

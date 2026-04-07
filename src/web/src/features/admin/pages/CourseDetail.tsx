@@ -22,6 +22,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { PageTopbar } from '@/components/layout/PageTopbar';
+import { DetailTitle } from '../components/DetailTitle';
 import type { Course } from '@/types/course';
 
 const schema = z.object({
@@ -59,61 +61,59 @@ export default function CourseDetail() {
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <p className="text-muted-foreground">Loading course...</p>
-      </div>
+      <>
+        <PageTopbar middle={<DetailTitle backTo="/admin/courses" />} />
+        <p className="text-ink-muted">Loading course...</p>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6">
+      <>
+        <PageTopbar middle={<DetailTitle backTo="/admin/courses" />} />
         <p className="text-destructive">
           Error: {error instanceof Error ? error.message : 'Failed to load courses'}
         </p>
-      </div>
+      </>
     );
   }
 
   if (!course) {
     return (
-      <div className="p-6 space-y-4">
-        <Button variant="ghost" asChild>
-          <Link to="/admin/courses">&larr; Back to Courses</Link>
+      <>
+        <PageTopbar middle={<DetailTitle backTo="/admin/courses" title="Not found" />} />
+        <p className="text-ink-muted">Course not found.</p>
+        <Button variant="outline" asChild className="mt-4">
+          <Link to="/admin/courses">Back to Courses</Link>
         </Button>
-        <p className="text-muted-foreground">Course not found.</p>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" asChild>
-          <Link to="/admin/courses">&larr; Back to Courses</Link>
-        </Button>
-        <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">
-          {course.name}
-        </h1>
-      </div>
+    <>
+      <PageTopbar middle={<DetailTitle backTo="/admin/courses" title={course.name} />} />
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+      <div className="grid gap-6 md:grid-cols-2 max-w-4xl">
+        <Card className="border-border-strong">
           <CardHeader>
-            <CardTitle>Course Information</CardTitle>
+            <CardTitle className="text-[11px] uppercase tracking-wider text-ink-muted font-normal">
+              Course Information
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Organization</p>
+              <p className="text-sm font-medium text-ink-muted">Organization</p>
               <p className="text-sm">{course.tenantName ?? '—'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Timezone</p>
+              <p className="text-sm font-medium text-ink-muted">Timezone</p>
               <p className="text-sm">{course.timeZoneId}</p>
             </div>
             {(course.streetAddress ?? course.city ?? course.state ?? course.zipCode) && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Address</p>
+                <p className="text-sm font-medium text-ink-muted">Address</p>
                 {course.streetAddress && (
                   <p className="text-sm">{course.streetAddress}</p>
                 )}
@@ -128,7 +128,7 @@ export default function CourseDetail() {
             )}
             {(course.contactEmail ?? course.contactPhone) && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Contact</p>
+                <p className="text-sm font-medium text-ink-muted">Contact</p>
                 {course.contactEmail && (
                   <p className="text-sm">{course.contactEmail}</p>
                 )}
@@ -138,15 +138,17 @@ export default function CourseDetail() {
               </div>
             )}
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Registered</p>
+              <p className="text-sm font-medium text-ink-muted">Registered</p>
               <p className="text-sm">{new Date(course.createdAt).toLocaleDateString()}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-border-strong">
           <CardHeader>
-            <CardTitle>Edit Course</CardTitle>
+            <CardTitle className="text-[11px] uppercase tracking-wider text-ink-muted font-normal">
+              Edit Course
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -178,7 +180,7 @@ export default function CourseDetail() {
                   )}
                 />
                 {mutation.isSuccess && (
-                  <p className="text-sm text-green-600">Changes saved.</p>
+                  <p className="text-sm text-green">Changes saved.</p>
                 )}
                 {mutation.isError && (
                   <p className="text-sm text-destructive">
@@ -195,6 +197,6 @@ export default function CourseDetail() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </>
   );
 }
