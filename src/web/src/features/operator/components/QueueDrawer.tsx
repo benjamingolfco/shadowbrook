@@ -18,7 +18,7 @@ interface QueueDrawerProps {
   onRemove: (entry: WalkUpWaitlistEntry) => void;
   removingEntryId: string | null;
   /** The trigger element (DrawerTrigger asChild ...). Provided by WalkUpWaitlistTopbar. */
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 export function QueueDrawer({
