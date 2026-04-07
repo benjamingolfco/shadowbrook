@@ -13,6 +13,7 @@ using Teeforce.Api.Infrastructure.Auth;
 using Teeforce.Api.Infrastructure.Configuration;
 using Teeforce.Api.Infrastructure.Data;
 using Teeforce.Api.Infrastructure.Email;
+using Teeforce.Api.Infrastructure.GraphApi;
 using Teeforce.Api.Infrastructure.Middleware;
 using Teeforce.Api.Infrastructure.Notifications;
 using Teeforce.Api.Infrastructure.Observability;

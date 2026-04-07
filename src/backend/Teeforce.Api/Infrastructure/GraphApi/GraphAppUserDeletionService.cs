@@ -1,7 +1,7 @@
 using Microsoft.Graph;
 using Teeforce.Domain.Services;
 
-namespace Teeforce.Api.Infrastructure;
+namespace Teeforce.Api.Infrastructure.GraphApi;
 
 public class GraphAppUserDeletionService(
     GraphServiceClient graphClient,
