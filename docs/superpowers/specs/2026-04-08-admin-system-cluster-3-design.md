@@ -363,10 +363,12 @@ function ExpandedRow({ envelope }: ExpandedRowProps) {
 
 ### Loading and error states
 
-The early-return loading and error states are kept structurally but tokenized:
+The early-return pattern is flattened: a single `return` renders `<PageTopbar>` (middle only, no `right` cluster because there's no data to select) followed by a branched body. This keeps the topbar rendering on every state and avoids maintaining three early-return wrappers.
 
-- **Loading:** `<p className="text-ink-muted">Loading dead letter messages...</p>` inside a topbar-contributing wrapper. To keep behavior simple, the early returns can stay as page-level `<div className="py-12 text-center"><p ...>…</p></div>` with no outer `p-6`. The topbar still renders via the portal because `<PageTopbar>` is a sibling at the top of the JSX tree in each branch — or, more simply, the loading/error states render after the `<PageTopbar>` tag at the top of the component's return.
-- **Error:** same pattern, `text-destructive` token unchanged.
+- **Loading:** `<p className="text-ink-muted text-sm py-12 text-center">Loading dead letter messages...</p>`
+- **Error:** `<p className="text-destructive text-sm py-12 text-center">Error: {error instanceof Error ? error.message : 'Failed to load dead letter messages'}</p>`
+
+Both copy strings are preserved verbatim from today. The outer `p-6` wrappers on the early-return branches are deleted.
 
 ### What gets removed from `DeadLetters.tsx`
 
