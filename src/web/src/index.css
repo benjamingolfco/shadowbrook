@@ -47,101 +47,141 @@
     --color-sidebar-ring: var(--sidebar-ring);
     --font-heading: var(--font-heading);
     --font-body: var(--font-body);
+    --font-mono: var(--font-mono);
+    --color-canvas: var(--canvas);
+    --color-paper: var(--paper);
+    --color-ink: var(--ink);
+    --color-ink-secondary: var(--ink-secondary);
+    --color-ink-muted: var(--ink-muted);
+    --color-ink-faint: var(--ink-faint);
+    --color-border-strong: var(--border-strong);
+    --color-green: var(--green);
+    --color-green-mid: var(--green-mid);
+    --color-green-light: var(--green-light);
+    --color-green-faint: var(--green-faint);
+    --color-orange: var(--orange);
+    --color-orange-mid: var(--orange-mid);
+    --color-orange-light: var(--orange-light);
+    --color-orange-faint: var(--orange-faint);
+    --color-red: var(--red);
+    --color-red-light: var(--red-light);
+    --color-blue: var(--blue);
+    --color-blue-light: var(--blue-light);
 }
 
 :root {
-    --radius: 0.75rem;
+    --radius: 5px;
 
     /* Fonts */
-    --font-heading: 'Fraunces', Georgia, serif;
-    --font-body: 'Albert Sans', system-ui, sans-serif;
+    --font-heading: 'Libre Baskerville', Georgia, serif;
+    --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
-    /* Warm professional palette */
-    --background: oklch(0.98 0.005 85);
-    --foreground: oklch(0.22 0.01 60);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.22 0.01 60);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.22 0.01 60);
+    /* Fieldstone palette */
+    --canvas: #f4f2ee;
+    --paper: #faf9f7;
+    --white: #ffffff;
+    --ink: #1c1a18;
+    --ink-secondary: #4a4742;
+    --ink-muted: #8c8880;
+    --ink-faint: #c8c4bc;
+    --border-soft: #e0dcd4;
+    --border-strong: #c8c4bc;
 
-    /* Deep forest green */
-    --primary: oklch(0.35 0.06 155);
-    --primary-foreground: oklch(0.98 0.005 85);
+    --green: #2e6b42;
+    --green-mid: #3d8a57;
+    --green-light: #d4ead9;
+    --green-faint: #edf6f0;
 
-    /* Warm stone */
-    --secondary: oklch(0.95 0.008 80);
-    --secondary-foreground: oklch(0.30 0.01 60);
-    --muted: oklch(0.94 0.008 80);
-    --muted-foreground: oklch(0.55 0.01 60);
+    --orange: #c45e1a;
+    --orange-mid: #e07035;
+    --orange-light: #f5dece;
+    --orange-faint: #fdf3ec;
 
-    /* Warm amber accent */
-    --accent: oklch(0.75 0.12 75);
-    --accent-foreground: oklch(0.25 0.02 60);
+    --red: #c0392b;
+    --red-light: #fce8e8;
 
-    /* Warm terracotta destructive */
-    --destructive: oklch(0.55 0.2 25);
+    --blue: #2563a8;
+    --blue-light: #ddeaf8;
 
-    /* Natural sage green for success */
-    --success: oklch(0.65 0.1 150);
-    --success-foreground: oklch(0.98 0.005 85);
+    /* shadcn semantic mapping → Fieldstone */
+    --background: var(--paper);
+    --foreground: var(--ink);
+    --card: var(--white);
+    --card-foreground: var(--ink);
+    --popover: var(--white);
+    --popover-foreground: var(--ink);
 
-    /* Warm borders */
-    --border: oklch(0.90 0.008 80);
-    --input: oklch(0.90 0.008 80);
-    --ring: oklch(0.45 0.06 155);
+    --primary: var(--green-faint);
+    --primary-foreground: var(--green);
 
-    /* Charts */
-    --chart-1: oklch(0.35 0.06 155);
-    --chart-2: oklch(0.75 0.12 75);
-    --chart-3: oklch(0.65 0.1 150);
-    --chart-4: oklch(0.55 0.2 25);
-    --chart-5: oklch(0.55 0.01 60);
+    --secondary: var(--canvas);
+    --secondary-foreground: var(--ink-secondary);
 
-    /* Sidebar */
-    --sidebar: oklch(0.97 0.006 80);
-    --sidebar-foreground: oklch(0.22 0.01 60);
-    --sidebar-primary: oklch(0.35 0.06 155);
-    --sidebar-primary-foreground: oklch(0.98 0.005 85);
-    --sidebar-accent: oklch(0.94 0.008 80);
-    --sidebar-accent-foreground: oklch(0.22 0.01 60);
-    --sidebar-border: oklch(0.90 0.008 80);
-    --sidebar-ring: oklch(0.45 0.06 155);
+    --muted: var(--canvas);
+    --muted-foreground: var(--ink-muted);
+
+    --accent: var(--canvas);
+    --accent-foreground: var(--ink);
+
+    --destructive: var(--red);
+
+    --success: var(--green-mid);
+    --success-foreground: var(--white);
+
+    --border: var(--border-soft);
+    --input: var(--border-soft);
+    --ring: var(--green-mid);
+
+    --chart-1: var(--green);
+    --chart-2: var(--orange);
+    --chart-3: var(--green-mid);
+    --chart-4: var(--red);
+    --chart-5: var(--ink-muted);
+
+    /* Sidebar — DARK ink for Fieldstone */
+    --sidebar: var(--ink);
+    --sidebar-foreground: rgba(255, 255, 255, 0.7);
+    --sidebar-primary: var(--green-mid);
+    --sidebar-primary-foreground: var(--paper);
+    --sidebar-accent: rgba(255, 255, 255, 0.08);
+    --sidebar-accent-foreground: var(--paper);
+    --sidebar-border: rgba(255, 255, 255, 0.08);
+    --sidebar-ring: var(--green-mid);
 }
 
 .dark {
-    --background: oklch(0.16 0.01 60);
-    --foreground: oklch(0.95 0.005 85);
-    --card: oklch(0.20 0.01 60);
-    --card-foreground: oklch(0.95 0.005 85);
-    --popover: oklch(0.20 0.01 60);
-    --popover-foreground: oklch(0.95 0.005 85);
-    --primary: oklch(0.65 0.1 150);
-    --primary-foreground: oklch(0.16 0.01 60);
-    --secondary: oklch(0.25 0.01 60);
-    --secondary-foreground: oklch(0.95 0.005 85);
-    --muted: oklch(0.25 0.01 60);
-    --muted-foreground: oklch(0.65 0.005 60);
-    --accent: oklch(0.75 0.12 75);
-    --accent-foreground: oklch(0.16 0.01 60);
-    --destructive: oklch(0.65 0.2 25);
-    --success: oklch(0.65 0.1 150);
-    --success-foreground: oklch(0.98 0.005 85);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.55 0.06 155);
-    --chart-1: oklch(0.65 0.1 150);
-    --chart-2: oklch(0.75 0.12 75);
-    --chart-3: oklch(0.65 0.1 150);
-    --chart-4: oklch(0.65 0.2 25);
-    --chart-5: oklch(0.55 0.01 60);
-    --sidebar: oklch(0.20 0.01 60);
-    --sidebar-foreground: oklch(0.95 0.005 85);
-    --sidebar-primary: oklch(0.65 0.1 150);
-    --sidebar-primary-foreground: oklch(0.95 0.005 85);
-    --sidebar-accent: oklch(0.25 0.01 60);
-    --sidebar-accent-foreground: oklch(0.95 0.005 85);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.55 0.06 155);
+    /* Fieldstone has a single light theme. Dark mode is not supported in this redesign. */
+    /* Keeping the .dark selector intact so existing class toggles don't break, */
+    /* but values match :root so the app renders consistently. */
+    --background: var(--paper);
+    --foreground: var(--ink);
+    --card: var(--white);
+    --card-foreground: var(--ink);
+    --popover: var(--white);
+    --popover-foreground: var(--ink);
+    --primary: var(--green-faint);
+    --primary-foreground: var(--green);
+    --secondary: var(--canvas);
+    --secondary-foreground: var(--ink-secondary);
+    --muted: var(--canvas);
+    --muted-foreground: var(--ink-muted);
+    --accent: var(--canvas);
+    --accent-foreground: var(--ink);
+    --destructive: var(--red);
+    --success: var(--green-mid);
+    --success-foreground: var(--white);
+    --border: var(--border-soft);
+    --input: var(--border-soft);
+    --ring: var(--green-mid);
+    --sidebar: var(--ink);
+    --sidebar-foreground: rgba(255, 255, 255, 0.7);
+    --sidebar-primary: var(--green-mid);
+    --sidebar-primary-foreground: var(--paper);
+    --sidebar-accent: rgba(255, 255, 255, 0.08);
+    --sidebar-accent-foreground: var(--paper);
+    --sidebar-border: rgba(255, 255, 255, 0.08);
+    --sidebar-ring: var(--green-mid);
 }
 
 @layer base {
