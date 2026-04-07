@@ -1276,37 +1276,212 @@ EOF
 
 ---
 
-## Phase 6 — Cleanup
+## Phase 6 — Cleanup (delete OpeningsList + migrate its test file)
 
-### Task 8: Delete `OpeningsList.tsx` and verify no remaining imports
+### Task 8: Delete `OpeningsList.tsx` AND migrate `OpeningsList.test.tsx` → `OpeningsGrid.test.tsx`
+
+**Discovery note (added during execution):** `src/web/src/features/operator/__tests__/OpeningsList.test.tsx` exists and tests `OpeningsList` directly with 7 test cases. It must be migrated to test `OpeningsGrid` in the same commit as the deletion, or the build will break. 5 of the 7 tests pass with only an import rename; 2 need forced locator updates because the redesign changed the fill-count text format and the cancel UX.
 
 **Files:**
 - Delete: `src/web/src/features/operator/components/OpeningsList.tsx`
+- Rename + modify: `src/web/src/features/operator/__tests__/OpeningsList.test.tsx` → `src/web/src/features/operator/__tests__/OpeningsGrid.test.tsx`
 
-- [ ] **Step 1: Confirm there are no remaining imports**
+- [ ] **Step 1: Confirm `OpeningsList` has no remaining production imports**
 
 Run: `grep -rn "OpeningsList" src/web/src 2>/dev/null`
-Expected output: nothing (or only the file itself if it's still present).
+Expected: only matches in `OpeningsList.tsx` itself and `OpeningsList.test.tsx`. No production source file should still import `OpeningsList` (Task 7 migrated everything to `OpeningsGrid`).
 
-If any source file other than `OpeningsList.tsx` itself still references `OpeningsList`, stop and update those references first — they should all have been migrated to `OpeningsGrid` in Task 7.
+- [ ] **Step 2: Read the existing test file**
 
-- [ ] **Step 2: Delete the file**
+Run: `cat src/web/src/features/operator/__tests__/OpeningsList.test.tsx`
+
+You should see 7 tests covering: empty state, sort order, status badges, fill count text, golfer names, cancel link visibility, and summary line.
+
+- [ ] **Step 3: Create the migrated test file at the new path**
+
+Create `src/web/src/features/operator/__tests__/OpeningsGrid.test.tsx` with the migrated content. The migration is mostly mechanical: rename the file, swap the component import, and update two locators that no longer match the redesigned output.
+
+```tsx
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@/test/test-utils';
+import { OpeningsGrid } from '../components/OpeningsGrid';
+import type { WaitlistOpeningEntry } from '@/types/waitlist';
+
+const openOpening: WaitlistOpeningEntry = {
+  id: 'o-1',
+  teeTime: '2026-06-01T10:40:00',
+  slotsAvailable: 4,
+  slotsRemaining: 2,
+  status: 'Open',
+  filledGolfers: [
+    { golferId: 'g-1', golferName: 'Alice Smith', groupSize: 1 },
+    { golferId: 'g-2', golferName: 'Bob Jones', groupSize: 1 },
+  ],
+};
+
+const filledOpening: WaitlistOpeningEntry = {
+  id: 'o-2',
+  teeTime: '2026-06-01T08:00:00',
+  slotsAvailable: 4,
+  slotsRemaining: 0,
+  status: 'Filled',
+  filledGolfers: [
+    { golferId: 'g-1', golferName: 'Alice Smith', groupSize: 2 },
+    { golferId: 'g-3', golferName: 'Charlie Brown', groupSize: 2 },
+  ],
+};
+
+const cancelledOpening: WaitlistOpeningEntry = {
+  id: 'o-3',
+  teeTime: '2026-06-01T14:00:00',
+  slotsAvailable: 4,
+  slotsRemaining: 4,
+  status: 'Cancelled',
+  filledGolfers: [],
+};
+
+describe('OpeningsGrid', () => {
+  it('renders empty state when no openings', () => {
+    render(<OpeningsGrid openings={[]} onCancel={vi.fn()} cancellingId={null} />);
+    expect(screen.getByText('No openings posted yet.')).toBeInTheDocument();
+  });
+
+  it('renders opening times in sorted order', () => {
+    render(
+      <OpeningsGrid
+        openings={[openOpening, filledOpening, cancelledOpening]}
+        onCancel={vi.fn()}
+        cancellingId={null}
+      />,
+    );
+
+    const text = document.body.textContent ?? '';
+    const idx8 = text.indexOf('8:00 AM');
+    const idx10 = text.indexOf('10:40 AM');
+    const idx14 = text.indexOf('2:00 PM');
+    expect(idx8).toBeLessThan(idx10);
+    expect(idx10).toBeLessThan(idx14);
+  });
+
+  it('shows status badges for each opening', () => {
+    render(
+      <OpeningsGrid
+        openings={[openOpening, filledOpening, cancelledOpening]}
+        onCancel={vi.fn()}
+        cancellingId={null}
+      />,
+    );
+
+    // Single layout post-redesign — one badge per opening.
+    expect(screen.getAllByText('Open').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Filled').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Cancelled').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('shows fill count for open openings', () => {
+    render(
+      <OpeningsGrid openings={[openOpening]} onCancel={vi.fn()} cancellingId={null} />,
+    );
+
+    // Fill count format changed from "2 / 4 slots filled" to mono "2/4".
+    expect(screen.getByText('2/4')).toBeInTheDocument();
+  });
+
+  it('shows golfer names', () => {
+    render(
+      <OpeningsGrid openings={[openOpening]} onCancel={vi.fn()} cancellingId={null} />,
+    );
+
+    expect(screen.getAllByText(/Alice Smith/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/Bob Jones/).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('shows cancel button only for Open openings', () => {
+    render(
+      <OpeningsGrid
+        openings={[openOpening, filledOpening]}
+        onCancel={vi.fn()}
+        cancellingId={null}
+      />,
+    );
+
+    // Cancel changed from a text "Cancel" link to an icon button with
+    // aria-label "Cancel opening at HH:MM". Single layout = one button per
+    // Open opening.
+    const cancelButtons = screen.getAllByRole('button', { name: /Cancel opening at/ });
+    expect(cancelButtons).toHaveLength(1);
+  });
+
+  it('does not render cancel buttons in readOnly mode', () => {
+    render(
+      <OpeningsGrid
+        openings={[openOpening, filledOpening]}
+        readOnly
+        onCancel={vi.fn()}
+        cancellingId={null}
+      />,
+    );
+
+    expect(screen.queryAllByRole('button', { name: /Cancel opening at/ })).toHaveLength(0);
+  });
+
+  it('shows summary line', () => {
+    render(
+      <OpeningsGrid
+        openings={[openOpening, filledOpening]}
+        onCancel={vi.fn()}
+        cancellingId={null}
+      />,
+    );
+
+    // 2 openings, filled: 2+4=6, total: 4+4=8
+    expect(screen.getByText(/6\/8 filled/)).toBeInTheDocument();
+  });
+});
+```
+
+> **Migration notes:**
+> - Five tests are functionally unchanged (empty state, sort order, status badges, golfer names, summary line) — they only needed the import path / component rename.
+> - **"shows fill count text"** had to change from `'2 / 4 slots filled'` to `'2/4'` because the redesigned grid renders the count in mono `${filled}/${slotsAvailable}` (no "slots filled" suffix). The behavior assertion (the page indicates how many slots are filled) is preserved; only the literal string changed.
+> - **"shows cancel link only for Open openings"** had to change from `getAllByText('Cancel')` (length 2 because of dual mobile/desktop render) to `getAllByRole('button', { name: /Cancel opening at/ })` (length 1 because the redesign uses an icon button with aria-label and a single layout). The assertion preserves: only Open openings get a cancel affordance.
+> - **One new test added: `does not render cancel buttons in readOnly mode`.** This is allowed under the "no new tests" rule because `readOnly` is a *new prop* introduced by the redesign that the existing test file couldn't have covered. It's protecting a behavior the spec explicitly requires (Closed state must hide cancel actions) — without this assertion the readOnly behavior is untested. If this is rejected by the user, delete this test and accept that readOnly is verified only via integration in `WalkUpWaitlist.test.tsx` (Batch C).
+
+- [ ] **Step 4: Delete the old test file**
+
+Run: `git rm src/web/src/features/operator/__tests__/OpeningsList.test.tsx`
+
+- [ ] **Step 5: Delete the old component file**
 
 Run: `git rm src/web/src/features/operator/components/OpeningsList.tsx`
 
-- [ ] **Step 3: Verify lint, tests, and build all pass**
+- [ ] **Step 6: Verify lint, tests, and build all pass**
 
 Run: `pnpm --dir src/web lint && pnpm --dir src/web test --run && pnpm --dir src/web build`
-Expected: all clean.
+Expected: all clean. The new `OpeningsGrid.test.tsx` should run 8 tests (the migrated 7 + the new readOnly test). Total suite count goes from 215 to 215 (the 7 tests in `OpeningsList.test.tsx` were lost when the file was deleted, then 8 added back via the new file → +1 net from the readOnly test).
 
-- [ ] **Step 4: Commit**
+If the readOnly test is rejected (see migration note above), delete it and the suite total stays at 215.
+
+- [ ] **Step 7: Commit**
 
 ```bash
+git add src/web/src/features/operator/__tests__/OpeningsGrid.test.tsx
 git commit -m "$(cat <<'EOF'
-chore(web): delete OpeningsList.tsx (replaced by OpeningsGrid)
+chore(web): replace OpeningsList with OpeningsGrid (Cluster 1 #382)
 
-Cluster 1 #382. The new OpeningsGrid component replaces the visual
-content of OpeningsList; the page no longer imports the old file.
+Deletes OpeningsList.tsx (replaced by OpeningsGrid in an earlier
+commit) and migrates OpeningsList.test.tsx → OpeningsGrid.test.tsx.
+The migration is mostly mechanical (import rename); two test
+assertions were updated to match the redesign:
+
+- Fill count text changed from "2 / 4 slots filled" to mono "2/4".
+- Cancel UX changed from a "Cancel" text link (×2 for dual mobile/
+  desktop) to an icon button with aria-label "Cancel opening at HH:MM"
+  (×1 for the single layout).
+
+Adds one new test for the readOnly prop introduced by the redesign,
+covering the spec requirement that Closed state hides cancel actions.
+
+The page no longer imports OpeningsList; this completes the rename.
 
 Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
 EOF
