@@ -8,6 +8,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { PageRightRail } from '@/components/layout/PageRightRail';
+import {
   useWalkUpWaitlistToday,
   useOpenWalkUpWaitlist,
   useCloseWalkUpWaitlist,
@@ -17,8 +25,8 @@ import { useRemoveGolferFromWaitlist, useCancelTeeTimeOpening } from '../hooks/u
 import { useCourseContext } from '../context/CourseContext';
 import { PostTeeTimeForm } from '../components/PostTeeTimeForm';
 import { OpeningsGrid } from '../components/OpeningsGrid';
-import { QueueDrawer } from '../components/QueueDrawer';
-import { WalkUpWaitlistTopbar } from '../components/WalkUpWaitlistTopbar';
+import { QueuePanel } from '../components/QueuePanel';
+import { WalkUpWaitlistPageHeader } from '../components/WalkUpWaitlistPageHeader';
 import { AddGolferDialog } from '../components/AddGolferDialog';
 import { CloseWaitlistDialog } from '../components/CloseWaitlistDialog';
 import { ReopenWaitlistDialog } from '../components/ReopenWaitlistDialog';
@@ -29,6 +37,7 @@ import type { WalkUpWaitlistEntry, WaitlistOpeningEntry } from '@/types/waitlist
 
 export default function WalkUpWaitlist() {
   const { course } = useCourseContext();
+  const isWide = useMediaQuery('(min-width: 1200px)');
   const [addGolferDialogOpen, setAddGolferDialogOpen] = useState(false);
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
   const [reopenDialogOpen, setReopenDialogOpen] = useState(false);
@@ -37,6 +46,7 @@ export default function WalkUpWaitlist() {
   const [removalTarget, setRemovalTarget] = useState<WalkUpWaitlistEntry | null>(null);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancellationTarget, setCancellationTarget] = useState<WaitlistOpeningEntry | null>(null);
+  const [queueSheetOpen, setQueueSheetOpen] = useState(false);
 
   const todayQuery = useWalkUpWaitlistToday(course?.id);
   const openMutation = useOpenWalkUpWaitlist();
@@ -182,46 +192,51 @@ export default function WalkUpWaitlist() {
   }
 
   // ── States B/C/D/E: Active or Closed ──
-  // Both states share the same body shell with the topbar + queue drawer + openings grid.
-  // Differences: Closed state hides PostTeeTimeForm, shows a banner, renders the grid read-only,
-  // and the topbar shows different status + overflow menu items.
+  // The queue lives in the right rail at ≥1200px and in a Sheet below. The page
+  // header only shows the waiting count at narrow widths, where it doubles as the
+  // Sheet trigger.
   const isClosed = waitlist.status === 'Closed';
+  const isWaitlistOpen = !isClosed;
+  const removingEntryId = removeMutation.isPending ? removalTarget?.id ?? null : null;
+
+  const queuePanel = (
+    <QueuePanel
+      entries={entries}
+      timeZoneId={course.timeZoneId}
+      isWaitlistOpen={isWaitlistOpen}
+      onAddGolfer={() => setAddGolferDialogOpen(true)}
+      onRemove={handleRemoveClick}
+      removingEntryId={removingEntryId}
+    />
+  );
 
   return (
     <>
-      <QueueDrawer
-        entries={entries}
-        timeZoneId={course.timeZoneId}
-        isOpen={!isClosed}
-        onRemove={handleRemoveClick}
-        removingEntryId={removeMutation.isPending ? removalTarget?.id ?? null : null}
-      >
-        <WalkUpWaitlistTopbar
-          status={isClosed ? 'Closed' : 'Open'}
-          shortCode={waitlist.shortCode}
-          queueCount={entries.length}
-          onAddGolfer={() => setAddGolferDialogOpen(true)}
-          onPrintSign={() => setPrintDialogOpen(true)}
-          onClose={() => setCloseDialogOpen(true)}
-          onReopen={() => setReopenDialogOpen(true)}
-        />
-      </QueueDrawer>
-
       <div className="p-6">
         <div className="mx-auto max-w-[860px] space-y-6">
+          <WalkUpWaitlistPageHeader
+            status={isClosed ? 'Closed' : 'Open'}
+            shortCode={waitlist.shortCode}
+            queueCount={entries.length}
+            hideQueueCount={isWide}
+            onPrintSign={() => setPrintDialogOpen(true)}
+            onClose={() => setCloseDialogOpen(true)}
+            onReopen={() => setReopenDialogOpen(true)}
+            onOpenQueue={() => setQueueSheetOpen(true)}
+          />
+
           {isClosed && (
             <div className="border-y border-border-strong bg-canvas px-4 py-2 text-sm text-ink-secondary">
               Waitlist closed. {entries.length} golfer{entries.length !== 1 ? 's' : ''} were on the queue.
             </div>
           )}
 
-          {!isClosed && <PostTeeTimeForm courseId={courseId} />}
-
           <OpeningsGrid
             openings={openings}
             readOnly={isClosed}
             onCancel={handleCancelClick}
             cancellingId={cancelMutation.isPending ? cancellationTarget?.id ?? null : null}
+            headerAction={!isClosed && <PostTeeTimeForm courseId={courseId} />}
           />
 
           {closeMutation.isError && (
@@ -242,6 +257,25 @@ export default function WalkUpWaitlist() {
           )}
         </div>
       </div>
+
+      {/* Wide: queue lives in the app shell right rail */}
+      {isWide && <PageRightRail>{queuePanel}</PageRightRail>}
+
+      {/* Narrow: queue lives in a side sheet triggered from the page header */}
+      {!isWide && (
+        <Sheet open={queueSheetOpen} onOpenChange={setQueueSheetOpen}>
+          <SheetContent
+            side="right"
+            showCloseButton={false}
+            className="w-[320px] gap-0 p-0 sm:max-w-none"
+          >
+            <SheetHeader className="sr-only">
+              <SheetTitle>Waiting queue</SheetTitle>
+            </SheetHeader>
+            {queuePanel}
+          </SheetContent>
+        </Sheet>
+      )}
 
       {/* Dialogs */}
       <AddGolferDialog

@@ -5,10 +5,8 @@ import { z } from 'zod/v4';
 import { getNextTeeTimeInterval, buildTeeTimeDateTime, getCourseNow } from '@/lib/course-time';
 import { useCourseContext } from '../context/CourseContext';
 import { useCreateTeeTimeOpening } from '../hooks/useWaitlist';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { ApiError } from '@/lib/api-client';
 import type { DuplicateOpeningError } from '@/types/waitlist';
 
@@ -84,86 +82,77 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
   }
 
   return (
-    <Card className="shadow-sm border-border-strong bg-white">
-      <CardContent className="pt-5 pb-5">
-        <p className="text-[11px] font-medium uppercase tracking-wider text-ink-muted mb-4">Post Tee Time</p>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-wrap items-end gap-3"
-        >
-          <div className="space-y-1">
-            <Label htmlFor="tee-time-input" className="text-xs text-ink-muted">
-              Time
-            </Label>
-            <Input
-              id="tee-time-input"
-              type="time"
-              className="w-[140px] font-mono"
-              autoFocus
-              {...teeTimeRegister}
-              ref={setTimeInputRef}
-            />
-            {form.formState.errors.teeTime && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.teeTime.message}
-              </p>
-            )}
-          </div>
+    <div>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex flex-wrap items-center gap-3"
+      >
+        <Input
+          id="tee-time-input"
+          type="time"
+          aria-label="Tee time"
+          className="w-[130px] font-mono"
+          autoFocus
+          {...teeTimeRegister}
+          ref={setTimeInputRef}
+        />
 
-          <div className="space-y-1 shrink-0">
-            <Label className="text-xs text-ink-muted">Slots</Label>
-            <div className="flex" role="radiogroup" aria-label="Slots">
-              {[1, 2, 3, 4].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  role="radio"
-                  aria-checked={selectedSlots === n}
-                  aria-label={String(n)}
-                  className={[
-                    'h-9 w-10 text-sm font-medium border transition-colors duration-100',
-                    n === 1 ? 'rounded-l-lg' : '',
-                    n === 4 ? 'rounded-r-lg' : '',
-                    n > 1 ? '-ml-px' : '',
-                    selectedSlots === n
-                      ? 'bg-primary text-primary-foreground border-primary z-10 relative'
-                      : 'bg-background text-foreground border-input hover:bg-muted',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  onClick={() => {
-                    setSelectedSlots(n);
-                    form.setValue('slotsAvailable', n);
-                  }}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          </div>
+        <div className="flex" role="radiogroup" aria-label="Slots">
+          {[1, 2, 3, 4].map((n) => (
+            <button
+              key={n}
+              type="button"
+              role="radio"
+              aria-checked={selectedSlots === n}
+              aria-label={String(n)}
+              className={[
+                'h-9 w-10 text-sm font-medium border transition-colors duration-100',
+                n === 1 ? 'rounded-l-md' : '',
+                n === 4 ? 'rounded-r-md' : '',
+                n > 1 ? '-ml-px' : '',
+                selectedSlots === n
+                  ? 'bg-primary text-primary-foreground border-primary z-10 relative'
+                  : 'bg-background text-foreground border-input hover:bg-muted',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              onClick={() => {
+                setSelectedSlots(n);
+                form.setValue('slotsAvailable', n);
+              }}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
 
-          <Button type="submit" disabled={createMutation.isPending} className="basis-full sm:basis-auto w-full sm:w-auto">
-            {showSuccess ? 'Posted!' : createMutation.isPending ? 'Posting...' : 'Post Tee Time'}
-          </Button>
-        </form>
+        <Button type="submit" disabled={createMutation.isPending}>
+          {showSuccess ? 'Posted!' : createMutation.isPending ? 'Posting...' : 'Post tee time'}
+        </Button>
 
-        {createMutation.isError && (() => {
-          const error = createMutation.error;
-          if (error instanceof ApiError && error.status === 409) {
-            const duplicateError = error.data as DuplicateOpeningError;
-            return (
-              <p className="text-sm text-amber-600 mt-3">
-                {duplicateError.error}
-              </p>
-            );
-          }
+        {form.formState.errors.teeTime && (
+          <p className="text-xs text-destructive basis-full">
+            {form.formState.errors.teeTime.message}
+          </p>
+        )}
+      </form>
+
+      {createMutation.isError && (() => {
+        const error = createMutation.error;
+        if (error instanceof ApiError && error.status === 409) {
+          const duplicateError = error.data as DuplicateOpeningError;
           return (
-            <p className="text-sm text-destructive mt-3">
-              Couldn&apos;t post opening. Try again.
+            <p className="text-sm text-amber-600 mt-2">
+              {duplicateError.error}
             </p>
           );
-        })()}
-      </CardContent>
-    </Card>
+        }
+        return (
+          <p className="text-sm text-destructive mt-2">
+            Couldn&apos;t post opening. Try again.
+          </p>
+        );
+      })()}
+    </div>
   );
 }

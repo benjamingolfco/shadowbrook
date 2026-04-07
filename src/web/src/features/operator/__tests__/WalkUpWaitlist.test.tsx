@@ -19,6 +19,16 @@ import {
 vi.mock('../context/CourseContext');
 vi.mock('../hooks/useWalkUpWaitlist');
 vi.mock('../hooks/useWaitlist');
+// Pin the viewport to "wide" so the queue renders inline via the right rail.
+// Narrow-viewport sheet behavior is exercised by the header's onOpenQueue test.
+vi.mock('@/hooks/use-media-query', () => ({
+  useMediaQuery: () => true,
+}));
+vi.mock('@/components/layout/PageRightRail', () => ({
+  PageRightRail: ({ children }: { children: ReactNode }) => (
+    <div data-testid="page-right-rail">{children}</div>
+  ),
+}));
 vi.mock('../components/PostTeeTimeForm', () => ({
   PostTeeTimeForm: ({ courseId }: { courseId: string }) => (
     <div data-testid="post-tee-time-form" data-course-id={courseId}>
@@ -27,48 +37,76 @@ vi.mock('../components/PostTeeTimeForm', () => ({
   ),
 }));
 vi.mock('../components/OpeningsGrid', () => ({
-  OpeningsGrid: ({ openings }: { openings: unknown[] }) => (
-    <div data-testid="openings-list" data-count={openings.length} />
-  ),
-}));
-vi.mock('../components/QueueDrawer', () => ({
-  QueueDrawer: ({ children }: { entries: unknown[]; children?: ReactNode }) => (
-    <div data-testid="queue-drawer">
-      {children}
+  OpeningsGrid: ({
+    openings,
+    headerAction,
+  }: {
+    openings: unknown[];
+    headerAction?: ReactNode;
+  }) => (
+    <div data-testid="openings-list" data-count={openings.length}>
+      {headerAction}
     </div>
   ),
 }));
-vi.mock('../components/WalkUpWaitlistTopbar', () => ({
-  WalkUpWaitlistTopbar: ({
+vi.mock('../components/QueuePanel', () => ({
+  QueuePanel: ({
+    entries,
+    isWaitlistOpen,
+    onAddGolfer,
+  }: {
+    entries: { id: string; golferName: string }[];
+    isWaitlistOpen: boolean;
+    onAddGolfer: () => void;
+  }) => (
+    <div data-testid="queue-panel" data-count={entries.length}>
+      {isWaitlistOpen && (
+        <button type="button" onClick={onAddGolfer}>Add golfer</button>
+      )}
+      <ul>
+        {entries.map((entry) => (
+          <li key={entry.id}>{entry.golferName}</li>
+        ))}
+      </ul>
+    </div>
+  ),
+}));
+vi.mock('../components/WalkUpWaitlistPageHeader', () => ({
+  WalkUpWaitlistPageHeader: ({
     status,
     shortCode,
     queueCount,
-    onAddGolfer,
+    hideQueueCount,
     onPrintSign,
     onClose,
     onReopen,
+    onOpenQueue,
   }: {
     status: 'Open' | 'Closed';
     shortCode: string;
     queueCount: number;
-    onAddGolfer?: () => void;
-    onPrintSign?: () => void;
-    onClose?: () => void;
-    onReopen?: () => void;
+    hideQueueCount?: boolean;
+    onPrintSign: () => void;
+    onClose: () => void;
+    onReopen: () => void;
+    onOpenQueue: () => void;
   }) => (
-    <div data-testid="walkup-waitlist-topbar">
+    <div data-testid="walkup-waitlist-page-header">
       <span>{status}</span>
       <span data-testid="short-code">{shortCode.split('').join(' ')}</span>
-      <span>{queueCount} waiting</span>
+      {!hideQueueCount && (
+        <button type="button" onClick={onOpenQueue}>
+          {queueCount} waiting
+        </button>
+      )}
       {status === 'Open' && (
         <>
-          <button type="button" onClick={() => onAddGolfer?.()}>Add golfer manually</button>
-          <button type="button" onClick={() => onPrintSign?.()}>Print sign</button>
-          <button type="button" onClick={() => onClose?.()}>Close waitlist for today</button>
+          <button type="button" onClick={onPrintSign}>Print sign</button>
+          <button type="button" onClick={onClose}>Close waitlist</button>
         </>
       )}
       {status === 'Closed' && (
-        <button type="button" onClick={() => onReopen?.()}>Reopen</button>
+        <button type="button" onClick={onReopen}>Reopen</button>
       )}
     </div>
   ),
@@ -422,17 +460,7 @@ describe('WalkUpWaitlist', () => {
       expect(screen.getByTestId('post-tee-time-form')).toBeInTheDocument();
     });
 
-    it('renders queue drawer showing count', () => {
-      render(<WalkUpWaitlist />);
-      expect(screen.getByTestId('queue-drawer')).toBeInTheDocument();
-    });
-
-    it('renders queue count showing 0 waiting when no entries', () => {
-      render(<WalkUpWaitlist />);
-      expect(screen.getByText('0 waiting')).toBeInTheDocument();
-    });
-
-    it('renders queue count showing number of entries waiting', () => {
+    it('renders queue panel with entry count in the right rail', () => {
       mockUseWalkUpWaitlistToday.mockReturnValue({
         isLoading: false,
         isError: false,
@@ -442,10 +470,13 @@ describe('WalkUpWaitlist', () => {
 
       render(<WalkUpWaitlist />);
 
-      expect(screen.getByText('2 waiting')).toBeInTheDocument();
+      const rail = screen.getByTestId('page-right-rail');
+      const panel = screen.getByTestId('queue-panel');
+      expect(rail).toContainElement(panel);
+      expect(panel).toHaveAttribute('data-count', '2');
     });
 
-    it('golfer names are NOT visible by default (hidden in drawer)', () => {
+    it('renders golfer names in the queue panel at wide widths', () => {
       mockUseWalkUpWaitlistToday.mockReturnValue({
         isLoading: false,
         isError: false,
@@ -455,8 +486,13 @@ describe('WalkUpWaitlist', () => {
 
       render(<WalkUpWaitlist />);
 
-      expect(screen.queryByText('Alice Smith')).not.toBeInTheDocument();
-      expect(screen.queryByText('Bob Jones')).not.toBeInTheDocument();
+      expect(screen.getByText('Alice Smith')).toBeInTheDocument();
+      expect(screen.getByText('Bob Jones')).toBeInTheDocument();
+    });
+
+    it('does not render the waiting count button in the page header at wide widths', () => {
+      render(<WalkUpWaitlist />);
+      expect(screen.queryByRole('button', { name: /waiting/ })).not.toBeInTheDocument();
     });
 
     it('renders openings list', () => {
@@ -464,14 +500,14 @@ describe('WalkUpWaitlist', () => {
       expect(screen.getByTestId('openings-list')).toBeInTheDocument();
     });
 
-    it('renders "Add golfer manually" link', () => {
+    it('renders "Add golfer" link', () => {
       render(<WalkUpWaitlist />);
-      expect(screen.getByText('Add golfer manually')).toBeInTheDocument();
+      expect(screen.getByText('Add golfer')).toBeInTheDocument();
     });
 
-    it('renders "Close waitlist for today" text link', () => {
+    it('renders "Close waitlist" text link', () => {
       render(<WalkUpWaitlist />);
-      expect(screen.getByText('Close waitlist for today')).toBeInTheDocument();
+      expect(screen.getByText('Close waitlist')).toBeInTheDocument();
     });
 
     it('does NOT show a "Print sign" button area as a standalone QR code', () => {
@@ -504,10 +540,10 @@ describe('WalkUpWaitlist', () => {
       } as unknown as ReturnType<typeof useWalkUpWaitlistToday>);
     });
 
-    it('opens CloseWaitlistDialog when "Close waitlist for today" is clicked', async () => {
+    it('opens CloseWaitlistDialog when "Close waitlist" is clicked', async () => {
       render(<WalkUpWaitlist />);
 
-      fireEvent.click(screen.getByText('Close waitlist for today'));
+      fireEvent.click(screen.getByText('Close waitlist'));
 
       await waitFor(() => {
         expect(screen.getByText('Close Walk-Up Waitlist?')).toBeInTheDocument();
@@ -517,7 +553,7 @@ describe('WalkUpWaitlist', () => {
     it('calls close mutation when dialog is confirmed', async () => {
       render(<WalkUpWaitlist />);
 
-      fireEvent.click(screen.getByText('Close waitlist for today'));
+      fireEvent.click(screen.getByText('Close waitlist'));
 
       await waitFor(() => {
         expect(screen.getByText('Close Walk-Up Waitlist?')).toBeInTheDocument();
@@ -554,9 +590,9 @@ describe('WalkUpWaitlist', () => {
       expect(screen.queryByTestId('post-tee-time-form')).not.toBeInTheDocument();
     });
 
-    it('does not render "Close waitlist for today" link', () => {
+    it('does not render "Close waitlist" link', () => {
       render(<WalkUpWaitlist />);
-      expect(screen.queryByText('Close waitlist for today')).not.toBeInTheDocument();
+      expect(screen.queryByText('Close waitlist')).not.toBeInTheDocument();
     });
 
     it('opens ReopenWaitlistDialog when Reopen is clicked', async () => {

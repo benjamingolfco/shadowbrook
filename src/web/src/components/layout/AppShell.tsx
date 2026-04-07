@@ -61,7 +61,7 @@ export function AppShell({ variant, navConfig, brand, onSwitchCourse, children }
   if (variant === 'minimal') {
     return (
       <AppShellProvider value={slots}>
-        <div className="flex min-h-screen flex-col bg-paper">
+        <div className="flex min-h-screen flex-col bg-background">
           <Topbar
             brand={brand}
             onSwitchCourse={onSwitchCourse}
@@ -83,7 +83,7 @@ export function AppShell({ variant, navConfig, brand, onSwitchCourse, children }
     <AppShellProvider value={slots}>
       <SidebarProvider>
         {navConfig && <AppSidebar brand={brand} navConfig={navConfig} />}
-        <SidebarInset className="bg-paper">
+        <SidebarInset className="bg-background">
           <Topbar
             brand={null}
             onSwitchCourse={onSwitchCourse}
@@ -154,12 +154,14 @@ interface TopbarProps {
 
 function Topbar({ brand, onSwitchCourse, setLeft, setMiddle, setRight, showSidebarTrigger }: TopbarProps) {
   return (
-    <header className="flex h-14 shrink-0 items-center gap-5 border-b border-border bg-white px-6">
-      {showSidebarTrigger && <SidebarTrigger className="md:hidden" />}
-      {brand}
-      <div ref={setLeft} className="flex items-center empty:hidden" />
-      <div ref={setMiddle} className="flex items-center gap-2 empty:hidden" />
-      <div className="ml-auto flex items-center gap-3">
+    <header className="grid h-14 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-5 border-b border-border bg-white px-6">
+      <div className="flex items-center gap-5 justify-self-start">
+        {showSidebarTrigger && <SidebarTrigger className="md:hidden" />}
+        {brand}
+        <div ref={setLeft} className="flex items-center empty:hidden" />
+      </div>
+      <div ref={setMiddle} className="flex items-center gap-2 justify-self-center" />
+      <div className="flex items-center gap-3 justify-self-end">
         <div ref={setRight} className="flex items-center gap-2 empty:hidden" />
         <UserMenu onSwitchCourse={onSwitchCourse} />
       </div>
