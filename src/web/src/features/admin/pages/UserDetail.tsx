@@ -28,6 +28,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { PageTopbar } from '@/components/layout/PageTopbar';
+import { DetailTitle } from '../components/DetailTitle';
 
 export default function UserDetail() {
   const { id } = useParams<{ id: string }>();
@@ -48,32 +50,37 @@ export default function UserDetail() {
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <p className="text-muted-foreground">Loading user...</p>
-      </div>
+      <>
+        <PageTopbar middle={<DetailTitle backTo="/admin/users" />} />
+        <p className="text-ink-muted">Loading user...</p>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6">
+      <>
+        <PageTopbar middle={<DetailTitle backTo="/admin/users" />} />
         <p className="text-destructive">
           Error: {error instanceof Error ? error.message : 'Failed to load user'}
         </p>
-      </div>
+      </>
     );
   }
 
   if (!user) {
     return (
-      <div className="p-6">
+      <>
+        <PageTopbar middle={<DetailTitle backTo="/admin/users" title="Not found" />} />
         <p className="text-destructive">User not found.</p>
         <Button variant="outline" size="sm" asChild className="mt-4">
           <Link to="/admin/users">Back to Users</Link>
         </Button>
-      </div>
+      </>
     );
   }
+
+  const displayName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
 
   function handleSave() {
     if (!user) return;
@@ -102,20 +109,16 @@ export default function UserDetail() {
   }
 
   return (
-    <div className="p-6 max-w-2xl space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" asChild>
-          <Link to="/admin/users">Back</Link>
-        </Button>
-        <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">User Detail</h1>
-      </div>
+    <>
+      <PageTopbar middle={<DetailTitle backTo="/admin/users" title={displayName} />} />
 
-      <Card>
+      <div className="max-w-2xl">
+      <Card className="border-border-strong">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>{[user.firstName, user.lastName].filter(Boolean).join(' ') || user.email}</span>
+          <CardTitle className="flex items-center justify-between text-[11px] uppercase tracking-wider text-ink-muted font-normal">
+            <span>Details</span>
             {user.isActive ? (
-              <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>
+              <Badge>Active</Badge>
             ) : (
               <Badge variant="secondary">Inactive</Badge>
             )}
@@ -124,15 +127,15 @@ export default function UserDetail() {
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 gap-4">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Name</p>
+              <p className="text-sm font-medium text-ink-muted">Name</p>
               <p className="mt-1">{[user.firstName, user.lastName].filter(Boolean).join(' ') || '—'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Email</p>
+              <p className="text-sm font-medium text-ink-muted">Email</p>
               <p className="mt-1">{user.email}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Invite Sent</p>
+              <p className="text-sm font-medium text-ink-muted">Invite Sent</p>
               <p className="mt-1">
                 {user.inviteSentAt
                   ? new Date(user.inviteSentAt).toLocaleDateString(undefined, {
@@ -206,7 +209,7 @@ export default function UserDetail() {
             </p>
           )}
 
-          <div className="flex gap-4 pt-2">
+          <div className="flex gap-3 pt-2">
             <Button onClick={handleSave} disabled={updateUser.isPending}>
               {updateUser.isPending ? 'Saving...' : 'Save Changes'}
             </Button>
@@ -250,6 +253,7 @@ export default function UserDetail() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 }
