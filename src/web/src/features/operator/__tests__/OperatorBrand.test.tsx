@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@/test/test-utils';
-import OperatorLayout from '@/components/layout/OperatorLayout';
+import { OperatorBrand } from '@/features/operator/navigation';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useCourseContext } from '@/features/operator/context/CourseContext';
 import { useOrgContext } from '@/features/operator/context/OrgContext';
@@ -13,7 +13,7 @@ const mockUseAuth = vi.mocked(useAuth);
 const mockUseCourseContext = vi.mocked(useCourseContext);
 const mockUseOrgContext = vi.mocked(useOrgContext);
 
-describe('OperatorLayout', () => {
+describe('OperatorBrand', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseOrgContext.mockReturnValue({
@@ -53,7 +53,7 @@ describe('OperatorLayout', () => {
   });
 
   it('shows organization name in sidebar header', () => {
-    render(<OperatorLayout />);
+    render(<OperatorBrand />);
     expect(screen.getByText('Pine Valley Golf Club')).toBeInTheDocument();
   });
 
@@ -80,7 +80,7 @@ describe('OperatorLayout', () => {
       hasPermission: vi.fn(() => true),
     });
 
-    render(<OperatorLayout />);
+    render(<OperatorBrand />);
     expect(screen.getByText('Teeforce')).toBeInTheDocument();
   });
 
@@ -108,11 +108,10 @@ describe('OperatorLayout', () => {
       hasPermission: vi.fn(() => true),
     });
 
-    render(<OperatorLayout />);
+    render(<OperatorBrand />);
     const heading = screen.getByText(longName);
     expect(heading).toHaveClass('truncate');
     expect(heading).toHaveClass('max-w-[180px]');
     expect(heading).toHaveAttribute('title', longName);
   });
-
 });

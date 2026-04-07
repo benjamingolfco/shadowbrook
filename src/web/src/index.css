@@ -46,6 +46,7 @@
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
     --font-heading: var(--font-heading);
+    --font-display: var(--font-heading);
     --font-body: var(--font-body);
     --font-mono: var(--font-mono);
     --color-canvas: var(--canvas);

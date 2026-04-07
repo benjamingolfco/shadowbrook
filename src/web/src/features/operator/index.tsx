@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router';
-import OperatorLayout from '@/components/layout/OperatorLayout';
-import WaitlistShellLayout from '@/components/layout/WaitlistShellLayout';
+import { useEffect, type ReactNode } from 'react';
+import { Routes, Route, Navigate, Outlet } from 'react-router';
+import { AppShell } from '@/components/layout/AppShell';
+import { useOperatorShellProps } from './hooks/useOperatorShellProps';
 import TeeSheet from './pages/TeeSheet';
 import TeeTimeSettings from './pages/TeeTimeSettings';
 import WalkUpWaitlist from './pages/WalkUpWaitlist';
@@ -12,6 +12,21 @@ import { OrgProvider, useOrgContext } from './context/OrgContext';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { useFeature } from '@/hooks/use-features';
 import { useAuth } from '@/features/auth';
+
+/**
+ * Local wrapper component that lets us call the `useOperatorShellProps` hook
+ * from inside React Router's `element` prop. Each operator route branch picks
+ * a variant ('full' or 'minimal'); the hook supplies the brand, nav config,
+ * and switch-course handler.
+ *
+ * This is the minimum glue needed to satisfy React Router's element-prop
+ * contract — it carries no logic of its own and replaces the deleted
+ * `OperatorLayout.tsx` and `WaitlistShellLayout.tsx` shims.
+ */
+function OperatorShell({ variant, children }: { variant: 'full' | 'minimal'; children: ReactNode }) {
+  const shellProps = useOperatorShellProps(variant);
+  return <AppShell {...shellProps}>{children}</AppShell>;
+}
 
 function OrgGate() {
   const { user } = useAuth();
@@ -30,7 +45,7 @@ function AdminOrgGate() {
   if (!org) {
     return (
       <Routes>
-        <Route element={<OperatorLayout />}>
+        <Route element={<OperatorShell variant="full"><Outlet /></OperatorShell>}>
           <Route path="*" element={<OrgPicker />} />
         </Route>
       </Routes>
@@ -55,7 +70,7 @@ function CourseGate() {
     if (fullOperatorApp) {
       return (
         <Routes>
-          <Route element={<OperatorLayout />}>
+          <Route element={<OperatorShell variant="full"><Outlet /></OperatorShell>}>
             <Route path="*" element={<CoursePortfolio />} />
           </Route>
         </Routes>
@@ -64,7 +79,7 @@ function CourseGate() {
 
     return (
       <Routes>
-        <Route element={<WaitlistShellLayout />}>
+        <Route element={<OperatorShell variant="minimal"><Outlet /></OperatorShell>}>
           <Route path="*" element={<CoursePortfolio />} />
         </Route>
       </Routes>
@@ -74,7 +89,7 @@ function CourseGate() {
   if (!fullOperatorApp) {
     return (
       <Routes>
-        <Route element={<WaitlistShellLayout />}>
+        <Route element={<OperatorShell variant="minimal"><Outlet /></OperatorShell>}>
           <Route path="*" element={<WalkUpWaitlist />} />
         </Route>
       </Routes>
@@ -83,7 +98,7 @@ function CourseGate() {
 
   return (
     <Routes>
-      <Route element={<OperatorLayout />}>
+      <Route element={<OperatorShell variant="full"><Outlet /></OperatorShell>}>
         <Route path="tee-sheet" element={<TeeSheet />} />
         <Route path="waitlist" element={<WalkUpWaitlist />} />
         <Route path="settings" element={<TeeTimeSettings />} />
