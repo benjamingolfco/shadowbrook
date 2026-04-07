@@ -1,21 +1,24 @@
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
 import { formatCourseTime } from '@/lib/course-time';
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
 } from '@/components/ui/drawer';
+import { cn } from '@/lib/utils';
 import type { WalkUpWaitlistEntry } from '@/types/waitlist';
+import type { ReactNode } from 'react';
 
 interface QueueDrawerProps {
   entries: WalkUpWaitlistEntry[];
   timeZoneId: string;
+  /** When true, Remove buttons render. False in Closed state for read-only history. */
   isOpen: boolean;
   onRemove: (entry: WalkUpWaitlistEntry) => void;
   removingEntryId: string | null;
+  /** The trigger element (DrawerTrigger asChild ...). Provided by WalkUpWaitlistTopbar. */
+  children?: ReactNode;
 }
 
 export function QueueDrawer({
@@ -24,59 +27,51 @@ export function QueueDrawer({
   isOpen,
   onRemove,
   removingEntryId,
+  children,
 }: QueueDrawerProps) {
   const [open, setOpen] = useState(false);
   const count = entries.length;
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
-        <button
-          type="button"
-          className="flex items-center gap-1.5 hover:text-foreground transition-colors"
-          aria-label={`${count} golfers waiting. ${open ? 'Hide' : 'Show'} queue`}
-        >
-          <span className={count > 0 ? 'text-xl font-semibold text-foreground' : 'text-xl font-semibold text-muted-foreground'}>
-            {count}
-          </span>
-          <span className="text-sm text-muted-foreground">waiting</span>
-          <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
-        </button>
-      </DrawerTrigger>
+      {children}
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{count} golfer{count !== 1 ? 's' : ''} waiting</DrawerTitle>
+          <DrawerTitle className="font-[family-name:var(--font-heading)] text-base">
+            {count} golfer{count !== 1 ? 's' : ''} waiting
+          </DrawerTitle>
         </DrawerHeader>
-        <div className="px-4 pb-4 max-h-[60vh] overflow-y-auto">
+        <div className="max-h-[60vh] overflow-y-auto px-4 pb-4">
           {entries.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Queue is empty</p>
+            <p className="py-4 text-center text-sm text-ink-muted">Queue is empty</p>
           ) : (
-            <div className="divide-y">
+            <div>
               {entries.map((entry, index) => (
                 <div
                   key={entry.id}
-                  className={`flex items-center gap-3 px-3 py-2 text-sm ${
-                    removingEntryId === entry.id ? 'opacity-40' : ''
-                  }`}
+                  className={cn(
+                    'flex items-center gap-3 border-b border-border px-3 py-2 text-sm last:border-b-0',
+                    removingEntryId === entry.id && 'opacity-40',
+                  )}
                 >
-                  <span className="font-mono text-muted-foreground w-6 text-right shrink-0">
-                    {index + 1}
+                  <span className="w-7 shrink-0 text-right font-mono text-[12px] text-ink-muted">
+                    {String(index + 1).padStart(2, '0')}
                   </span>
-                  <span className="font-medium flex-1 min-w-0">
+                  <span className="min-w-0 flex-1 text-ink">
                     {entry.golferName}
                     {entry.groupSize > 1 && (
-                      <span className="text-muted-foreground text-xs ml-1">
-                        ({'\u00d7'}{entry.groupSize})
+                      <span className="ml-1 text-xs text-ink-muted">
+                        (×{entry.groupSize})
                       </span>
                     )}
                   </span>
-                  <span className="text-xs text-muted-foreground shrink-0">
+                  <span className="shrink-0 font-mono text-[11px] text-ink-muted">
                     {formatCourseTime(entry.joinedAt, timeZoneId)}
                   </span>
                   {isOpen && (
                     <button
                       type="button"
-                      className="text-xs text-destructive hover:underline shrink-0"
+                      className="shrink-0 text-xs text-destructive hover:underline"
                       onClick={() => onRemove(entry)}
                       disabled={removingEntryId === entry.id}
                       aria-label={`Remove ${entry.golferName} from waitlist`}

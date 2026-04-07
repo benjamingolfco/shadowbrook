@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { ReactNode } from 'react';
 import { render, screen, fireEvent, waitFor } from '@/test/test-utils';
 import WalkUpWaitlist from '../pages/WalkUpWaitlist';
 import { useCourseContext } from '../context/CourseContext';
@@ -25,16 +26,50 @@ vi.mock('../components/PostTeeTimeForm', () => ({
     </div>
   ),
 }));
-vi.mock('../components/OpeningsList', () => ({
-  OpeningsList: ({ openings }: { openings: unknown[] }) => (
+vi.mock('../components/OpeningsGrid', () => ({
+  OpeningsGrid: ({ openings }: { openings: unknown[] }) => (
     <div data-testid="openings-list" data-count={openings.length} />
   ),
 }));
 vi.mock('../components/QueueDrawer', () => ({
-  QueueDrawer: ({ entries }: { entries: unknown[] }) => (
+  QueueDrawer: ({ children }: { entries: unknown[]; children?: ReactNode }) => (
     <div data-testid="queue-drawer">
-      <span>{entries.length} waiting</span>
-      <button type="button">View queue</button>
+      {children}
+    </div>
+  ),
+}));
+vi.mock('../components/WalkUpWaitlistTopbar', () => ({
+  WalkUpWaitlistTopbar: ({
+    status,
+    shortCode,
+    queueCount,
+    onAddGolfer,
+    onPrintSign,
+    onClose,
+    onReopen,
+  }: {
+    status: 'Open' | 'Closed';
+    shortCode: string;
+    queueCount: number;
+    onAddGolfer?: () => void;
+    onPrintSign?: () => void;
+    onClose?: () => void;
+    onReopen?: () => void;
+  }) => (
+    <div data-testid="walkup-waitlist-topbar">
+      <span>{status}</span>
+      <span data-testid="short-code">{shortCode.split('').join(' ')}</span>
+      <span>{queueCount} waiting</span>
+      {status === 'Open' && (
+        <>
+          <button type="button" onClick={() => onAddGolfer?.()}>Add golfer manually</button>
+          <button type="button" onClick={() => onPrintSign?.()}>Print sign</button>
+          <button type="button" onClick={() => onClose?.()}>Close waitlist for today</button>
+        </>
+      )}
+      {status === 'Closed' && (
+        <button type="button" onClick={() => onReopen?.()}>Reopen</button>
+      )}
     </div>
   ),
 }));

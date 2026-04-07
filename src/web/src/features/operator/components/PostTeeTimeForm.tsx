@@ -84,21 +84,21 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
   }
 
   return (
-    <Card className="shadow-sm border-border/80">
+    <Card className="shadow-sm border-border-strong bg-white">
       <CardContent className="pt-5 pb-5">
-        <p className="text-base font-semibold mb-4">Post Tee Time</p>
+        <p className="text-[11px] font-medium uppercase tracking-wider text-ink-muted mb-4">Post Tee Time</p>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-wrap items-end gap-3"
         >
           <div className="space-y-1">
-            <Label htmlFor="tee-time-input" className="text-xs text-muted-foreground">
+            <Label htmlFor="tee-time-input" className="text-xs text-ink-muted">
               Time
             </Label>
             <Input
               id="tee-time-input"
               type="time"
-              className="w-[140px]"
+              className="w-[140px] font-mono"
               autoFocus
               {...teeTimeRegister}
               ref={setTimeInputRef}
@@ -111,7 +111,7 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
           </div>
 
           <div className="space-y-1 shrink-0">
-            <Label className="text-xs text-muted-foreground">Slots</Label>
+            <Label className="text-xs text-ink-muted">Slots</Label>
             <div className="flex" role="radiogroup" aria-label="Slots">
               {[1, 2, 3, 4].map((n) => (
                 <button

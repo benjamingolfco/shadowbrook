@@ -200,6 +200,15 @@ if (!app.Environment.IsProduction() && app.Environment.EnvironmentName != "Testi
     {
         app.Logger.LogError(ex, "E2E seed data failed, continuing startup");
     }
+
+    try
+    {
+        await DevSeedData.EnsureAsync(app.Services);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Dev seed data failed, continuing startup");
+    }
 }
 
 app.UseSerilogRequestLogging();
