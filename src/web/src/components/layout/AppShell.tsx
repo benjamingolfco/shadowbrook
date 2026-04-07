@@ -4,7 +4,6 @@ import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
-  SidebarFooter,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -15,7 +14,6 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import UserMenu from '@/components/layout/UserMenu';
-import { useAuth } from '@/features/auth/hooks/useAuth';
 import { AppShellProvider, type AppShellSlots } from './AppShellContext';
 
 export interface NavItem {
@@ -110,15 +108,6 @@ interface AppSidebarProps {
 }
 
 function AppSidebar({ brand, navConfig }: AppSidebarProps) {
-  const { user } = useAuth();
-  const initials = (user?.displayName ?? user?.email ?? '?')
-    .split(/\s+/)
-    .map((p) => p[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-
   return (
     <Sidebar>
       <SidebarHeader>
@@ -150,19 +139,6 @@ function AppSidebar({ brand, navConfig }: AppSidebarProps) {
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter>
-        <div className="flex items-center gap-2 px-2 py-2 text-sm">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green text-[10px] font-semibold text-white">
-            {initials}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-[12px] text-sidebar-foreground">
-              {user?.displayName ?? user?.email}
-            </div>
-            <div className="truncate text-[10px] text-sidebar-foreground/60">{user?.role}</div>
-          </div>
-        </div>
-      </SidebarFooter>
     </Sidebar>
   );
 }
