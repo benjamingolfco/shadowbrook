@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageTopbar } from '@/components/layout/PageTopbar';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -64,7 +65,6 @@ export default function TeeTimeSettings() {
     };
   }, [formIsDirty, registerDirtyForm, unregisterDirtyForm]);
 
-  // When settings load for the selected course, reset the form
   useEffect(() => {
     if (settingsQuery.data?.firstTeeTime && settingsQuery.data.lastTeeTime) {
       form.reset({
@@ -75,118 +75,120 @@ export default function TeeTimeSettings() {
     }
   }, [settingsQuery.data, form]);
 
-  if (!course) {
-    return (
-      <div className="flex h-full items-center justify-center p-6">
-        <p className="text-muted-foreground">
-          Select a course from the sidebar to configure settings.
-        </p>
-      </div>
-    );
-  }
-
-  const courseId = course.id;
+  const courseId = course?.id;
 
   function onSubmit(data: TeeTimeSettingsFormData) {
-    updateMutation.mutate(
-      { courseId, data },
-      {
-        onSuccess: () => {
-          // Success feedback handled by mutation state
-        },
-      }
-    );
+    if (!courseId) return;
+    updateMutation.mutate({ courseId, data });
   }
 
   return (
-    <div className="p-6 max-w-2xl">
-      <PageHeader title="Tee Time Settings" />
+    <>
+      <PageTopbar
+        middle={<h1 className="font-display text-[18px] text-ink">Tee Time Settings</h1>}
+      />
 
-      {settingsQuery.isLoading && (
-        <p className="text-muted-foreground">Loading settings...</p>
-      )}
+      {!course ? (
+        <p className="text-ink-muted text-sm py-12 text-center">
+          Select a course from the sidebar to configure settings.
+        </p>
+      ) : (
+        <div className="max-w-2xl">
+          <Card className="border-border-strong">
+            <CardHeader>
+              <CardTitle className="text-[11px] uppercase tracking-wider text-ink-muted font-normal">
+                Tee Time Configuration
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  {settingsQuery.isLoading && (
+                    <p className="text-ink-muted text-sm">Loading settings…</p>
+                  )}
+                  {settingsQuery.isError && (
+                    <p className="text-destructive text-sm">
+                      Error loading settings: {settingsQuery.error.message}
+                    </p>
+                  )}
 
-      {settingsQuery.isError && (
-        <div className="text-destructive text-sm mb-4">
-          Error loading settings: {settingsQuery.error.message}
+                  <FormField
+                    control={form.control}
+                    name="teeTimeIntervalMinutes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tee Time Interval</FormLabel>
+                        <Select
+                          value={String(field.value)}
+                          onValueChange={(value) => field.onChange(Number(value))}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select interval" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="8">Every 8 minutes</SelectItem>
+                            <SelectItem value="10">Every 10 minutes</SelectItem>
+                            <SelectItem value="12">Every 12 minutes</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="firstTeeTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>First Tee Time</FormLabel>
+                          <FormControl>
+                            <Input type="time" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lastTeeTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Last Tee Time</FormLabel>
+                          <FormControl>
+                            <Input type="time" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {updateMutation.isError && (
+                    <p className="text-destructive text-sm">
+                      Error: {updateMutation.error.message}
+                    </p>
+                  )}
+
+                  {updateMutation.isSuccess && (
+                    <p className="text-green text-sm">
+                      Tee time settings saved successfully!
+                    </p>
+                  )}
+
+                  <Button type="submit" disabled={updateMutation.isPending}>
+                    {updateMutation.isPending ? 'Saving…' : 'Save Settings'}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
         </div>
       )}
-
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="teeTimeIntervalMinutes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tee Time Interval</FormLabel>
-                <Select
-                  value={String(field.value)}
-                  onValueChange={(value) => field.onChange(Number(value))}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select interval" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="8">Every 8 minutes</SelectItem>
-                    <SelectItem value="10">Every 10 minutes</SelectItem>
-                    <SelectItem value="12">Every 12 minutes</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="firstTeeTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>First Tee Time</FormLabel>
-                  <FormControl>
-                    <Input type="time" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="lastTeeTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Last Tee Time</FormLabel>
-                  <FormControl>
-                    <Input type="time" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {updateMutation.isError && (
-            <div className="text-destructive text-sm">
-              Error: {updateMutation.error.message}
-            </div>
-          )}
-
-          {updateMutation.isSuccess && (
-            <div className="text-success text-sm">
-              Tee time settings saved successfully!
-            </div>
-          )}
-
-          <Button type="submit" disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? 'Saving...' : 'Save Settings'}
-          </Button>
-        </form>
-      </Form>
-    </div>
+    </>
   );
 }
