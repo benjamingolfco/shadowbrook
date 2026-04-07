@@ -1,14 +1,11 @@
 import { useState } from 'react';
-import { Copy, Check } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   useWalkUpWaitlistToday,
@@ -19,8 +16,9 @@ import {
 import { useRemoveGolferFromWaitlist, useCancelTeeTimeOpening } from '../hooks/useWaitlist';
 import { useCourseContext } from '../context/CourseContext';
 import { PostTeeTimeForm } from '../components/PostTeeTimeForm';
-import { OpeningsList } from '../components/OpeningsList';
+import { OpeningsGrid } from '../components/OpeningsGrid';
 import { QueueDrawer } from '../components/QueueDrawer';
+import { WalkUpWaitlistTopbar } from '../components/WalkUpWaitlistTopbar';
 import { AddGolferDialog } from '../components/AddGolferDialog';
 import { CloseWaitlistDialog } from '../components/CloseWaitlistDialog';
 import { ReopenWaitlistDialog } from '../components/ReopenWaitlistDialog';
@@ -31,10 +29,10 @@ import type { WalkUpWaitlistEntry, WaitlistOpeningEntry } from '@/types/waitlist
 
 export default function WalkUpWaitlist() {
   const { course } = useCourseContext();
-  const [copied, setCopied] = useState(false);
   const [addGolferDialogOpen, setAddGolferDialogOpen] = useState(false);
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
   const [reopenDialogOpen, setReopenDialogOpen] = useState(false);
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [removalTarget, setRemovalTarget] = useState<WalkUpWaitlistEntry | null>(null);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -50,7 +48,7 @@ export default function WalkUpWaitlist() {
   if (!course) {
     return (
       <div className="flex h-full items-center justify-center p-6">
-        <p className="text-muted-foreground">
+        <p className="text-sm text-ink-muted">
           Select a course from the sidebar to manage the walk-up waitlist.
         </p>
       </div>
@@ -58,13 +56,6 @@ export default function WalkUpWaitlist() {
   }
 
   const courseId = course.id;
-
-  function handleCopyCode(shortCode: string) {
-    void navigator.clipboard.writeText(shortCode).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
 
   function handleOpenWaitlist() {
     openMutation.mutate({ courseId });
@@ -114,14 +105,11 @@ export default function WalkUpWaitlist() {
     );
   }
 
-  // Loading state
+  // ── Loading ──
   if (todayQuery.isLoading) {
     return (
-      <div className="p-6 max-w-[860px]" aria-label="Loading walk-up waitlist">
-        <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">
-          Walk-Up Waitlist
-        </h1>
-        <div className="space-y-6 mt-6">
+      <div className="p-6" aria-label="Loading walk-up waitlist">
+        <div className="max-w-[860px] space-y-6">
           <Skeleton className="h-[80px] w-full rounded-lg" />
           <Skeleton className="h-[200px] w-full rounded-lg" />
         </div>
@@ -129,16 +117,15 @@ export default function WalkUpWaitlist() {
     );
   }
 
-  // Error state
+  // ── Error ──
   if (todayQuery.isError) {
     return (
-      <div className="p-6 max-w-[860px]">
-        <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">
-          Walk-Up Waitlist
-        </h1>
-        <div className="mt-6 border rounded-lg p-6 text-center">
-          <p className="font-medium">Couldn't load waitlist</p>
-          <p className="text-sm text-muted-foreground mt-1">
+      <div className="flex h-full items-center justify-center p-6">
+        <div className="w-full max-w-md rounded-xl border border-border-strong bg-white p-6 text-center">
+          <p className="font-[family-name:var(--font-heading)] text-lg font-semibold text-ink">
+            Couldn't load waitlist
+          </p>
+          <p className="mt-1 text-sm text-ink-muted">
             {todayQuery.error instanceof Error ? todayQuery.error.message : 'Please try again.'}
           </p>
           <Button onClick={() => todayQuery.refetch()} variant="outline" size="sm" className="mt-4">
@@ -162,17 +149,17 @@ export default function WalkUpWaitlist() {
 
     return (
       <div className="flex h-full items-center justify-center px-4 py-6">
-        <div className="w-full max-w-md text-center space-y-4 border rounded-xl p-8">
-          <h1 className="text-xl font-semibold font-[family-name:var(--font-heading)]">
+        <div className="w-full max-w-md space-y-4 rounded-xl border border-border-strong bg-white p-8 text-center">
+          <h1 className="font-[family-name:var(--font-heading)] text-xl font-semibold text-ink">
             Walk-Up Waitlist
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-ink-muted">
             Open the waitlist to let walk-up golfers join the queue. You'll post tee time openings
             throughout the day.
           </p>
 
           <Button
-            className="w-full h-11"
+            className="h-11 w-full"
             onClick={handleOpenWaitlist}
             disabled={openMutation.isPending}
           >
@@ -194,150 +181,67 @@ export default function WalkUpWaitlist() {
     );
   }
 
-  // ── State E: Closed ──
-  if (waitlist.status === 'Closed') {
-    return (
-      <div className="p-6 max-w-[860px]">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">
-              Walk-Up Waitlist
-            </h1>
-            <Badge variant="secondary">Closed</Badge>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setReopenDialogOpen(true)}
-            disabled={reopenMutation.isPending}
-          >
-            {reopenMutation.isPending ? 'Reopening...' : 'Reopen'}
-          </Button>
-        </div>
+  // ── States B/C/D/E: Active or Closed ──
+  // Both states share the same body shell with the topbar + queue drawer + openings grid.
+  // Differences: Closed state hides PostTeeTimeForm, shows a banner, renders the grid read-only,
+  // and the topbar shows different status + overflow menu items.
+  const isClosed = waitlist.status === 'Closed';
 
-        {reopenMutation.isError && (
-          <p className="text-sm text-destructive mt-2">
-            Couldn't reopen waitlist. Try again.
-          </p>
-        )}
-
-        <ReopenWaitlistDialog
-          open={reopenDialogOpen}
-          onOpenChange={setReopenDialogOpen}
-          onConfirm={handleReopen}
-        />
-
-        <p className="text-sm text-muted-foreground mt-4">
-          {entries.length} golfer{entries.length !== 1 ? 's' : ''} were on the queue
-        </p>
-
-        <div className="mt-6">
-          <OpeningsList openings={openings} onCancel={() => {}} cancellingId={null} />
-        </div>
-      </div>
-    );
-  }
-
-  // ── States B/C/D: Active ──
   return (
-    <div className="p-6 max-w-[860px]">
-      {/* Zone 1: Header */}
-      <div className="mb-6">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">
-            Walk-Up Waitlist
-          </h1>
-          <Badge variant="success">Open</Badge>
-          <span className="inline-flex items-center gap-1 whitespace-nowrap">
-            <span data-testid="short-code" className="font-mono font-bold text-base md:text-lg tracking-[0.15em] md:tracking-[0.25em]">
-              {waitlist.shortCode.split('').join(' ')}
-            </span>
-            <button
-              type="button"
-              className="text-muted-foreground hover:text-foreground transition-colors p-1"
-              onClick={() => handleCopyCode(waitlist.shortCode)}
-              aria-label="Copy short code"
-            >
-              {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
-            </button>
-          </span>
-        </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-sm text-muted-foreground">
-          <QueueDrawer
-            entries={entries}
-            timeZoneId={course.timeZoneId}
-            isOpen={true}
-            onRemove={handleRemoveClick}
-            removingEntryId={removeMutation.isPending ? removalTarget?.id ?? null : null}
-          />
-          <span>·</span>
-          <Dialog>
-            <DialogTrigger asChild>
-              <button
-                type="button"
-                className="hover:text-foreground hover:underline"
-              >
-                Print sign
-              </button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>QR Code Sign</DialogTitle>
-              </DialogHeader>
-              <QrCodePanel shortCode={waitlist.shortCode} />
-            </DialogContent>
-          </Dialog>
-          <span>·</span>
-          <button
-            type="button"
-            className="hover:text-foreground hover:underline"
-            onClick={() => setAddGolferDialogOpen(true)}
-          >
-            Add golfer manually
-          </button>
-          <span>·</span>
-          <button
-            type="button"
-            className="hover:text-destructive hover:underline"
-            onClick={() => setCloseDialogOpen(true)}
-            disabled={closeMutation.isPending}
-          >
-            {closeMutation.isPending ? 'Closing...' : 'Close waitlist for today'}
-          </button>
-        </div>
-      </div>
-
-      {/* Zone 2: Post Tee Time */}
-      <div className="mb-6">
-        <PostTeeTimeForm courseId={courseId} />
-      </div>
-
-      {/* Zone 3: Openings List */}
-      <div className="mb-8">
-        <OpeningsList
-          openings={openings}
-          onCancel={handleCancelClick}
-          cancellingId={cancelMutation.isPending ? cancellationTarget?.id ?? null : null}
+    <>
+      <QueueDrawer
+        entries={entries}
+        timeZoneId={course.timeZoneId}
+        isOpen={!isClosed}
+        onRemove={handleRemoveClick}
+        removingEntryId={removeMutation.isPending ? removalTarget?.id ?? null : null}
+      >
+        <WalkUpWaitlistTopbar
+          status={isClosed ? 'Closed' : 'Open'}
+          shortCode={waitlist.shortCode}
+          queueCount={entries.length}
+          onAddGolfer={!isClosed ? () => setAddGolferDialogOpen(true) : undefined}
+          onPrintSign={!isClosed ? () => setPrintDialogOpen(true) : undefined}
+          onClose={!isClosed ? () => setCloseDialogOpen(true) : undefined}
+          onReopen={isClosed ? () => setReopenDialogOpen(true) : undefined}
         />
+      </QueueDrawer>
+
+      <div className="p-6">
+        <div className="mx-auto max-w-[860px] space-y-6">
+          {isClosed && (
+            <div className="border-y border-border-strong bg-canvas px-4 py-2 text-sm text-ink-secondary">
+              Waitlist closed. {entries.length} golfer{entries.length !== 1 ? 's' : ''} were on the queue.
+            </div>
+          )}
+
+          {!isClosed && <PostTeeTimeForm courseId={courseId} />}
+
+          <OpeningsGrid
+            openings={openings}
+            readOnly={isClosed}
+            onCancel={handleCancelClick}
+            cancellingId={cancelMutation.isPending ? cancellationTarget?.id ?? null : null}
+          />
+
+          {closeMutation.isError && (
+            <p className="text-sm text-destructive">Couldn't close waitlist. Try again.</p>
+          )}
+          {reopenMutation.isError && (
+            <p className="text-sm text-destructive">Couldn't reopen waitlist. Try again.</p>
+          )}
+          {removeMutation.isError && (
+            <p className="text-sm text-destructive">
+              Error removing golfer: {(removeMutation.error as Error).message}
+            </p>
+          )}
+          {cancelMutation.isError && (
+            <p className="text-sm text-destructive">
+              Error cancelling opening: {(cancelMutation.error as Error).message}
+            </p>
+          )}
+        </div>
       </div>
-
-      {closeMutation.isError && (
-        <p className="text-sm text-destructive mt-2">
-          Couldn't close waitlist. Try again.
-        </p>
-      )}
-
-      {removeMutation.isError && (
-        <p className="text-sm text-destructive mt-2">
-          Error removing golfer: {(removeMutation.error as Error).message}
-        </p>
-      )}
-
-      {cancelMutation.isError && (
-        <p className="text-sm text-destructive mt-2">
-          Error cancelling opening: {(cancelMutation.error as Error).message}
-        </p>
-      )}
 
       {/* Dialogs */}
       <AddGolferDialog
@@ -349,6 +253,11 @@ export default function WalkUpWaitlist() {
         open={closeDialogOpen}
         onOpenChange={setCloseDialogOpen}
         onConfirm={handleClose}
+      />
+      <ReopenWaitlistDialog
+        open={reopenDialogOpen}
+        onOpenChange={setReopenDialogOpen}
+        onConfirm={handleReopen}
       />
       <RemoveGolferDialog
         open={removeDialogOpen}
@@ -363,6 +272,14 @@ export default function WalkUpWaitlist() {
         onConfirm={handleCancelConfirm}
         isPending={cancelMutation.isPending}
       />
-    </div>
+      <Dialog open={printDialogOpen} onOpenChange={setPrintDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>QR Code Sign</DialogTitle>
+          </DialogHeader>
+          <QrCodePanel shortCode={waitlist.shortCode} />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
