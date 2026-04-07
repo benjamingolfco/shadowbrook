@@ -40,8 +40,8 @@ describe('PostTeeTimeForm', () => {
   it('renders the form with time input, slot buttons, and post button', () => {
     render(<PostTeeTimeForm courseId="course-1" />);
 
-    expect(screen.getByLabelText('Time')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Post Tee Time' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Tee time')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Post tee time' })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: '1' })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: '2' })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: '3' })).toBeInTheDocument();
@@ -57,13 +57,13 @@ describe('PostTeeTimeForm', () => {
   it('calls create mutation with correct data on submit', async () => {
     render(<PostTeeTimeForm courseId="course-1" />);
 
-    const timeInput = screen.getByLabelText('Time');
+    const timeInput = screen.getByLabelText('Tee time');
     fireEvent.change(timeInput, { target: { value: '10:40' } });
 
     const slot2 = screen.getByRole('radio', { name: '2' });
     fireEvent.click(slot2);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Post Tee Time' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Post tee time' }));
 
     await waitFor(() => {
       expect(mockMutate).toHaveBeenCalledWith(
@@ -156,10 +156,10 @@ describe('PostTeeTimeForm', () => {
 
     render(<PostTeeTimeForm courseId="course-1" />);
 
-    const timeInput = screen.getByLabelText('Time');
+    const timeInput = screen.getByLabelText('Tee time');
     fireEvent.change(timeInput, { target: { value: '13:00' } });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Post Tee Time' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Post tee time' }));
 
     await waitFor(() => {
       expect(screen.getByText('Tee time must be in the future')).toBeInTheDocument();
@@ -172,10 +172,10 @@ describe('PostTeeTimeForm', () => {
 
     render(<PostTeeTimeForm courseId="course-1" />);
 
-    const timeInput = screen.getByLabelText('Time');
+    const timeInput = screen.getByLabelText('Tee time');
     fireEvent.change(timeInput, { target: { value: '14:00' } });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Post Tee Time' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Post tee time' }));
 
     await waitFor(() => {
       expect(mockMutate).toHaveBeenCalled();

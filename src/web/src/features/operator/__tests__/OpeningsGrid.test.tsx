@@ -108,16 +108,4 @@ describe('OpeningsGrid', () => {
     expect(cancelButtons).toHaveLength(1);
   });
 
-  it('shows summary line', () => {
-    render(
-      <OpeningsGrid
-        openings={[openOpening, filledOpening]}
-        onCancel={vi.fn()}
-        cancellingId={null}
-      />,
-    );
-
-    // 2 openings, filled: 2+4=6, total: 4+4=8
-    expect(screen.getByText(/6\/8 filled/)).toBeInTheDocument();
-  });
 });

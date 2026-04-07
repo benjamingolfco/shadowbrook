@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { formatWallClockTime } from '@/lib/course-time';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,8 @@ export interface OpeningsGridProps {
   readOnly?: boolean;
   onCancel: (opening: WaitlistOpeningEntry) => void;
   cancellingId: string | null;
+  /** Optional action rendered on the right side of the section header (e.g. the Post Tee Time row). */
+  headerAction?: ReactNode;
 }
 
 export function OpeningsGrid({
@@ -21,25 +24,18 @@ export function OpeningsGrid({
   readOnly = false,
   onCancel,
   cancellingId,
+  headerAction,
 }: OpeningsGridProps) {
   const sorted = [...openings].sort((a, b) => a.teeTime.localeCompare(b.teeTime));
-  const nonCancelled = sorted.filter((o) => o.status !== 'Cancelled');
-  const totalFilled = nonCancelled.reduce(
-    (sum, o) => sum + (o.slotsAvailable - o.slotsRemaining),
-    0,
-  );
-  const totalSlots = nonCancelled.reduce((sum, o) => sum + o.slotsAvailable, 0);
 
   return (
     <section>
       {/* Section header line */}
-      <div className="flex items-baseline justify-between border-b border-border pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
         <h2 className="text-[10px] font-medium uppercase tracking-wider text-ink-muted">
           Today's Openings
         </h2>
-        <p className="font-mono text-[11px] text-ink-muted">
-          {nonCancelled.length} posted · {totalFilled}/{totalSlots} filled
-        </p>
+        {headerAction}
       </div>
 
       {sorted.length === 0 ? (
@@ -75,9 +71,9 @@ export function OpeningsGrid({
                   data-testid={`opening-row-${opening.id}`}
                   className={cn(
                     'grid items-center px-1 py-2.5 text-[13px] transition-colors',
-                    isFaded ? 'bg-canvas text-ink-muted' : 'bg-paper text-ink',
+                    isFaded ? 'bg-canvas text-ink-muted' : 'bg-white text-ink',
                     isCancelling && 'opacity-40',
-                    'hover:bg-white',
+                    'hover:bg-paper',
                   )}
                   style={{
                     gridTemplateColumns: GRID_COLS,
