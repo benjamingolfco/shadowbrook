@@ -49,6 +49,7 @@ When an issue number is provided:
      - The test credentials (from `.local/test-credentials.md`)
      - Instruction to log in with the appropriate test account before testing (pick the role that matches the story's persona)
      - Instruction to use Playwright MCP tools in headless mode (or headed if `--headed` was passed)
+     - **Login gate:** The agent MUST successfully log in before testing any ACs. If login fails (auth timeout, credential error, SSO redirect loop, etc.), the agent must stop immediately and return a report stating "BLOCKED — login failed" with the specific error. Do NOT fall back to code review or unit test analysis — QA validates the deployed app, not the source code.
    - Wait for the agent to return the QA report
 
 6. **Post the report on the issue:**
