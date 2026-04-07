@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { PageTopbar } from '@/components/layout/PageTopbar';
 
 function stripNamespace(typeName: string | undefined): string {
   if (!typeName) return 'Unknown';
@@ -53,19 +54,21 @@ interface ExpandedRowProps {
 function ExpandedRow({ envelope }: ExpandedRowProps) {
   return (
     <TableRow>
-      <TableCell colSpan={5} className="bg-muted/40 px-6 py-4">
+      <TableCell colSpan={5} className="bg-canvas px-6 py-4">
         <div className="space-y-3" data-testid="dead-letter-detail">
           <div>
-            <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">
+            <p className="text-[11px] uppercase tracking-wider text-ink-muted mb-1">
               Exception Message
             </p>
-            <p className="text-sm whitespace-pre-wrap break-words">{envelope.exceptionMessage}</p>
+            <p className="text-sm whitespace-pre-wrap break-words text-ink">
+              {envelope.exceptionMessage}
+            </p>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">
+            <p className="text-[11px] uppercase tracking-wider text-ink-muted mb-1">
               Message Body
             </p>
-            <pre className="text-xs bg-background border rounded-md p-3 overflow-x-auto whitespace-pre-wrap break-words">
+            <pre className="font-mono text-[12px] bg-canvas border border-border-strong rounded-md p-3 overflow-x-auto whitespace-pre-wrap break-words">
               {JSON.stringify(envelope.message, null, 2)}
             </pre>
           </div>
@@ -136,85 +139,88 @@ export default function DeadLetters() {
 
   const allSelected = envelopes.length > 0 && selectedIds.size === envelopes.length;
   const someSelected = selectedIds.size > 0 && !allSelected;
+  const totalCount = page?.totalCount ?? 0;
+
+  const topbarMiddle = (
+    <h1 className="font-display text-[18px] text-ink">
+      Dead Letter Queue
+      {totalCount > 0 && (
+        <span className="ml-2 font-mono text-[13px] text-ink-muted">· {totalCount}</span>
+      )}
+    </h1>
+  );
+
+  const topbarRight =
+    selectedIds.size > 0 ? (
+      <div className="flex items-center gap-2">
+        <span className="text-[12px] text-ink-muted">{selectedIds.size} selected</span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleReplay}
+          disabled={replay.isPending}
+        >
+          {replay.isPending ? 'Replaying\u2026' : 'Replay'}
+        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" size="sm" disabled={deleteMessages.isPending}>
+              {deleteMessages.isPending ? 'Deleting\u2026' : 'Delete'}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete dead letter messages?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete {selectedIds.size}{' '}
+                {selectedIds.size === 1 ? 'message' : 'messages'}. This action cannot be
+                undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    ) : null;
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <p className="text-muted-foreground">Loading dead letter messages...</p>
-      </div>
+      <>
+        <PageTopbar middle={topbarMiddle} />
+        <p className="text-ink-muted text-sm py-12 text-center">
+          Loading dead letter messages...
+        </p>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6">
-        <p className="text-destructive">
+      <>
+        <PageTopbar middle={topbarMiddle} />
+        <p className="text-destructive text-sm py-12 text-center">
           Error: {error instanceof Error ? error.message : 'Failed to load dead letter messages'}
         </p>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">
-            Dead Letter Queue
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {page ? `${page.totalCount} failed messages` : 'Messages that failed processing'}
-          </p>
-        </div>
-
-        {selectedIds.size > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              {selectedIds.size} selected
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleReplay}
-              disabled={replay.isPending}
-            >
-              {replay.isPending ? 'Replaying\u2026' : 'Replay'}
-            </Button>
-
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm" disabled={deleteMessages.isPending}>
-                  {deleteMessages.isPending ? 'Deleting\u2026' : 'Delete'}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete dead letter messages?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete {selectedIds.size}{' '}
-                    {selectedIds.size === 1 ? 'message' : 'messages'}. This action cannot be
-                    undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        )}
-      </div>
+    <>
+      <PageTopbar middle={topbarMiddle} right={topbarRight} />
 
       {envelopes.length === 0 ? (
-        <div className="border rounded-md p-12 text-center">
-          <p className="text-muted-foreground text-sm">No dead letter messages. All clear.</p>
-        </div>
+        <p className="text-ink-muted text-sm py-12 text-center">
+          No dead letter messages. All clear.
+        </p>
       ) : (
-        <div className="border rounded-md">
+        <div className="border border-border-strong rounded-md bg-white overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-canvas">
                 <TableHead className="w-10">
                   <Checkbox
                     checked={allSelected}
@@ -223,10 +229,18 @@ export default function DeadLetters() {
                     aria-label="Select all messages"
                   />
                 </TableHead>
-                <TableHead>Message Type</TableHead>
-                <TableHead>Exception Type</TableHead>
-                <TableHead className="hidden md:table-cell">Exception Message</TableHead>
-                <TableHead className="hidden md:table-cell whitespace-nowrap">Sent At</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider text-ink-muted">
+                  Message Type
+                </TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider text-ink-muted">
+                  Exception Type
+                </TableHead>
+                <TableHead className="hidden md:table-cell text-[10px] uppercase tracking-wider text-ink-muted">
+                  Exception Message
+                </TableHead>
+                <TableHead className="hidden md:table-cell text-[10px] uppercase tracking-wider text-ink-muted whitespace-nowrap">
+                  Sent At
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -249,28 +263,26 @@ export default function DeadLetters() {
                         aria-label={`Select message ${envelope.id}`}
                       />
                     </TableCell>
-                    <TableCell className="font-medium font-mono text-sm">
+                    <TableCell className="font-medium font-mono text-[13px] text-ink">
                       {stripNamespace(envelope.messageType)}
                     </TableCell>
-                    <TableCell className="text-sm text-destructive">
+                    <TableCell className="text-[13px] text-destructive">
                       {stripNamespace(envelope.exceptionType)}
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                    <TableCell className="hidden md:table-cell font-mono text-[12px] text-ink-muted">
                       {truncate(envelope.exceptionMessage)}
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground whitespace-nowrap">
+                    <TableCell className="hidden md:table-cell font-mono text-[12px] text-ink-muted whitespace-nowrap">
                       {formatSentAt(envelope.sentAt)}
                     </TableCell>
                   </TableRow>
-                  {expandedIds.has(envelope.id) && (
-                    <ExpandedRow envelope={envelope} />
-                  )}
+                  {expandedIds.has(envelope.id) && <ExpandedRow envelope={envelope} />}
                 </React.Fragment>
               ))}
             </TableBody>
           </Table>
         </div>
       )}
-    </div>
+    </>
   );
 }
