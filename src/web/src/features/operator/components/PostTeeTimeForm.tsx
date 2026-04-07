@@ -84,9 +84,9 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
   }
 
   return (
-    <Card className="shadow-sm border-border/80">
+    <Card className="shadow-sm border-border-strong bg-white">
       <CardContent className="pt-5 pb-5">
-        <p className="text-base font-semibold mb-4">Post Tee Time</p>
+        <p className="text-[11px] font-medium uppercase tracking-wider text-ink-muted mb-4">Post Tee Time</p>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-wrap items-end gap-3"
@@ -98,7 +98,7 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
             <Input
               id="tee-time-input"
               type="time"
-              className="w-[140px]"
+              className="w-[140px] font-mono"
               autoFocus
               {...teeTimeRegister}
               ref={setTimeInputRef}
