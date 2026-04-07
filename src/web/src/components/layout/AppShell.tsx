@@ -159,8 +159,10 @@ function Topbar({ brand, onSwitchCourse, setLeft, setMiddle, setRight, showSideb
       {brand}
       <div ref={setLeft} className="flex items-center empty:hidden" />
       <div ref={setMiddle} className="flex items-center gap-2 empty:hidden" />
-      <div ref={setRight} className="ml-auto flex items-center gap-2 empty:hidden" />
-      <UserMenu onSwitchCourse={onSwitchCourse} />
+      <div className="ml-auto flex items-center gap-3">
+        <div ref={setRight} className="flex items-center gap-2 empty:hidden" />
+        <UserMenu onSwitchCourse={onSwitchCourse} />
+      </div>
     </header>
   );
 }
