@@ -84,11 +84,11 @@ export function AppShell({ variant, navConfig, brand, onSwitchCourse, children }
   return (
     <AppShellProvider value={slots}>
       <SidebarProvider>
-        {navConfig && <AppSidebar brand={brand} navConfig={navConfig} onSwitchCourse={onSwitchCourse} />}
+        {navConfig && <AppSidebar brand={brand} navConfig={navConfig} />}
         <SidebarInset className="bg-paper">
           <Topbar
             brand={null}
-            onSwitchCourse={undefined}
+            onSwitchCourse={onSwitchCourse}
             setLeft={setTopbarLeft}
             setMiddle={setTopbarMiddle}
             setRight={setTopbarRight}
@@ -107,10 +107,9 @@ export function AppShell({ variant, navConfig, brand, onSwitchCourse, children }
 interface AppSidebarProps {
   brand: ReactNode;
   navConfig: NavConfig;
-  onSwitchCourse?: () => void;
 }
 
-function AppSidebar({ brand, navConfig, onSwitchCourse }: AppSidebarProps) {
+function AppSidebar({ brand, navConfig }: AppSidebarProps) {
   const { user } = useAuth();
   const initials = (user?.displayName ?? user?.email ?? '?')
     .split(/\s+/)
@@ -162,7 +161,6 @@ function AppSidebar({ brand, navConfig, onSwitchCourse }: AppSidebarProps) {
             </div>
             <div className="truncate text-[10px] text-sidebar-foreground/60">{user?.role}</div>
           </div>
-          <UserMenu onSwitchCourse={onSwitchCourse} />
         </div>
       </SidebarFooter>
     </Sidebar>
@@ -183,11 +181,10 @@ function Topbar({ brand, onSwitchCourse, setLeft, setMiddle, setRight, showSideb
     <header className="flex h-14 shrink-0 items-center gap-5 border-b border-border bg-white px-6">
       {showSidebarTrigger && <SidebarTrigger className="md:hidden" />}
       {brand}
-      <div ref={setLeft} className="flex items-center" />
-      <div className="h-6 w-px bg-border" />
-      <div ref={setMiddle} className="flex items-center gap-2" />
-      <div ref={setRight} className="ml-auto flex items-center gap-2" />
-      {brand && <UserMenu onSwitchCourse={onSwitchCourse} />}
+      <div ref={setLeft} className="flex items-center empty:hidden" />
+      <div ref={setMiddle} className="flex items-center gap-2 empty:hidden" />
+      <div ref={setRight} className="ml-auto flex items-center gap-2 empty:hidden" />
+      <UserMenu onSwitchCourse={onSwitchCourse} />
     </header>
   );
 }
