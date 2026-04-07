@@ -1,7 +1,15 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-export type StatusBadgeStatus = 'booked' | 'open' | 'waitlist' | 'checkedin' | 'noshowed';
+export type StatusBadgeStatus =
+  | 'booked'
+  | 'open'
+  | 'waitlist'
+  | 'checkedin'
+  | 'noshowed'
+  | 'filled'
+  | 'expired'
+  | 'cancelled';
 
 const STATUS_STYLES: Record<StatusBadgeStatus, { className: string; label: string }> = {
   booked:    { className: 'bg-green-faint text-green border-green-light',     label: 'Booked' },
@@ -9,6 +17,9 @@ const STATUS_STYLES: Record<StatusBadgeStatus, { className: string; label: strin
   waitlist:  { className: 'bg-orange-faint text-orange border-orange-light',  label: 'Waitlist' },
   checkedin: { className: 'bg-blue-light text-blue border-blue-light',        label: 'Checked in' },
   noshowed:  { className: 'bg-red-light text-red border-red-light',           label: 'No show' },
+  filled:    { className: 'bg-green-light text-green border-green-light',     label: 'Filled' },
+  expired:   { className: 'bg-canvas text-ink-muted border-border',           label: 'Expired' },
+  cancelled: { className: 'bg-red-light text-red border-red-light',           label: 'Cancelled' },
 };
 
 export interface StatusBadgeProps {
