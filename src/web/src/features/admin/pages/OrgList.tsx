@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router';
 import { useOrganizations } from '../hooks/useOrganizations';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageTopbar } from '@/components/layout/PageTopbar';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -11,20 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { StatTile } from '../components/StatTile';
 import type { Organization } from '@/types/organization';
-
-function SummaryCardSkeleton() {
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <Skeleton className="h-4 w-32" />
-      </CardHeader>
-      <CardContent>
-        <Skeleton className="h-8 w-16" />
-      </CardContent>
-    </Card>
-  );
-}
 
 function TableRowSkeleton() {
   return (
@@ -44,57 +32,27 @@ export default function OrgList() {
   const totalCourses = orgs?.reduce((sum, org) => sum + org.courseCount, 0) ?? 0;
   const totalUsers = orgs?.reduce((sum, org) => sum + org.userCount, 0) ?? 0;
 
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">Organizations</h1>
-          <p className="text-sm text-muted-foreground">Platform Admin View</p>
-        </div>
-        <Button asChild>
-          <Link to="/admin/organizations/new">Create Organization</Link>
-        </Button>
-      </div>
+  const loadingSkeleton = <Skeleton className="h-7 w-12 inline-block" />;
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {isLoading ? (
-          <>
-            <SummaryCardSkeleton />
-            <SummaryCardSkeleton />
-            <SummaryCardSkeleton />
-          </>
-        ) : (
-          <>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Organizations</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{orgs?.length ?? 0}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Courses</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{totalCourses}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Users</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{totalUsers}</p>
-              </CardContent>
-            </Card>
-          </>
-        )}
+  return (
+    <>
+      <PageTopbar
+        middle={<h1 className="font-[family-name:var(--font-heading)] text-[18px] text-ink">Organizations</h1>}
+        right={
+          <Button asChild>
+            <Link to="/admin/organizations/new">Create Organization</Link>
+          </Button>
+        }
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <StatTile label="Total Organizations" value={isLoading ? loadingSkeleton : (orgs?.length ?? 0)} />
+        <StatTile label="Total Courses" value={isLoading ? loadingSkeleton : totalCourses} />
+        <StatTile label="Total Users" value={isLoading ? loadingSkeleton : totalUsers} />
       </div>
 
       {error && (
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 mb-6">
           <p className="text-destructive">
             {error instanceof Error ? error.message : 'Failed to load organizations'}
           </p>
@@ -105,14 +63,14 @@ export default function OrgList() {
       )}
 
       {isLoading ? (
-        <div className="border rounded-md">
+        <div className="border border-border-strong rounded-md bg-white overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Courses</TableHead>
-                <TableHead>Users</TableHead>
-                <TableHead className="hidden md:table-cell">Created</TableHead>
+              <TableRow className="bg-canvas">
+                <TableHead className="text-[10px] uppercase tracking-wider text-ink-muted">Name</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider text-ink-muted">Courses</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider text-ink-muted">Users</TableHead>
+                <TableHead className="hidden md:table-cell text-[10px] uppercase tracking-wider text-ink-muted">Created</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -123,16 +81,16 @@ export default function OrgList() {
           </Table>
         </div>
       ) : !orgs || orgs.length === 0 ? (
-        <p className="text-muted-foreground">No organizations yet. Create one to get started.</p>
+        <p className="text-ink-muted text-sm py-12 text-center">No organizations yet. Create one to get started.</p>
       ) : (
-        <div className="border rounded-md">
+        <div className="border border-border-strong rounded-md bg-white overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Courses</TableHead>
-                <TableHead>Users</TableHead>
-                <TableHead className="hidden md:table-cell">Created</TableHead>
+              <TableRow className="bg-canvas">
+                <TableHead className="text-[10px] uppercase tracking-wider text-ink-muted">Name</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider text-ink-muted">Courses</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider text-ink-muted">Users</TableHead>
+                <TableHead className="hidden md:table-cell text-[10px] uppercase tracking-wider text-ink-muted">Created</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -142,10 +100,10 @@ export default function OrgList() {
                   className="cursor-pointer"
                   onClick={() => navigate(`/admin/organizations/${org.id}`)}
                 >
-                  <TableCell className="font-semibold">{org.name}</TableCell>
-                  <TableCell>{org.courseCount}</TableCell>
-                  <TableCell>{org.userCount}</TableCell>
-                  <TableCell className="hidden md:table-cell text-sm">
+                  <TableCell className="font-medium">{org.name}</TableCell>
+                  <TableCell className="font-mono text-[13px] text-ink">{org.courseCount}</TableCell>
+                  <TableCell className="font-mono text-[13px] text-ink">{org.userCount}</TableCell>
+                  <TableCell className="hidden md:table-cell font-mono text-[12px] text-ink-muted">
                     {new Date(org.createdAt).toLocaleDateString()}
                   </TableCell>
                 </TableRow>
@@ -154,6 +112,6 @@ export default function OrgList() {
           </Table>
         </div>
       )}
-    </div>
+    </>
   );
 }
