@@ -1,5 +1,6 @@
-import { Routes, Route, Navigate } from 'react-router';
-import AdminLayout from '@/components/layout/AdminLayout';
+import { Routes, Route, Navigate, Outlet } from 'react-router';
+import { AppShell } from '@/components/layout/AppShell';
+import { adminNav, adminBrand } from './navigation';
 import Dashboard from './pages/Dashboard';
 import OrgList from './pages/OrgList';
 import OrgCreate from './pages/OrgCreate';
@@ -14,10 +15,18 @@ import FeatureFlags from './pages/FeatureFlags';
 import DeadLetters from './pages/DeadLetters';
 import DevSmsPage from '@/features/dev/pages/DevSmsPage';
 
+function AdminShell() {
+  return (
+    <AppShell variant="full" navConfig={adminNav} brand={adminBrand}>
+      <Outlet />
+    </AppShell>
+  );
+}
+
 export default function AdminFeature() {
   return (
     <Routes>
-      <Route element={<AdminLayout />}>
+      <Route element={<AdminShell />}>
         <Route index element={<Dashboard />} />
         <Route path="organizations" element={<OrgList />} />
         <Route path="organizations/new" element={<OrgCreate />} />
