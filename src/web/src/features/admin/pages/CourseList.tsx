@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router';
 import { useCourses } from '../hooks/useCourses';
 import { Button } from '@/components/ui/button';
+import { PageTopbar } from '@/components/layout/PageTopbar';
 import {
   Table,
   TableBody,
@@ -15,48 +16,53 @@ export default function CourseList() {
   const navigate = useNavigate();
   const { data: courses, isLoading, error } = useCourses();
 
+  const topbar = (
+    <PageTopbar
+      middle={<h1 className="font-[family-name:var(--font-heading)] text-[18px] text-ink">All Registered Courses</h1>}
+      right={
+        <Button asChild>
+          <Link to="/admin/courses/new">Register Course</Link>
+        </Button>
+      }
+    />
+  );
+
   if (isLoading) {
     return (
-      <div className="p-6">
-        <p className="text-muted-foreground">Loading courses...</p>
-      </div>
+      <>
+        {topbar}
+        <p className="text-ink-muted">Loading courses...</p>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6">
+      <>
+        {topbar}
         <p className="text-destructive">
           Error: {error instanceof Error ? error.message : 'Failed to load courses'}
         </p>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">All Registered Courses</h1>
-          <p className="text-sm text-muted-foreground">Platform Admin View</p>
-        </div>
-        <Button asChild>
-          <Link to="/admin/courses/new">Register Course</Link>
-        </Button>
-      </div>
+    <>
+      {topbar}
 
       {!courses || courses.length === 0 ? (
-        <p className="text-muted-foreground">No courses registered yet.</p>
+        <p className="text-ink-muted text-sm py-12 text-center">No courses registered yet.</p>
       ) : (
-        <div className="border rounded-md">
+        <div className="border border-border-strong rounded-md bg-white overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Organization</TableHead>
-                <TableHead className="hidden md:table-cell">Location</TableHead>
-                <TableHead className="hidden md:table-cell">Contact</TableHead>
-                <TableHead className="hidden md:table-cell">Registered</TableHead>
+              <TableRow className="bg-canvas">
+                <TableHead className="text-[10px] uppercase tracking-wider text-ink-muted">Name</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider text-ink-muted">Organization</TableHead>
+                <TableHead className="hidden md:table-cell text-[10px] uppercase tracking-wider text-ink-muted">Location</TableHead>
+                <TableHead className="hidden md:table-cell text-[10px] uppercase tracking-wider text-ink-muted">Contact</TableHead>
+                <TableHead className="hidden md:table-cell text-[10px] uppercase tracking-wider text-ink-muted">Registered</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -67,8 +73,8 @@ export default function CourseList() {
                   onClick={() => void navigate(`/admin/courses/${course.id}`)}
                 >
                   <TableCell>
-                    <div className="font-semibold">{course.name}</div>
-                    <div className="md:hidden text-sm text-muted-foreground">
+                    <div className="font-medium">{course.name}</div>
+                    <div className="md:hidden text-sm text-ink-muted">
                       {course.tenantName || '—'}
                     </div>
                   </TableCell>
@@ -99,7 +105,7 @@ export default function CourseList() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm">
+                  <TableCell className="hidden md:table-cell font-mono text-[12px] text-ink-muted">
                     {new Date(course.createdAt).toLocaleDateString()}
                   </TableCell>
                 </TableRow>
@@ -108,6 +114,6 @@ export default function CourseList() {
           </Table>
         </div>
       )}
-    </div>
+    </>
   );
 }
