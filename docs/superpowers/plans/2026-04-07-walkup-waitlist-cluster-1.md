@@ -1412,19 +1412,6 @@ describe('OpeningsGrid', () => {
     expect(cancelButtons).toHaveLength(1);
   });
 
-  it('does not render cancel buttons in readOnly mode', () => {
-    render(
-      <OpeningsGrid
-        openings={[openOpening, filledOpening]}
-        readOnly
-        onCancel={vi.fn()}
-        cancellingId={null}
-      />,
-    );
-
-    expect(screen.queryAllByRole('button', { name: /Cancel opening at/ })).toHaveLength(0);
-  });
-
   it('shows summary line', () => {
     render(
       <OpeningsGrid
@@ -1444,7 +1431,7 @@ describe('OpeningsGrid', () => {
 > - Five tests are functionally unchanged (empty state, sort order, status badges, golfer names, summary line) — they only needed the import path / component rename.
 > - **"shows fill count text"** had to change from `'2 / 4 slots filled'` to `'2/4'` because the redesigned grid renders the count in mono `${filled}/${slotsAvailable}` (no "slots filled" suffix). The behavior assertion (the page indicates how many slots are filled) is preserved; only the literal string changed.
 > - **"shows cancel link only for Open openings"** had to change from `getAllByText('Cancel')` (length 2 because of dual mobile/desktop render) to `getAllByRole('button', { name: /Cancel opening at/ })` (length 1 because the redesign uses an icon button with aria-label and a single layout). The assertion preserves: only Open openings get a cancel affordance.
-> - **One new test added: `does not render cancel buttons in readOnly mode`.** This is allowed under the "no new tests" rule because `readOnly` is a *new prop* introduced by the redesign that the existing test file couldn't have covered. It's protecting a behavior the spec explicitly requires (Closed state must hide cancel actions) — without this assertion the readOnly behavior is untested. If this is rejected by the user, delete this test and accept that readOnly is verified only via integration in `WalkUpWaitlist.test.tsx` (Batch C).
+> - **The new `readOnly` prop has no test.** The "no new tests" rule is strict. The readOnly behavior (Closed state hides cancel actions) is verified by manual smoke in Batch E and indirectly through the `WalkUpWaitlist.test.tsx` mocks in Batch C.
 
 - [ ] **Step 4: Delete the old test file**
 
@@ -1457,9 +1444,7 @@ Run: `git rm src/web/src/features/operator/components/OpeningsList.tsx`
 - [ ] **Step 6: Verify lint, tests, and build all pass**
 
 Run: `pnpm --dir src/web lint && pnpm --dir src/web test --run && pnpm --dir src/web build`
-Expected: all clean. The new `OpeningsGrid.test.tsx` should run 8 tests (the migrated 7 + the new readOnly test). Total suite count goes from 215 to 215 (the 7 tests in `OpeningsList.test.tsx` were lost when the file was deleted, then 8 added back via the new file → +1 net from the readOnly test).
-
-If the readOnly test is rejected (see migration note above), delete it and the suite total stays at 215.
+Expected: all clean. The new `OpeningsGrid.test.tsx` should run 7 tests (the migrated set, with two locator updates). Total suite count stays at 215 — the 7 tests in `OpeningsList.test.tsx` are deleted, the same 7 are added back via the new file.
 
 - [ ] **Step 7: Commit**
 
@@ -1478,8 +1463,9 @@ assertions were updated to match the redesign:
   desktop) to an icon button with aria-label "Cancel opening at HH:MM"
   (×1 for the single layout).
 
-Adds one new test for the readOnly prop introduced by the redesign,
-covering the spec requirement that Closed state hides cancel actions.
+No new tests added per the cluster's "no new tests" rule. The new
+readOnly prop is verified by manual smoke in Batch E and via the
+WalkUpWaitlist.test.tsx mocks in Batch C.
 
 The page no longer imports OpeningsList; this completes the rename.
 
