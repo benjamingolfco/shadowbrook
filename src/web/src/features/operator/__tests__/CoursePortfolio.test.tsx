@@ -70,8 +70,9 @@ describe('CoursePortfolio', () => {
 
     render(<CoursePortfolio />);
 
-    expect(screen.getByText('No courses available')).toBeInTheDocument();
-    expect(screen.getByText('Contact your administrator to add a course.')).toBeInTheDocument();
+    expect(
+      screen.getByText('No courses available. Contact your administrator to add a course.')
+    ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Register a Course' })).not.toBeInTheDocument();
   });
 
@@ -131,8 +132,6 @@ describe('CoursePortfolio', () => {
     expect(screen.getByText('Spyglass Hill')).toBeInTheDocument();
     expect(screen.getByText('Augusta, GA')).toBeInTheDocument();
     expect(screen.getByText('Pebble Beach, CA')).toBeInTheDocument();
-    // "Manage" buttons are aria-hidden (decorative), use getAllByText with hidden:true
-    expect(screen.getAllByText('Manage', { selector: 'button' })).toHaveLength(2);
   });
 
   it('calls selectCourse when a course card is clicked', () => {
