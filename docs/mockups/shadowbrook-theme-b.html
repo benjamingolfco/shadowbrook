@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shadowbrook — Theme B: Fieldstone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --canvas: #f4f2ee;
+  --paper: #faf9f7;
+  --white: #ffffff;
+  --ink: #1c1a18;
+  --ink-secondary: #4a4742;
+  --ink-muted: #8c8880;
+  --ink-faint: #c8c4bc;
+  --border: #e0dcd4;
+  --border-strong: #c8c4bc;
+
+  --green: #2e6b42;
+  --green-mid: #3d8a57;
+  --green-light: #d4ead9;
+  --green-faint: #edf6f0;
+
+  --orange: #c45e1a;
+  --orange-mid: #e07035;
+  --orange-light: #f5dece;
+  --orange-faint: #fdf3ec;
+
+  --red-light: #fce8e8;
+  --red: #c0392b;
+
+  --blue-light: #ddeaf8;
+  --blue: #2563a8;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'IBM Plex Sans', sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 228px;
+  min-height: 100vh;
+  background: var(--ink);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebar-logo {
+  padding: 22px 20px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.logo-mark {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 17px;
+  color: var(--paper);
+  letter-spacing: 0.01em;
+}
+
+.logo-sub {
+  font-size: 9px;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-top: 3px;
+}
+
+.course-selector {
+  margin: 14px 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.course-name { font-size: 12px; font-weight: 500; color: var(--paper); }
+.course-type { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+.chevron { font-size: 10px; color: rgba(255,255,255,0.35); }
+
+nav { padding: 6px 0; flex: 1; }
+
+.nav-section-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: rgba(255,255,255,0.25);
+  padding: 14px 20px 5px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 20px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: all 0.12s;
+  position: relative;
+}
+
+.nav-item:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+
+.nav-item.active {
+  color: var(--paper);
+  background: rgba(255,255,255,0.08);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px; bottom: 4px;
+  width: 3px;
+  background: var(--green-mid);
+  border-radius: 0 2px 2px 0;
+}
+
+.nav-icon { font-size: 13px; width: 17px; text-align: center; opacity: 0.7; }
+.nav-item.active .nav-icon { opacity: 1; }
+
+.nav-badge {
+  margin-left: auto;
+  background: var(--orange);
+  color: white;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.sidebar-footer {
+  padding: 14px 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.avatar {
+  width: 27px; height: 27px;
+  background: var(--green);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600; color: white;
+  flex-shrink: 0;
+}
+
+/* MAIN */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.topbar {
+  height: 56px;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.topbar-date-group {}
+.topbar-day { font-size: 15px; font-weight: 600; color: var(--ink); }
+.topbar-date { font-size: 12px; color: var(--ink-muted); margin-top: 0; }
+
+.sep { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+
+.status-chips { display: flex; gap: 8px; }
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+.chip-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chip-green { background: var(--green-faint); color: var(--green); border-color: var(--green-light); }
+.chip-green .chip-dot { background: var(--green-mid); }
+
+.chip-orange { background: var(--orange-faint); color: var(--orange); border-color: var(--orange-light); }
+.chip-orange .chip-dot { background: var(--orange-mid); }
+
+.chip-gray { background: var(--canvas); color: var(--ink-secondary); border-color: var(--border); }
+.chip-gray .chip-dot { background: var(--ink-faint); }
+
+.date-nav { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+
+.date-btn {
+  width: 30px; height: 30px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--ink-muted);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s;
+}
+.date-btn:hover { border-color: var(--border-strong); color: var(--ink); }
+
+.today-btn {
+  padding: 0 12px;
+  height: 30px;
+  background: var(--green-faint);
+  border: 1px solid var(--green-light);
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--green);
+  cursor: pointer;
+}
+
+/* CONTENT */
+.content { flex: 1; display: flex; overflow: hidden; }
+
+.tee-sheet { flex: 1; overflow-y: auto; background: var(--paper); }
+
+.tee-sheet-header {
+  display: grid;
+  grid-template-columns: 88px 1fr 1fr 1fr 1fr 100px 90px;
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--white);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.col-header {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+.tee-row {
+  display: grid;
+  grid-template-columns: 88px 1fr 1fr 1fr 1fr 100px 90px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+  min-height: 54px;
+  align-items: center;
+  transition: background 0.1s;
+  cursor: pointer;
+  background: var(--paper);
+}
+
+.tee-row:hover { background: var(--white); }
+
+.tee-row.past { background: var(--canvas); }
+.tee-row.past:hover { background: #eeece7; }
+
+.tee-row.current-time {
+  background: var(--white);
+  box-shadow: inset 3px 0 0 var(--green);
+}
+
+.tee-row.waitlist-filled { background: #fffaf6; }
+
+.tee-time-cell {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.tee-time-cell.past { color: var(--ink-muted); }
+
+.player-cell { display: flex; align-items: center; gap: 7px; }
+
+.player-avatar {
+  width: 24px; height: 24px;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.pa-green { background: var(--green-light); color: var(--green); }
+.pa-orange { background: var(--orange-light); color: var(--orange); }
+.pa-gray { background: var(--border); color: var(--ink-muted); }
+
+.player-name { font-size: 12px; color: var(--ink); }
+.player-name.past { color: var(--ink-muted); }
+.player-meta { font-size: 10px; color: var(--ink-muted); }
+
+.empty-slot { font-size: 11px; color: var(--ink-faint); font-style: italic; }
+
+.status-cell { display: flex; align-items: center; gap: 6px; }
+
+.status-badge {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+.sb-booked { background: var(--green-faint); color: var(--green); border-color: var(--green-light); }
+.sb-open { background: var(--canvas); color: var(--ink-muted); border-color: var(--border); }
+.sb-waitlist { background: var(--orange-faint); color: var(--orange); border-color: var(--orange-light); }
+.sb-checkedin { background: var(--blue-light); color: var(--blue); border-color: #bbd4f0; }
+.sb-noshowed { background: var(--red-light); color: var(--red); border-color: #f0c8c8; }
+
+.action-cell { display: flex; gap: 4px; justify-content: flex-end; }
+
+.row-action {
+  padding: 4px 9px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.12s;
+}
+
+.ra-primary { background: var(--green-faint); color: var(--green); border-color: var(--green-light); }
+.ra-primary:hover { background: var(--green-light); }
+
+.ra-warn { background: var(--orange-faint); color: var(--orange); border-color: var(--orange-light); }
+.ra-add { background: var(--white); color: var(--ink-muted); border-color: var(--border); }
+
+.time-marker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 24px;
+  pointer-events: none;
+}
+
+.time-marker-line {
+  flex: 1; height: 1px;
+  background: var(--green-mid);
+  opacity: 0.3;
+}
+
+.time-marker-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* RIGHT PANEL */
+.right-panel {
+  width: 272px;
+  border-left: 1px solid var(--border);
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.panel-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+  font-weight: 500;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panel-link { font-size: 11px; color: var(--green); cursor: pointer; text-transform: none; letter-spacing: 0; }
+
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.stat-card {
+  background: var(--canvas);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.stat-val {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.stat-val.green { color: var(--green); }
+.stat-val.orange { color: var(--orange); }
+.stat-val.red { color: var(--red); }
+.stat-label { font-size: 10px; color: var(--ink-muted); margin-top: 4px; }
+
+.fill-bar-wrap { margin-top: 10px; }
+.fill-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-muted); margin-bottom: 5px; }
+.fill-bar-track { height: 6px; background: var(--canvas); border-radius: 3px; overflow: hidden; }
+.fill-bar-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--green-mid)); border-radius: 3px; }
+
+.waitlist-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.waitlist-item:last-child { border-bottom: none; }
+
+.wl-position {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-faint);
+  width: 16px;
+}
+
+.wl-info { flex: 1; min-width: 0; }
+.wl-name { font-size: 12px; font-weight: 500; color: var(--ink); }
+.wl-detail { font-size: 10px; color: var(--ink-muted); margin-top: 1px; }
+
+.wl-window {
+  font-size: 10px;
+  color: var(--orange);
+  background: var(--orange-faint);
+  border: 1px solid var(--orange-light);
+  padding: 2px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.alert-item { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+.alert-item:last-child { border-bottom: none; }
+
+.alert-icon { font-size: 12px; margin-top: 1px; flex-shrink: 0; }
+.alert-text { font-size: 12px; color: var(--ink-secondary); line-height: 1.4; }
+.alert-time { font-size: 10px; color: var(--ink-faint); margin-top: 2px; }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">Shadowbrook</div>
+    <div class="logo-sub">Course Operations</div>
+  </div>
+
+  <div class="course-selector">
+    <div>
+      <div class="course-name">Braemar Golf Course</div>
+      <div class="course-type">Municipal · 18 holes</div>
+    </div>
+    <div class="chevron">▾</div>
+  </div>
+
+  <nav>
+    <div class="nav-section-label">Operations</div>
+    <div class="nav-item active">
+      <span class="nav-icon">⬛</span> Tee Sheet
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⏱</span> Waitlist
+      <span class="nav-badge">4</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⚠</span> No-Shows
+      <span class="nav-badge" style="background:#c0392b">2</span>
+    </div>
+    <div class="nav-section-label">Management</div>
+    <div class="nav-item">
+      <span class="nav-icon">⚙</span> Tee Time Settings
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">$</span> Pricing
+    </div>
+    <div class="nav-section-label">Analytics</div>
+    <div class="nav-item">
+      <span class="nav-icon">▦</span> Fill Rate
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">↗</span> Revenue
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="avatar">JM</div>
+    <div>
+      <div style="font-size:12px; color:rgba(255,255,255,0.7)">J. Murphy</div>
+      <div style="font-size:10px; color:rgba(255,255,255,0.35)">Pro Shop Staff</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-date-group">
+      <div class="topbar-day">Saturday, April 6</div>
+      <div class="topbar-date">2026</div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="status-chips">
+      <span class="chip chip-green"><span class="chip-dot"></span>74% Booked</span>
+      <span class="chip chip-orange"><span class="chip-dot"></span>4 Waitlisted</span>
+      <span class="chip chip-gray"><span class="chip-dot"></span>8 Open</span>
+    </div>
+
+    <div class="date-nav">
+      <button class="date-btn">‹</button>
+      <button class="today-btn">Today</button>
+      <button class="date-btn">›</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="tee-sheet">
+      <div class="tee-sheet-header">
+        <div class="col-header">Time</div>
+        <div class="col-header">Player 1</div>
+        <div class="col-header">Player 2</div>
+        <div class="col-header">Player 3</div>
+        <div class="col-header">Player 4</div>
+        <div class="col-header">Status</div>
+        <div class="col-header" style="text-align:right">Actions</div>
+      </div>
+
+      <div class="tee-row past">
+        <div class="tee-time-cell past">6:42 AM</div>
+        <div class="player-cell">
+          <div class="player-avatar pa-gray">RC</div>
+          <div><div class="player-name past">R. Chen</div><div class="player-meta">Hcp 8</div></div>
+        </div>
+        <div class="player-cell">
+          <div class="player-avatar pa-gray">SM</div>
+          <div><div class="player-name past">S. Miller</div><div class="player-meta">Hcp 14</div></div>
+        </div>
+        <div class="player-cell">
+          <div class="player-avatar pa-gray">DK</div>
+          <div><div class="player-name past">D. Kim</div><div class="player-meta">Hcp 6</div></div>
+        </div>
+        <div class="player-cell"><div class="empty-slot">—</div></div>
+        <div class="status-cell"><span class="status-badge sb-checkedin">On course</span></div>
+        <div class="action-cell" style="font-size:10px; color:var(--ink-faint)">On course</div>
+      </div>
+
+      <div class="tee-row past">
+        <div class="tee-time-cell past">6:51 AM</div>
+        <div class="player-cell">
+          <div class="player-avatar pa-gray">AB</div>
+          <div><div class="player-name past">A. Barker</div><div class="player-meta">Hcp 18</div></div>
+        </div>
+        <div class="player-cell">
+          <div class="player-avatar pa-gray">TW</div>
+          <div><div class="player-name past">T. Walsh</div><div class="player-meta">Hcp 22</div></div>
+        </div>
+        <div class="player-cell">
+          <div class="player-avatar pa-gray">NL</div>
+          <div><div class="player-name past">N. Lopez</div><div class="player-meta">Hcp 11</div></div>
+        </div>
+        <div class="player-cell">
+          <div class="player-avatar pa-gray">MH</div>
+          <div><div class="player-name past">M. Hughes</div><div class="player-meta">Hcp 5</div></div>
+        </div>
+        <div class="status-cell"><span class="status-badge sb-checkedin">On course</span></div>
+        <div class="action-cell" style="font-size:10px; color:var(--ink-faint)">On course</div>
+      </div>
+
+      <div class="time-marker">
+        <div class="time-marker-line"></div>
+        <div class="time-marker-label">▶ Now · 9:14 AM</div>
+        <div class="time-marker-line"></div>
+      </div>
+
+      <div class="tee-row current-time">
+        <div class="tee-time-cell">9:18 AM</div>
+        <div class="player-cell">
+          <div class="player-avatar pa-green">PJ</div>
+          <div><div class="player-name">P. Johnson</div><div class="player-meta">Hcp 4</div></div>
+        </div>
+        <div class="player-cell">
+          <div class="player-avatar pa-green">EG</div>
+          <div><div class="player-name">E. Grant</div><div class="player-meta">Hcp 12</div></div>
+        </div>
+        <div class="player-cell">
+          <div class="player-avatar pa-green">BO</div>
+          <div><div class="player-name">B. O'Brien</div><div class="player-meta">Hcp 9</div></div>
+        </div>
+        <div class="player-cell"><div class="empty-slot">Open slot</div></div>
+        <div class="status-cell"><span class="status-badge sb-checkedin">Ready</span></div>
+        <div class="action-cell">
+          <button class="row-action ra-primary">Send off</button>
+        </div>
+      </div>
+
+      <div class="tee-row">
+        <div class="tee-time-cell">9:27 AM</div>
+        <div class="player-cell">
+          <div class="player-avatar pa-green">KR</div>
+          <div><div class="player-name">K. Reynolds</div><div class="player-meta">Hcp 16</div></div>
+        </div>
+        <div class="player-cell">
+          <div class="player-avatar pa-green">SN</div>
+          <div><div class="player-name">S. Nguyen</div><div class="player-meta">Hcp 20</div></div>
+        </div>
+        <div class="player-cell">
+          <div class="player-avatar pa-green">JF</div>
+          <div><div class="player-name">J. Flores</div><div class="player-meta">Hcp 7</div></div>
+        </div>
+        <div class="player-cell">
+          <div class="player-avatar pa-green">CM</div>
+          <div><div class="player-name">C. Mitchell</div><div class="player-meta">Hcp 13</div></div>
+        </div>
+        <div class="status-cell"><span class="status-badge sb-booked">Booked</span></div>
+        <div class="action-cell">
+          <button class="row-action ra-primary">Check in</button>
+        </div>
+      </div>
+
+      <div class="tee-row waitlist-filled">
+        <div class="tee-time-cell">9:36 AM</div>
+        <div class="player-cell">
+          <div class="player-avatar pa-orange">MT</div>
+          <div><div class="player-name">M. Torres</div><div class="player-meta">Waitlist fill</div></div>
+        </div>
+        <div class="player-cell">
+          <div class="player-avatar pa-orange">LB</div>
+          <div><div class="player-name">L. Barnes</div><div class="player-meta">Waitlist fill</div></div>
+        </div>
+        <div class="player-cell">
+          <div class="player-avatar pa-green">WC</div>
+          <div><div class="player-name">W. Cooper</div><div class="player-meta">Hcp 3</div></div>
+        </div>
+        <div class="player-cell"><div class="empty-slot">Open slot</div></div>
+        <div class="status-cell"><span class="status-badge sb-waitlist">Waitlist</span></div>
+        <div class="action-cell">
+          <button class="row-action ra-primary">Check in</button>
+          <button class="row-action ra-warn">Flag</button>
+        </div>
+      </div>
+
+      <div class="tee-row">
+        <div class="tee-time-cell">9:45 AM</div>
+        <div class="player-cell">
+          <div class="player-avatar pa-green">HR</div>
+          <div><div class="player-name">H. Robinson</div><div class="player-meta">Hcp 11</div></div>
+        </div>
+        <div class="player-cell">
+          <div class="player-avatar pa-green">AP</div>
+          <div><div class="player-name">A. Patel</div><div class="player-meta">Hcp 8</div></div>
+        </div>
+        <div class="player-cell">
+          <div class="player-avatar pa-green">GS</div>
+          <div><div class="player-name">G. Sullivan</div><div class="player-meta">Hcp 17</div></div>
+        </div>
+        <div class="player-cell">
+          <div class="player-avatar pa-green">IV</div>
+          <div><div class="player-name">I. Vasquez</div><div class="player-meta">Hcp 25</div></div>
+        </div>
+        <div class="status-cell"><span class="status-badge sb-booked">Booked</span></div>
+        <div class="action-cell">
+          <button class="row-action ra-primary">Check in</button>
+        </div>
+      </div>
+
+      <div class="tee-row">
+        <div class="tee-time-cell">9:54 AM</div>
+        <div class="player-cell"><div class="empty-slot">Open slot</div></div>
+        <div class="player-cell"><div class="empty-slot">—</div></div>
+        <div class="player-cell"><div class="empty-slot">—</div></div>
+        <div class="player-cell"><div class="empty-slot">—</div></div>
+        <div class="status-cell"><span class="status-badge sb-open">Open</span></div>
+        <div class="action-cell">
+          <button class="row-action ra-add">+ Add</button>
+        </div>
+      </div>
+
+      <div class="tee-row">
+        <div class="tee-time-cell">10:03 AM</div>
+        <div class="player-cell">
+          <div class="player-avatar pa-green">FD</div>
+          <div><div class="player-name">F. Davidson</div><div class="player-meta">Hcp 2</div></div>
+        </div>
+        <div class="player-cell">
+          <div class="player-avatar pa-green">QH</div>
+          <div><div class="player-name">Q. Harris</div><div class="player-meta">Hcp 19</div></div>
+        </div>
+        <div class="player-cell"><div class="empty-slot">Open slot</div></div>
+        <div class="player-cell"><div class="empty-slot">Open slot</div></div>
+        <div class="status-cell"><span class="status-badge sb-booked">Booked (2)</span></div>
+        <div class="action-cell">
+          <button class="row-action ra-primary">Check in</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+
+      <div class="panel-section">
+        <div class="panel-title">Today's Snapshot</div>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-val green">74%</div>
+            <div class="stat-label">Fill rate</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val">42</div>
+            <div class="stat-label">Rounds booked</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val orange">4</div>
+            <div class="stat-label">On waitlist</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val red">2</div>
+            <div class="stat-label">No-shows flagged</div>
+          </div>
+        </div>
+        <div class="fill-bar-wrap">
+          <div class="fill-bar-label">
+            <span>Fill progress</span>
+            <span>42 / 56 slots</span>
+          </div>
+          <div class="fill-bar-track">
+            <div class="fill-bar-fill" style="width:74%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-title">
+          Active Waitlist
+          <span class="panel-link">View all →</span>
+        </div>
+        <div class="waitlist-item">
+          <div class="wl-position">1</div>
+          <div class="wl-info">
+            <div class="wl-name">D. Hernandez</div>
+            <div class="wl-detail">2 players · Any time 9–11am</div>
+          </div>
+          <div class="wl-window">9–11am</div>
+        </div>
+        <div class="waitlist-item">
+          <div class="wl-position">2</div>
+          <div class="wl-info">
+            <div class="wl-name">R. Park</div>
+            <div class="wl-detail">4 players · Any time today</div>
+          </div>
+          <div class="wl-window">All day</div>
+        </div>
+        <div class="waitlist-item">
+          <div class="wl-position">3</div>
+          <div class="wl-info">
+            <div class="wl-name">C. Wheeler + 1</div>
+            <div class="wl-detail">2 players · After 10am</div>
+          </div>
+          <div class="wl-window">10am+</div>
+        </div>
+        <div class="waitlist-item">
+          <div class="wl-position">4</div>
+          <div class="wl-info">
+            <div class="wl-name">M. Okafor</div>
+            <div class="wl-detail">1 player · Flexible</div>
+          </div>
+          <div class="wl-window">Flex</div>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-title">
+          Activity
+          <span class="panel-link">All alerts</span>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon">🔔</div>
+          <div>
+            <div class="alert-text">M. Torres confirmed waitlist slot at 9:36am via SMS</div>
+            <div class="alert-time">8 min ago</div>
+          </div>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon">✓</div>
+          <div>
+            <div class="alert-text">K. Reynolds checked in at the pro shop</div>
+            <div class="alert-time">14 min ago</div>
+          </div>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon">💳</div>
+          <div>
+            <div class="alert-text">No-show fee charged to T. Osman · $25</div>
+            <div class="alert-time">32 min ago</div>
+          </div>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon">↩</div>
+          <div>
+            <div class="alert-text">Cancellation at 10:30am — waitlist notified</div>
+            <div class="alert-time">41 min ago</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
