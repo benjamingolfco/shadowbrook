@@ -42,7 +42,7 @@ The page contributes content to the topbar via `<PageTopbar>` slot helpers, only
 
 **Middle slot:** a horizontal group of three elements, separated by a small gap, vertically centered in the topbar (~24 px tall):
 
-1. **Status chip** — `<StatusChip tone="green">OPEN</StatusChip>` in the Open state, `<StatusChip tone="gray">CLOSED</StatusChip>` in the Closed state. Uses the foundation `StatusChip` primitive as-is.
+1. **Status chip** — `<StatusChip tone="green">Open</StatusChip>` in the Open state, `<StatusChip tone="gray">Closed</StatusChip>` in the Closed state. Sentence case (not uppercase) so existing tests that look for `getByText('Open')` / `getByText('Closed')` continue to pass — the casing is presentation, not behavior. Uses the foundation `StatusChip` primitive as-is.
 2. **Short code** — the waitlist short code rendered in `font-mono` with letter-spacing (~0.15em), height matched to the chip. Each character readable on its own — no special big-display treatment, just clean mono digits. To the right of the digits, a small ghost `<Button>` with the lucide `Copy` icon (or `Check` for two seconds after a successful copy) preserves today's copy-to-clipboard behavior. The success-tick state and the existing `data-testid="short-code"` are preserved.
 3. **Queue trigger** — a borderless pill that opens the `QueueDrawer`. Shape: count number in `font-mono` (`text-ink` when count > 0, `text-ink-muted` when 0), the word "waiting" in Plex Sans muted, and a `ChevronDown` icon (lucide). Wrapped in `<DrawerTrigger asChild>`. `aria-label` preserved (`"N golfers waiting. Show queue"`).
 
