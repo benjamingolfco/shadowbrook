@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@/test/test-utils';
-import { OpeningsList } from '../components/OpeningsList';
+import { OpeningsGrid } from '../components/OpeningsGrid';
 import type { WaitlistOpeningEntry } from '@/types/waitlist';
 
 const openOpening: WaitlistOpeningEntry = {
@@ -36,15 +36,15 @@ const cancelledOpening: WaitlistOpeningEntry = {
   filledGolfers: [],
 };
 
-describe('OpeningsList', () => {
+describe('OpeningsGrid', () => {
   it('renders empty state when no openings', () => {
-    render(<OpeningsList openings={[]} onCancel={vi.fn()} cancellingId={null} />);
+    render(<OpeningsGrid openings={[]} onCancel={vi.fn()} cancellingId={null} />);
     expect(screen.getByText('No openings posted yet.')).toBeInTheDocument();
   });
 
   it('renders opening times in sorted order', () => {
     render(
-      <OpeningsList
+      <OpeningsGrid
         openings={[openOpening, filledOpening, cancelledOpening]}
         onCancel={vi.fn()}
         cancellingId={null}
@@ -61,53 +61,56 @@ describe('OpeningsList', () => {
 
   it('shows status badges for each opening', () => {
     render(
-      <OpeningsList
+      <OpeningsGrid
         openings={[openOpening, filledOpening, cancelledOpening]}
         onCancel={vi.fn()}
         cancellingId={null}
       />,
     );
 
-    // Each status appears in both the mobile and desktop layout
+    // Single layout post-redesign — one badge per opening.
     expect(screen.getAllByText('Open').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Filled').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Cancelled').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('shows fill count text for open openings', () => {
+  it('shows fill count for open openings', () => {
     render(
-      <OpeningsList openings={[openOpening]} onCancel={vi.fn()} cancellingId={null} />,
+      <OpeningsGrid openings={[openOpening]} onCancel={vi.fn()} cancellingId={null} />,
     );
 
-    expect(screen.getAllByText('2 / 4 slots filled').length).toBeGreaterThanOrEqual(1);
+    // Fill count format changed from "2 / 4 slots filled" to mono "2/4".
+    expect(screen.getByText('2/4')).toBeInTheDocument();
   });
 
   it('shows golfer names', () => {
     render(
-      <OpeningsList openings={[openOpening]} onCancel={vi.fn()} cancellingId={null} />,
+      <OpeningsGrid openings={[openOpening]} onCancel={vi.fn()} cancellingId={null} />,
     );
 
     expect(screen.getAllByText(/Alice Smith/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/Bob Jones/).length).toBeGreaterThanOrEqual(1);
   });
 
-  it('shows cancel link only for Open openings', () => {
+  it('shows cancel button only for Open openings', () => {
     render(
-      <OpeningsList
+      <OpeningsGrid
         openings={[openOpening, filledOpening]}
         onCancel={vi.fn()}
         cancellingId={null}
       />,
     );
 
-    // One Cancel per layout (mobile + desktop) for the single Open opening = 2 total
-    const cancelLinks = screen.getAllByText('Cancel');
-    expect(cancelLinks).toHaveLength(2);
+    // Cancel changed from a text "Cancel" link to an icon button with
+    // aria-label "Cancel opening at HH:MM". Single layout = one button per
+    // Open opening.
+    const cancelButtons = screen.getAllByRole('button', { name: /Cancel opening at/ });
+    expect(cancelButtons).toHaveLength(1);
   });
 
   it('shows summary line', () => {
     render(
-      <OpeningsList
+      <OpeningsGrid
         openings={[openOpening, filledOpening]}
         onCancel={vi.fn()}
         cancellingId={null}
