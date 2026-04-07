@@ -2,10 +2,10 @@ name: Teeforce Planning
 
 on:
   workflow_dispatch:
-  issues:
-    types: [opened, labeled, unlabeled]
-  schedule:
-    - cron: '0 0,8,16 * * *'  # Every 8 hours UTC (6pm, 2am, 10am CST)
+  # issues:
+  #   types: [opened, labeled, unlabeled]
+  # schedule:
+  #   - cron: '0 0,8,16 * * *'  # Every 8 hours UTC (6pm, 2am, 10am CST)
 
 jobs:
   planning:
