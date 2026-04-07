@@ -75,10 +75,11 @@ export default function TeeTimeSettings() {
     }
   }, [settingsQuery.data, form]);
 
-  const courseId = course?.id;
+  if (!course) return null;
+
+  const courseId = course.id;
 
   function onSubmit(data: TeeTimeSettingsFormData) {
-    if (!courseId) return;
     updateMutation.mutate({ courseId, data });
   }
 
@@ -88,107 +89,101 @@ export default function TeeTimeSettings() {
         middle={<h1 className="font-display text-[18px] text-ink">Tee Time Settings</h1>}
       />
 
-      {!course ? (
-        <p className="text-ink-muted text-sm py-12 text-center">
-          Select a course from the sidebar to configure settings.
-        </p>
-      ) : (
-        <div className="max-w-2xl">
-          <Card className="border-border-strong">
-            <CardHeader>
-              <CardTitle className="text-[11px] uppercase tracking-wider text-ink-muted font-normal">
-                Tee Time Configuration
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  {settingsQuery.isLoading && (
-                    <p className="text-ink-muted text-sm">Loading settings…</p>
-                  )}
-                  {settingsQuery.isError && (
-                    <p className="text-destructive text-sm">
-                      Error loading settings: {settingsQuery.error.message}
-                    </p>
-                  )}
+      <div className="max-w-2xl">
+        <Card className="border-border-strong">
+          <CardHeader>
+            <CardTitle className="text-[11px] uppercase tracking-wider text-ink-muted font-normal">
+              Tee Time Configuration
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {settingsQuery.isLoading && (
+                  <p className="text-ink-muted text-sm">Loading settings…</p>
+                )}
+                {settingsQuery.isError && (
+                  <p className="text-destructive text-sm">
+                    Error loading settings: {settingsQuery.error.message}
+                  </p>
+                )}
 
+                <FormField
+                  control={form.control}
+                  name="teeTimeIntervalMinutes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tee Time Interval</FormLabel>
+                      <Select
+                        value={String(field.value)}
+                        onValueChange={(value) => field.onChange(Number(value))}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select interval" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="8">Every 8 minutes</SelectItem>
+                          <SelectItem value="10">Every 10 minutes</SelectItem>
+                          <SelectItem value="12">Every 12 minutes</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="teeTimeIntervalMinutes"
+                    name="firstTeeTime"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Tee Time Interval</FormLabel>
-                        <Select
-                          value={String(field.value)}
-                          onValueChange={(value) => field.onChange(Number(value))}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select interval" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="8">Every 8 minutes</SelectItem>
-                            <SelectItem value="10">Every 10 minutes</SelectItem>
-                            <SelectItem value="12">Every 12 minutes</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormLabel>First Tee Time</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="firstTeeTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>First Tee Time</FormLabel>
-                          <FormControl>
-                            <Input type="time" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <FormField
+                    control={form.control}
+                    name="lastTeeTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Tee Time</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-                    <FormField
-                      control={form.control}
-                      name="lastTeeTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Last Tee Time</FormLabel>
-                          <FormControl>
-                            <Input type="time" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                {updateMutation.isError && (
+                  <p className="text-destructive text-sm">
+                    Error: {updateMutation.error.message}
+                  </p>
+                )}
 
-                  {updateMutation.isError && (
-                    <p className="text-destructive text-sm">
-                      Error: {updateMutation.error.message}
-                    </p>
-                  )}
+                {updateMutation.isSuccess && (
+                  <p className="text-green text-sm">
+                    Tee time settings saved successfully!
+                  </p>
+                )}
 
-                  {updateMutation.isSuccess && (
-                    <p className="text-green text-sm">
-                      Tee time settings saved successfully!
-                    </p>
-                  )}
-
-                  <Button type="submit" disabled={updateMutation.isPending}>
-                    {updateMutation.isPending ? 'Saving…' : 'Save Settings'}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+                <Button type="submit" disabled={updateMutation.isPending}>
+                  {updateMutation.isPending ? 'Saving…' : 'Save Settings'}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
     </>
   );
 }
