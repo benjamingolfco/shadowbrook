@@ -4,7 +4,7 @@ using Microsoft.Graph.Models;
 using Teeforce.Api.Infrastructure.Configuration;
 using Teeforce.Domain.Services;
 
-namespace Teeforce.Api.Infrastructure.AppUsers;
+namespace Teeforce.Api.Infrastructure.GraphApi;
 
 public class GraphAppUserInvitationService(
     GraphServiceClient graphClient,
