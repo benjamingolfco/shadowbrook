@@ -21,6 +21,10 @@ interface ThemeProviderProps {
 
 export function ThemeProvider({ children, courseTheme }: ThemeProviderProps) {
   useEffect(() => {
+    // Defaults live in index.css as the Fieldstone palette. Only apply
+    // inline overrides when a course provides its own theme — otherwise
+    // this would clobber the stylesheet defaults with legacy values.
+    if (!courseTheme) return;
     applyTheme(document.documentElement, courseTheme);
     return () => {
       clearTheme(document.documentElement);

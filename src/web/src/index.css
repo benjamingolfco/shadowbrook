@@ -46,6 +46,7 @@
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
     --font-heading: var(--font-heading);
+    --font-display: var(--font-heading);
     --font-body: var(--font-body);
     --font-mono: var(--font-mono);
     --color-canvas: var(--canvas);
@@ -107,7 +108,7 @@
     --blue-light: #ddeaf8;
 
     /* shadcn semantic mapping → Fieldstone */
-    --background: var(--paper);
+    --background: var(--white);
     --foreground: var(--ink);
     --card: var(--white);
     --card-foreground: var(--ink);
@@ -156,7 +157,7 @@
     /* Fieldstone has a single light theme. Dark mode is not supported in this redesign. */
     /* Keeping the .dark selector intact so existing class toggles don't break, */
     /* but values match :root so the app renders consistently. */
-    --background: var(--paper);
+    --background: var(--white);
     --foreground: var(--ink);
     --card: var(--white);
     --card-foreground: var(--ink);

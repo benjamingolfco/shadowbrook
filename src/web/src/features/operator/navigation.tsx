@@ -1,8 +1,19 @@
-import { Outlet, useNavigate } from 'react-router';
+// navigation.tsx — operator feature shell config.
+//
+// This file colocates `operatorNav` (the AppShell sidebar nav config) with the
+// brand components (`OperatorBrand`, `WaitlistBrand`) that render in the AppShell
+// header for the operator feature. The brand components are interactive (admins
+// get an `OrgSwitcher` dropdown), so they are real React components rather than
+// static ReactNodes — that's why this file is `.tsx`.
+//
+// The colocation pattern matches `features/admin/navigation.tsx` (Cluster 2),
+// where `adminBrand` lives next to `adminNav`. The principle: a feature's
+// nav and brand together describe one shell identity, and they belong in one place.
+
 import { useCallback } from 'react';
-import { AppShell } from '@/components/layout/AppShell';
-import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router';
 import { ChevronsUpDown } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,9 +21,26 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { useCourseContext } from '@/features/operator/context/CourseContext';
-import { useOrgContext } from '@/features/operator/context/OrgContext';
-import { operatorNav } from '@/features/operator/navigation';
+import { useOrgContext } from './context/OrgContext';
+import { useCourseContext } from './context/CourseContext';
+import type { NavConfig } from '@/components/layout/AppShell';
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const operatorNav: NavConfig = {
+  sections: [
+    {
+      label: 'Operations',
+      items: [
+        { to: '/operator/tee-sheet', label: 'Tee Sheet' },
+        { to: '/operator/waitlist', label: 'Waitlist' },
+      ],
+    },
+    {
+      label: 'Management',
+      items: [{ to: '/operator/settings', label: 'Settings' }],
+    },
+  ],
+};
 
 function OrgSwitcher() {
   const { organizations } = useAuth();
@@ -68,7 +96,7 @@ function OrgSwitcher() {
   );
 }
 
-function OperatorBrand() {
+export function OperatorBrand() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'Admin';
 
@@ -91,26 +119,14 @@ function OperatorBrand() {
   );
 }
 
-export default function OperatorLayout() {
+export function WaitlistBrand() {
+  const { course } = useCourseContext();
   const { user } = useAuth();
-  const { clearCourse } = useCourseContext();
-  const navigate = useNavigate();
-
-  const handleSwitchCourse = useCallback(() => {
-    clearCourse();
-    navigate('/operator');
-  }, [clearCourse, navigate]);
-
-  const showSwitchCourse = (user?.courses?.length ?? 0) > 1;
+  const displayName = course?.name ?? user?.organization?.name ?? 'Teeforce';
 
   return (
-    <AppShell
-      variant="full"
-      navConfig={operatorNav}
-      brand={<OperatorBrand />}
-      onSwitchCourse={showSwitchCourse ? handleSwitchCourse : undefined}
-    >
-      <Outlet />
-    </AppShell>
+    <span className="text-lg font-semibold font-[family-name:var(--font-heading)] text-ink">
+      {displayName}
+    </span>
   );
 }
