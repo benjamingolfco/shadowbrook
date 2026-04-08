@@ -150,8 +150,8 @@ public static class WalkUpWaitlistEndpoints
         ICourseContext courseContext,
         ITimeProvider timeProvider)
     {
-        var teeTime = new TeeTime(DateOnly.FromDateTime(request.TeeTime), TimeOnly.FromDateTime(request.TeeTime));
-        var courseNow = new TeeTime(courseContext.Today, courseContext.Now);
+        var teeTime = new BookingDateTime(DateOnly.FromDateTime(request.TeeTime), TimeOnly.FromDateTime(request.TeeTime));
+        var courseNow = new BookingDateTime(courseContext.Today, courseContext.Now);
 
         if (teeTime.Value < courseNow.Value)
         {

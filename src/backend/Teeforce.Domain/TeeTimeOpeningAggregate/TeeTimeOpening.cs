@@ -8,7 +8,7 @@ namespace Teeforce.Domain.TeeTimeOpeningAggregate;
 public class TeeTimeOpening : Entity
 {
     public Guid CourseId { get; private set; }
-    public TeeTime TeeTime { get; private set; } = null!;
+    public BookingDateTime TeeTime { get; private set; } = null!;
     public int SlotsAvailable { get; private set; }
     public int SlotsRemaining { get; private set; }
     public bool OperatorOwned { get; private set; }
@@ -41,7 +41,7 @@ public class TeeTimeOpening : Entity
         {
             Id = Guid.CreateVersion7(),
             CourseId = courseId,
-            TeeTime = new TeeTime(date, teeTime),
+            TeeTime = new BookingDateTime(date, teeTime),
             SlotsAvailable = slotsAvailable,
             SlotsRemaining = slotsAvailable,
             OperatorOwned = operatorOwned,

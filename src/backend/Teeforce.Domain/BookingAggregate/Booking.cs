@@ -8,7 +8,7 @@ public class Booking : Entity
 {
     public Guid CourseId { get; private set; }
     public Guid GolferId { get; private set; }
-    public TeeTime TeeTime { get; private set; } = null!;
+    public BookingDateTime TeeTime { get; private set; } = null!;
     public int PlayerCount { get; private set; }
     public BookingStatus Status { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
@@ -29,7 +29,7 @@ public class Booking : Entity
             Id = bookingId,
             CourseId = courseId,
             GolferId = golferId,
-            TeeTime = new TeeTime(date, teeTime),
+            TeeTime = new BookingDateTime(date, teeTime),
             PlayerCount = playerCount,
             Status = BookingStatus.Pending,
             CreatedAt = now
@@ -62,7 +62,7 @@ public class Booking : Entity
             Id = bookingId,
             CourseId = courseId,
             GolferId = golferId,
-            TeeTime = new TeeTime(date, teeTime),
+            TeeTime = new BookingDateTime(date, teeTime),
             PlayerCount = playerCount,
             Status = BookingStatus.Confirmed,
             CreatedAt = now

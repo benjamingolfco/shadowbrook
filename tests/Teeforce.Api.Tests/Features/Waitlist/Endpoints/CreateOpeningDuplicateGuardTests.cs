@@ -34,7 +34,7 @@ public class CreateOpeningDuplicateGuardTests
 
         this.openingRepo.GetActiveByCourseTeeTimeAsync(
             courseId,
-            Arg.Is<TeeTime>(t => t.Date == DateOnly.FromDateTime(FutureTeeTime) && t.Time == TimeOnly.FromDateTime(FutureTeeTime)))
+            Arg.Is<BookingDateTime>(t => t.Date == DateOnly.FromDateTime(FutureTeeTime) && t.Time == TimeOnly.FromDateTime(FutureTeeTime)))
             .Returns((TeeTimeOpening?)null);
 
         var result = await WalkUpWaitlistEndpoints.CreateOpening(courseId, request, this.openingRepo, this.courseContext, this.timeProvider);
@@ -58,7 +58,7 @@ public class CreateOpeningDuplicateGuardTests
 
         this.openingRepo.GetActiveByCourseTeeTimeAsync(
             courseId,
-            Arg.Is<TeeTime>(t => t.Date == DateOnly.FromDateTime(FutureTeeTime) && t.Time == TimeOnly.FromDateTime(FutureTeeTime)))
+            Arg.Is<BookingDateTime>(t => t.Date == DateOnly.FromDateTime(FutureTeeTime) && t.Time == TimeOnly.FromDateTime(FutureTeeTime)))
             .Returns(existing);
 
         var result = await WalkUpWaitlistEndpoints.CreateOpening(courseId, request, this.openingRepo, this.courseContext, this.timeProvider);
@@ -95,7 +95,7 @@ public class CreateOpeningDuplicateGuardTests
 
         this.openingRepo.GetActiveByCourseTeeTimeAsync(
             courseId,
-            Arg.Is<TeeTime>(t => t.Date == DateOnly.FromDateTime(FutureTeeTime) && t.Time == TimeOnly.FromDateTime(FutureTeeTime)))
+            Arg.Is<BookingDateTime>(t => t.Date == DateOnly.FromDateTime(FutureTeeTime) && t.Time == TimeOnly.FromDateTime(FutureTeeTime)))
             .Returns(existing);
 
         var result = await WalkUpWaitlistEndpoints.CreateOpening(courseId, request, this.openingRepo, this.courseContext, this.timeProvider);
@@ -137,7 +137,7 @@ public class CreateOpeningDuplicateGuardTests
 
         this.openingRepo.GetActiveByCourseTeeTimeAsync(
             courseId,
-            Arg.Is<TeeTime>(t => t.Date == DateOnly.FromDateTime(FutureTeeTime) && t.Time == TimeOnly.FromDateTime(FutureTeeTime)))
+            Arg.Is<BookingDateTime>(t => t.Date == DateOnly.FromDateTime(FutureTeeTime) && t.Time == TimeOnly.FromDateTime(FutureTeeTime)))
             .Returns(existing);
 
         var result = await WalkUpWaitlistEndpoints.CreateOpening(courseId, request, this.openingRepo, this.courseContext, this.timeProvider);
@@ -179,7 +179,7 @@ public class CreateOpeningDuplicateGuardTests
 
         this.openingRepo.GetActiveByCourseTeeTimeAsync(
             courseId,
-            Arg.Is<TeeTime>(t => t.Date == DateOnly.FromDateTime(FutureTeeTime) && t.Time == TimeOnly.FromDateTime(FutureTeeTime)))
+            Arg.Is<BookingDateTime>(t => t.Date == DateOnly.FromDateTime(FutureTeeTime) && t.Time == TimeOnly.FromDateTime(FutureTeeTime)))
             .Returns(existing);
 
         var result = await WalkUpWaitlistEndpoints.CreateOpening(courseId, request, this.openingRepo, this.courseContext, this.timeProvider);
