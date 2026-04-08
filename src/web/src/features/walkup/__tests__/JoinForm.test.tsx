@@ -105,6 +105,59 @@ describe('JoinForm', () => {
     });
   });
 
+  it('includes partySize in the join request payload', async () => {
+    const capturedMutate = vi.fn();
+
+    mockUseJoinWaitlist.mockReturnValue({
+      mutate: capturedMutate,
+      isPending: false,
+      isError: false,
+      isSuccess: false,
+      error: null,
+    } as unknown as ReturnType<typeof useJoinWaitlist>);
+
+    render(<JoinForm verifyData={verifyData} onJoined={vi.fn()} />);
+
+    fireEvent.change(screen.getByLabelText('First Name'), { target: { value: 'John' } });
+    fireEvent.change(screen.getByLabelText('Last Name'), { target: { value: 'Smith' } });
+    fireEvent.change(screen.getByLabelText('Phone Number'), { target: { value: '5551234567' } });
+    fireEvent.click(screen.getByRole('radio', { name: '3' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Join Waitlist' }));
+
+    await waitFor(() => {
+      expect(capturedMutate).toHaveBeenCalledWith(
+        expect.objectContaining({ partySize: 3 }),
+        expect.anything(),
+      );
+    });
+  });
+
+  it('defaults party size to 1', async () => {
+    const capturedMutate = vi.fn();
+
+    mockUseJoinWaitlist.mockReturnValue({
+      mutate: capturedMutate,
+      isPending: false,
+      isError: false,
+      isSuccess: false,
+      error: null,
+    } as unknown as ReturnType<typeof useJoinWaitlist>);
+
+    render(<JoinForm verifyData={verifyData} onJoined={vi.fn()} />);
+
+    fireEvent.change(screen.getByLabelText('First Name'), { target: { value: 'Jane' } });
+    fireEvent.change(screen.getByLabelText('Last Name'), { target: { value: 'Doe' } });
+    fireEvent.change(screen.getByLabelText('Phone Number'), { target: { value: '5559876543' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Join Waitlist' }));
+
+    await waitFor(() => {
+      expect(capturedMutate).toHaveBeenCalledWith(
+        expect.objectContaining({ partySize: 1 }),
+        expect.anything(),
+      );
+    });
+  });
+
   it('treats 409 duplicate as success and calls onJoined', async () => {
     const onJoined = vi.fn();
     const error = Object.assign(new Error("You're already on the waitlist."), {

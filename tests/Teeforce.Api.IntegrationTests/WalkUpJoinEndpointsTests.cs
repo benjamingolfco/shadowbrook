@@ -188,6 +188,25 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IAsyn
     }
 
     [Fact]
+    public async Task Join_WithPartySize2_PersistsGroupSize()
+    {
+        var (_, courseId, shortCode) = await CreateOpenWaitlistAsync();
+        var verifyBody = await (await PostVerifyAsync(shortCode)).Content.ReadFromJsonAsync<VerifyCodeResponse>();
+
+        var response = await PostJoinAsync(verifyBody!.CourseWaitlistId, "Party", "Test", "555-222-3333", partySize: 2);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        // Verify persisted GroupSize via the operator today endpoint
+        var todayResponse = await this.client.GetAsync($"/courses/{courseId}/walkup-waitlist/today");
+        Assert.Equal(HttpStatusCode.OK, todayResponse.StatusCode);
+
+        var today = await todayResponse.Content.ReadFromJsonAsync<WaitlistTodayResponse>();
+        var entry = Assert.Single(today!.Entries);
+        Assert.Equal(2, entry.GroupSize);
+    }
+
+    [Fact]
     public async Task Join_SendsSmsConfirmation_DoesNotBreakFlow()
     {
         // SMS sending should not break the main flow (ConsoleTextMessageService is used in tests)
@@ -377,14 +396,16 @@ public class WalkUpJoinEndpointsTests(TestWebApplicationFactory factory) : IAsyn
         Guid courseWaitlistId,
         string firstName,
         string lastName,
-        string phone)
+        string phone,
+        int partySize = 1)
     {
         return await this.client.PostAsJsonAsync("/walkup/join", new
         {
             CourseWaitlistId = courseWaitlistId,
             FirstName = firstName,
             LastName = lastName,
-            Phone = phone
+            Phone = phone,
+            PartySize = partySize
         });
     }
 

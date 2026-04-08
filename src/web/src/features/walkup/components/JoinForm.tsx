@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
@@ -18,6 +19,7 @@ const joinSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   phone: z.string().min(10, 'Enter a valid phone number'),
+  partySize: z.number().int().min(1).max(4),
 });
 
 type JoinFormData = z.infer<typeof joinSchema>;
@@ -25,10 +27,12 @@ type JoinFormData = z.infer<typeof joinSchema>;
 interface JoinFormProps {
   verifyData: VerifyCodeResponse;
   onJoined: (result: JoinWaitlistResponse) => void;
+  onPhoneCapture?: (phone: string) => void;
 }
 
-export default function JoinForm({ verifyData, onJoined }: JoinFormProps) {
+export default function JoinForm({ verifyData, onJoined, onPhoneCapture }: JoinFormProps) {
   const joinMutation = useJoinWaitlist();
+  const [selectedPartySize, setSelectedPartySize] = useState(1);
 
   const form = useForm<JoinFormData>({
     resolver: zodResolver(joinSchema),
@@ -36,16 +40,19 @@ export default function JoinForm({ verifyData, onJoined }: JoinFormProps) {
       firstName: '',
       lastName: '',
       phone: '',
+      partySize: 1,
     },
   });
 
   function onSubmit(data: JoinFormData) {
+    onPhoneCapture?.(data.phone);
     joinMutation.mutate(
       {
         courseWaitlistId: verifyData.courseWaitlistId,
         firstName: data.firstName,
         lastName: data.lastName,
         phone: data.phone,
+        partySize: data.partySize,
       },
       {
         onSuccess: (result) => {
@@ -128,6 +135,45 @@ export default function JoinForm({ verifyData, onJoined }: JoinFormProps) {
                     {...field}
                   />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="partySize"
+            render={() => (
+              <FormItem>
+                <FormLabel>Party Size</FormLabel>
+                <div className="flex" role="radiogroup" aria-label="Party size">
+                  {[1, 2, 3, 4].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      role="radio"
+                      aria-checked={selectedPartySize === n}
+                      aria-label={String(n)}
+                      className={[
+                        'h-9 w-10 text-sm font-medium border transition-colors duration-100',
+                        n === 1 ? 'rounded-l-md' : '',
+                        n === 4 ? 'rounded-r-md' : '',
+                        n > 1 ? '-ml-px' : '',
+                        selectedPartySize === n
+                          ? 'bg-primary text-primary-foreground border-primary z-10 relative'
+                          : 'bg-background text-foreground border-input hover:bg-muted',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                      onClick={() => {
+                        setSelectedPartySize(n);
+                        form.setValue('partySize', n);
+                      }}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
                 <FormMessage />
               </FormItem>
             )}

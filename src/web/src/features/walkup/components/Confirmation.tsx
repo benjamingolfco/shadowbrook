@@ -4,10 +4,12 @@ import type { JoinWaitlistResponse } from '@/types/waitlist';
 
 interface ConfirmationProps {
   result: JoinWaitlistResponse;
+  phone?: string;
 }
 
-export default function Confirmation({ result }: ConfirmationProps) {
+export default function Confirmation({ result, phone }: ConfirmationProps) {
   const firstName = result.golferName.split(' ')[0];
+  const smsLinkId = result.golferId || (phone ?? '');
 
   return (
     <div className="space-y-6 text-center">
@@ -45,7 +47,7 @@ export default function Confirmation({ result }: ConfirmationProps) {
       {(import.meta.env.DEV || import.meta.env.VITE_SHOW_DEV_TOOLS === 'true') && (
         <div className="pt-2">
           <Link
-            to={`/dev/sms/golfer/${result.golferId}`}
+            to={`/dev/sms/golfer/${smsLinkId}`}
             className="inline-flex items-center gap-2 rounded-md border-2 border-dashed border-amber-400 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 hover:bg-amber-100 transition-colors"
           >
             <MessageSquareText className="h-4 w-4" />

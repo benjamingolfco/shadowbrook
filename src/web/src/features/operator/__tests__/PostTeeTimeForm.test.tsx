@@ -182,4 +182,53 @@ describe('PostTeeTimeForm', () => {
     });
     expect(screen.queryByText('Tee time must be in the future')).not.toBeInTheDocument();
   });
+
+  it('calls the mutation on a second successive submission without a page refresh', async () => {
+    // Simulate time advancing between submissions: first post at 10:00, then
+    // getCourseNow advances to 10:00 and getNextTeeTimeInterval suggests 10:10.
+    vi.mocked(courseTime.getCourseNow).mockReturnValue('09:50');
+    vi.mocked(courseTime.getNextTeeTimeInterval).mockReturnValue('10:00');
+
+    // Make mutate immediately invoke onSuccess so the form resets.
+    mockMutate.mockImplementation(
+      (_payload: unknown, { onSuccess }: { onSuccess?: () => void }) => {
+        onSuccess?.();
+      },
+    );
+
+    render(<PostTeeTimeForm courseId="course-1" />);
+
+    const timeInput = screen.getByLabelText('Tee time');
+
+    // First submission
+    fireEvent.change(timeInput, { target: { value: '10:00' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Post tee time' }));
+    await waitFor(() => expect(mockMutate).toHaveBeenCalledTimes(1));
+
+    // After success, getCourseNow advances so the previous time is now "past".
+    vi.mocked(courseTime.getCourseNow).mockReturnValue('10:00');
+    vi.mocked(courseTime.getNextTeeTimeInterval).mockReturnValue('10:10');
+
+    // The form should have reset to the new suggested time (10:10).
+    // Set it explicitly to mirror what an operator would see after the reset.
+    fireEvent.change(timeInput, { target: { value: '10:10' } });
+
+    // Wait for the 1500ms "Posted!" banner to clear so the submit button
+    // returns to its normal label, then fire the second submission.
+    const submitButton = await waitFor(
+      () => screen.getByRole('button', { name: 'Post tee time' }),
+      { timeout: 3000 },
+    );
+    fireEvent.click(submitButton);
+    await waitFor(() => expect(mockMutate).toHaveBeenCalledTimes(2));
+
+    expect(screen.queryByText('Tee time must be in the future')).not.toBeInTheDocument();
+    expect(mockMutate).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        data: expect.objectContaining({ teeTime: expect.stringContaining('10:10') }),
+      }),
+      expect.any(Object),
+    );
+  });
 });
