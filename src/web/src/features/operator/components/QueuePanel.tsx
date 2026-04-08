@@ -1,3 +1,5 @@
+import { X } from 'lucide-react';
+
 import { formatCourseTime } from '@/lib/course-time';
 import { cn } from '@/lib/utils';
 import type { WalkUpWaitlistEntry } from '@/types/waitlist';
@@ -88,9 +90,9 @@ export function QueuePanel({
                     onClick={() => onRemove(entry)}
                     disabled={removingEntryId === entry.id}
                     aria-label={`Remove ${entry.golferName} from waitlist`}
-                    className="shrink-0 text-[11px] font-medium text-ink-muted opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100 focus-visible:opacity-100"
+                    className="shrink-0 text-destructive transition-opacity hover:opacity-80"
                   >
-                    Remove
+                    <X className="h-4 w-4" aria-hidden="true" />
                   </button>
                 )}
               </li>
