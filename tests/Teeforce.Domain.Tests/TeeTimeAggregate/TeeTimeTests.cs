@@ -47,6 +47,7 @@ public class TeeTimeTests
         var claim = Assert.Single(teeTime.Claims);
         Assert.Equal(bookingId, claim.BookingId);
         Assert.Equal(2, claim.GroupSize);
+        Assert.DoesNotContain(teeTime.DomainEvents, e => e is TeeTimeFilled);
     }
 
     [Fact]
@@ -81,6 +82,21 @@ public class TeeTimeTests
         Assert.Equal(1, teeTime.Remaining);
         Assert.Equal(2, teeTime.Claims.Count);
         Assert.Single(teeTime.DomainEvents.OfType<TeeTimeClaimed>());
+    }
+
+    [Fact]
+    public void ClaimInstance_ExhaustingCapacity_TransitionsToFilledAndRaisesFilled()
+    {
+        var (_, interval, auth) = MakeSheetAndInterval(capacity: 4);
+        var teeTime = TeeTime.Claim(interval, this.courseId, this.date, auth, Guid.NewGuid(), Guid.NewGuid(), 2, this.timeProvider);
+        teeTime.ClearDomainEvents();
+
+        teeTime.Claim(auth, Guid.NewGuid(), Guid.NewGuid(), 2, this.timeProvider);
+
+        Assert.Equal(TeeTimeStatus.Filled, teeTime.Status);
+        Assert.Equal(0, teeTime.Remaining);
+        Assert.Contains(teeTime.DomainEvents, e => e is TeeTimeClaimed);
+        Assert.Contains(teeTime.DomainEvents, e => e is TeeTimeFilled);
     }
 
     [Fact]
