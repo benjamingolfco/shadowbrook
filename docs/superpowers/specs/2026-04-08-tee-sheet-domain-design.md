@@ -307,15 +307,17 @@ The read-model shape is a new record type scoped to the endpoint file, per the f
 
 Creates and publishes the `TeeSheet` for the given date if it doesn't exist; publishes an existing draft if it does. Used to seed data in dev/test and (eventually) by an automated job that publishes days N days in advance.
 
-### New endpoint: `POST /courses/{courseId}/tee-sheet-intervals/{intervalId}/book`
+### New endpoint: `POST /courses/{courseId}/tee-times/book`
 
-Direct booking against a `TeeSheetInterval` (note: the route uses the interval id, not the TeeTime id, because the TeeTime may not yet exist at the time of the call). Pre-allocates `bookingId` on the server side. Body:
+Direct booking action. `courseId` stays in the path so tenant scoping goes through the existing `CourseExistsMiddleware`. The specific target interval is an input, not a URL segment — which avoids the "path id type doesn't match body id type" mismatch that a `.../{intervalId}/book` shape would imply.
+
+Body:
 
 ```
-{ golferId: Guid, groupSize: int }
+{ teeSheetIntervalId: Guid, golferId: Guid, groupSize: int }
 ```
 
-Wolverine endpoint calls `TeeTime.Claim(...)` via the repository (or materializes a new TeeTime via the factory if none exists for the interval). Transactional middleware saves, events flow, the `Booking` row lands via the `TeeTimeClaimed` handler.
+Pre-allocates `bookingId` on the server side. The Wolverine endpoint loads the `TeeSheetInterval`, then either calls `TeeTime.Claim(...)` on an existing row or invokes the `TeeTime.Claim(interval, ...)` factory if no row exists for that interval. Transactional middleware saves, events flow, the `Booking` row lands via the `TeeTimeClaimed` handler. FluentValidation lives on the request record per conventions.
 
 ### Existing booking endpoints
 
