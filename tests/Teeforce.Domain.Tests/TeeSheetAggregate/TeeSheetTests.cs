@@ -32,6 +32,19 @@ public class TeeSheetTests
     }
 
     [Fact]
+    public void Draft_WithUnevenlyDivisibleSpan_StopsBeforeLastTeeTime()
+    {
+        var sheet = TeeSheet.Draft(Guid.NewGuid(), new DateOnly(2026, 6, 1),
+            new ScheduleSettings(new TimeOnly(7, 0), new TimeOnly(9, 0), 45, 4),
+            this.timeProvider);
+
+        Assert.Equal(3, sheet.Intervals.Count);
+        Assert.Equal(new TimeOnly(7, 0), sheet.Intervals[0].Time);
+        Assert.Equal(new TimeOnly(7, 45), sheet.Intervals[1].Time);
+        Assert.Equal(new TimeOnly(8, 30), sheet.Intervals[2].Time);
+    }
+
+    [Fact]
     public void Draft_AssignsCapacityFromSettings()
     {
         var sheet = TeeSheet.Draft(Guid.NewGuid(), new DateOnly(2026, 6, 1),
