@@ -31,6 +31,7 @@ public class BookingCancelledNotificationHandlerTests
             bookingId ?? Guid.CreateVersion7(),
             courseId ?? Guid.NewGuid(),
             golferId ?? Guid.NewGuid(),
+            teeTimeId: null,
             new DateOnly(2026, 7, 4),
             new TimeOnly(8, 0),
             2);

@@ -8,6 +8,7 @@ public class Booking : Entity
 {
     public Guid CourseId { get; private set; }
     public Guid GolferId { get; private set; }
+    public Guid? TeeTimeId { get; private set; }
     public BookingDateTime TeeTime { get; private set; } = null!;
     public int PlayerCount { get; private set; }
     public BookingStatus Status { get; private set; }
@@ -52,6 +53,7 @@ public class Booking : Entity
         Guid bookingId,
         Guid courseId,
         Guid golferId,
+        Guid? teeTimeId,
         DateOnly date,
         TimeOnly teeTime,
         int playerCount)
@@ -62,6 +64,7 @@ public class Booking : Entity
             Id = bookingId,
             CourseId = courseId,
             GolferId = golferId,
+            TeeTimeId = teeTimeId,
             TeeTime = new BookingDateTime(date, teeTime),
             PlayerCount = playerCount,
             Status = BookingStatus.Confirmed,

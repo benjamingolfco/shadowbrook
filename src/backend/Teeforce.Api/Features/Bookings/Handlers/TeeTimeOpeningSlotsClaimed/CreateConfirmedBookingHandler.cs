@@ -13,6 +13,7 @@ public static class TeeTimeOpeningSlotsClaimedCreateConfirmedBookingHandler
             bookingId: evt.BookingId,
             courseId: evt.CourseId,
             golferId: evt.GolferId,
+            teeTimeId: null,
             date: evt.Date,
             teeTime: evt.TeeTime,
             playerCount: evt.GroupSize);

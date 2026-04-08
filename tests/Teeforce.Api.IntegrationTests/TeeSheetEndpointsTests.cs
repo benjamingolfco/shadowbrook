@@ -39,6 +39,7 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
             bookingId: Guid.CreateVersion7(),
             courseId: courseId,
             golferId: golfer.Id,
+            teeTimeId: null,
             date: DateOnly.ParseExact(date, "yyyy-MM-dd"),
             teeTime: TimeOnly.ParseExact(time, "HH:mm"),
             playerCount: playerCount);
