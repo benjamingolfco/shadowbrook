@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Teeforce.Api.Infrastructure.Auth;
 using Teeforce.Api.Infrastructure.Data;
+using Teeforce.Domain.TeeSheetAggregate;
+using Teeforce.Domain.TeeTimeAggregate;
 using Wolverine.Http;
 
 namespace Teeforce.Api.Features.TeeSheet;
@@ -13,7 +15,10 @@ public static class TeeSheetEndpoints
     public static async Task<IResult> GetTeeSheet(
         Guid? courseId,
         string? date,
-        ApplicationDbContext db)
+        ApplicationDbContext db,
+        ITeeSheetRepository teeSheetRepository,
+        ITeeTimeRepository teeTimeRepository,
+        CancellationToken ct)
     {
         if (courseId is null)
         {
@@ -30,60 +35,63 @@ public static class TeeSheetEndpoints
             return Results.BadRequest(new { error = "date must be in yyyy-MM-dd format." });
         }
 
-        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId.Value);
+        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId.Value, ct);
         if (course is null)
         {
             return Results.NotFound(new { error = "Course not found." });
         }
 
-        if (course.TeeTimeIntervalMinutes is null || course.FirstTeeTime is null || course.LastTeeTime is null)
+        var sheet = await teeSheetRepository.GetByCourseAndDateAsync(courseId.Value, dateOnly, ct);
+        if (sheet is null)
         {
-            return Results.NotFound(new { error = "Tee time settings not configured for this course." });
+            // No sheet drafted/published yet for this date — return empty slot list
+            // so the UI can render a "not yet published" state without blowing up.
+            return Results.Ok(new TeeSheetResponse(course.Id, course.Name, []));
         }
 
-        // Fetch all bookings for the course and date, joining to golfer for the name
-        // Compare against TeeTime.Value (the mapped DateTime column) so EF can translate
-        var startOfDay = dateOnly.ToDateTime(TimeOnly.MinValue);
-        var startOfNextDay = dateOnly.AddDays(1).ToDateTime(TimeOnly.MinValue);
+        var teeTimes = await teeTimeRepository.GetByTeeSheetIdAsync(sheet.Id, ct);
+        var teeTimesByInterval = teeTimes.ToDictionary(t => t.TeeSheetIntervalId);
 
-        var bookings = await db.Bookings
-            .Where(b => b.CourseId == courseId.Value
-                && b.TeeTime.Value >= startOfDay
-                && b.TeeTime.Value < startOfNextDay)
-            .Join(
-                db.Golfers,
-                b => b.GolferId,
-                g => g.Id,
-                (b, g) => new
-                {
-                    b.TeeTime,
-                    b.PlayerCount,
-                    GolferName = g.FirstName + " " + g.LastName
-                })
-            .ToListAsync();
+        var golferIds = teeTimes
+            .SelectMany(t => t.Claims)
+            .Select(c => c.GolferId)
+            .Distinct()
+            .ToList();
 
-        // Generate all time slots
+        var golferNames = await db.Golfers
+            .Where(g => golferIds.Contains(g.Id))
+            .Select(g => new { g.Id, Name = g.FirstName + " " + g.LastName })
+            .ToDictionaryAsync(g => g.Id, g => g.Name, ct);
+
         var slots = new List<TeeSheetSlot>();
-        var currentTime = course.FirstTeeTime.Value;
-        var interval = TimeSpan.FromMinutes(course.TeeTimeIntervalMinutes.Value);
-
-        while (currentTime < course.LastTeeTime.Value)
+        foreach (var interval in sheet.Intervals.OrderBy(i => i.Time))
         {
-            var booking = bookings.FirstOrDefault(b => b.TeeTime.Time == currentTime);
+            var slotDateTime = dateOnly.ToDateTime(interval.Time);
 
-            slots.Add(new TeeSheetSlot(
-                dateOnly.ToDateTime(currentTime),
-                booking is not null ? "booked" : "open",
-                booking?.GolferName,
-                booking?.PlayerCount ?? 0));
+            if (!teeTimesByInterval.TryGetValue(interval.Id, out var teeTime))
+            {
+                slots.Add(new TeeSheetSlot(slotDateTime, "open", null, 0));
+                continue;
+            }
 
-            currentTime = currentTime.Add(interval);
+            if (teeTime.Status == TeeTimeStatus.Blocked)
+            {
+                slots.Add(new TeeSheetSlot(slotDateTime, "blocked", null, 0));
+                continue;
+            }
+
+            var claim = teeTime.Claims.FirstOrDefault();
+            if (claim is null)
+            {
+                slots.Add(new TeeSheetSlot(slotDateTime, "open", null, 0));
+                continue;
+            }
+
+            var golferName = golferNames.TryGetValue(claim.GolferId, out var name) ? name : null;
+            slots.Add(new TeeSheetSlot(slotDateTime, "booked", golferName, claim.GroupSize));
         }
 
-        return Results.Ok(new TeeSheetResponse(
-            course.Id,
-            course.Name,
-            slots));
+        return Results.Ok(new TeeSheetResponse(course.Id, course.Name, slots));
     }
 }
 

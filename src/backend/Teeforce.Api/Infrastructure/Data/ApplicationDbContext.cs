@@ -55,6 +55,13 @@ public class ApplicationDbContext(
         foreach (var entry in ChangeTracker.Entries<Entity>()
             .Where(e => e.State is EntityState.Added or EntityState.Modified))
         {
+            // Only aggregate roots carry shadow audit properties (configured via
+            // HasShadowAuditProperties). Owned/child entities (e.g. TeeSheetInterval,
+            // TeeTimeClaim) inherit from Entity but have no audit columns — skip them.
+            if (entry.Metadata.FindProperty("UpdatedAt") is null)
+            {
+                continue;
+            }
             entry.Property("UpdatedAt").CurrentValue = now;
             entry.Property("UpdatedBy").CurrentValue = userId;
         }
