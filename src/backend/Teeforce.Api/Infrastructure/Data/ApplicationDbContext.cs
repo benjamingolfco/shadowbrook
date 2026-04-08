@@ -14,6 +14,7 @@ using Teeforce.Domain.GolferAggregate;
 using Teeforce.Domain.GolferWaitlistEntryAggregate;
 using Teeforce.Domain.OrganizationAggregate;
 using Teeforce.Domain.TeeSheetAggregate;
+using Teeforce.Domain.TeeTimeAggregate;
 using Teeforce.Domain.TeeTimeOpeningAggregate;
 using Teeforce.Domain.TenantAggregate;
 using Teeforce.Domain.WaitlistOfferAggregate;
@@ -36,6 +37,7 @@ public class ApplicationDbContext(
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<CourseWaitlist> CourseWaitlists => Set<CourseWaitlist>();
     public DbSet<TeeSheet> TeeSheets => Set<TeeSheet>();
+    public DbSet<TeeTime> TeeTimes => Set<TeeTime>();
     public DbSet<TeeTimeOpening> TeeTimeOpenings => Set<TeeTimeOpening>();
     public DbSet<Golfer> Golfers => Set<Golfer>();
     public DbSet<GolferWaitlistEntry> GolferWaitlistEntries => Set<GolferWaitlistEntry>();
@@ -94,6 +96,7 @@ public class ApplicationDbContext(
         modelBuilder.ApplyConfiguration(new WalkUpWaitlistConfiguration());
         modelBuilder.ApplyConfiguration(new OnlineWaitlistConfiguration());
         modelBuilder.ApplyConfiguration(new TeeSheetConfiguration());
+        modelBuilder.ApplyConfiguration(new TeeTimeConfiguration());
         modelBuilder.ApplyConfiguration(new TeeTimeOpeningConfiguration());
         modelBuilder.ApplyConfiguration(new GolferConfiguration());
         modelBuilder.ApplyConfiguration(new GolferWaitlistEntryConfiguration());
