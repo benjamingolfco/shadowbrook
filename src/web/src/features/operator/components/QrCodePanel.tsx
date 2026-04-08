@@ -1,8 +1,8 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, Printer } from 'lucide-react';
+import { Check, Copy, Download, Printer } from 'lucide-react';
 
 interface QrCodePanelProps {
   shortCode: string;
@@ -11,6 +11,14 @@ interface QrCodePanelProps {
 export function QrCodePanel({ shortCode }: QrCodePanelProps) {
   const qrRef = useRef<HTMLDivElement>(null);
   const shortUrl = `${window.location.origin}/w/${shortCode}`;
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    void navigator.clipboard.writeText(shortUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
 
   function handleDownload() {
     const canvas = qrRef.current?.querySelector('canvas');
@@ -67,7 +75,22 @@ export function QrCodePanel({ shortCode }: QrCodePanelProps) {
             </div>
 
             <div className="text-center">
-              <p className="font-mono text-sm text-muted-foreground break-all">{shortUrl}</p>
+              <div className="flex items-center justify-center gap-2 print:block">
+                <p className="font-mono text-sm text-muted-foreground break-all">{shortUrl}</p>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0 print:hidden"
+                  onClick={handleCopy}
+                  aria-label={copied ? 'Copied' : 'Copy join link'}
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
               <p className="text-xs text-muted-foreground mt-2">
                 Scan to join the walk-up waitlist
               </p>

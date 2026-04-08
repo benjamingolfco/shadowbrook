@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { MessageSquareText } from 'lucide-react';
 import { formatWallClockDate, formatWallClockTime } from '@/lib/course-time';
 import type { WaitlistOfferAcceptResponse, WaitlistOfferResponse } from '@/types/waitlist';
 
@@ -42,12 +43,18 @@ export default function AcceptConfirmation({ response, offer }: AcceptConfirmati
       </div>
 
       {(import.meta.env.DEV || import.meta.env.VITE_SHOW_DEV_TOOLS === 'true') && response?.golferId && (
-        <Link
-          to={`/dev/sms/golfer/${response.golferId}`}
-          className="text-xs text-muted-foreground underline"
-        >
-          View SMS messages
-        </Link>
+        <div className="pt-2">
+          <Link
+            to={`/dev/sms/golfer/${response.golferId}`}
+            className="inline-flex items-center gap-2 rounded-md border-2 border-dashed border-amber-400 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 hover:bg-amber-100 transition-colors"
+          >
+            <MessageSquareText className="h-4 w-4" />
+            View SMS messages
+            <span className="text-[10px] font-mono uppercase tracking-wide bg-amber-200 text-amber-900 rounded px-1.5 py-0.5">
+              Dev
+            </span>
+          </Link>
+        </div>
       )}
     </div>
   );

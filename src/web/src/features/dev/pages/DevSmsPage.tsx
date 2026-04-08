@@ -46,19 +46,44 @@ function groupByPhoneNumber(messages: SmsMessage[]): Map<string, SmsMessage[]> {
   return groups;
 }
 
+const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+
+function renderBodyWithLinks(body: string, isOutbound: boolean) {
+  const parts = body.split(URL_REGEX);
+  return parts.map((part, i) => {
+    if (part.match(/^https?:\/\//)) {
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            'underline underline-offset-2 break-all',
+            isOutbound ? 'text-primary-foreground' : 'text-foreground'
+          )}
+        >
+          {part}
+        </a>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 function MessageBubble({ msg }: { msg: SmsMessage }) {
   const isOutbound = msg.direction === 0;
   return (
     <div className={cn('flex flex-col gap-1', isOutbound ? 'items-end' : 'items-start')}>
       <div
         className={cn(
-          'max-w-xs rounded-2xl px-4 py-2 text-sm',
+          'max-w-xs rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap',
           isOutbound
             ? 'bg-primary text-primary-foreground rounded-br-sm'
             : 'bg-muted text-foreground rounded-bl-sm'
         )}
       >
-        {msg.body}
+        {renderBodyWithLinks(msg.body, isOutbound)}
       </div>
       <span className="text-xs text-muted-foreground px-1">
         {isOutbound ? 'System' : 'Golfer'} · {formatTime(msg.timestamp)}
