@@ -4,6 +4,7 @@ using Teeforce.Api.Infrastructure.Auth;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.TeeSheetAggregate;
 using Teeforce.Domain.TeeTimeAggregate;
+using Teeforce.Domain.TeeTimeOfferAggregate;
 using Wolverine.Http;
 using TeeTimeAggregate = Teeforce.Domain.TeeTimeAggregate.TeeTime;
 
@@ -12,7 +13,7 @@ namespace Teeforce.Api.Features.Bookings.Endpoints;
 public record BookTeeTimeRequest(
     Guid BookingId,
     Guid TeeSheetIntervalId,
-    Guid GolferId,
+    Guid? GolferId,
     int GroupSize);
 
 public class BookTeeTimeRequestValidator : AbstractValidator<BookTeeTimeRequest>
@@ -21,7 +22,6 @@ public class BookTeeTimeRequestValidator : AbstractValidator<BookTeeTimeRequest>
     {
         RuleFor(r => r.BookingId).NotEmpty();
         RuleFor(r => r.TeeSheetIntervalId).NotEmpty();
-        RuleFor(r => r.GolferId).NotEmpty();
         RuleFor(r => r.GroupSize).GreaterThan(0);
     }
 }
@@ -29,15 +29,24 @@ public class BookTeeTimeRequestValidator : AbstractValidator<BookTeeTimeRequest>
 public static class BookTeeTimeEndpoint
 {
     [WolverinePost("/courses/{courseId}/tee-times/book")]
-    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccessOrOfferToken)]
     public static async Task<IResult> Handle(
         Guid courseId,
         BookTeeTimeRequest request,
+        IHttpContextAccessor httpContextAccessor,
         ITeeSheetRepository teeSheetRepository,
         ITeeTimeRepository teeTimeRepository,
         ITimeProvider timeProvider,
         CancellationToken ct)
     {
+        // Resolve golfer ID: from offer token (anonymous booking) or from request body (authenticated booking)
+        var offer = httpContextAccessor.HttpContext?.Items[TeeTimeOfferTokenAuthorizationHandler.OfferItemKey] as TeeTimeOffer;
+        var golferId = offer?.GolferId ?? request.GolferId;
+        if (golferId is null || golferId == Guid.Empty)
+        {
+            return Results.BadRequest(new { error = "GolferId is required when not using an offer token." });
+        }
+
         var sheet = await teeSheetRepository.GetByIntervalIdAsync(request.TeeSheetIntervalId, ct);
         if (sheet is null)
         {
@@ -56,14 +65,14 @@ public static class BookTeeTimeEndpoint
                 sheet.Date,
                 auth,
                 request.BookingId,
-                request.GolferId,
+                golferId.Value,
                 request.GroupSize,
                 timeProvider);
             teeTimeRepository.Add(teeTime);
         }
         else
         {
-            existing.Claim(auth, request.BookingId, request.GolferId, request.GroupSize, timeProvider);
+            existing.Claim(auth, request.BookingId, golferId.Value, request.GroupSize, timeProvider);
         }
 
         return Results.Ok(new { bookingId = request.BookingId });
