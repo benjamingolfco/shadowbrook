@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Teeforce.Api.Features.Bookings;
+using Teeforce.Api.Features.TeeSheet.Policies;
 using Teeforce.Api.Features.Waitlist;
 using Teeforce.Api.Features.Waitlist.Policies;
 using Teeforce.Api.Infrastructure.Auth;
@@ -15,11 +16,10 @@ using Teeforce.Domain.GolferWaitlistEntryAggregate;
 using Teeforce.Domain.OrganizationAggregate;
 using Teeforce.Domain.TeeSheetAggregate;
 using Teeforce.Domain.TeeTimeAggregate;
+using Teeforce.Domain.TeeTimeOfferAggregate;
 using Teeforce.Domain.TeeTimeOpeningAggregate;
 using Teeforce.Domain.TenantAggregate;
-using Teeforce.Domain.TeeTimeOfferAggregate;
 using Teeforce.Domain.WaitlistOfferAggregate;
-using Teeforce.Api.Features.TeeSheet.Policies;
 
 namespace Teeforce.Api.Infrastructure.Data;
 
