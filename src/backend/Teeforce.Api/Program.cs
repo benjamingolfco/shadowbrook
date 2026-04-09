@@ -33,6 +33,8 @@ using Teeforce.Domain.TeeSheetAggregate;
 using Teeforce.Domain.TeeTimeAggregate;
 using Teeforce.Domain.TeeTimeOpeningAggregate;
 using Teeforce.Domain.TenantAggregate;
+using Teeforce.Api.Infrastructure.Services;
+using Teeforce.Domain.TeeTimeOfferAggregate;
 using Teeforce.Domain.WaitlistOfferAggregate;
 using Teeforce.Domain.WaitlistServices;
 using Wolverine.Http;
@@ -144,6 +146,8 @@ builder.Services.AddScoped<WaitlistOfferClaimService>();
 builder.Services.AddScoped<IWaitlistOfferRepository, WaitlistOfferRepository>();
 builder.Services.AddScoped<IGolferWaitlistEntryRepository, GolferWaitlistEntryRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<ITeeTimeOfferRepository, TeeTimeOfferRepository>();
+builder.Services.AddScoped<ITeeTimeWaitlistMatcher, EmptyTeeTimeWaitlistMatcher>();
 builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
 
 var useDevAuth = builder.Configuration.GetSection(AuthSettings.SectionName).Get<AuthSettings>()?.UseDevAuth ?? false;

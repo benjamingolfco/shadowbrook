@@ -30,6 +30,8 @@ public static class DomainExceptionHandler
                     WaitlistNotClosedException => StatusCodes.Status409Conflict,
                     OfferNotPendingException => StatusCodes.Status409Conflict,
                     OfferAlreadyNotifiedException => StatusCodes.Status409Conflict,
+                    Teeforce.Domain.TeeTimeOfferAggregate.Exceptions.OfferNotPendingException => StatusCodes.Status409Conflict,
+                    Teeforce.Domain.TeeTimeOfferAggregate.Exceptions.OfferAlreadyNotifiedException => StatusCodes.Status409Conflict,
                     BookingNotPendingException => StatusCodes.Status409Conflict,
                     BookingNotCancellableException => StatusCodes.Status409Conflict,
                     CannotExtendRemovedEntryException => StatusCodes.Status409Conflict,
