@@ -17,7 +17,9 @@ using Teeforce.Domain.TeeSheetAggregate;
 using Teeforce.Domain.TeeTimeAggregate;
 using Teeforce.Domain.TeeTimeOpeningAggregate;
 using Teeforce.Domain.TenantAggregate;
+using Teeforce.Domain.TeeTimeOfferAggregate;
 using Teeforce.Domain.WaitlistOfferAggregate;
+using Teeforce.Api.Features.TeeSheet.Policies;
 
 namespace Teeforce.Api.Infrastructure.Data;
 
@@ -45,6 +47,8 @@ public class ApplicationDbContext(
     public DbSet<TeeTimeOpeningExpirationPolicy> TeeTimeOpeningExpirationPolicies => Set<TeeTimeOpeningExpirationPolicy>();
     public DbSet<TeeTimeOpeningOfferPolicy> TeeTimeOpeningOfferPolicies => Set<TeeTimeOpeningOfferPolicy>();
     public DbSet<WaitlistOfferResponsePolicy> WaitlistOfferResponsePolicies => Set<WaitlistOfferResponsePolicy>();
+    public DbSet<TeeTimeOffer> TeeTimeOffers => Set<TeeTimeOffer>();
+    public DbSet<TeeTimeAvailabilityPolicy> TeeTimeAvailabilityPolicies => Set<TeeTimeAvailabilityPolicy>();
     public DbSet<DevSmsMessage> DevSmsMessages => Set<DevSmsMessage>();
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -111,5 +115,7 @@ public class ApplicationDbContext(
         modelBuilder.ApplyConfiguration(new TeeTimeOpeningExpirationPolicyConfiguration());
         modelBuilder.ApplyConfiguration(new TeeTimeOpeningOfferPolicyConfiguration());
         modelBuilder.ApplyConfiguration(new WaitlistOfferResponsePolicyConfiguration());
+        modelBuilder.ApplyConfiguration(new TeeTimeOfferConfiguration());
+        modelBuilder.ApplyConfiguration(new TeeTimeAvailabilityPolicyConfiguration());
     }
 }
