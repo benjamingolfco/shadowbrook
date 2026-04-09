@@ -166,7 +166,7 @@ public class TeeTimeTests
 
         Assert.Empty(teeTime.Claims);
         Assert.Equal(4, teeTime.Remaining);
-        var released = Assert.IsType<TeeTimeClaimReleased>(Assert.Single(teeTime.DomainEvents));
+        var released = Assert.Single(teeTime.DomainEvents.OfType<TeeTimeClaimReleased>());
         Assert.Equal(bookingId, released.BookingId);
         Assert.Equal(2, released.GroupSize);
     }
@@ -256,5 +256,48 @@ public class TeeTimeTests
         teeTime.Unblock(this.timeProvider);
 
         Assert.Empty(teeTime.DomainEvents);
+    }
+
+    [Fact]
+    public void ClaimFactory_RaisesTeeTimeAvailabilityChanged()
+    {
+        var (_, interval, auth) = MakeSheetAndInterval(capacity: 4);
+        var teeTime = TeeTime.Claim(interval, this.courseId, this.date, auth, Guid.NewGuid(), Guid.NewGuid(), 2, this.timeProvider);
+
+        var evt = Assert.Single(teeTime.DomainEvents.OfType<TeeTimeAvailabilityChanged>());
+        Assert.Equal(teeTime.Id, evt.TeeTimeId);
+        Assert.Equal(2, evt.Remaining);
+        Assert.Equal(this.courseId, evt.CourseId);
+        Assert.Equal(this.date, evt.Date);
+        Assert.Equal(interval.Time, evt.Time);
+    }
+
+    [Fact]
+    public void ClaimInstance_RaisesTeeTimeAvailabilityChanged()
+    {
+        var (_, interval, auth) = MakeSheetAndInterval(capacity: 4);
+        var teeTime = TeeTime.Claim(interval, this.courseId, this.date, auth, Guid.NewGuid(), Guid.NewGuid(), 1, this.timeProvider);
+        teeTime.ClearDomainEvents();
+
+        teeTime.Claim(auth, Guid.NewGuid(), Guid.NewGuid(), 2, this.timeProvider);
+
+        var evt = Assert.Single(teeTime.DomainEvents.OfType<TeeTimeAvailabilityChanged>());
+        Assert.Equal(teeTime.Id, evt.TeeTimeId);
+        Assert.Equal(1, evt.Remaining);
+    }
+
+    [Fact]
+    public void ReleaseClaim_RaisesTeeTimeAvailabilityChanged()
+    {
+        var (_, interval, auth) = MakeSheetAndInterval(capacity: 4);
+        var bookingId = Guid.NewGuid();
+        var teeTime = TeeTime.Claim(interval, this.courseId, this.date, auth, bookingId, Guid.NewGuid(), 2, this.timeProvider);
+        teeTime.ClearDomainEvents();
+
+        teeTime.ReleaseClaim(bookingId, this.timeProvider);
+
+        var evt = Assert.Single(teeTime.DomainEvents.OfType<TeeTimeAvailabilityChanged>());
+        Assert.Equal(teeTime.Id, evt.TeeTimeId);
+        Assert.Equal(4, evt.Remaining);
     }
 }

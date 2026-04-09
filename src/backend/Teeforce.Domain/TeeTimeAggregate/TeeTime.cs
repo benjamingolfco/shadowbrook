@@ -115,6 +115,15 @@ public class TeeTime : Entity
             Time = Time,
         });
 
+        AddDomainEvent(new TeeTimeAvailabilityChanged
+        {
+            TeeTimeId = Id,
+            Remaining = Remaining,
+            CourseId = CourseId,
+            Date = Date,
+            Time = Time,
+        });
+
         if (Remaining == 0)
         {
             Status = TeeTimeStatus.Filled;
@@ -146,6 +155,15 @@ public class TeeTime : Entity
             BookingId = claim.BookingId,
             GolferId = claim.GolferId,
             GroupSize = claim.GroupSize,
+            CourseId = CourseId,
+            Date = Date,
+            Time = Time,
+        });
+
+        AddDomainEvent(new TeeTimeAvailabilityChanged
+        {
+            TeeTimeId = Id,
+            Remaining = Remaining,
             CourseId = CourseId,
             Date = Date,
             Time = Time,
