@@ -13,6 +13,7 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
         builder.Property(b => b.Id).ValueGeneratedNever();
 
         builder.Property(b => b.Status).HasConversion<string>().HasMaxLength(20);
+        builder.Property(b => b.TeeTimeId);
 
         builder.ComplexProperty(b => b.TeeTime, t =>
             t.Property(x => x.Value).HasColumnName("TeeTime").HasColumnType("datetime2"));
@@ -21,5 +22,6 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
         builder.HasShadowAuditProperties();
 
         builder.HasIndex(o => o.CourseId);
+        builder.HasIndex(b => b.TeeTimeId);
     }
 }

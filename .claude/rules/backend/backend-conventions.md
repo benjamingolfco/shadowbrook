@@ -131,36 +131,12 @@ public static async Task Handle(IOptions<AppSettings> appSettings, ...)
 
 ## Domain-Driven Design
 
-### Core Principles
+For pure-domain rules (aggregates, value objects, capability tokens, domain events, domain exceptions, repository interfaces) see `domain-conventions.md` — that file is path-scoped to `src/backend/Teeforce.Domain/**`. The sections below cover handler/messaging concerns that live in the API layer.
 
-- Domain model lives in `Teeforce.Domain` (zero dependencies — no EF, no ASP.NET)
-- Domain models are pure write/behavior — never add properties or methods to serve read/display concerns
-- If the domain model makes it hard to query data for display, create a separate read model (CQRS-lite)
-- EF entity type configurations in `Infrastructure/EntityTypeConfigurations/`
+### Domain Model in the API Layer
 
-### Aggregates
-
-- Inherit from `Entity` base class
-- All properties use `private set` — no public setters
-- Private parameterless constructor for EF (`private MyAggregate() { }`)
-- Static factory methods for construction (e.g., `MyAggregate.Create(...)` or `MyAggregate.CreateAsync(...)`)
-- Use `Guid.CreateVersion7()` for all new IDs (time-ordered UUIDs)
-- Guard their own invariants — validate state in domain methods before making changes
-- Raise domain events via `AddDomainEvent()` inside state-changing methods
-
-### Aggregate Boundaries
-
-- Each aggregate defines a consistency boundary — one transaction should ideally modify one aggregate
-- Reference other aggregates by ID only, not by holding direct navigation properties
-- Passing another aggregate as a **method parameter** for validation is acceptable (e.g., `offer.Accept(golfer)`)
-- An aggregate can serve as a **factory for another aggregate** — validate creation rules and return a new independent aggregate (e.g., `WalkUpWaitlist.Join()` validates waitlist rules and returns a new `GolferWaitlistEntry` aggregate). The returned aggregate is independent and not owned as a child.
-- Never use `InternalsVisibleTo` to expose domain internals for testing or handler consumption. If you need to test or call an `internal` method from outside the domain, rethink the design — either make it part of the public API or restructure so the behavior is exercised through public methods. Tests should always test the public interface.
-
-### Domain Events
-
-- Events carry **identifiers only** — handlers look up the data they need at handling time
-- Events are immutable `record` types implementing `IDomainEvent`
-- Events are dispatched via Wolverine's `IMessageBus` — `ApplicationDbContext.SaveChangesAsync()` harvests events from tracked entities and publishes them
+- EF entity type configurations live in `Infrastructure/EntityTypeConfigurations/`
+- Domain events are dispatched via Wolverine's `IMessageBus` — `ApplicationDbContext.SaveChangesAsync()` harvests events from tracked entities and publishes them
 - Event handlers live in `Features/{FeatureName}/` alongside related endpoints
 - Each handler does **one thing** and raises **one event** — chain handlers for multi-step flows
 
@@ -242,29 +218,11 @@ For operations spanning multiple aggregates, use sequential event chains instead
 - Pre-allocate IDs (e.g., `BookingId` on `WaitlistOffer`) when downstream steps need correlation
 - Wolverine's `MultipleHandlerBehavior.Separated` ensures that if one handler for an event fails, the others still run independently
 
-### Value Objects
+### Value Object EF Mapping
 
-- Value objects are defined by their attributes, not by identity — no `Id`, no inheritance from `Entity`
-- Immutable: all properties are `get`-only, set through the constructor
-- Implement `IEquatable<T>` with `Equals`, `GetHashCode`, and a private parameterless constructor for EF
-- Value objects live in `Teeforce.Domain/Common/` (shared) or in an aggregate folder if aggregate-specific
-- Map in EF Core using `ComplexProperty` (not `OwnsOne`) — this is the modern EF Core 10 approach
-- Use `HasColumnName` inside `ComplexProperty` to control column names (default is `{Nav}_{Prop}`)
-- Events carry flat fields, not value objects — events are data contracts across boundaries
-- Use value objects for comparisons when they normalize data — e.g., `TeeTime` normalizes seconds to zero in its constructor, so comparing two `TeeTime` instances gives minute-granularity comparison without manual truncation. Prefer `new TeeTime(date, time).Value < new TeeTime(otherDate, otherTime).Value` over hand-rolling `new TimeOnly(hour, minute)`.
+Value objects (defined in the domain — see `domain-conventions.md`) are mapped in EF Core using `ComplexProperty` (not `OwnsOne`) — this is the modern EF Core 10 approach. Use `HasColumnName` inside `ComplexProperty` to control column names (default is `{Nav}_{Prop}`).
 
 ```csharp
-// Domain: Value object
-public class TeeTime : IEquatable<TeeTime>
-{
-    public DateOnly Date { get; }
-    public TimeOnly Time { get; }
-    public TeeTime(DateOnly date, TimeOnly time) { Date = date; Time = time; }
-    private TeeTime() { } // EF
-    // ... Equals, GetHashCode, ToString
-}
-
-// EF Config: ComplexProperty mapping
 builder.ComplexProperty(o => o.TeeTime, t =>
 {
     t.Property(x => x.Date).HasColumnName("Date");
@@ -272,32 +230,16 @@ builder.ComplexProperty(o => o.TeeTime, t =>
 });
 ```
 
-### Result Objects
+### Repository Implementations
 
-- For `internal` cross-aggregate methods, prefer returning result objects over throwing exceptions
-- Use `record` types: `record FillResult(bool Success, string? RejectionReason = null)`
-- The calling aggregate inspects the result and decides what to do (e.g., reject the offer with the reason)
-- Reserve exceptions for true invariant violations that should never happen in correct code
-
-### Domain Exceptions
-
-- `DomainException` subclasses break control flow for true invariant violations
-- **Always use `DomainException` subclasses** — never throw `InvalidOperationException`, `ArgumentException`, or any other .NET framework exception from domain code. Every domain invariant violation gets its own exception class in `{Aggregate}/Exceptions/`. This includes factory method guards (e.g., invalid slots → `InvalidSlotsAvailableException`), state guards (e.g., already notified → `OfferAlreadyNotifiedException`), and cross-aggregate lookups (e.g., not found → `EntityNotFoundException`).
-- The global exception handler in `Program.cs` maps them to HTTP status codes — new exception types must be added there
-- Do NOT catch `DomainException` in endpoints — let them propagate
-
-### Repositories
-
-- Repository interfaces defined in domain, implemented in `Infrastructure/Repositories/`
-- One repository per aggregate root
+- Repository implementations live in `Infrastructure/Repositories/` (one per aggregate root, interface defined in domain)
 - Return fully loaded aggregates (with child collections via `.Include()`)
 - Do NOT call `SaveAsync()` in endpoints or handlers — Wolverine's transactional middleware handles save + domain event publishing automatically
 
-### Domain Services
+### Domain Exceptions in the API Layer
 
-- Domain service interfaces defined in domain (e.g., `IShortCodeGenerator`)
-- Implementations in `Infrastructure/Services/`
-- Use for cross-aggregate logic that doesn't belong to any single aggregate
+- Do NOT catch `DomainException` in endpoints — let them propagate to the global exception handler in `Program.cs`, which maps them to HTTP status codes
+- New `DomainException` subclasses must be registered in the global handler when they're added
 
 ## Testing
 

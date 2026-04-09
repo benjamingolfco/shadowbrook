@@ -1,4 +1,7 @@
 using Teeforce.Domain.Common;
+using Teeforce.Domain.CourseAggregate.Exceptions;
+using Teeforce.Domain.TeeSheetAggregate;
+using Teeforce.Domain.TeeSheetAggregate.Exceptions;
 
 namespace Teeforce.Domain.CourseAggregate;
 
@@ -15,6 +18,7 @@ public class Course : Entity
     public int? TeeTimeIntervalMinutes { get; private set; }
     public TimeOnly? FirstTeeTime { get; private set; }
     public TimeOnly? LastTeeTime { get; private set; }
+    public int DefaultCapacity { get; private set; } = 4;
     public decimal? FlatRatePrice { get; private set; }
     public Dictionary<string, bool>? FeatureFlags { get; private set; }
     public bool? WaitlistEnabled { get; private set; }
@@ -66,4 +70,26 @@ public class Course : Entity
     public void UpdatePricing(decimal flatRatePrice) => FlatRatePrice = flatRatePrice;
 
     public void SetFeatureFlags(Dictionary<string, bool> flags) => FeatureFlags = flags;
+
+    public void UpdateDefaultCapacity(int defaultCapacity)
+    {
+        if (defaultCapacity <= 0)
+        {
+            throw new InvalidScheduleSettingsException("Default capacity must be positive.");
+        }
+        DefaultCapacity = defaultCapacity;
+    }
+
+    public ScheduleSettings CurrentScheduleDefaults()
+    {
+        if (TeeTimeIntervalMinutes is null || FirstTeeTime is null || LastTeeTime is null)
+        {
+            throw new CourseScheduleNotConfiguredException(Id);
+        }
+        return new ScheduleSettings(
+            firstTeeTime: FirstTeeTime.Value,
+            lastTeeTime: LastTeeTime.Value,
+            intervalMinutes: TeeTimeIntervalMinutes.Value,
+            defaultCapacity: DefaultCapacity);
+    }
 }

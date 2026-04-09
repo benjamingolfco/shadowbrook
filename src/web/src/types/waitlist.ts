@@ -70,6 +70,7 @@ export interface JoinWaitlistRequest {
   firstName: string;
   lastName: string;
   phone: string;
+  partySize: number;
 }
 
 export interface JoinWaitlistResponse {

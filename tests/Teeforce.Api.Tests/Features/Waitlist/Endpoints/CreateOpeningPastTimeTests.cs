@@ -25,7 +25,7 @@ public class CreateOpeningPastTimeTests
         this.timeProvider.GetCurrentTimestamp().Returns(DateTimeOffset.UtcNow);
 
         // Default: no existing opening so the duplicate check does not interfere
-        this.openingRepo.GetActiveByCourseTeeTimeAsync(Arg.Any<Guid>(), Arg.Any<TeeTime>())
+        this.openingRepo.GetActiveByCourseTeeTimeAsync(Arg.Any<Guid>(), Arg.Any<BookingDateTime>())
             .Returns((TeeTimeOpening?)null);
     }
 

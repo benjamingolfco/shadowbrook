@@ -37,7 +37,7 @@ public class TeeTimeOpeningCancelledCancelBookingsHandlerTests
         var confirmed = CreateBooking(evt);
         confirmed.Confirm();
 
-        this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, Arg.Any<TeeTime>(), Arg.Any<CancellationToken>())
+        this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, Arg.Any<BookingDateTime>(), Arg.Any<CancellationToken>())
             .Returns([pending, confirmed]);
 
         await this.handler.Handle(evt, CancellationToken.None);
@@ -51,12 +51,12 @@ public class TeeTimeOpeningCancelledCancelBookingsHandlerTests
     {
         var evt = CreateEvent();
 
-        this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, Arg.Any<TeeTime>(), Arg.Any<CancellationToken>())
+        this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, Arg.Any<BookingDateTime>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         await this.handler.Handle(evt, CancellationToken.None);
 
-        await this.bookingRepository.Received(1).GetByCourseAndTeeTimeAsync(evt.CourseId, Arg.Any<TeeTime>(), Arg.Any<CancellationToken>());
+        await this.bookingRepository.Received(1).GetByCourseAndTeeTimeAsync(evt.CourseId, Arg.Any<BookingDateTime>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class TeeTimeOpeningCancelledCancelBookingsHandlerTests
         var cancelled = CreateBooking(evt);
         cancelled.Cancel();
 
-        this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, Arg.Any<TeeTime>(), Arg.Any<CancellationToken>())
+        this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, Arg.Any<BookingDateTime>(), Arg.Any<CancellationToken>())
             .Returns([rejected, cancelled]);
 
         await this.handler.Handle(evt, CancellationToken.None);
@@ -87,7 +87,7 @@ public class TeeTimeOpeningCancelledCancelBookingsHandlerTests
         var rejected = CreateBooking(evt);
         rejected.Reject();
 
-        this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, Arg.Any<TeeTime>(), Arg.Any<CancellationToken>())
+        this.bookingRepository.GetByCourseAndTeeTimeAsync(evt.CourseId, Arg.Any<BookingDateTime>(), Arg.Any<CancellationToken>())
             .Returns([pending, confirmed, rejected]);
 
         await this.handler.Handle(evt, CancellationToken.None);

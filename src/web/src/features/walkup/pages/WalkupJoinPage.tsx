@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router';
 import { Clock, CalendarX2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,8 +17,23 @@ export default function WalkupJoinPage() {
   const [phase, setPhase] = useState<Phase>('code');
   const [verifyData, setVerifyData] = useState<VerifyCodeResponse | null>(null);
   const [joinResult, setJoinResult] = useState<JoinWaitlistResponse | null>(null);
+  const [submittedPhone, setSubmittedPhone] = useState('');
 
   const { data: statusData, isLoading, isError, error, refetch } = useWalkUpStatus(shortCode);
+
+  const courseName =
+    joinResult?.courseName ?? verifyData?.courseName ?? statusData?.courseName;
+
+  useEffect(() => {
+    if (courseName) {
+      document.title = `${courseName} – Join Waitlist`;
+    } else {
+      document.title = 'Join Waitlist';
+    }
+    return () => {
+      document.title = 'Teeforce';
+    };
+  }, [courseName]);
 
   function handleVerified(data: VerifyCodeResponse) {
     setVerifyData(data);
@@ -149,10 +164,10 @@ export default function WalkupJoinPage() {
 
         {phase === 'code' && <CodeEntry onVerified={handleVerified} initialCode={shortCode} />}
         {phase === 'join' && verifyData && (
-          <JoinForm verifyData={verifyData} onJoined={handleJoined} />
+          <JoinForm verifyData={verifyData} onJoined={handleJoined} onPhoneCapture={setSubmittedPhone} />
         )}
         {phase === 'confirmation' && joinResult && (
-          <Confirmation result={joinResult} />
+          <Confirmation result={joinResult} phone={submittedPhone} />
         )}
       </div>
     </div>

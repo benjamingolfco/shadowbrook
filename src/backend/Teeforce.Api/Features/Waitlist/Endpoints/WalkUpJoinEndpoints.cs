@@ -116,7 +116,7 @@ public static class WalkUpJoinEndpoints
         var activeCount = await db.GolferWaitlistEntries
             .CountAsync(e => e.CourseWaitlistId == waitlist.Id && e.RemovedAt == null);
 
-        var entry = await waitlist.Join(golfer, entryRepo, timeProvider, courseTimeZoneId);
+        var entry = await waitlist.Join(golfer, entryRepo, timeProvider, courseTimeZoneId, request.PartySize);
         entryRepo.Add(entry);
 
         var submittedName = $"{request.FirstName.Trim()} {request.LastName.Trim()}";
@@ -153,7 +153,8 @@ public record JoinWaitlistRequest(
     Guid CourseWaitlistId,
     string FirstName,
     string LastName,
-    string Phone);
+    string Phone,
+    int PartySize);
 
 public class JoinWaitlistRequestValidator : AbstractValidator<JoinWaitlistRequest>
 {
@@ -167,6 +168,9 @@ public class JoinWaitlistRequestValidator : AbstractValidator<JoinWaitlistReques
 
         RuleFor(x => x.Phone)
             .Must(PhoneNormalizer.IsValid).WithMessage("A valid US phone number is required.");
+
+        RuleFor(x => x.PartySize)
+            .InclusiveBetween(1, 4).WithMessage("Party size must be between 1 and 4.");
     }
 }
 

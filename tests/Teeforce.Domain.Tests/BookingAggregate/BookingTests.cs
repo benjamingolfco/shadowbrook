@@ -110,6 +110,7 @@ public class BookingTests
             bookingId,
             Guid.NewGuid(),
             Guid.NewGuid(),
+            teeTimeId: null,
             new DateOnly(2026, 6, 15),
             new TimeOnly(9, 0),
             2);
@@ -127,7 +128,7 @@ public class BookingTests
         var time = new TimeOnly(9, 0);
         var playerCount = 2;
 
-        var booking = Booking.CreateConfirmed(bookingId, courseId, golferId, date, time, playerCount);
+        var booking = Booking.CreateConfirmed(bookingId, courseId, golferId, teeTimeId: null, date, time, playerCount);
 
         Assert.Equal(bookingId, booking.Id);
         Assert.Equal(courseId, booking.CourseId);
@@ -147,6 +148,7 @@ public class BookingTests
             bookingId,
             Guid.NewGuid(),
             Guid.NewGuid(),
+            teeTimeId: null,
             new DateOnly(2026, 6, 15),
             new TimeOnly(9, 0),
             1);
@@ -165,11 +167,43 @@ public class BookingTests
             bookingId,
             Guid.NewGuid(),
             Guid.NewGuid(),
+            teeTimeId: null,
             new DateOnly(2026, 6, 15),
             new TimeOnly(9, 0),
             1);
 
         Assert.Equal(bookingId, booking.Id);
+    }
+
+    [Fact]
+    public void CreateConfirmed_StoresTeeTimeId()
+    {
+        var teeTimeId = Guid.NewGuid();
+        var booking = Booking.CreateConfirmed(
+            bookingId: Guid.NewGuid(),
+            courseId: Guid.NewGuid(),
+            golferId: Guid.NewGuid(),
+            teeTimeId: teeTimeId,
+            date: new DateOnly(2026, 6, 1),
+            teeTime: new TimeOnly(9, 0),
+            playerCount: 2);
+
+        Assert.Equal(teeTimeId, booking.TeeTimeId);
+    }
+
+    [Fact]
+    public void CreateConfirmed_AllowsNullTeeTimeId_ForCompatSeam()
+    {
+        var booking = Booking.CreateConfirmed(
+            bookingId: Guid.NewGuid(),
+            courseId: Guid.NewGuid(),
+            golferId: Guid.NewGuid(),
+            teeTimeId: null,
+            date: new DateOnly(2026, 6, 1),
+            teeTime: new TimeOnly(9, 0),
+            playerCount: 2);
+
+        Assert.Null(booking.TeeTimeId);
     }
 
     [Fact]

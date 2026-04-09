@@ -28,6 +28,7 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course>
                 v => v == null ? null : System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
                 v => v == null ? null : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, bool>>(v, (System.Text.Json.JsonSerializerOptions?)null));
         builder.Property(c => c.WaitlistEnabled);
+        builder.Property(c => c.DefaultCapacity).HasDefaultValue(4);
 
         builder.HasOne<Organization>()
             .WithMany()

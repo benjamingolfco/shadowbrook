@@ -35,10 +35,14 @@ public static class AuthServiceExtensions
             .AddPolicy(AuthorizationPolicies.RequireAppAccess, policy =>
                 policy.AddRequirements(new RequireAppUserRequirement(), new PermissionRequirement(Permissions.AppAccess)))
             .AddPolicy(AuthorizationPolicies.RequireUsersManage, policy =>
-                policy.AddRequirements(new RequireAppUserRequirement(), new PermissionRequirement(Permissions.UsersManage)));
+                policy.AddRequirements(new RequireAppUserRequirement(), new PermissionRequirement(Permissions.UsersManage)))
+            .AddPolicy(AuthorizationPolicies.RequireAppAccessOrOfferToken, policy =>
+                policy.AddRequirements(new AppAccessOrOfferTokenRequirement()));
 
         services.AddScoped<IAuthorizationHandler, RequireAppUserHandler>();
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        services.AddScoped<IAuthorizationHandler, TeeTimeOfferTokenAuthorizationHandler>();
+        services.AddScoped<IAuthorizationHandler, AppAccessOrOfferTokenPermissionHandler>();
         services.AddSingleton<IAuthorizationMiddlewareResultHandler>(sp =>
             new AppUserAuthorizationResultHandler(new AuthorizationMiddlewareResultHandler()));
 

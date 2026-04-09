@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
@@ -32,7 +32,6 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
   const { course } = useCourseContext();
   const timeZoneId = course?.timeZoneId ?? 'UTC';
   const createMutation = useCreateTeeTimeOpening();
-  const timeInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedSlots, setSelectedSlots] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -46,15 +45,10 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
     },
   });
 
-  const { ref: rhfRef, ...teeTimeRegister } = form.register('teeTime');
-  const setTimeInputRef = useCallback(
-    (el: HTMLInputElement | null) => {
-      rhfRef(el);
-      timeInputRef.current = el;
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
+  // form.register returns a fresh ref callback on each render. Spread the full
+  // registration result (including ref) directly onto the input so RHF always
+  // holds a live reference to the DOM element — even after form.reset().
+  const teeTimeRegister = form.register('teeTime');
 
   function onSubmit(data: FormData) {
     createMutation.mutate(
@@ -68,12 +62,13 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
       {
         onSuccess: () => {
           form.reset({
-            teeTime: getNextTeeTimeInterval(timeZoneId),
+            teeTime: '',
             slotsAvailable: 1,
           });
           setSelectedSlots(1);
           createMutation.reset();
-          timeInputRef.current?.focus();
+          // Use RHF's setFocus so it always targets the current field registration.
+          form.setFocus('teeTime');
           setShowSuccess(true);
           setTimeout(() => setShowSuccess(false), 1500);
         },
@@ -94,7 +89,6 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
           className="w-[130px] font-mono"
           autoFocus
           {...teeTimeRegister}
-          ref={setTimeInputRef}
         />
 
         <div className="flex" role="radiogroup" aria-label="Slots">

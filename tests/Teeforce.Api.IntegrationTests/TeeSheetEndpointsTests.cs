@@ -2,8 +2,8 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Teeforce.Api.Infrastructure.Data;
-using Teeforce.Domain.BookingAggregate;
 using Teeforce.Domain.GolferAggregate;
+using Teeforce.Domain.TeeSheetAggregate;
 
 namespace Teeforce.Api.IntegrationTests;
 
@@ -23,28 +23,66 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
 
     public Task DisposeAsync() => Task.CompletedTask;
 
-    private async Task CreateBookingAsync(Guid courseId, string date, string time, string golferName, int playerCount)
+    private async Task<Guid> CreateGolferAsync(string firstName, string lastName)
     {
         using var scope = this.factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-        var nameParts = golferName.Split(' ', 2);
-        var firstName = nameParts[0];
-        var lastName = nameParts.Length > 1 ? nameParts[1] : string.Empty;
         var phone = $"+1555{new Random().Next(1000000, 9999999)}";
         var golfer = Golfer.Create(phone, firstName, lastName);
         db.Golfers.Add(golfer);
-
-        var booking = Booking.CreateConfirmed(
-            bookingId: Guid.CreateVersion7(),
-            courseId: courseId,
-            golferId: golfer.Id,
-            date: DateOnly.ParseExact(date, "yyyy-MM-dd"),
-            teeTime: TimeOnly.ParseExact(time, "HH:mm"),
-            playerCount: playerCount);
-
-        db.Bookings.Add(booking);
         await db.SaveChangesAsync();
+        return golfer.Id;
+    }
+
+    private async Task DraftAndPublishSheetAsync(Guid courseId, string date)
+    {
+        var draftResponse = await this.client.PostAsJsonAsync(
+            $"/courses/{courseId}/tee-sheets/draft",
+            new { Date = date });
+        draftResponse.EnsureSuccessStatusCode();
+
+        var publishResponse = await this.client.PostAsync(
+            $"/courses/{courseId}/tee-sheets/{date}/publish",
+            content: null);
+        publishResponse.EnsureSuccessStatusCode();
+    }
+
+    private async Task<List<TeeSheetSlot>> GetSlotsAsync(Guid courseId, string date)
+    {
+        var response = await this.client.GetAsync($"/tee-sheets?courseId={courseId}&date={date}");
+        response.EnsureSuccessStatusCode();
+        var sheet = await response.Content.ReadFromJsonAsync<TeeSheetResponse>();
+        return sheet!.Slots;
+    }
+
+    private async Task BookSlotAsync(Guid courseId, string date, string time, string golferName, int playerCount)
+    {
+        var nameParts = golferName.Split(' ', 2);
+        var firstName = nameParts[0];
+        var lastName = nameParts.Length > 1 ? nameParts[1] : string.Empty;
+        var golferId = await CreateGolferAsync(firstName, lastName);
+
+        // Look up the interval id by matching the slot's TeeTime wall-clock value.
+        var targetDateTime = DateOnly.ParseExact(date, "yyyy-MM-dd")
+            .ToDateTime(TimeOnly.ParseExact(time, "HH:mm"));
+
+        using var scope = this.factory.Services.CreateScope();
+        var teeSheetRepository = scope.ServiceProvider.GetRequiredService<ITeeSheetRepository>();
+        var parsedDate = DateOnly.ParseExact(date, "yyyy-MM-dd");
+        var parsedTime = TimeOnly.ParseExact(time, "HH:mm");
+        var sheet = await teeSheetRepository.GetByCourseAndDateAsync(courseId, parsedDate);
+        var interval = sheet!.Intervals.Single(i => i.Time == parsedTime);
+
+        var bookResponse = await this.client.PostAsJsonAsync(
+            $"/courses/{courseId}/tee-times/book",
+            new
+            {
+                BookingId = Guid.CreateVersion7(),
+                TeeSheetIntervalId = interval.Id,
+                GolferId = golferId,
+                GroupSize = playerCount
+            });
+        bookResponse.EnsureSuccessStatusCode();
     }
 
     private async Task<Guid> CreateTestTenantAsync()
@@ -81,6 +119,8 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
             LastTeeTime = "17:00"
         });
 
+        await DraftAndPublishSheetAsync(course.Id, "2026-02-07");
+
         // Act
         var response = await this.client.GetAsync($"/tee-sheets?courseId={course.Id}&date=2026-02-07");
 
@@ -108,8 +148,10 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
             LastTeeTime = "08:00"
         });
 
+        await DraftAndPublishSheetAsync(course.Id, "2026-02-07");
+
         // Create a booking at 07:10
-        await CreateBookingAsync(course.Id, "2026-02-07", "07:10", "John Doe", 4);
+        await BookSlotAsync(course.Id, "2026-02-07", "07:10", "John Doe", 4);
 
         // Act
         var response = await this.client.GetAsync($"/tee-sheets?courseId={course.Id}&date=2026-02-07");
@@ -148,7 +190,8 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
             LastTeeTime = "08:00"
         });
 
-        await CreateBookingAsync(course.Id, "2026-02-07", "07:00", "Jane Smith", 2);
+        await DraftAndPublishSheetAsync(course.Id, "2026-02-07");
+        await BookSlotAsync(course.Id, "2026-02-07", "07:00", "Jane Smith", 2);
 
         // Act
         var response = await this.client.GetAsync($"/tee-sheets?courseId={course.Id}&date=2026-02-07");
@@ -165,17 +208,6 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
     public async Task GetTeeSheet_CourseNotFound_ReturnsNotFound()
     {
         var response = await this.client.GetAsync($"/tee-sheets?courseId={Guid.NewGuid()}&date=2026-02-07");
-
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task GetTeeSheet_TeeTimeSettingsNotConfigured_ReturnsNotFound()
-    {
-        var tenantId = await CreateTestTenantAsync();
-        var course = await CreateCourseAsync(tenantId);
-
-        var response = await this.client.GetAsync($"/tee-sheets?courseId={course.Id}&date=2026-02-07");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -220,6 +252,8 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
             LastTeeTime = "08:00"
         });
 
+        await DraftAndPublishSheetAsync(course.Id, "2026-02-07");
+
         var response = await this.client.GetAsync($"/tee-sheets?courseId={course.Id}&date=2026-02-07");
 
         var teeSheet = await response.Content.ReadFromJsonAsync<TeeSheetResponse>();
@@ -244,10 +278,12 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
             LastTeeTime = "07:30"
         });
 
+        await DraftAndPublishSheetAsync(course.Id, "2026-02-07");
+
         // Book all slots
-        await CreateBookingAsync(course.Id, "2026-02-07", "07:00", "Player 1", 4);
-        await CreateBookingAsync(course.Id, "2026-02-07", "07:10", "Player 2", 4);
-        await CreateBookingAsync(course.Id, "2026-02-07", "07:20", "Player 3", 4);
+        await BookSlotAsync(course.Id, "2026-02-07", "07:00", "Player 1", 4);
+        await BookSlotAsync(course.Id, "2026-02-07", "07:10", "Player 2", 4);
+        await BookSlotAsync(course.Id, "2026-02-07", "07:20", "Player 3", 4);
 
         var response = await this.client.GetAsync($"/tee-sheets?courseId={course.Id}&date=2026-02-07");
 

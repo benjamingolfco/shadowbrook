@@ -1,0 +1,34 @@
+using Microsoft.AspNetCore.Authorization;
+using Teeforce.Api.Infrastructure.Auth;
+using Teeforce.Domain.Common;
+using Teeforce.Domain.TeeSheetAggregate;
+using Wolverine.Http;
+
+namespace Teeforce.Api.Features.TeeSheet.Endpoints;
+
+public static class PublishTeeSheetEndpoint
+{
+    [WolverinePost("/courses/{courseId}/tee-sheets/{date}/publish")]
+    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
+    public static async Task<IResult> Handle(
+        Guid courseId,
+        string date,
+        ITeeSheetRepository teeSheetRepository,
+        ITimeProvider timeProvider,
+        CancellationToken ct)
+    {
+        if (!DateOnly.TryParseExact(date, "yyyy-MM-dd", out var dateOnly))
+        {
+            return Results.BadRequest(new { error = "date must be in yyyy-MM-dd format." });
+        }
+
+        var sheet = await teeSheetRepository.GetByCourseAndDateAsync(courseId, dateOnly, ct);
+        if (sheet is null)
+        {
+            return Results.NotFound(new { error = "Tee sheet not found." });
+        }
+
+        sheet.Publish(timeProvider); // idempotent
+        return Results.Ok(new { teeSheetId = sheet.Id, status = sheet.Status.ToString() });
+    }
+}
