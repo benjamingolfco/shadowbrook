@@ -177,11 +177,13 @@ public static class CourseEndpoints
         }
 
         course.UpdateTeeTimeSettings(request.TeeTimeIntervalMinutes, request.FirstTeeTime, request.LastTeeTime);
+        course.UpdateDefaultCapacity(request.DefaultCapacity);
 
         return Results.Ok(new TeeTimeSettingsResponse(
             course.TeeTimeIntervalMinutes!.Value,
             course.FirstTeeTime!.Value,
-            course.LastTeeTime!.Value));
+            course.LastTeeTime!.Value,
+            course.DefaultCapacity));
     }
 
     [WolverineGet("/courses/{courseId}/tee-time-settings")]
@@ -203,7 +205,8 @@ public static class CourseEndpoints
         return Results.Ok(new TeeTimeSettingsResponse(
             course.TeeTimeIntervalMinutes.Value,
             course.FirstTeeTime.Value,
-            course.LastTeeTime.Value));
+            course.LastTeeTime.Value,
+            course.DefaultCapacity));
     }
 
     [WolverinePut("/courses/{courseId}/pricing")]
@@ -276,12 +279,14 @@ public sealed record UpdateCourseRequest(string Name, string TimeZoneId);
 public record TeeTimeSettingsRequest(
     int TeeTimeIntervalMinutes,
     TimeOnly FirstTeeTime,
-    TimeOnly LastTeeTime);
+    TimeOnly LastTeeTime,
+    int DefaultCapacity);
 
 public record TeeTimeSettingsResponse(
     int TeeTimeIntervalMinutes,
     TimeOnly FirstTeeTime,
-    TimeOnly LastTeeTime);
+    TimeOnly LastTeeTime,
+    int DefaultCapacity);
 
 public record PricingRequest(decimal FlatRatePrice);
 
@@ -335,15 +340,16 @@ public class PricingRequestValidator : AbstractValidator<PricingRequest>
 
 public class TeeTimeSettingsRequestValidator : AbstractValidator<TeeTimeSettingsRequest>
 {
-    private static readonly int[] allowedIntervals = [8, 10, 12];
-
     public TeeTimeSettingsRequestValidator()
     {
         RuleFor(x => x.TeeTimeIntervalMinutes)
-            .Must(i => allowedIntervals.Contains(i))
-            .WithMessage("Interval must be 8, 10, or 12 minutes.");
+            .GreaterThan(0)
+            .WithMessage("Interval must be greater than 0.");
         RuleFor(x => x.FirstTeeTime)
             .LessThan(x => x.LastTeeTime)
             .WithMessage("First tee time must be before last tee time.");
+        RuleFor(x => x.DefaultCapacity)
+            .GreaterThan(0)
+            .WithMessage("Default capacity must be greater than 0.");
     }
 }
