@@ -92,7 +92,8 @@ public class TeeTimeOpeningOfferPolicyIntegrationTests(TestWebApplicationFactory
         {
             TeeTimeIntervalMinutes = 10,
             FirstTeeTime = "07:00",
-            LastTeeTime = "17:00"
+            LastTeeTime = "17:00",
+            DefaultCapacity = 4
         });
 
         return (tenantId, course.Id);

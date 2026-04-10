@@ -1,5 +1,6 @@
 using Teeforce.Domain.CourseAggregate;
 using Teeforce.Domain.CourseAggregate.Exceptions;
+using Teeforce.Domain.TeeSheetAggregate.Exceptions;
 
 namespace Teeforce.Domain.Tests.CourseAggregate;
 
@@ -25,6 +26,16 @@ public class CourseScheduleDefaultsTests
         var course = Course.Create(Guid.NewGuid(), "Pebble", "America/Los_Angeles");
 
         Assert.Throws<CourseScheduleNotConfiguredException>(() => course.CurrentScheduleDefaults());
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void UpdateDefaultCapacity_NonPositive_Throws(int capacity)
+    {
+        var course = Course.Create(Guid.NewGuid(), "Pebble", "America/Los_Angeles");
+
+        Assert.Throws<InvalidScheduleSettingsException>(() => course.UpdateDefaultCapacity(capacity));
     }
 
     [Fact]

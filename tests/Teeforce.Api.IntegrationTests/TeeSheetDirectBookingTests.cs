@@ -52,7 +52,8 @@ public class TeeSheetDirectBookingTests(TestWebApplicationFactory factory) : IAs
             {
                 TeeTimeIntervalMinutes = 10,
                 FirstTeeTime = firstTime,
-                LastTeeTime = lastTime
+                LastTeeTime = lastTime,
+                DefaultCapacity = 4
             });
         settingsResponse.EnsureSuccessStatusCode();
 
