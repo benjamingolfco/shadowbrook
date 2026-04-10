@@ -38,7 +38,7 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
     {
         var draftResponse = await this.client.PostAsJsonAsync(
             $"/courses/{courseId}/tee-sheets/draft",
-            new { Date = date });
+            new { Dates = new[] { date } });
         draftResponse.EnsureSuccessStatusCode();
 
         var publishResponse = await this.client.PostAsync(
