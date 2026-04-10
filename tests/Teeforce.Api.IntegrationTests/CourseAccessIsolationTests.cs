@@ -79,7 +79,8 @@ public class CourseAccessIsolationTests(TestWebApplicationFactory factory) : IAs
         {
             TeeTimeIntervalMinutes = 10,
             FirstTeeTime = "07:00",
-            LastTeeTime = "18:00"
+            LastTeeTime = "18:00",
+            DefaultCapacity = 4
         });
 
         // Assert: Operator A cannot see Course B (different org) — EF query filter + CourseExistsMiddleware returns 404

@@ -116,7 +116,8 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         {
             TeeTimeIntervalMinutes = 10,
             FirstTeeTime = "07:00",
-            LastTeeTime = "17:00"
+            LastTeeTime = "17:00",
+            DefaultCapacity = 4
         });
 
         await DraftAndPublishSheetAsync(course.Id, "2026-02-07");
@@ -145,7 +146,8 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         {
             TeeTimeIntervalMinutes = 10,
             FirstTeeTime = "07:00",
-            LastTeeTime = "08:00"
+            LastTeeTime = "08:00",
+            DefaultCapacity = 4
         });
 
         await DraftAndPublishSheetAsync(course.Id, "2026-02-07");
@@ -187,7 +189,8 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         {
             TeeTimeIntervalMinutes = 10,
             FirstTeeTime = "07:00",
-            LastTeeTime = "08:00"
+            LastTeeTime = "08:00",
+            DefaultCapacity = 4
         });
 
         await DraftAndPublishSheetAsync(course.Id, "2026-02-07");
@@ -249,7 +252,8 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         {
             TeeTimeIntervalMinutes = 10,
             FirstTeeTime = "07:00",
-            LastTeeTime = "08:00"
+            LastTeeTime = "08:00",
+            DefaultCapacity = 4
         });
 
         await DraftAndPublishSheetAsync(course.Id, "2026-02-07");
@@ -275,7 +279,8 @@ public class TeeSheetEndpointsTests(TestWebApplicationFactory factory) : IAsyncL
         {
             TeeTimeIntervalMinutes = 10,
             FirstTeeTime = "07:00",
-            LastTeeTime = "07:30"
+            LastTeeTime = "07:30",
+            DefaultCapacity = 4
         });
 
         await DraftAndPublishSheetAsync(course.Id, "2026-02-07");
