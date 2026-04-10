@@ -23,6 +23,35 @@ namespace Teeforce.Api.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Teeforce.Api.Features.TeeSheet.Policies.TeeTimeAvailabilityPolicy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("GracePeriodExpired")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PendingOfferIds")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SlotsRemaining")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly>("Time")
+                        .HasColumnType("time");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TeeTimeAvailabilityPolicies", (string)null);
+                });
+
             modelBuilder.Entity("Teeforce.Api.Features.Waitlist.Policies.TeeTimeOpeningExpirationPolicy", b =>
                 {
                     b.Property<Guid>("Id")
@@ -193,6 +222,9 @@ namespace Teeforce.Api.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<Guid?>("TeeTimeId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -200,7 +232,7 @@ namespace Teeforce.Api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "TeeTime", "Teeforce.Domain.BookingAggregate.Booking.TeeTime#TeeTime", b1 =>
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "TeeTime", "Teeforce.Domain.BookingAggregate.Booking.TeeTime#BookingDateTime", b1 =>
                         {
                             b1.IsRequired();
 
@@ -212,6 +244,8 @@ namespace Teeforce.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CourseId");
+
+                    b.HasIndex("TeeTimeId");
 
                     b.ToTable("Bookings", (string)null);
                 });
@@ -235,6 +269,11 @@ namespace Teeforce.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("DefaultCapacity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(4);
 
                     b.Property<string>("FeatureFlags")
                         .HasColumnType("nvarchar(max)");
@@ -480,6 +519,200 @@ namespace Teeforce.Api.Migrations
                     b.ToTable("Organizations", (string)null);
                 });
 
+            modelBuilder.Entity("Teeforce.Domain.TeeSheetAggregate.TeeSheet", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset?>("PublishedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Settings", "Teeforce.Domain.TeeSheetAggregate.TeeSheet.Settings#ScheduleSettings", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<int>("DefaultCapacity")
+                                .HasColumnType("int")
+                                .HasColumnName("Settings_DefaultCapacity");
+
+                            b1.Property<TimeOnly>("FirstTeeTime")
+                                .HasColumnType("time")
+                                .HasColumnName("Settings_FirstTeeTime");
+
+                            b1.Property<int>("IntervalMinutes")
+                                .HasColumnType("int")
+                                .HasColumnName("Settings_IntervalMinutes");
+
+                            b1.Property<TimeOnly>("LastTeeTime")
+                                .HasColumnType("time")
+                                .HasColumnName("Settings_LastTeeTime");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId", "Date")
+                        .IsUnique();
+
+                    b.ToTable("TeeSheets", (string)null);
+                });
+
+            modelBuilder.Entity("Teeforce.Domain.TeeTimeAggregate.TeeTime", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Remaining")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("TeeSheetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TeeSheetIntervalId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<TimeOnly>("Time")
+                        .HasColumnType("time");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeeSheetIntervalId")
+                        .IsUnique();
+
+                    b.HasIndex("CourseId", "Date");
+
+                    b.ToTable("TeeTimes", (string)null);
+                });
+
+            modelBuilder.Entity("Teeforce.Domain.TeeTimeOfferAggregate.TeeTimeOffer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("GolferId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("GolferWaitlistEntryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("GroupSize")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsStale")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTimeOffset?>("NotifiedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("TeeTimeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<TimeOnly>("Time")
+                        .HasColumnType("time");
+
+                    b.Property<Guid>("Token")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("TeeTimeId");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("TeeTimeId", "GolferId", "Status");
+
+                    b.ToTable("TeeTimeOffers", (string)null);
+                });
+
             modelBuilder.Entity("Teeforce.Domain.TeeTimeOpeningAggregate.TeeTimeOpening", b =>
                 {
                     b.Property<Guid>("Id")
@@ -526,7 +759,7 @@ namespace Teeforce.Api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "TeeTime", "Teeforce.Domain.TeeTimeOpeningAggregate.TeeTimeOpening.TeeTime#TeeTime", b1 =>
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "TeeTime", "Teeforce.Domain.TeeTimeOpeningAggregate.TeeTimeOpening.TeeTime#BookingDateTime", b1 =>
                         {
                             b1.IsRequired();
 
@@ -754,6 +987,93 @@ namespace Teeforce.Api.Migrations
                     b.HasOne("Teeforce.Domain.GolferAggregate.Golfer", null)
                         .WithMany()
                         .HasForeignKey("GolferId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Teeforce.Domain.TeeSheetAggregate.TeeSheet", b =>
+                {
+                    b.HasOne("Teeforce.Domain.CourseAggregate.Course", null)
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsMany("Teeforce.Domain.TeeSheetAggregate.TeeSheetInterval", "Intervals", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<int>("Capacity")
+                                .HasColumnType("int");
+
+                            b1.Property<Guid>("TeeSheetId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<TimeOnly>("Time")
+                                .HasColumnType("time");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("TeeSheetId", "Time")
+                                .IsUnique();
+
+                            b1.ToTable("TeeSheetIntervals", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("TeeSheetId");
+                        });
+
+                    b.Navigation("Intervals");
+                });
+
+            modelBuilder.Entity("Teeforce.Domain.TeeTimeAggregate.TeeTime", b =>
+                {
+                    b.HasOne("Teeforce.Domain.CourseAggregate.Course", null)
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsMany("Teeforce.Domain.TeeTimeAggregate.TeeTimeClaim", "Claims", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<Guid>("BookingId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<DateTimeOffset>("ClaimedAt")
+                                .HasColumnType("datetimeoffset");
+
+                            b1.Property<Guid>("GolferId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<int>("GroupSize")
+                                .HasColumnType("int");
+
+                            b1.Property<Guid>("TeeTimeId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("TeeTimeId", "BookingId")
+                                .IsUnique();
+
+                            b1.ToTable("TeeTimeClaims", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("TeeTimeId");
+                        });
+
+                    b.Navigation("Claims");
+                });
+
+            modelBuilder.Entity("Teeforce.Domain.TeeTimeOfferAggregate.TeeTimeOffer", b =>
+                {
+                    b.HasOne("Teeforce.Domain.TeeTimeAggregate.TeeTime", null)
+                        .WithMany()
+                        .HasForeignKey("TeeTimeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

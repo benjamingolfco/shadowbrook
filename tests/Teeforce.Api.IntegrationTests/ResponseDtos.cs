@@ -85,7 +85,8 @@ public record ErrorResponse(string Error);
 public record TeeTimeSettingsResponse(
     int TeeTimeIntervalMinutes,
     string FirstTeeTime,
-    string LastTeeTime);
+    string LastTeeTime,
+    int DefaultCapacity);
 
 public record PricingResponse(decimal FlatRatePrice);
 

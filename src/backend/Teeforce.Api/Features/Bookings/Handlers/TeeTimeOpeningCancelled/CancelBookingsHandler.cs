@@ -13,7 +13,7 @@ public class TeeTimeOpeningCancelledCancelBookingsHandler(IBookingRepository boo
     {
         var bookings = await bookingRepository.GetByCourseAndTeeTimeAsync(
             domainEvent.CourseId,
-            new TeeTime(domainEvent.Date, domainEvent.TeeTime),
+            new BookingDateTime(domainEvent.Date, domainEvent.TeeTime),
             ct);
 
         if (bookings.Count == 0)

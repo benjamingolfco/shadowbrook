@@ -49,7 +49,8 @@ public class TeeTimeSettingsTests(TestWebApplicationFactory factory) : IAsyncLif
         {
             TeeTimeIntervalMinutes = 10,
             FirstTeeTime = "07:00",
-            LastTeeTime = "18:00"
+            LastTeeTime = "18:00",
+            DefaultCapacity = 4
         });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -59,6 +60,7 @@ public class TeeTimeSettingsTests(TestWebApplicationFactory factory) : IAsyncLif
         Assert.Equal(10, body!.TeeTimeIntervalMinutes);
         Assert.Equal("07:00:00", body.FirstTeeTime);
         Assert.Equal("18:00:00", body.LastTeeTime);
+        Assert.Equal(4, body.DefaultCapacity);
     }
 
     [Fact]
@@ -68,7 +70,8 @@ public class TeeTimeSettingsTests(TestWebApplicationFactory factory) : IAsyncLif
         {
             TeeTimeIntervalMinutes = 10,
             FirstTeeTime = "07:00",
-            LastTeeTime = "18:00"
+            LastTeeTime = "18:00",
+            DefaultCapacity = 4
         });
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -83,7 +86,8 @@ public class TeeTimeSettingsTests(TestWebApplicationFactory factory) : IAsyncLif
         {
             TeeTimeIntervalMinutes = 8,
             FirstTeeTime = "06:30",
-            LastTeeTime = "17:30"
+            LastTeeTime = "17:30",
+            DefaultCapacity = 4
         });
 
         var response = await this.client.GetAsync($"/courses/{courseId}/tee-time-settings");
@@ -94,6 +98,7 @@ public class TeeTimeSettingsTests(TestWebApplicationFactory factory) : IAsyncLif
         Assert.Equal(8, body!.TeeTimeIntervalMinutes);
         Assert.Equal("06:30:00", body.FirstTeeTime);
         Assert.Equal("17:30:00", body.LastTeeTime);
+        Assert.Equal(4, body.DefaultCapacity);
     }
 
     [Fact]

@@ -54,6 +54,7 @@ Course operators know their course best. Ship with sensible defaults, but every 
 - src/backend/Teeforce.Api/Infrastructure/Observability/ — Serilog enrichers (OrganizationIdEnricher)
 
 ## Code Conventions
+- Backend follows DDD patterns (aggregates, value objects, domain events, capability tokens for cross-aggregate invariants) — see `.claude/rules/backend/domain-conventions.md` (path-scoped to `Teeforce.Domain`)
 - C#: `.editorconfig` at repo root defines style rules; see `.claude/rules/backend/backend-conventions.md` for full conventions
 - TypeScript: strict mode, ES modules, no CommonJS, path aliases (`@/*`)
 - Frontend: feature-based folders, TanStack Query for data fetching, RHF + Zod for forms (see `.claude/rules/frontend/react-conventions.md`)

@@ -5,4 +5,5 @@ public static class AuthorizationPolicies
     public const string RequireAppUser = nameof(RequireAppUser);
     public const string RequireAppAccess = nameof(RequireAppAccess);
     public const string RequireUsersManage = nameof(RequireUsersManage);
+    public const string RequireAppAccessOrOfferToken = nameof(RequireAppAccessOrOfferToken);
 }

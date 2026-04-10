@@ -124,7 +124,8 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
         {
             TeeTimeIntervalMinutes = 10,
             FirstTeeTime = "07:00",
-            LastTeeTime = "18:00"
+            LastTeeTime = "18:00",
+            DefaultCapacity = 4
         });
 
         // Assert
