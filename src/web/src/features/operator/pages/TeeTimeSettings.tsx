@@ -6,7 +6,7 @@ import { z } from 'zod/v4';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { WarningAlert } from '@/components/ui/warning-alert';
 import {
   Form,
   FormControl,
@@ -25,7 +25,7 @@ const teeTimeSettingsSchema = z.object({
   teeTimeIntervalMinutes: z.number().int().min(1, 'Interval must be at least 1 minute'),
   firstTeeTime: z.string().min(1, 'First tee time is required'),
   lastTeeTime: z.string().min(1, 'Last tee time is required'),
-  defaultCapacity: z.number().int().min(1, 'Must be at least 1'),
+  defaultCapacity: z.number().int().min(1, 'Default group size must be at least 1'),
 });
 
 type TeeTimeSettingsFormData = z.infer<typeof teeTimeSettingsSchema>;
@@ -115,7 +115,7 @@ export default function TeeTimeSettings() {
                           type="number"
                           min={1}
                           {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          onChange={(e) => field.onChange(e.target.valueAsNumber)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -124,11 +124,9 @@ export default function TeeTimeSettings() {
                 />
 
                 {intervalValue > 0 && intervalValue < 8 && (
-                  <Alert variant="warning">
-                    <AlertDescription>
-                      Most courses use intervals of 8 minutes or more. Short intervals may cause pace-of-play issues.
-                    </AlertDescription>
-                  </Alert>
+                  <WarningAlert>
+                    Most courses use intervals of 8 minutes or more. Short intervals may cause pace-of-play issues.
+                  </WarningAlert>
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -172,7 +170,7 @@ export default function TeeTimeSettings() {
                           type="number"
                           min={1}
                           {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          onChange={(e) => field.onChange(e.target.valueAsNumber)}
                         />
                       </FormControl>
                       <FormMessage />
