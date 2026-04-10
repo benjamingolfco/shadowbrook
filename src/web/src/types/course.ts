@@ -18,6 +18,7 @@ export interface TeeTimeSettings {
   teeTimeIntervalMinutes: number;
   firstTeeTime: string;
   lastTeeTime: string;
+  defaultCapacity: number;
 }
 
 export interface Pricing {

@@ -2,17 +2,11 @@ import { useEffect } from 'react';
 import { PageTopbar } from '@/components/layout/PageTopbar';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Form,
   FormControl,
@@ -28,11 +22,10 @@ import {
 import { useCourseContext } from '../context/CourseContext';
 
 const teeTimeSettingsSchema = z.object({
-  teeTimeIntervalMinutes: z.number().refine((val) => [8, 10, 12].includes(val), {
-    message: 'Interval must be 8, 10, or 12 minutes',
-  }),
+  teeTimeIntervalMinutes: z.number().int().min(1, 'Interval must be at least 1 minute'),
   firstTeeTime: z.string().min(1, 'First tee time is required'),
   lastTeeTime: z.string().min(1, 'Last tee time is required'),
+  defaultCapacity: z.number().int().min(1, 'Must be at least 1'),
 });
 
 type TeeTimeSettingsFormData = z.infer<typeof teeTimeSettingsSchema>;
@@ -46,6 +39,7 @@ export default function TeeTimeSettings() {
       teeTimeIntervalMinutes: 10,
       firstTeeTime: '07:00',
       lastTeeTime: '18:00',
+      defaultCapacity: 4,
     },
   });
 
@@ -53,6 +47,7 @@ export default function TeeTimeSettings() {
   const updateMutation = useUpdateTeeTimeSettings();
 
   const formIsDirty = form.formState.isDirty;
+  const intervalValue = form.watch('teeTimeIntervalMinutes');
 
   useEffect(() => {
     if (formIsDirty) {
@@ -71,6 +66,7 @@ export default function TeeTimeSettings() {
         teeTimeIntervalMinutes: settingsQuery.data.teeTimeIntervalMinutes,
         firstTeeTime: settingsQuery.data.firstTeeTime.slice(0, 5),
         lastTeeTime: settingsQuery.data.lastTeeTime.slice(0, 5),
+        defaultCapacity: settingsQuery.data.defaultCapacity,
       });
     }
   }, [settingsQuery.data, form]);
@@ -113,26 +109,27 @@ export default function TeeTimeSettings() {
                   name="teeTimeIntervalMinutes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tee Time Interval</FormLabel>
-                      <Select
-                        value={String(field.value)}
-                        onValueChange={(value) => field.onChange(Number(value))}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select interval" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="8">Every 8 minutes</SelectItem>
-                          <SelectItem value="10">Every 10 minutes</SelectItem>
-                          <SelectItem value="12">Every 12 minutes</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Tee Time Interval (minutes)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={1}
+                          {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {intervalValue > 0 && intervalValue < 8 && (
+                  <Alert variant="warning">
+                    <AlertDescription>
+                      Most courses use intervals of 8 minutes or more. Short intervals may cause pace-of-play issues.
+                    </AlertDescription>
+                  </Alert>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
@@ -163,6 +160,25 @@ export default function TeeTimeSettings() {
                     )}
                   />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="defaultCapacity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Default Group Size</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={1}
+                          {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 {updateMutation.isError && (
                   <p className="text-destructive text-sm">
