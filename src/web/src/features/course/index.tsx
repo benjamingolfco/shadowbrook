@@ -3,6 +3,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import ManagementLayout from './manage/layouts/ManagementLayout';
 import PosLayout from './pos/layouts/PosLayout';
 import Schedule from './manage/pages/Schedule';
+import ScheduleDay from './manage/pages/ScheduleDay';
 import Settings from './manage/pages/Settings';
 import TeeSheet from './pos/pages/TeeSheet';
 import WalkUpWaitlist from './pos/pages/WalkUpWaitlist';
@@ -19,7 +20,7 @@ export default function CourseFeature() {
         <Route path="manage" element={<ManagementLayout />}>
           <Route index element={<PlaceholderPage name="Dashboard" />} />
           <Route path="schedule" element={<Schedule />} />
-          <Route path="schedule/:date" element={<PlaceholderPage name="Day Detail" />} />
+          <Route path="schedule/:date" element={<ScheduleDay />} />
           <Route path="settings" element={<Settings />} />
         </Route>
         <Route path="pos" element={<PosLayout />}>
