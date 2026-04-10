@@ -2,23 +2,19 @@ import { Routes, Route, Navigate } from 'react-router';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import ManagementLayout from './manage/layouts/ManagementLayout';
 import PosLayout from './pos/layouts/PosLayout';
+import Dashboard from './manage/pages/Dashboard';
 import Schedule from './manage/pages/Schedule';
 import ScheduleDay from './manage/pages/ScheduleDay';
 import Settings from './manage/pages/Settings';
 import TeeSheet from './pos/pages/TeeSheet';
 import WalkUpWaitlist from './pos/pages/WalkUpWaitlist';
 
-// Dashboard, ScheduleDay will be added in later tasks
-function PlaceholderPage({ name }: { name: string }) {
-  return <div className="p-6 text-muted-foreground">{name} — coming soon</div>;
-}
-
 export default function CourseFeature() {
   return (
     <ThemeProvider>
       <Routes>
         <Route path="manage" element={<ManagementLayout />}>
-          <Route index element={<PlaceholderPage name="Dashboard" />} />
+          <Route index element={<Dashboard />} />
           <Route path="schedule" element={<Schedule />} />
           <Route path="schedule/:date" element={<ScheduleDay />} />
           <Route path="settings" element={<Settings />} />
