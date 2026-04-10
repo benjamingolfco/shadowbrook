@@ -7,7 +7,7 @@ using Wolverine.Http;
 
 namespace Teeforce.Api.Features.TeeSheet.Endpoints;
 
-public record WeeklyStatusRequest(string StartDate);
+public record WeeklyStatusRequest(DateOnly StartDate);
 
 public class WeeklyStatusRequestValidator : AbstractValidator<WeeklyStatusRequest>
 {
@@ -17,9 +17,9 @@ public class WeeklyStatusRequestValidator : AbstractValidator<WeeklyStatusReques
     }
 }
 
-public record DayStatusResponse(string Date, string Status, Guid? TeeSheetId, int? IntervalCount);
+public record DayStatusResponse(DateOnly Date, string Status, Guid? TeeSheetId, int? IntervalCount);
 
-public record WeeklyStatusResponse(string WeekStart, string WeekEnd, List<DayStatusResponse> Days);
+public record WeeklyStatusResponse(DateOnly WeekStart, DateOnly WeekEnd, List<DayStatusResponse> Days);
 
 public static class WeeklyStatusEndpoint
 {
@@ -27,20 +27,16 @@ public static class WeeklyStatusEndpoint
     [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> Handle(
         Guid courseId,
-        string? startDate,
+        DateOnly? startDate,
         ApplicationDbContext db,
         CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(startDate))
+        if (startDate is null)
         {
             return Results.BadRequest(new { error = "startDate query parameter is required." });
         }
 
-        if (!DateOnly.TryParseExact(startDate, "yyyy-MM-dd", out var start))
-        {
-            return Results.BadRequest(new { error = "startDate must be in yyyy-MM-dd format." });
-        }
-
+        var start = startDate.Value;
         var end = start.AddDays(6);
 
         var sheets = await db.TeeSheets
@@ -63,7 +59,7 @@ public static class WeeklyStatusEndpoint
             if (sheetsByDate.TryGetValue(date, out var sheet))
             {
                 days.Add(new DayStatusResponse(
-                    date.ToString("yyyy-MM-dd"),
+                    date,
                     sheet.Status.ToString().ToLowerInvariant(),
                     sheet.Id,
                     sheet.IntervalCount));
@@ -71,16 +67,13 @@ public static class WeeklyStatusEndpoint
             else
             {
                 days.Add(new DayStatusResponse(
-                    date.ToString("yyyy-MM-dd"),
+                    date,
                     "notStarted",
                     null,
                     null));
             }
         }
 
-        return Results.Ok(new WeeklyStatusResponse(
-            start.ToString("yyyy-MM-dd"),
-            end.ToString("yyyy-MM-dd"),
-            days));
+        return Results.Ok(new WeeklyStatusResponse(start, end, days));
     }
 }

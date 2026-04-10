@@ -54,8 +54,8 @@ public class WeeklyTeeSheetSetupTests(TestWebApplicationFactory factory) : IAsyn
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var result = await response.Content.ReadFromJsonAsync<WeeklyStatusResponse>();
         Assert.NotNull(result);
-        Assert.Equal("2026-04-13", result!.WeekStart);
-        Assert.Equal("2026-04-19", result.WeekEnd);
+        Assert.Equal(new DateOnly(2026, 4, 13), result!.WeekStart);
+        Assert.Equal(new DateOnly(2026, 4, 19), result.WeekEnd);
         Assert.Equal(7, result.Days.Count);
         Assert.All(result.Days, day => Assert.Equal("notStarted", day.Status));
     }
@@ -94,15 +94,15 @@ public class WeeklyTeeSheetSetupTests(TestWebApplicationFactory factory) : IAsyn
         var result = await response.Content.ReadFromJsonAsync<WeeklyStatusResponse>();
         Assert.NotNull(result);
 
-        var monday = result!.Days.Single(d => d.Date == "2026-04-13");
+        var monday = result!.Days.Single(d => d.Date == new DateOnly(2026, 4, 13));
         Assert.Equal("notStarted", monday.Status);
 
-        var tuesday = result.Days.Single(d => d.Date == "2026-04-14");
+        var tuesday = result.Days.Single(d => d.Date == new DateOnly(2026, 4, 14));
         Assert.Equal("draft", tuesday.Status);
         Assert.NotNull(tuesday.TeeSheetId);
         Assert.True(tuesday.IntervalCount > 0);
 
-        var wednesday = result.Days.Single(d => d.Date == "2026-04-15");
+        var wednesday = result.Days.Single(d => d.Date == new DateOnly(2026, 4, 15));
         Assert.Equal("published", wednesday.Status);
     }
 
@@ -159,12 +159,12 @@ public class WeeklyTeeSheetSetupTests(TestWebApplicationFactory factory) : IAsyn
     }
 
     [Fact]
-    public async Task Step7_WeeklyStatus_InvalidDateFormat_ReturnsBadRequest()
+    public async Task Step7_WeeklyStatus_InvalidDateValue_ReturnsBadRequest()
     {
         await SetupCourseWithDefaults();
 
         var response = await this.client.GetAsync(
-            $"/courses/{this.courseId}/tee-sheets/week?startDate=04-13-2026");
+            $"/courses/{this.courseId}/tee-sheets/week?startDate=not-a-date");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }

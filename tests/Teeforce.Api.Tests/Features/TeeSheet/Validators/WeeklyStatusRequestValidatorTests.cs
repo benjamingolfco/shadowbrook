@@ -9,16 +9,11 @@ public class WeeklyStatusRequestValidatorTests
 
     [Fact]
     public void Valid_StartDate_Passes() =>
-        this.validator.TestValidate(new WeeklyStatusRequest("2026-04-13"))
+        this.validator.TestValidate(new WeeklyStatusRequest(DateOnly.Parse("2026-04-13")))
             .ShouldNotHaveAnyValidationErrors();
 
     [Fact]
-    public void Missing_StartDate_Fails() =>
-        this.validator.TestValidate(new WeeklyStatusRequest(null!))
-            .ShouldHaveValidationErrorFor(x => x.StartDate);
-
-    [Fact]
-    public void Empty_StartDate_Fails() =>
-        this.validator.TestValidate(new WeeklyStatusRequest(""))
+    public void Default_StartDate_Fails() =>
+        this.validator.TestValidate(new WeeklyStatusRequest(default))
             .ShouldHaveValidationErrorFor(x => x.StartDate);
 }

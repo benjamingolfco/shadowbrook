@@ -12,7 +12,7 @@ namespace Teeforce.Api.Features.TeeSheet.Endpoints;
 
 public record BulkDraftRequest(List<DateOnly> Dates);
 
-public record BulkDraftItem(string Date, Guid TeeSheetId);
+public record BulkDraftItem(DateOnly Date, Guid TeeSheetId);
 
 public record BulkDraftResponse(List<BulkDraftItem> TeeSheets);
 
@@ -52,7 +52,7 @@ public static class BulkDraftEndpoint
             var sheet = TeeSheetAggregate.Draft(courseId, date, settings, timeProvider);
             teeSheetRepository.Add(sheet);
 
-            results.Add(new BulkDraftItem(date.ToString("yyyy-MM-dd"), sheet.Id));
+            results.Add(new BulkDraftItem(date, sheet.Id));
         }
 
         return Results.Ok(new BulkDraftResponse(results));
