@@ -10,3 +10,20 @@ export interface TeeSheetResponse {
   courseName: string;
   slots: TeeSheetSlot[];
 }
+
+export interface DayStatus {
+  date: string;
+  status: 'notStarted' | 'draft' | 'published';
+  teeSheetId?: string;
+  intervalCount?: number;
+}
+
+export interface WeeklyStatusResponse {
+  weekStart: string;
+  weekEnd: string;
+  days: DayStatus[];
+}
+
+export interface BulkDraftResponse {
+  teeSheets: Array<{ date: string; teeSheetId: string }>;
+}

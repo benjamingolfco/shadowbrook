@@ -22,6 +22,7 @@ export const queryKeys = {
   },
   teeSheets: {
     byDate: (courseId: string, date: string) => ['tee-sheets', courseId, date] as const,
+    weeklyStatus: (courseId: string, startDate: string) => ['tee-sheets', courseId, 'week', startDate] as const,
   },
   walkUpWaitlist: {
     today: (courseId: string) => ['walkup-waitlist', courseId, 'today'] as const,

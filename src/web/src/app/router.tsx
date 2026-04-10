@@ -7,6 +7,7 @@ import PermissionGuard from '@/features/auth/components/PermissionGuard';
 import RootErrorBoundary from '@/features/error/pages/RootErrorBoundary';
 
 const AdminFeature = lazy(() => import('@/features/admin'));
+const CourseFeature = lazy(() => import('@/features/course'));
 const OperatorFeature = lazy(() => import('@/features/operator'));
 const GolferFeature = lazy(() => import('@/features/golfer'));
 const WalkupFeature = lazy(() => import('@/features/walkup'));
@@ -73,6 +74,22 @@ export const router = createBrowserRouter([
             element: (
               <AuthGuard>
                 <LazyFeature><OperatorFeature /></LazyFeature>
+              </AuthGuard>
+            ),
+          },
+          {
+            path: 'course',
+            element: (
+              <AuthGuard>
+                <Navigate to="/operator" replace />
+              </AuthGuard>
+            ),
+          },
+          {
+            path: 'course/:courseId/*',
+            element: (
+              <AuthGuard>
+                <LazyFeature><CourseFeature /></LazyFeature>
               </AuthGuard>
             ),
           },
