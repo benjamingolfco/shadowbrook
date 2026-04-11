@@ -131,4 +131,45 @@ public class TeeSheetTests
 
         Assert.Throws<TeeSheetNotPublishedException>(() => sheet.AuthorizeBooking());
     }
+
+    [Fact]
+    public void Unpublish_FromPublished_TransitionsToDraftAndRaisesEvent()
+    {
+        var courseId = Guid.NewGuid();
+        var date = new DateOnly(2026, 6, 1);
+        var sheet = TeeSheet.Draft(courseId, date, DefaultSettings(), this.timeProvider);
+        sheet.Publish(this.timeProvider);
+        sheet.ClearDomainEvents();
+
+        sheet.Unpublish(reason: null, this.timeProvider);
+
+        Assert.Equal(TeeSheetStatus.Draft, sheet.Status);
+        Assert.Null(sheet.PublishedAt);
+        var evt = Assert.IsType<TeeSheetUnpublished>(Assert.Single(sheet.DomainEvents));
+        Assert.Equal(sheet.Id, evt.TeeSheetId);
+        Assert.Equal(courseId, evt.CourseId);
+        Assert.Equal(date, evt.Date);
+        Assert.Null(evt.Reason);
+    }
+
+    [Fact]
+    public void Unpublish_WithReason_EventCarriesReason()
+    {
+        var sheet = TeeSheet.Draft(Guid.NewGuid(), new DateOnly(2026, 6, 1), DefaultSettings(), this.timeProvider);
+        sheet.Publish(this.timeProvider);
+        sheet.ClearDomainEvents();
+
+        sheet.Unpublish("Course maintenance", this.timeProvider);
+
+        var evt = Assert.IsType<TeeSheetUnpublished>(Assert.Single(sheet.DomainEvents));
+        Assert.Equal("Course maintenance", evt.Reason);
+    }
+
+    [Fact]
+    public void Unpublish_WhenDraft_Throws()
+    {
+        var sheet = TeeSheet.Draft(Guid.NewGuid(), new DateOnly(2026, 6, 1), DefaultSettings(), this.timeProvider);
+
+        Assert.Throws<TeeSheetNotPublishedException>(() => sheet.Unpublish(null, this.timeProvider));
+    }
 }
