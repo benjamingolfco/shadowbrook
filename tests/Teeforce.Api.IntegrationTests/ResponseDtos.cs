@@ -108,3 +108,8 @@ public record JoinWaitlistResponse(Guid EntryId, Guid GolferId, string GolferNam
 public record CurrentUserResponse(Guid? OrganizationId);
 
 public record OrganizationResponse(Guid Id, string Name);
+
+public record BulkDraftItem(DateOnly Date, Guid TeeSheetId);
+public record BulkDraftResponse(List<BulkDraftItem> TeeSheets);
+public record DayStatusResponse(DateOnly Date, string Status, Guid? TeeSheetId, int? IntervalCount);
+public record WeeklyStatusResponse(DateOnly WeekStart, DateOnly WeekEnd, List<DayStatusResponse> Days);

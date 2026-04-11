@@ -64,7 +64,7 @@ public class TeeSheetDirectBookingTests(TestWebApplicationFactory factory) : IAs
     {
         var draftResponse = await this.client.PostAsJsonAsync(
             $"/courses/{courseId}/tee-sheets/draft",
-            new { Date = date });
+            new { Dates = new[] { date } });
         draftResponse.EnsureSuccessStatusCode();
     }
 

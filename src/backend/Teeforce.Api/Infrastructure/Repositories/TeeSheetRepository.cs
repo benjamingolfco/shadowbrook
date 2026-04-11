@@ -16,6 +16,12 @@ public class TeeSheetRepository(ApplicationDbContext db) : ITeeSheetRepository
             .Include(s => s.Intervals)
             .FirstOrDefaultAsync(s => s.CourseId == courseId && s.Date == date, ct);
 
+    public async Task<List<TeeSheet>> GetByCourseAndDatesAsync(Guid courseId, List<DateOnly> dates, CancellationToken ct = default) =>
+        await db.TeeSheets
+            .Include(s => s.Intervals)
+            .Where(s => s.CourseId == courseId && dates.Contains(s.Date))
+            .ToListAsync(ct);
+
     public async Task<TeeSheet?> GetByIntervalIdAsync(Guid intervalId, CancellationToken ct = default) =>
         await db.TeeSheets
             .Include(s => s.Intervals)
