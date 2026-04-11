@@ -17,4 +17,16 @@ public class BookingRepository(ApplicationDbContext db) : IBookingRepository
         await db.Bookings
             .Where(b => b.CourseId == courseId && b.TeeTime.Value == teeTime.Value)
             .ToListAsync(ct);
+
+    public async Task<List<Booking>> GetByTeeTimeIdsAsync(List<Guid> teeTimeIds, CancellationToken ct = default) =>
+        await db.Bookings
+            .Where(b => b.TeeTimeId != null && teeTimeIds.Contains(b.TeeTimeId.Value))
+            .ToListAsync(ct);
+
+    public async Task<int> GetConfirmedCountByTeeSheetIdAsync(Guid teeSheetId, CancellationToken ct = default) =>
+        await db.Bookings
+            .Where(b => b.TeeTimeId != null
+                && db.TeeTimes.Where(t => t.TeeSheetId == teeSheetId).Select(t => t.Id).Contains(b.TeeTimeId.Value)
+                && b.Status == BookingStatus.Confirmed)
+            .CountAsync(ct);
 }
