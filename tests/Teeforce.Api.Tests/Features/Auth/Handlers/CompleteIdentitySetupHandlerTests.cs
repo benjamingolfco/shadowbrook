@@ -24,7 +24,7 @@ public class CompleteIdentitySetupHandlerTests
         this.repository.GetByIdAsync(user.Id).Returns(user);
 
         await CompleteIdentitySetupHandler.Handle(
-            new CompleteIdentitySetupCommand(user.Id, "entra-oid-123", "Jane", "Smith"),
+            new CompleteIdentitySetupCommand(user.Id, "Jane", "Smith"),
             this.repository);
 
         Assert.Equal("Jane", user.FirstName);
@@ -40,7 +40,7 @@ public class CompleteIdentitySetupHandlerTests
 
         await Assert.ThrowsAsync<EntityNotFoundException>(
             () => CompleteIdentitySetupHandler.Handle(
-                new CompleteIdentitySetupCommand(userId, "oid", "Jane", "Smith"),
+                new CompleteIdentitySetupCommand(userId, "Jane", "Smith"),
                 this.repository));
     }
 
@@ -52,7 +52,7 @@ public class CompleteIdentitySetupHandlerTests
         this.repository.GetByIdAsync(user.Id).Returns(user);
 
         await CompleteIdentitySetupHandler.Handle(
-            new CompleteIdentitySetupCommand(user.Id, "entra-oid-123", "Different", "Name"),
+            new CompleteIdentitySetupCommand(user.Id, "Different", "Name"),
             this.repository);
 
         Assert.Equal("Jane", user.FirstName);

@@ -53,7 +53,7 @@ public class AppUserClaimsTransformation(
 
             // Fire-and-forget: populate first/last name from the identity token.
             // This runs on the user's first login after being invited.
-            await bus.SendAsync(new CompleteIdentitySetupCommand(data.AppUserId, oid, firstName, lastName));
+            await bus.SendAsync(new CompleteIdentitySetupCommand(data.AppUserId, firstName, lastName));
         }
 
         var permissions = data.IsActive

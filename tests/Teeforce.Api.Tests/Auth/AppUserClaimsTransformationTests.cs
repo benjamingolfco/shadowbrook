@@ -95,7 +95,6 @@ public class AppUserClaimsTransformationTests
         await bus.Received(1).SendAsync(
             Arg.Is<CompleteIdentitySetupCommand>(c =>
                 c.AppUserId == appUserId &&
-                c.IdentityId == oid &&
                 c.FirstName == "Jane" &&
                 c.LastName == "Smith"));
 

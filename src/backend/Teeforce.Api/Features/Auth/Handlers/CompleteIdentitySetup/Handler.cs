@@ -3,7 +3,7 @@ using Teeforce.Domain.Common;
 
 namespace Teeforce.Api.Features.Auth.Handlers;
 
-public record CompleteIdentitySetupCommand(Guid AppUserId, string IdentityId, string FirstName, string LastName);
+public record CompleteIdentitySetupCommand(Guid AppUserId, string FirstName, string LastName);
 
 public static class CompleteIdentitySetupHandler
 {
