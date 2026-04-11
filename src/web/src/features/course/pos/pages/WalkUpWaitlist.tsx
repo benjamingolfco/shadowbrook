@@ -22,6 +22,7 @@ import {
 } from '../hooks/useWalkUpWaitlist';
 import { useRemoveGolferFromWaitlist, useCancelTeeTimeOpening } from '../hooks/useWaitlist';
 import { useCourseId } from '../../hooks/useCourseId';
+import { useCourseContext } from '../../context/CourseProvider';
 import { getBrowserTimeZone } from '@/lib/course-time';
 import { PostTeeTimeForm } from '../components/PostTeeTimeForm';
 import { OpeningsGrid } from '../components/OpeningsGrid';
@@ -37,7 +38,8 @@ import type { WalkUpWaitlistEntry, WaitlistOpeningEntry } from '@/types/waitlist
 
 export default function WalkUpWaitlist() {
   const courseId = useCourseId();
-  const timeZoneId = getBrowserTimeZone();
+  const { course } = useCourseContext();
+  const timeZoneId = course?.timeZoneId ?? getBrowserTimeZone();
   const isWide = useMediaQuery('(min-width: 1200px)');
   const [addGolferDialogOpen, setAddGolferDialogOpen] = useState(false);
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);

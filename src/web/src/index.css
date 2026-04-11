@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
     --radius-sm: calc(var(--radius) - 4px);
@@ -29,6 +29,8 @@
     --color-destructive: var(--destructive);
     --color-success: var(--success);
     --color-success-foreground: var(--success-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
@@ -56,6 +58,8 @@
     --color-ink-muted: var(--ink-muted);
     --color-ink-faint: var(--ink-faint);
     --color-border-strong: var(--border-strong);
+    --color-green-darkest: var(--green-darkest);
+    --color-green-dark: var(--green-dark);
     --color-green: var(--green);
     --color-green-mid: var(--green-mid);
     --color-green-light: var(--green-light);
@@ -80,26 +84,28 @@
     --font-body: 'IBM Plex Sans', system-ui, sans-serif;
     --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
-    /* Fieldstone palette */
-    --canvas: #f4f2ee;
-    --paper: #faf9f7;
-    --white: #ffffff;
-    --ink: #1c1a18;
-    --ink-secondary: #4a4742;
-    --ink-muted: #8c8880;
-    --ink-faint: #c8c4bc;
-    --border-soft: #e0dcd4;
-    --border-strong: #c8c4bc;
+    /* Teeforce palette */
+    --canvas: #F5FAF6;          /* Off White — main background */
+    --paper: #FFFFFF;
+    --white: #FFFFFF;
+    --ink: #101F14;             /* Text */
+    --ink-secondary: #2B4433;   /* derived — between Text and Text Light */
+    --ink-muted: #6A856C;       /* Text Light */
+    --ink-faint: #A8BAA9;       /* derived */
+    --border-soft: #D6E4D9;     /* derived from Forest Pale */
+    --border-strong: #A8BAA9;
 
-    --green: #2e6b42;
-    --green-mid: #3d8a57;
-    --green-light: #d4ead9;
-    --green-faint: #edf6f0;
+    --green-darkest: #102B1A;   /* Deep Forest — primary dark */
+    --green-dark: #1A4D35;      /* Forest Mid — secondary dark */
+    --green: #276749;           /* Evergreen — primary mid */
+    --green-mid: #52B788;       /* Fern — bright accent / dark-bg force */
+    --green-light: #E2F0E5;     /* Forest Pale — light surface */
+    --green-faint: #EEF7F0;     /* derived, slightly lighter */
 
-    --orange: #c45e1a;
-    --orange-mid: #e07035;
-    --orange-light: #f5dece;
-    --orange-faint: #fdf3ec;
+    --orange: #F28C28;          /* Tangerine */
+    --orange-mid: #FFA355;      /* derived hover */
+    --orange-light: #FBDEBD;    /* derived pale */
+    --orange-faint: #FDF1E3;    /* derived very pale */
 
     --red: #c0392b;
     --red-light: #fce8e8;
@@ -107,34 +113,37 @@
     --blue: #2563a8;
     --blue-light: #ddeaf8;
 
-    /* shadcn semantic mapping → Fieldstone */
-    --background: var(--white);
+    /* shadcn semantic mapping → Teeforce */
+    --background: var(--canvas);
     --foreground: var(--ink);
     --card: var(--white);
     --card-foreground: var(--ink);
     --popover: var(--white);
     --popover-foreground: var(--ink);
 
-    --primary: var(--green-faint);
-    --primary-foreground: var(--green);
+    --primary: var(--orange);
+    --primary-foreground: var(--ink);
 
-    --secondary: var(--canvas);
+    --secondary: var(--green-light);
     --secondary-foreground: var(--ink-secondary);
 
-    --muted: var(--canvas);
+    --muted: var(--green-light);
     --muted-foreground: var(--ink-muted);
 
-    --accent: var(--canvas);
+    --accent: var(--green-light);
     --accent-foreground: var(--ink);
 
     --destructive: var(--red);
 
-    --success: var(--green-mid);
+    --success: var(--green);
     --success-foreground: var(--white);
+
+    --warning: #92400E;              /* dark mustard — readable as text on light bg */
+    --warning-foreground: var(--white);
 
     --border: var(--border-soft);
     --input: var(--border-soft);
-    --ring: var(--green-mid);
+    --ring: var(--green);
 
     --chart-1: var(--green);
     --chart-2: var(--orange);
@@ -142,9 +151,9 @@
     --chart-4: var(--red);
     --chart-5: var(--ink-muted);
 
-    /* Sidebar — DARK ink for Fieldstone */
-    --sidebar: var(--ink);
-    --sidebar-foreground: rgba(255, 255, 255, 0.7);
+    /* Sidebar — Deep Forest dark surface */
+    --sidebar: var(--green-darkest);
+    --sidebar-foreground: rgba(255, 255, 255, 0.75);
     --sidebar-primary: var(--green-mid);
     --sidebar-primary-foreground: var(--paper);
     --sidebar-accent: rgba(255, 255, 255, 0.08);
@@ -198,9 +207,16 @@
     --destructive: var(--red);
     --success: var(--green-mid);
     --success-foreground: var(--canvas);
+    --warning: #FBBF24;              /* bright honey — readable on forest surfaces */
+    --warning-foreground: var(--ink);
     --border: var(--border-soft);
     --input: var(--border-soft);
     --ring: var(--green-mid);
+    --chart-1: var(--green-mid);
+    --chart-2: var(--orange);
+    --chart-3: var(--green-light);
+    --chart-4: var(--red);
+    --chart-5: var(--ink-muted);
     --sidebar: #0a140c;
     --sidebar-foreground: rgba(232, 228, 220, 0.8);
     --sidebar-primary: var(--green-mid);

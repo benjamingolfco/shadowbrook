@@ -17,7 +17,7 @@ src/web/src/
 │   └── layout/       # Role-based layouts (AdminLayout, OperatorLayout, GolferLayout)
 ├── features/
 │   ├── admin/        # Platform admin (pages/, hooks/, components/, __tests__/)
-│   ├── operator/     # Course operator
+│   ├── course/       # Course operator (manage + POS)
 │   ├── golfer/       # Golfer-facing
 │   └── auth/         # Auth provider, guards, dev switcher
 ├── hooks/            # Shared hooks (useMediaQuery, useDebounce, etc.)

@@ -8,12 +8,15 @@ import RootErrorBoundary from '@/features/error/pages/RootErrorBoundary';
 
 const AdminFeature = lazy(() => import('@/features/admin'));
 const CourseFeature = lazy(() => import('@/features/course'));
-const OperatorFeature = lazy(() => import('@/features/operator'));
+
 const GolferFeature = lazy(() => import('@/features/golfer'));
 const WalkupFeature = lazy(() => import('@/features/walkup'));
 const WalkUpOfferFeature = lazy(() => import('@/features/walk-up'));
 const WalkUpQrFeature = lazy(() => import('@/features/walkup-qr'));
 const DevGolferSmsPage = lazy(() => import('@/features/dev/pages/DevGolferSmsPage'));
+const StyleguidePage = import.meta.env.MODE !== 'production'
+  ? lazy(() => import('@/features/dev/pages/StyleguidePage'))
+  : null;
 
 function LazyFeature({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<div className="p-6 text-muted-foreground">Loading...</div>}>{children}</Suspense>;
@@ -39,7 +42,7 @@ function RoleRedirect() {
     return <Navigate to="/admin" replace />;
   }
 
-  return <Navigate to="/operator" replace />;
+  return <Navigate to="/course" replace />;
 }
 
 export const router = createBrowserRouter([
@@ -63,35 +66,23 @@ export const router = createBrowserRouter([
             path: 'admin/*',
             element: (
               <AuthGuard>
-                <PermissionGuard permission="users:manage" fallback="/operator">
+                <PermissionGuard permission="users:manage" fallback="/course">
                   <LazyFeature><AdminFeature /></LazyFeature>
                 </PermissionGuard>
               </AuthGuard>
             ),
           },
           {
-            path: 'operator/*',
-            element: (
-              <AuthGuard>
-                <LazyFeature><OperatorFeature /></LazyFeature>
-              </AuthGuard>
-            ),
-          },
-          {
-            path: 'course',
-            element: (
-              <AuthGuard>
-                <Navigate to="/operator" replace />
-              </AuthGuard>
-            ),
-          },
-          {
-            path: 'course/:courseId/*',
+            path: 'course/*',
             element: (
               <AuthGuard>
                 <LazyFeature><CourseFeature /></LazyFeature>
               </AuthGuard>
             ),
+          },
+          {
+            path: 'operator/*',
+            element: <Navigate to="/course" replace />,
           },
         ],
       },
@@ -120,12 +111,22 @@ export const router = createBrowserRouter([
           <LazyFeature><WalkUpQrFeature /></LazyFeature>
         ),
       },
-      ...((import.meta.env.DEV || import.meta.env.VITE_SHOW_DEV_TOOLS === 'true') ? [{
-        path: 'dev/sms/golfer/:golferId',
-        element: (
-          <LazyFeature><DevGolferSmsPage /></LazyFeature>
-        ),
-      }] : []),
+      ...((import.meta.env.DEV || import.meta.env.VITE_SHOW_DEV_TOOLS === 'true') ? [
+        {
+          path: 'dev/sms/golfer/:golferId',
+          element: (
+            <LazyFeature><DevGolferSmsPage /></LazyFeature>
+          ),
+        },
+      ] : []),
+      ...(StyleguidePage ? [
+        {
+          path: 'dev/styleguide',
+          element: (
+            <LazyFeature><StyleguidePage /></LazyFeature>
+          ),
+        },
+      ] : []),
     ],
   },
 ]);
