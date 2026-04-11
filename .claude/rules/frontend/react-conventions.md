@@ -79,6 +79,7 @@ const form = useForm({ resolver: zodResolver(schema) });
 
 Tailwind CSS utility classes. No CSS modules, no styled-components, no inline style objects.
 
+- Use semantic color tokens (`bg-canvas`, `text-ink`, `border-border-strong`, `bg-paper`, etc.) — never hardcoded Tailwind colors (`bg-white`, `text-gray-500`, `bg-amber-50`). Hardcoded colors break dark mode. The full token palette is defined in `src/web/src/index.css`.
 - Use shadcn/ui primitives from `@/components/ui/` for standard UI elements — never build custom interactive components (drawers, dialogs, dropdowns, popovers, tooltips) when a shadcn primitive exists. Custom components miss accessibility, animations, and dismiss behavior that shadcn handles out of the box.
 - Use `cn()` from `@/lib/utils` to merge conditional Tailwind classes
 - shadcn components are vendored source files but treated as read-only (see "Theming shadcn components" section)
@@ -122,6 +123,10 @@ Vitest + React Testing Library.
 - Use `render` from `@/test/test-utils` (wraps with QueryClient + MemoryRouter)
 - Mock hooks with `vi.mock()` + `vi.mocked()` — cast partial returns as `unknown`
 - Run: `pnpm --dir src/web test` (single run) or `pnpm --dir src/web test:watch`
+
+## Layout & AppShell
+
+Every page that uses `<PageTopbar>` or `<PageRightRail>` must be rendered inside an `<AppShell>`. These slot helpers require `AppShellContext` and will crash the app if used outside it. Each route group should have a dedicated layout component (e.g. `ManagementLayout`, `PosLayout`, `PickerLayout`) that wraps `<AppShell>` — don't inline `<AppShell>` in route definitions.
 
 ## Component Patterns
 
