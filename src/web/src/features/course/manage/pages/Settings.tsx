@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useBlocker } from 'react-router';
 import { PageTopbar } from '@/components/layout/PageTopbar';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -43,6 +44,12 @@ export default function Settings() {
     },
   });
 
+  const isDirty = form.formState.isDirty;
+
+  useBlocker(({ currentLocation, nextLocation }) =>
+    isDirty && currentLocation.pathname !== nextLocation.pathname,
+  );
+
   const settingsQuery = useTeeTimeSettings(courseId);
   const updateMutation = useUpdateTeeTimeSettings();
 
@@ -68,6 +75,12 @@ export default function Settings() {
       <PageTopbar
         middle={<h1 className="font-display text-[18px] text-ink">Tee Time Settings</h1>}
       />
+
+      {isDirty && (
+        <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+          You have unsaved changes.
+        </div>
+      )}
 
       <div className="max-w-2xl">
         <Card className="border-border-strong">
