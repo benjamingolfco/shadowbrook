@@ -4,6 +4,7 @@ import { useMsalAuthentication } from '@azure/msal-react';
 import { loginRequest } from '@/lib/msal-config';
 import { useAuth } from '../hooks/useAuth';
 import UnauthorizedPage from './UnauthorizedPage';
+import SplashScreen from '@/components/SplashScreen';
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -24,7 +25,7 @@ function MsalAuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, isLoading, unauthorized } = useAuth();
 
   if (unauthorized) return <UnauthorizedPage />;
-  if (isLoading || !isAuthenticated) return null;
+  if (isLoading || !isAuthenticated) return <SplashScreen />;
 
   return <>{children}</>;
 }
@@ -33,7 +34,7 @@ function DevAuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, isLoading, unauthorized } = useAuth();
 
   if (unauthorized) return <UnauthorizedPage />;
-  if (isLoading || !isAuthenticated) return null;
+  if (isLoading || !isAuthenticated) return <SplashScreen />;
 
   return <>{children}</>;
 }
