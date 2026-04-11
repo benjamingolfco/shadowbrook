@@ -38,8 +38,8 @@ function formatDateParam(date: Date): string {
 
 function formatDayLabel(dateStr: string): string {
   // Parse YYYY-MM-DD as local date
-  const [y, m, d] = dateStr.split('-').map(Number);
-  const date = new Date(y, m - 1, d);
+  const parts = dateStr.split('-').map(Number);
+  const date = new Date(parts[0]!, parts[1]! - 1, parts[2]!);
   const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
   const monthName = date.toLocaleDateString('en-US', { month: 'short' });
   const dayNum = date.getDate();

@@ -30,4 +30,12 @@ public class BulkDraftRequestValidatorTests
     public void Empty_Dates_Fails() =>
         this.validator.TestValidate(new BulkDraftRequest([]))
             .ShouldHaveValidationErrorFor(x => x.Dates);
+
+    [Fact]
+    public void Duplicate_Dates_Fails() =>
+        this.validator.TestValidate(new BulkDraftRequest([
+            DateOnly.Parse("2026-04-13"),
+            DateOnly.Parse("2026-04-13"),
+        ]))
+            .ShouldHaveValidationErrorFor(x => x.Dates);
 }

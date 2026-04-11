@@ -21,6 +21,9 @@ public class BulkDraftRequestValidator : AbstractValidator<BulkDraftRequest>
     public BulkDraftRequestValidator()
     {
         RuleFor(r => r.Dates).NotEmpty();
+        RuleFor(r => r.Dates)
+            .Must(dates => dates.Distinct().Count() == dates.Count)
+            .WithMessage("Dates must not contain duplicates.");
     }
 }
 
@@ -39,16 +42,16 @@ public static class BulkDraftEndpoint
         var course = await courseRepository.GetRequiredByIdAsync(courseId);
         var settings = course.CurrentScheduleDefaults();
 
+        var existingSheets = await teeSheetRepository.GetByCourseAndDatesAsync(courseId, request.Dates, ct);
+        if (existingSheets.Count > 0)
+        {
+            throw new TeeSheetAlreadyExistsException(courseId, existingSheets[0].Date);
+        }
+
         var results = new List<BulkDraftItem>();
 
         foreach (var date in request.Dates)
         {
-            var existing = await teeSheetRepository.GetByCourseAndDateAsync(courseId, date, ct);
-            if (existing is not null)
-            {
-                throw new TeeSheetAlreadyExistsException(courseId, date);
-            }
-
             var sheet = TeeSheetAggregate.Draft(courseId, date, settings, timeProvider);
             teeSheetRepository.Add(sheet);
 
