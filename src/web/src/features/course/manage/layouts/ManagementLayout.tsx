@@ -9,7 +9,7 @@ function ManagementBrand() {
   return (
     <>
       <h1
-        className="max-w-[180px] truncate text-lg font-semibold font-[family-name:var(--font-heading)] text-sidebar-foreground"
+        className="max-w-[180px] truncate text-lg font-semibold font-[family-name:var(--font-heading)]"
         title={user?.organization?.name ?? 'Teeforce'}
       >
         {user?.organization?.name ?? 'Teeforce'}
