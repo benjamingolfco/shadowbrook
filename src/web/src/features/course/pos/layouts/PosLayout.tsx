@@ -45,6 +45,7 @@ export default function PosLayout({ variant = 'full' }: PosLayoutProps) {
       variant={variant}
       navConfig={variant === 'full' ? navConfig : undefined}
       brand={<PosBrand />}
+      settingsTo={`/course/${courseId}/manage/settings`}
     >
       <Outlet />
     </AppShell>

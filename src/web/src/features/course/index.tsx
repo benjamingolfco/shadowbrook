@@ -18,15 +18,16 @@ import CoursePicker from './pages/CoursePicker';
 function CourseRoutes() {
   const courseId = useCourseId();
   const fullApp = useFeature('full-operator-app', courseId);
+  const base = `/course/${courseId}`;
 
   if (!fullApp) {
     return (
       <Routes>
         <Route path="pos" element={<PosLayout variant="minimal" />}>
           <Route path="waitlist" element={<WalkUpWaitlist />} />
-          <Route path="*" element={<Navigate to="waitlist" replace />} />
+          <Route path="*" element={<Navigate to={`${base}/pos/waitlist`} replace />} />
         </Route>
-        <Route path="*" element={<Navigate to="pos/waitlist" replace />} />
+        <Route path="*" element={<Navigate to={`${base}/pos/waitlist`} replace />} />
       </Routes>
     );
   }
@@ -42,10 +43,10 @@ function CourseRoutes() {
       <Route path="pos" element={<PosLayout />}>
         <Route path="tee-sheet" element={<TeeSheet />} />
         <Route path="waitlist" element={<WalkUpWaitlist />} />
-        <Route path="*" element={<Navigate to="tee-sheet" replace />} />
+        <Route path="*" element={<Navigate to={`${base}/pos/tee-sheet`} replace />} />
       </Route>
-      <Route index element={<Navigate to="manage" replace />} />
-      <Route path="*" element={<Navigate to="manage" replace />} />
+      <Route index element={<Navigate to={`${base}/manage`} replace />} />
+      <Route path="*" element={<Navigate to={`${base}/manage`} replace />} />
     </Routes>
   );
 }

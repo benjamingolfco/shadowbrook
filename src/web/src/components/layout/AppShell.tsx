@@ -1,5 +1,6 @@
 import { type ReactNode, useState } from 'react';
-import { NavLink } from 'react-router';
+import { Link, NavLink } from 'react-router';
+import { Settings } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -39,6 +40,8 @@ export interface AppShellProps {
   brand: ReactNode;
   /** Optional handler for the user menu's "Switch course" item. */
   onSwitchCourse?: () => void;
+  /** Optional settings page link — renders a gear icon in the topbar next to the user menu. */
+  settingsTo?: string;
   children: ReactNode;
 }
 
@@ -50,7 +53,7 @@ export interface AppShellProps {
  * Pages contribute topbar and right rail content via <PageTopbar> and <PageRightRail>
  * helpers from inside <Outlet>.
  */
-export function AppShell({ variant, navConfig, brand, onSwitchCourse, children }: AppShellProps) {
+export function AppShell({ variant, navConfig, brand, onSwitchCourse, settingsTo, children }: AppShellProps) {
   const [topbarLeft, setTopbarLeft] = useState<HTMLDivElement | null>(null);
   const [topbarMiddle, setTopbarMiddle] = useState<HTMLDivElement | null>(null);
   const [topbarRight, setTopbarRight] = useState<HTMLDivElement | null>(null);
@@ -65,6 +68,7 @@ export function AppShell({ variant, navConfig, brand, onSwitchCourse, children }
           <Topbar
             brand={brand}
             onSwitchCourse={onSwitchCourse}
+            settingsTo={settingsTo}
             setLeft={setTopbarLeft}
             setMiddle={setTopbarMiddle}
             setRight={setTopbarRight}
@@ -87,6 +91,7 @@ export function AppShell({ variant, navConfig, brand, onSwitchCourse, children }
           <Topbar
             brand={null}
             onSwitchCourse={onSwitchCourse}
+            settingsTo={settingsTo}
             setLeft={setTopbarLeft}
             setMiddle={setTopbarMiddle}
             setRight={setTopbarRight}
@@ -146,13 +151,14 @@ function AppSidebar({ brand, navConfig }: AppSidebarProps) {
 interface TopbarProps {
   brand: ReactNode;
   onSwitchCourse?: () => void;
+  settingsTo?: string;
   setLeft: (el: HTMLDivElement | null) => void;
   setMiddle: (el: HTMLDivElement | null) => void;
   setRight: (el: HTMLDivElement | null) => void;
   showSidebarTrigger: boolean;
 }
 
-function Topbar({ brand, onSwitchCourse, setLeft, setMiddle, setRight, showSidebarTrigger }: TopbarProps) {
+function Topbar({ brand, onSwitchCourse, settingsTo, setLeft, setMiddle, setRight, showSidebarTrigger }: TopbarProps) {
   return (
     <header className="grid h-14 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-5 border-b border-border bg-paper px-6">
       <div className="flex items-center gap-5 justify-self-start">
@@ -163,6 +169,15 @@ function Topbar({ brand, onSwitchCourse, setLeft, setMiddle, setRight, showSideb
       <div ref={setMiddle} className="flex items-center gap-2 justify-self-center" />
       <div className="flex items-center gap-3 justify-self-end">
         <div ref={setRight} className="flex items-center gap-2 empty:hidden" />
+        {settingsTo && (
+          <Link
+            to={settingsTo}
+            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Settings"
+          >
+            <Settings className="h-5 w-5" />
+          </Link>
+        )}
         <UserMenu onSwitchCourse={onSwitchCourse} />
       </div>
     </header>
