@@ -2,8 +2,9 @@ import { Routes, Route, Navigate } from 'react-router';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { OrgProvider } from './context/OrgContext';
 import { CourseProvider } from './context/CourseProvider';
-import { useFeature } from '@/hooks/use-features';
+import { useFeatures } from '@/hooks/use-features';
 import { useCourseId } from './hooks/useCourseId';
+import SplashScreen from '@/components/SplashScreen';
 import PickerLayout from './layouts/PickerLayout';
 import ManagementLayout from './manage/layouts/ManagementLayout';
 import PosLayout from './pos/layouts/PosLayout';
@@ -17,8 +18,13 @@ import CoursePicker from './pages/CoursePicker';
 
 function CourseRoutes() {
   const courseId = useCourseId();
-  const fullApp = useFeature('full-operator-app', courseId);
+  const { data, isLoading } = useFeatures(courseId);
+  const fullApp = data?.['full-operator-app'] ?? false;
   const base = `/course/${courseId}`;
+
+  if (isLoading) {
+    return <SplashScreen />;
+  }
 
   if (!fullApp) {
     return (
