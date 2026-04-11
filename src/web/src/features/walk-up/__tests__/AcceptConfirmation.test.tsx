@@ -55,10 +55,10 @@ describe('AcceptConfirmation', () => {
   it('renders a green checkmark icon', () => {
     const { container } = render(<AcceptConfirmation offer={offer} />);
 
-    const iconWrapper = container.querySelector('.bg-green-100');
+    const iconWrapper = container.querySelector('.bg-green-light');
     expect(iconWrapper).toBeInTheDocument();
 
-    const svg = iconWrapper?.querySelector('svg.text-green-600');
+    const svg = iconWrapper?.querySelector('svg.text-green');
     expect(svg).toBeInTheDocument();
   });
 

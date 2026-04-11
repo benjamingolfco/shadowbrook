@@ -85,7 +85,7 @@ export function QrCodePanel({ shortCode }: QrCodePanelProps) {
                   aria-label={copied ? 'Copied' : 'Copy join link'}
                 >
                   {copied ? (
-                    <Check className="h-4 w-4 text-green-600" />
+                    <Check className="h-4 w-4 text-green" />
                   ) : (
                     <Copy className="h-4 w-4" />
                   )}

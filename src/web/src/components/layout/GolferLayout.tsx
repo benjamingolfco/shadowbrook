@@ -13,7 +13,7 @@ export default function GolferLayout() {
       </header>
 
       {/* Content */}
-      <main className="flex-1 bg-gray-50">
+      <main className="flex-1 bg-canvas">
         <Outlet />
       </main>
 
@@ -24,7 +24,7 @@ export default function GolferLayout() {
             to="/golfer/tee-times"
             className={({ isActive }) =>
               `flex-1 border-r py-3 text-center text-sm font-medium ${
-                isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+                isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'
               }`
             }
           >
@@ -34,7 +34,7 @@ export default function GolferLayout() {
             to="/golfer/bookings"
             className={({ isActive }) =>
               `flex-1 py-3 text-center text-sm font-medium ${
-                isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+                isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'
               }`
             }
           >

@@ -104,7 +104,7 @@ describe('PostTeeTimeForm', () => {
     expect(screen.getByText(/couldn't post opening/i)).toBeInTheDocument();
   });
 
-  it('shows amber warning when duplicate opening exists with 4 slots (full)', () => {
+  it('shows warning when duplicate opening exists with 4 slots (full)', () => {
     const duplicateError = new ApiError('Conflict', 409, {
       error: 'A tee time opening for this time already exists with 4 slots.',
       existingSlotsAvailable: 4,
@@ -124,10 +124,10 @@ describe('PostTeeTimeForm', () => {
 
     render(<PostTeeTimeForm courseId="course-1" />);
     expect(screen.getByText(/already exists with 4 slots/i)).toBeInTheDocument();
-    expect(screen.getByText(/already exists with 4 slots/i)).toHaveClass('text-amber-600');
+    expect(screen.getByText(/already exists with 4 slots/i)).toHaveClass('text-orange');
   });
 
-  it('shows amber warning with slot count when duplicate opening exists with fewer than 4 slots', () => {
+  it('shows warning with slot count when duplicate opening exists with fewer than 4 slots', () => {
     const duplicateError = new ApiError('Conflict', 409, {
       error: 'An opening already exists for this time with 2 slot(s). Would you like to add more slots to it?',
       existingSlotsAvailable: 2,
@@ -148,7 +148,7 @@ describe('PostTeeTimeForm', () => {
     render(<PostTeeTimeForm courseId="course-1" />);
     expect(screen.getByText(/an opening already exists for this time with 2 slot\(s\)/i)).toBeInTheDocument();
     expect(screen.getByText(/would you like to add more slots to it/i)).toBeInTheDocument();
-    expect(screen.getByText(/an opening already exists for this time with 2 slot\(s\)/i)).toHaveClass('text-amber-600');
+    expect(screen.getByText(/an opening already exists for this time with 2 slot\(s\)/i)).toHaveClass('text-orange');
   });
 
   it('shows validation error and does not call mutation when tee time is in the past', async () => {

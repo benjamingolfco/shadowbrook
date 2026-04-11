@@ -134,7 +134,7 @@ export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
         if (error instanceof ApiError && error.status === 409) {
           const duplicateError = error.data as DuplicateOpeningError;
           return (
-            <p className="text-sm text-amber-600 mt-2">
+            <p className="text-sm text-orange mt-2">
               {duplicateError.error}
             </p>
           );

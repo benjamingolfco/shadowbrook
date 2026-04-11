@@ -154,35 +154,59 @@
 }
 
 .dark {
-    /* Fieldstone has a single light theme. Dark mode is not supported in this redesign. */
-    /* Keeping the .dark selector intact so existing class toggles don't break, */
-    /* but values match :root so the app renders consistently. */
-    --background: var(--white);
+    /* Fieldstone dark — deep forest green surfaces, warm light text */
+    --canvas: #0d1a10;
+    --paper: #132117;
+    --white: #1a2e1f;
+    --ink: #e8e4dc;
+    --ink-secondary: #b8b3a8;
+    --ink-muted: #8a8578;
+    --ink-faint: #4a4740;
+    --border-soft: #2a4a33;
+    --border-strong: #3d6b4a;
+
+    --green: #5db876;
+    --green-mid: #4da868;
+    --green-light: #1e3525;
+    --green-faint: #162b1b;
+
+    --orange: #e8884f;
+    --orange-mid: #f09a65;
+    --orange-light: #2a2118;
+    --orange-faint: #1f1a14;
+
+    --red: #e05445;
+    --red-light: #2a1a18;
+
+    --blue: #5a9ae0;
+    --blue-light: #1a2530;
+
+    --background: var(--canvas);
     --foreground: var(--ink);
-    --card: var(--white);
+    --card: var(--paper);
     --card-foreground: var(--ink);
-    --popover: var(--white);
+    --popover: var(--paper);
     --popover-foreground: var(--ink);
-    --primary: var(--green-faint);
-    --primary-foreground: var(--green);
-    --secondary: var(--canvas);
+    --primary: var(--green);
+    --primary-foreground: var(--canvas);
+    --secondary: var(--white);
     --secondary-foreground: var(--ink-secondary);
-    --muted: var(--canvas);
+    --muted: var(--white);
     --muted-foreground: var(--ink-muted);
-    --accent: var(--canvas);
+    --accent: var(--white);
     --accent-foreground: var(--ink);
     --destructive: var(--red);
     --success: var(--green-mid);
-    --success-foreground: var(--white);
+    --success-foreground: var(--canvas);
     --border: var(--border-soft);
     --input: var(--border-soft);
     --ring: var(--green-mid);
-    --sidebar: var(--ink);
-    --sidebar-foreground: rgba(255, 255, 255, 0.7);
+    --sidebar: #0a140c;
+    --sidebar-foreground: rgba(232, 228, 220, 0.8);
     --sidebar-primary: var(--green-mid);
-    --sidebar-primary-foreground: var(--paper);
-    --sidebar-accent: rgba(255, 255, 255, 0.08);
-    --sidebar-accent-foreground: var(--paper);
+    --sidebar-primary-foreground: var(--canvas);
+    --sidebar-accent: rgba(255, 255, 255, 0.06);
+    --sidebar-accent-foreground: var(--ink);
     --sidebar-border: rgba(255, 255, 255, 0.08);
     --sidebar-ring: var(--green-mid);
 }
