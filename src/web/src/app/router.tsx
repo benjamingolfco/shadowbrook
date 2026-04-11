@@ -5,6 +5,7 @@ import { useAuth, AuthProvider } from '@/features/auth';
 import AuthGuard from '@/features/auth/components/AuthGuard';
 import PermissionGuard from '@/features/auth/components/PermissionGuard';
 import RootErrorBoundary from '@/features/error/pages/RootErrorBoundary';
+import SplashScreen from '@/components/SplashScreen';
 
 const AdminFeature = lazy(() => import('@/features/admin'));
 const CourseFeature = lazy(() => import('@/features/course'));
@@ -19,7 +20,7 @@ const StyleguidePage = import.meta.env.MODE !== 'production'
   : null;
 
 function LazyFeature({ children }: { children: React.ReactNode }) {
-  return <Suspense fallback={<div className="p-6 text-muted-foreground">Loading...</div>}>{children}</Suspense>;
+  return <Suspense fallback={<SplashScreen />}>{children}</Suspense>;
 }
 
 // Layout that provides AuthProvider/MsalProvider only for protected routes.
