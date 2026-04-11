@@ -46,7 +46,7 @@ export default function TeeSheet() {
           : 'Failed to load tee sheet';
         const isNotConfigured = message.toLowerCase().includes('not configured');
         return isNotConfigured ? (
-          <div className="m-6 max-w-md rounded-md border border-border bg-white p-6 text-center">
+          <div className="m-6 max-w-md rounded-md border border-border bg-card p-6 text-center">
             <p className="font-medium text-ink">Configure your tee times to get started</p>
             <p className="mt-1 text-sm text-ink-muted">
               Set your tee time interval, first tee time, and last tee time in Settings.

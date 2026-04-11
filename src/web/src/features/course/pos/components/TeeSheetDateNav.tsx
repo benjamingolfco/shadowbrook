@@ -50,7 +50,7 @@ export function TeeSheetDateNav({ selectedDate, onDateChange, courseTimeZoneId }
         type="date"
         value={selectedDate}
         onChange={(e) => onDateChange(e.target.value)}
-        className="ml-1 h-8 rounded-[5px] border border-border bg-white px-2 text-[11px] text-ink"
+        className="ml-1 h-8 rounded-[5px] border border-border bg-card px-2 text-[11px] text-ink"
         aria-label="Pick date"
       />
     </div>

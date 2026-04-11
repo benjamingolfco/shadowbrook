@@ -122,7 +122,7 @@ export default function WalkUpWaitlist() {
   if (todayQuery.isError) {
     return (
       <div className="flex h-full items-center justify-center p-6">
-        <div className="w-full max-w-md rounded-xl border border-border-strong bg-white p-6 text-center">
+        <div className="w-full max-w-md rounded-xl border border-border-strong bg-card p-6 text-center">
           <p className="font-[family-name:var(--font-heading)] text-lg font-semibold text-ink">
             Couldn't load waitlist
           </p>
@@ -150,7 +150,7 @@ export default function WalkUpWaitlist() {
 
     return (
       <div className="flex h-full items-center justify-center px-4 py-6">
-        <div className="w-full max-w-md space-y-4 rounded-xl border border-border-strong bg-white p-8 text-center">
+        <div className="w-full max-w-md space-y-4 rounded-xl border border-border-strong bg-card p-8 text-center">
           <h1 className="font-[family-name:var(--font-heading)] text-xl font-semibold text-ink">
             Walk-Up Waitlist
           </h1>
@@ -250,7 +250,7 @@ export default function WalkUpWaitlist() {
             {isWide && (
               <aside
                 data-testid="queue-rail"
-                className="border-l border-border bg-white"
+                className="border-l border-border bg-card"
               >
                 {queuePanel}
               </aside>

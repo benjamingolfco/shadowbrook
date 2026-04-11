@@ -217,7 +217,7 @@ export default function DeadLetters() {
           No dead letter messages. All clear.
         </p>
       ) : (
-        <div className="border border-border-strong rounded-md bg-white overflow-hidden">
+        <div className="border border-border-strong rounded-md bg-card overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-canvas">

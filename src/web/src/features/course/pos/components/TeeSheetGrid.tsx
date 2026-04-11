@@ -21,7 +21,7 @@ export function TeeSheetGrid({ slots, now }: TeeSheetGridProps) {
 
   return (
     <div className="bg-paper">
-      <div className="sticky top-0 z-10 grid grid-cols-[100px_120px_1fr_80px] gap-4 border-b border-border bg-white px-6 py-2.5">
+      <div className="sticky top-0 z-10 grid grid-cols-[100px_120px_1fr_80px] gap-4 border-b border-border bg-card px-6 py-2.5">
         <div className="text-[10px] font-medium uppercase tracking-[0.1em] text-ink-muted">Time</div>
         <div className="text-[10px] font-medium uppercase tracking-[0.1em] text-ink-muted">Status</div>
         <div className="text-[10px] font-medium uppercase tracking-[0.1em] text-ink-muted">Golfer</div>

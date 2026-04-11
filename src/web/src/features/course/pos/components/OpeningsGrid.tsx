@@ -46,7 +46,7 @@ export function OpeningsGrid({
         <>
           {/* Sticky column header row */}
           <div
-            className="sticky top-0 z-10 grid border-b border-border bg-white px-1 py-1.5 text-[10px] font-medium uppercase tracking-wider text-ink-muted"
+            className="sticky top-0 z-10 grid border-b border-border bg-card px-1 py-1.5 text-[10px] font-medium uppercase tracking-wider text-ink-muted"
             style={{ gridTemplateColumns: GRID_COLS }}
           >
             <span>Time</span>
@@ -71,7 +71,7 @@ export function OpeningsGrid({
                   data-testid={`opening-row-${opening.id}`}
                   className={cn(
                     'grid items-center px-1 py-2.5 text-[13px] transition-colors',
-                    isFaded ? 'bg-canvas text-ink-muted' : 'bg-white text-ink',
+                    isFaded ? 'bg-canvas text-ink-muted' : 'bg-paper text-ink',
                     isCancelling && 'opacity-40',
                     'hover:bg-paper',
                   )}

@@ -54,7 +54,7 @@ export default function CourseList() {
       {!courses || courses.length === 0 ? (
         <p className="text-ink-muted text-sm py-12 text-center">No courses registered yet.</p>
       ) : (
-        <div className="border border-border-strong rounded-md bg-white overflow-hidden">
+        <div className="border border-border-strong rounded-md bg-card overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-canvas">

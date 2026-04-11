@@ -65,7 +65,7 @@ export default function UserList() {
       {!users || users.length === 0 ? (
         <p className="text-ink-muted text-sm py-12 text-center">No users yet.</p>
       ) : (
-        <div className="border border-border-strong rounded-md bg-white overflow-hidden">
+        <div className="border border-border-strong rounded-md bg-card overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-canvas">

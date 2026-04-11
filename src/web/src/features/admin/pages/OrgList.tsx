@@ -63,7 +63,7 @@ export default function OrgList() {
       )}
 
       {isLoading ? (
-        <div className="border border-border-strong rounded-md bg-white overflow-hidden">
+        <div className="border border-border-strong rounded-md bg-card overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-canvas">
@@ -83,7 +83,7 @@ export default function OrgList() {
       ) : !orgs || orgs.length === 0 ? (
         <p className="text-ink-muted text-sm py-12 text-center">No organizations yet. Create one to get started.</p>
       ) : (
-        <div className="border border-border-strong rounded-md bg-white overflow-hidden">
+        <div className="border border-border-strong rounded-md bg-card overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-canvas">
