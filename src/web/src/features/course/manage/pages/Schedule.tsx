@@ -121,7 +121,7 @@ export default function Schedule() {
       <>
         <PageTopbar middle={<h1 className="text-lg font-semibold">Schedule</h1>} />
         <div className="p-6">
-          <p className="text-muted-foreground">
+          <p className="text-ink-muted">
             Schedule defaults are not configured.{' '}
             <Link to={`/course/${courseId}/manage/settings`} className="underline text-primary">
               Configure settings
@@ -141,7 +141,7 @@ export default function Schedule() {
       />
       <div className="p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-muted-foreground">
+          <h2 className="text-sm font-medium text-ink-muted">
             {formatDayLabel(startDateStr)} &ndash;{' '}
             {data?.weekEnd ? formatDayLabel(data.weekEnd) : formatDayLabel(formatDateParam(
               new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 6),
@@ -206,7 +206,7 @@ function DayCard({ day, courseId, isSelected, onToggle }: DayCardProps) {
         </div>
         <Badge variant={config.variant}>{config.label}</Badge>
         {day.intervalCount != null && (
-          <p className="text-xs text-muted-foreground">{day.intervalCount} intervals</p>
+          <p className="text-xs text-ink-muted">{day.intervalCount} intervals</p>
         )}
       </CardContent>
     </Card>

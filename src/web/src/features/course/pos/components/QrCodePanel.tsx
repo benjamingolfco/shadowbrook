@@ -64,7 +64,8 @@ export function QrCodePanel({ shortCode }: QrCodePanelProps) {
             <div
               ref={qrRef}
               aria-label="QR code for walk-up waitlist"
-              className="bg-white p-4 rounded-md"
+              className="p-4 rounded-md"
+              style={{ backgroundColor: '#ffffff' }}
             >
               <QRCodeCanvas
                 value={shortUrl}
@@ -76,7 +77,7 @@ export function QrCodePanel({ shortCode }: QrCodePanelProps) {
 
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 print:block">
-                <p className="font-mono text-sm text-muted-foreground break-all">{shortUrl}</p>
+                <p className="font-mono text-sm text-ink-muted break-all">{shortUrl}</p>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -91,10 +92,10 @@ export function QrCodePanel({ shortCode }: QrCodePanelProps) {
                   )}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-xs text-ink-muted mt-2">
                 Scan to join the walk-up waitlist
               </p>
-              <p className="text-xs text-muted-foreground print:block hidden mt-1">
+              <p className="text-xs text-ink-muted print:block hidden mt-1">
                 {new Date().toLocaleDateString()}
               </p>
             </div>
