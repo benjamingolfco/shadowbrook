@@ -4,6 +4,7 @@ import { OrgProvider } from './context/OrgContext';
 import { CourseProvider } from './context/CourseProvider';
 import { useFeature } from '@/hooks/use-features';
 import { useCourseId } from './hooks/useCourseId';
+import PickerLayout from './layouts/PickerLayout';
 import ManagementLayout from './manage/layouts/ManagementLayout';
 import PosLayout from './pos/layouts/PosLayout';
 import Dashboard from './manage/pages/Dashboard';
@@ -62,7 +63,7 @@ export default function CourseFeature() {
     <ThemeProvider>
       <OrgProvider>
         <Routes>
-          <Route index element={<CoursePicker />} />
+          <Route index element={<PickerLayout><CoursePicker /></PickerLayout>} />
           <Route path=":courseId/*" element={<CourseWithProvider />} />
         </Routes>
       </OrgProvider>
