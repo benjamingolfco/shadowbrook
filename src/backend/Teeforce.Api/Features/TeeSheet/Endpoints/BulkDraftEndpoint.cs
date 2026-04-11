@@ -23,7 +23,8 @@ public class BulkDraftRequestValidator : AbstractValidator<BulkDraftRequest>
         RuleFor(r => r.Dates).NotEmpty();
         RuleFor(r => r.Dates)
             .Must(dates => dates.Distinct().Count() == dates.Count)
-            .WithMessage("Dates must not contain duplicates.");
+            .WithMessage("Dates must not contain duplicates.")
+            .When(r => r.Dates is not null);
     }
 }
 
