@@ -38,7 +38,7 @@ export default function ManagementLayout() {
   };
 
   return (
-    <AppShell variant="full" navConfig={navConfig} brand={<ManagementBrand />}>
+    <AppShell variant="full" navConfig={navConfig} brand={<ManagementBrand />} settingsTo={`/course/${courseId}/manage/settings`}>
       <Outlet />
     </AppShell>
   );
