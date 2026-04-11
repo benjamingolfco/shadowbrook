@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 import { useTeeSheet } from '../hooks/useTeeSheet';
 import { useCourseId } from '../../hooks/useCourseId';
+import { useCourseContext } from '../../context/CourseProvider';
 import { getCourseToday, getBrowserTimeZone } from '@/lib/course-time';
 import { Button } from '@/components/ui/button';
 import { PageTopbar } from '@/components/layout/PageTopbar';
@@ -11,7 +12,8 @@ import { TeeSheetGrid } from '../components/TeeSheetGrid';
 
 export default function TeeSheet() {
   const courseId = useCourseId();
-  const timeZone = getBrowserTimeZone();
+  const { course } = useCourseContext();
+  const timeZone = course?.timeZoneId ?? getBrowserTimeZone();
   const [selectedDate, setSelectedDate] = useState<string>(() => getCourseToday(timeZone));
   const teeSheetQuery = useTeeSheet(courseId, selectedDate);
 

@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
 import { getCourseNow, buildTeeTimeDateTime, getBrowserTimeZone } from '@/lib/course-time';
+import { useCourseContext } from '../../context/CourseProvider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -38,7 +39,8 @@ interface AddTeeTimeOpeningDialogProps {
 
 export function AddTeeTimeOpeningDialog({ open, onOpenChange, courseId }: AddTeeTimeOpeningDialogProps) {
   const createMutation = useCreateTeeTimeOpening();
-  const timeZoneId = getBrowserTimeZone();
+  const { course } = useCourseContext();
+  const timeZoneId = course?.timeZoneId ?? getBrowserTimeZone();
 
   const addTeeTimeRequestSchema = useMemo(
     () =>
