@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
 import { getNextTeeTimeInterval, buildTeeTimeDateTime, getCourseNow, getBrowserTimeZone } from '@/lib/course-time';
+import { useCourseContext } from '../../context/CourseProvider';
 import { useCreateTeeTimeOpening } from '../hooks/useWaitlist';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,8 @@ interface PostTeeTimeFormProps {
 }
 
 export function PostTeeTimeForm({ courseId }: PostTeeTimeFormProps) {
-  const timeZoneId = getBrowserTimeZone();
+  const { course } = useCourseContext();
+  const timeZoneId = course?.timeZoneId ?? getBrowserTimeZone();
   const createMutation = useCreateTeeTimeOpening();
   const [selectedSlots, setSelectedSlots] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
