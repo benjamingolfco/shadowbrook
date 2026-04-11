@@ -92,28 +92,17 @@ public class AppUser : Entity
         return user;
     }
 
-    public void CompleteIdentitySetup(string identityId, string firstName, string lastName)
+    public bool IsIdentitySetupComplete => FirstName is not null;
+
+    public void CompleteProfileSetup(string firstName, string lastName)
     {
-        if (IdentityId is not null && IdentityId == identityId)
+        if (FirstName is not null)
         {
-            return; // Idempotent — already linked to this identity
+            return; // Idempotent — profile already populated
         }
 
-        if (IdentityId is not null)
-        {
-            throw new IdentityAlreadyLinkedException();
-        }
-
-        IdentityId = identityId;
         FirstName = firstName;
         LastName = lastName;
-        IsActive = true;
-
-        AddDomainEvent(new AppUserSetupCompleted
-        {
-            AppUserId = Id,
-            Email = Email,
-        });
     }
 
     public void MakeAdmin()
@@ -137,6 +126,7 @@ public class AppUser : Entity
     {
         var identityId = await invitationService.SendInvitationAsync(Email, ct);
         IdentityId = identityId;
+        IsActive = true;
         InviteSentAt = DateTimeOffset.UtcNow;
 
         AddDomainEvent(new AppUserInvited

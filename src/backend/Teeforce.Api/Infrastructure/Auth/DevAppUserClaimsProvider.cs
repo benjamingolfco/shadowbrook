@@ -11,9 +11,8 @@ public class DevAppUserClaimsProvider(ApplicationDbContext db) : IAppUserClaimsP
         // Look up by email so seeded users don't need fake IdentityIds.
         return await db.AppUsers
             .Where(u => u.Email == identityId)
-            .Select(u => new AppUserClaimsData(u.Id, u.OrganizationId, u.Role, u.IsActive))
+            .Select(u => new AppUserClaimsData(u.Id, u.OrganizationId, u.Role, u.IsActive, !u.IsIdentitySetupComplete))
             .FirstOrDefaultAsync();
     }
 
-    public Task<AppUserClaimsData?> GetByEmailUnlinkedAsync(string email) => Task.FromResult<AppUserClaimsData?>(null);
 }

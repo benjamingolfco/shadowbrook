@@ -15,6 +15,13 @@ public class AppUserTests
         return checker;
     }
 
+    private static IAppUserInvitationService NewInvitationService(string identityId = "entra-oid-123")
+    {
+        var service = Substitute.For<IAppUserInvitationService>();
+        service.SendInvitationAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(identityId);
+        return service;
+    }
+
     [Fact]
     public async Task CreateAdmin_SetsAdminRoleAndNullOrganizationId()
     {
@@ -89,10 +96,48 @@ public class AppUserTests
     }
 
     [Fact]
+    public async Task Invite_SetsIdentityIdAndActivatesUser()
+    {
+        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
+        user.ClearDomainEvents();
+
+        await user.Invite(NewInvitationService("entra-oid-123"), CancellationToken.None);
+
+        Assert.Equal("entra-oid-123", user.IdentityId);
+        Assert.True(user.IsActive);
+        Assert.NotNull(user.InviteSentAt);
+        Assert.Contains(user.DomainEvents, e => e is AppUserInvited);
+    }
+
+    [Fact]
+    public async Task CompleteProfileSetup_SetsFirstAndLastName()
+    {
+        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
+
+        user.CompleteProfileSetup("Jane", "Smith");
+
+        Assert.Equal("Jane", user.FirstName);
+        Assert.Equal("Smith", user.LastName);
+        Assert.True(user.IsIdentitySetupComplete);
+    }
+
+    [Fact]
+    public async Task CompleteProfileSetup_AlreadySetup_IsIdempotent()
+    {
+        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
+        user.CompleteProfileSetup("Jane", "Smith");
+
+        user.CompleteProfileSetup("Different", "Name");
+
+        Assert.Equal("Jane", user.FirstName);
+        Assert.Equal("Smith", user.LastName);
+    }
+
+    [Fact]
     public async Task Deactivate_SetsIsActiveFalse()
     {
         var user = await AppUser.CreateOperator("e@e.com", Guid.CreateVersion7(), NewChecker());
-        user.CompleteIdentitySetup("oid", "Test", "User");
+        await user.Invite(NewInvitationService(), CancellationToken.None);
 
         user.Deactivate();
 
@@ -103,7 +148,7 @@ public class AppUserTests
     public async Task Activate_SetsIsActiveTrue()
     {
         var user = await AppUser.CreateOperator("e@e.com", Guid.CreateVersion7(), NewChecker());
-        user.CompleteIdentitySetup("oid", "Test", "User");
+        await user.Invite(NewInvitationService(), CancellationToken.None);
         user.Deactivate();
 
         user.Activate();
@@ -149,44 +194,6 @@ public class AppUserTests
     }
 
     [Fact]
-    public async Task CompleteIdentitySetup_SetsIdentityAndActivates()
-    {
-        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
-        user.ClearDomainEvents();
-
-        user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
-
-        Assert.Equal("entra-oid-123", user.IdentityId);
-        Assert.Equal("Jane", user.FirstName);
-        Assert.Equal("Smith", user.LastName);
-        Assert.True(user.IsActive);
-        Assert.Contains(user.DomainEvents, e => e is AppUserSetupCompleted);
-    }
-
-    [Fact]
-    public async Task CompleteIdentitySetup_SameOid_IsIdempotent()
-    {
-        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
-        user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
-        user.ClearDomainEvents();
-
-        user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
-
-        Assert.Empty(user.DomainEvents);
-        Assert.Equal("entra-oid-123", user.IdentityId);
-    }
-
-    [Fact]
-    public async Task CompleteIdentitySetup_DifferentOid_Throws()
-    {
-        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
-        user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
-
-        Assert.Throws<IdentityAlreadyLinkedException>(
-            () => user.CompleteIdentitySetup("different-oid", "Jane", "Smith"));
-    }
-
-    [Fact]
     public async Task CreateAdmin_WithSendInvite_SetsEventFlag()
     {
         var user = await AppUser.CreateAdmin("admin@example.com", NewChecker(), sendInvite: true);
@@ -208,7 +215,7 @@ public class AppUserTests
     public async Task Delete_SetsIsDeletedAndDeletedAtAndRaisesEvent()
     {
         var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
-        user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
+        await user.Invite(NewInvitationService("entra-oid-123"), CancellationToken.None);
         user.ClearDomainEvents();
 
         user.Delete();

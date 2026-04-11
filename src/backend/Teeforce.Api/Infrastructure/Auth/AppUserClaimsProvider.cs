@@ -9,15 +9,8 @@ public class AppUserClaimsProvider(ApplicationDbContext db) : IAppUserClaimsProv
     {
         return await db.AppUsers
             .Where(u => u.IdentityId == identityId)
-            .Select(u => new AppUserClaimsData(u.Id, u.OrganizationId, u.Role, u.IsActive))
+            .Select(u => new AppUserClaimsData(u.Id, u.OrganizationId, u.Role, u.IsActive, !u.IsIdentitySetupComplete))
             .FirstOrDefaultAsync();
     }
 
-    public async Task<AppUserClaimsData?> GetByEmailUnlinkedAsync(string email)
-    {
-        return await db.AppUsers
-            .Where(u => u.Email == email && u.IdentityId == null)
-            .Select(u => new AppUserClaimsData(u.Id, u.OrganizationId, u.Role, u.IsActive))
-            .FirstOrDefaultAsync();
-    }
 }

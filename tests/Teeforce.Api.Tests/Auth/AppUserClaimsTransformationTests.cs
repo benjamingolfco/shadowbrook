@@ -63,7 +63,7 @@ public class AppUserClaimsTransformationTests
         var appUserId = Guid.NewGuid();
 
         this.claimsProvider.GetByIdentityIdAsync(oid)
-            .Returns(new AppUserClaimsData(appUserId, orgId, AppUserRole.Operator, IsActive: true));
+            .Returns(new AppUserClaimsData(appUserId, orgId, AppUserRole.Operator, IsActive: true, NeedsProfileSetup: false));
 
         var transformation = CreateTransformation(bus);
         var principal = CreateAuthenticatedPrincipal(oid);
@@ -77,30 +77,47 @@ public class AppUserClaimsTransformationTests
     }
 
     [Fact]
-    public async Task AuthenticatedUser_UnlinkedAppUser_MatchesByEmail_DispatchesSetupCommand()
+    public async Task AuthenticatedUser_NeedsProfileSetup_DispatchesSetupCommand()
     {
         var bus = Substitute.For<IMessageBus>();
 
         var oid = Guid.NewGuid().ToString();
         var appUserId = Guid.NewGuid();
 
-        this.claimsProvider.GetByIdentityIdAsync(oid).Returns((AppUserClaimsData?)null);
-        this.claimsProvider.GetByEmailUnlinkedAsync("admin@example.com")
-            .Returns(new AppUserClaimsData(appUserId, null, AppUserRole.Admin, IsActive: true));
+        this.claimsProvider.GetByIdentityIdAsync(oid)
+            .Returns(new AppUserClaimsData(appUserId, null, AppUserRole.Admin, IsActive: true, NeedsProfileSetup: true));
 
         var transformation = CreateTransformation(bus);
-        var principal = CreateAuthenticatedPrincipal(oid, email: "admin@example.com", givenName: "Jane", surname: "Smith");
+        var principal = CreateAuthenticatedPrincipal(oid, givenName: "Jane", surname: "Smith");
 
         var result = await transformation.TransformAsync(principal);
 
         await bus.Received(1).SendAsync(
             Arg.Is<CompleteIdentitySetupCommand>(c =>
                 c.AppUserId == appUserId &&
-                c.IdentityId == oid &&
                 c.FirstName == "Jane" &&
                 c.LastName == "Smith"));
 
         Assert.Equal(appUserId.ToString(), result.FindFirst("app_user_id")?.Value);
+    }
+
+    [Fact]
+    public async Task AuthenticatedUser_ProfileAlreadySetup_DoesNotDispatchCommand()
+    {
+        var bus = Substitute.For<IMessageBus>();
+
+        var oid = Guid.NewGuid().ToString();
+        var appUserId = Guid.NewGuid();
+
+        this.claimsProvider.GetByIdentityIdAsync(oid)
+            .Returns(new AppUserClaimsData(appUserId, null, AppUserRole.Admin, IsActive: true, NeedsProfileSetup: false));
+
+        var transformation = CreateTransformation(bus);
+        var principal = CreateAuthenticatedPrincipal(oid, givenName: "Jane", surname: "Smith");
+
+        await transformation.TransformAsync(principal);
+
+        await bus.DidNotReceive().SendAsync(Arg.Any<CompleteIdentitySetupCommand>());
     }
 
     [Fact]
@@ -111,7 +128,6 @@ public class AppUserClaimsTransformationTests
         var oid = Guid.NewGuid().ToString();
 
         this.claimsProvider.GetByIdentityIdAsync(oid).Returns((AppUserClaimsData?)null);
-        this.claimsProvider.GetByEmailUnlinkedAsync(Arg.Any<string>()).Returns((AppUserClaimsData?)null);
 
         var transformation = CreateTransformation(bus);
         var principal = CreateAuthenticatedPrincipal(oid, email: "unknown@example.com");
@@ -132,7 +148,7 @@ public class AppUserClaimsTransformationTests
         var appUserId = Guid.NewGuid();
 
         this.claimsProvider.GetByIdentityIdAsync(oid)
-            .Returns(new AppUserClaimsData(appUserId, null, AppUserRole.Admin, IsActive: false));
+            .Returns(new AppUserClaimsData(appUserId, null, AppUserRole.Admin, IsActive: false, NeedsProfileSetup: false));
 
         var transformation = CreateTransformation(bus);
         var principal = CreateAuthenticatedPrincipal(oid);
@@ -153,7 +169,7 @@ public class AppUserClaimsTransformationTests
         var appUserId = Guid.NewGuid();
 
         this.claimsProvider.GetByIdentityIdAsync(oid)
-            .Returns(new AppUserClaimsData(appUserId, null, AppUserRole.Admin, IsActive: true));
+            .Returns(new AppUserClaimsData(appUserId, null, AppUserRole.Admin, IsActive: true, NeedsProfileSetup: false));
 
         var transformation = CreateTransformation(bus);
         var principal = CreateAuthenticatedPrincipal(oid);

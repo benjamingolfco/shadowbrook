@@ -49,7 +49,6 @@ public static class DomainExceptionHandler
                     Teeforce.Domain.TeeTimeAggregate.Exceptions.InvalidGroupSizeException => StatusCodes.Status422UnprocessableEntity,
                     InvalidTeeTimeCapacityException => StatusCodes.Status422UnprocessableEntity,
                     InvalidScheduleSettingsException => StatusCodes.Status422UnprocessableEntity,
-                    IdentityAlreadyLinkedException => StatusCodes.Status409Conflict,
                     DuplicateEmailException => StatusCodes.Status409Conflict,
                     EmptyOrganizationIdException => StatusCodes.Status422UnprocessableEntity,
                     _ => StatusCodes.Status400BadRequest
