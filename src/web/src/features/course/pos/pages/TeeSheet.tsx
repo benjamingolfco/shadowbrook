@@ -9,6 +9,7 @@ import { PageTopbar } from '@/components/layout/PageTopbar';
 import { TeeSheetTopbarTitle } from '../components/TeeSheetTopbarTitle';
 import { TeeSheetDateNav } from '../components/TeeSheetDateNav';
 import { TeeSheetGrid } from '../components/TeeSheetGrid';
+import { TeeSheetPublishButton } from '../components/TeeSheetPublishButton';
 
 export default function TeeSheet() {
   const courseId = useCourseId();
@@ -32,11 +33,18 @@ export default function TeeSheet() {
           />
         }
         right={
-          <TeeSheetDateNav
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-            courseTimeZoneId={timeZone}
-          />
+          <div className="flex items-center gap-3">
+            <TeeSheetPublishButton
+              courseId={courseId}
+              date={selectedDate}
+              status={data?.status ?? null}
+            />
+            <TeeSheetDateNav
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+              courseTimeZoneId={timeZone}
+            />
+          </div>
         }
       />
 
