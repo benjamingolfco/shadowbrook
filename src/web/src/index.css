@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
     --radius-sm: calc(var(--radius) - 4px);
@@ -29,6 +29,8 @@
     --color-destructive: var(--destructive);
     --color-success: var(--success);
     --color-success-foreground: var(--success-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
@@ -136,6 +138,9 @@
     --success: var(--green);
     --success-foreground: var(--white);
 
+    --warning: #92400E;              /* dark mustard — readable as text on light bg */
+    --warning-foreground: var(--white);
+
     --border: var(--border-soft);
     --input: var(--border-soft);
     --ring: var(--green);
@@ -182,6 +187,9 @@
 
     --success: var(--green-mid);
     --success-foreground: var(--ink);
+
+    --warning: #FBBF24;              /* bright honey — readable on forest surfaces */
+    --warning-foreground: var(--ink);
 
     --border: #234C38;
     --input: #234C38;

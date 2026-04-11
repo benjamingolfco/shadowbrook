@@ -3,8 +3,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
 import {
   AlertCircle,
+  AlertTriangle,
   Bell,
   Check,
+  CheckCircle2,
   ChevronDown,
   Copy,
   Edit,
@@ -86,6 +88,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { SuccessAlert } from '@/components/ui/success-alert';
 import { WarningAlert } from '@/components/ui/warning-alert';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 
@@ -389,9 +392,12 @@ function AlertsSection() {
             The course has bookings that overlap the new interval. Resolve them before changing the schedule.
           </AlertDescription>
         </Alert>
-        <WarningAlert>
+        <WarningAlert icon={<AlertTriangle />}>
           This action will cancel 4 existing bookings. Affected golfers will receive an SMS notification.
         </WarningAlert>
+        <SuccessAlert icon={<CheckCircle2 />}>
+          Tee sheet published. 60 slots are now bookable by golfers.
+        </SuccessAlert>
       </div>
     </section>
   );
