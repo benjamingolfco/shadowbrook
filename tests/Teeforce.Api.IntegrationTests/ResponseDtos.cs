@@ -93,6 +93,7 @@ public record PricingResponse(decimal FlatRatePrice);
 public record TeeSheetResponse(
     Guid CourseId,
     string CourseName,
+    string? Status,
     List<TeeSheetSlot> Slots);
 
 public record TeeSheetSlot(
