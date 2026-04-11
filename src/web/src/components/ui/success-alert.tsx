@@ -1,14 +1,14 @@
 import type { ReactNode } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-interface WarningAlertProps {
+interface SuccessAlertProps {
   icon?: ReactNode;
   children: ReactNode;
 }
 
-export function WarningAlert({ icon, children }: WarningAlertProps) {
+export function SuccessAlert({ icon, children }: SuccessAlertProps) {
   return (
-    <Alert className="text-warning border-warning/30 *:data-[slot=alert-description]:text-warning/90 [&>svg]:text-current">
+    <Alert className="text-success border-success/30 *:data-[slot=alert-description]:text-success/90 [&>svg]:text-current">
       {icon}
       <AlertDescription>{children}</AlertDescription>
     </Alert>
