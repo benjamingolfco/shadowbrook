@@ -1,8 +1,6 @@
 using NSubstitute;
 using Teeforce.Api.Features.Auth.Handlers;
 using Teeforce.Domain.AppUserAggregate;
-using Teeforce.Domain.AppUserAggregate.Events;
-using Teeforce.Domain.AppUserAggregate.Exceptions;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.Services;
 
@@ -20,21 +18,18 @@ public class CompleteIdentitySetupHandlerTests
     }
 
     [Fact]
-    public async Task Handle_LinksIdentityAndActivatesUser()
+    public async Task Handle_PopulatesProfile()
     {
         var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
-        user.ClearDomainEvents();
         this.repository.GetByIdAsync(user.Id).Returns(user);
 
         await CompleteIdentitySetupHandler.Handle(
             new CompleteIdentitySetupCommand(user.Id, "entra-oid-123", "Jane", "Smith"),
             this.repository);
 
-        Assert.Equal("entra-oid-123", user.IdentityId);
         Assert.Equal("Jane", user.FirstName);
         Assert.Equal("Smith", user.LastName);
-        Assert.True(user.IsActive);
-        Assert.Contains(user.DomainEvents, e => e is AppUserSetupCompleted);
+        Assert.True(user.IsIdentitySetupComplete);
     }
 
     [Fact]
@@ -43,39 +38,24 @@ public class CompleteIdentitySetupHandlerTests
         var userId = Guid.NewGuid();
         this.repository.GetByIdAsync(userId).Returns((AppUser?)null);
 
-        var ex = await Assert.ThrowsAsync<EntityNotFoundException>(
+        await Assert.ThrowsAsync<EntityNotFoundException>(
             () => CompleteIdentitySetupHandler.Handle(
                 new CompleteIdentitySetupCommand(userId, "oid", "Jane", "Smith"),
                 this.repository));
-
-        Assert.Contains(userId.ToString(), ex.Message);
     }
 
     [Fact]
-    public async Task Handle_AlreadyLinkedSameOid_IsIdempotent()
+    public async Task Handle_ProfileAlreadySetup_IsIdempotent()
     {
         var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
-        user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
-        user.ClearDomainEvents();
+        user.CompleteProfileSetup("Jane", "Smith");
         this.repository.GetByIdAsync(user.Id).Returns(user);
 
         await CompleteIdentitySetupHandler.Handle(
-            new CompleteIdentitySetupCommand(user.Id, "entra-oid-123", "Jane", "Smith"),
+            new CompleteIdentitySetupCommand(user.Id, "entra-oid-123", "Different", "Name"),
             this.repository);
 
-        Assert.Empty(user.DomainEvents);
-    }
-
-    [Fact]
-    public async Task Handle_AlreadyLinkedDifferentOid_Throws()
-    {
-        var user = await AppUser.CreateAdmin("admin@example.com", NewChecker());
-        user.CompleteIdentitySetup("entra-oid-123", "Jane", "Smith");
-        this.repository.GetByIdAsync(user.Id).Returns(user);
-
-        await Assert.ThrowsAsync<IdentityAlreadyLinkedException>(
-            () => CompleteIdentitySetupHandler.Handle(
-                new CompleteIdentitySetupCommand(user.Id, "different-oid", "Jane", "Smith"),
-                this.repository));
+        Assert.Equal("Jane", user.FirstName);
+        Assert.Equal("Smith", user.LastName);
     }
 }

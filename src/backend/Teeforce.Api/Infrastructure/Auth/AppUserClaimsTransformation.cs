@@ -40,32 +40,20 @@ public class AppUserClaimsTransformation(
 
         if (data is null)
         {
-            var email = ExtractEmail(principal);
-
-            if (!string.IsNullOrEmpty(email))
-            {
-                data = await claimsProvider.GetByEmailUnlinkedAsync(email);
-
-                if (data is not null)
-                {
-                    var firstName = principal.FindFirst("given_name")?.Value ?? string.Empty;
-                    var lastName = principal.FindFirst("family_name")?.Value ?? string.Empty;
-
-                    // Fire-and-forget: CompleteIdentitySetupCommand runs asynchronously via
-                    // Wolverine's outbox. We already have the AppUserClaimsData from
-                    // GetByEmailUnlinkedAsync, so enrichment proceeds immediately without
-                    // waiting for the handler to complete.
-                    await bus.SendAsync(new CompleteIdentitySetupCommand(data.AppUserId, oid, firstName, lastName));
-                }
-            }
-        }
-
-        if (data is null)
-        {
-            // No AppUser found by oid or email match. Return the principal unchanged.
+            // No AppUser found by oid. Return the principal unchanged.
             // The authorization layer (RequireAppUserHandler) handles rejection.
             logger.LogWarning("No AppUser found for oid {Oid}", oid);
             return principal;
+        }
+
+        if (data.NeedsProfileSetup)
+        {
+            var firstName = principal.FindFirst("given_name")?.Value ?? string.Empty;
+            var lastName = principal.FindFirst("family_name")?.Value ?? string.Empty;
+
+            // Fire-and-forget: populate first/last name from the identity token.
+            // This runs on the user's first login after being invited.
+            await bus.SendAsync(new CompleteIdentitySetupCommand(data.AppUserId, oid, firstName, lastName));
         }
 
         var permissions = data.IsActive
@@ -93,11 +81,4 @@ public class AppUserClaimsTransformation(
         return principal;
     }
 
-    private static string ExtractEmail(ClaimsPrincipal principal) =>
-        principal.FindFirst("emails")?.Value
-        ?? principal.FindFirst("email")?.Value
-        ?? principal.FindFirst(ClaimTypes.Email)?.Value
-        ?? principal.FindFirst(ClaimTypes.Name)?.Value
-        ?? principal.FindFirst("upn")?.Value
-        ?? string.Empty;
 }

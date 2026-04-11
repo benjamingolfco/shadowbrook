@@ -11,6 +11,6 @@ public static class CompleteIdentitySetupHandler
     {
         var user = await repository.GetRequiredByIdAsync(command.AppUserId);
 
-        user.CompleteIdentitySetup(command.IdentityId, command.FirstName, command.LastName);
+        user.CompleteProfileSetup(command.FirstName, command.LastName);
     }
 }
