@@ -48,12 +48,16 @@ public class AppUserClaimsTransformation(
 
         if (data.NeedsProfileSetup)
         {
-            var firstName = principal.FindFirst("given_name")?.Value ?? string.Empty;
-            var lastName = principal.FindFirst("family_name")?.Value ?? string.Empty;
+            var firstName = principal.FindFirst("given_name")?.Value;
+            var lastName = principal.FindFirst("family_name")?.Value;
 
-            // Fire-and-forget: populate first/last name from the identity token.
-            // This runs on the user's first login after being invited.
-            await bus.SendAsync(new CompleteIdentitySetupCommand(data.AppUserId, firstName, lastName));
+            if (!string.IsNullOrEmpty(firstName) || !string.IsNullOrEmpty(lastName))
+            {
+                // Fire-and-forget: populate first/last name from the identity token.
+                // This runs on the user's first login after being invited.
+                await bus.SendAsync(new CompleteIdentitySetupCommand(
+                    data.AppUserId, firstName ?? string.Empty, lastName ?? string.Empty));
+            }
         }
 
         var permissions = data.IsActive
