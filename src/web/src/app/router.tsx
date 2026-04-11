@@ -14,6 +14,9 @@ const WalkupFeature = lazy(() => import('@/features/walkup'));
 const WalkUpOfferFeature = lazy(() => import('@/features/walk-up'));
 const WalkUpQrFeature = lazy(() => import('@/features/walkup-qr'));
 const DevGolferSmsPage = lazy(() => import('@/features/dev/pages/DevGolferSmsPage'));
+const StyleguidePage = import.meta.env.MODE !== 'production'
+  ? lazy(() => import('@/features/dev/pages/StyleguidePage'))
+  : null;
 
 function LazyFeature({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<div className="p-6 text-muted-foreground">Loading...</div>}>{children}</Suspense>;
@@ -120,12 +123,22 @@ export const router = createBrowserRouter([
           <LazyFeature><WalkUpQrFeature /></LazyFeature>
         ),
       },
-      ...((import.meta.env.DEV || import.meta.env.VITE_SHOW_DEV_TOOLS === 'true') ? [{
-        path: 'dev/sms/golfer/:golferId',
-        element: (
-          <LazyFeature><DevGolferSmsPage /></LazyFeature>
-        ),
-      }] : []),
+      ...((import.meta.env.DEV || import.meta.env.VITE_SHOW_DEV_TOOLS === 'true') ? [
+        {
+          path: 'dev/sms/golfer/:golferId',
+          element: (
+            <LazyFeature><DevGolferSmsPage /></LazyFeature>
+          ),
+        },
+      ] : []),
+      ...(StyleguidePage ? [
+        {
+          path: 'dev/styleguide',
+          element: (
+            <LazyFeature><StyleguidePage /></LazyFeature>
+          ),
+        },
+      ] : []),
     ],
   },
 ]);

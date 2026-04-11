@@ -1,3 +1,4 @@
+import { Moon, Sun } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -5,9 +6,14 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/features/auth';
+import { useColorMode } from '@/lib/color-mode';
+import { ThemeMenuItems } from './ThemeToggle';
 
 function getInitials(displayName: string): string {
   const parts = displayName.trim().split(/\s+/).filter(Boolean);
@@ -23,10 +29,12 @@ interface UserMenuProps {
 
 export default function UserMenu({ onSwitchCourse }: UserMenuProps = {}) {
   const { user, logout } = useAuth();
+  const { resolved } = useColorMode();
 
   if (!user) return null;
 
   const initials = getInitials(user.displayName || user.email);
+  const ThemeIcon = resolved === 'dark' ? Moon : Sun;
 
   return (
     <DropdownMenu>
@@ -50,11 +58,21 @@ export default function UserMenu({ onSwitchCourse }: UserMenuProps = {}) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <ThemeIcon />
+            Theme
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <ThemeMenuItems />
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
         {onSwitchCourse && (
           <DropdownMenuItem onSelect={onSwitchCourse}>
             Switch course
           </DropdownMenuItem>
         )}
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"
           onSelect={logout}

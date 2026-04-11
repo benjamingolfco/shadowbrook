@@ -11,6 +11,15 @@
       rel="stylesheet"
     />
     <title>Teeforce</title>
+    <script>
+      (function () {
+        try {
+          var m = localStorage.getItem('teeforce:color-mode') || 'system';
+          var dark = m === 'dark' || (m === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
