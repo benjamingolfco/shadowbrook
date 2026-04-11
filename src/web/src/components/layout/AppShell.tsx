@@ -154,7 +154,7 @@ interface TopbarProps {
 
 function Topbar({ brand, onSwitchCourse, setLeft, setMiddle, setRight, showSidebarTrigger }: TopbarProps) {
   return (
-    <header className="grid h-14 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-5 border-b border-border bg-white px-6">
+    <header className="grid h-14 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-5 border-b border-border bg-paper px-6">
       <div className="flex items-center gap-5 justify-self-start">
         {showSidebarTrigger && <SidebarTrigger className="md:hidden" />}
         {brand}
@@ -173,7 +173,7 @@ function RightRailRegion({ setRef }: { setRef: (el: HTMLDivElement | null) => vo
   return (
     <aside
       ref={setRef}
-      className="empty:hidden w-[272px] shrink-0 overflow-y-auto border-l border-border bg-white"
+      className="empty:hidden w-[272px] shrink-0 overflow-y-auto border-l border-border bg-paper"
     />
   );
 }

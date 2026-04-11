@@ -19,7 +19,7 @@ export interface TeeSheetRowProps {
 
 const VARIANT_STYLES: Record<TeeSheetRowVariant, string> = {
   past:    'bg-canvas',
-  current: 'bg-white shadow-[inset_3px_0_0_var(--green)]',
+  current: 'bg-card shadow-[inset_3px_0_0_var(--green)]',
   default: 'bg-paper',
 };
 
@@ -29,7 +29,7 @@ export function TeeSheetRow({ slot, variant }: TeeSheetRowProps) {
 
   return (
     <div
-      className={`grid min-h-[54px] grid-cols-[100px_120px_1fr_80px] items-center gap-4 border-b border-border px-6 transition-colors hover:bg-white ${VARIANT_STYLES[variant]}`}
+      className={`grid min-h-[54px] grid-cols-[100px_120px_1fr_80px] items-center gap-4 border-b border-border px-6 transition-colors hover:bg-card ${VARIANT_STYLES[variant]}`}
     >
       <div className={`font-mono text-[12px] ${isPast ? 'text-ink-muted' : 'text-ink'}`}>
         {formatWallClockTime(slot.teeTime)}

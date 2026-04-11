@@ -72,6 +72,7 @@
     --color-red-light: var(--red-light);
     --color-blue: var(--blue);
     --color-blue-light: var(--blue-light);
+    --color-overlay: var(--overlay);
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
 }
@@ -112,6 +113,8 @@
 
     --blue: #2563a8;
     --blue-light: #ddeaf8;
+
+    --overlay: rgba(0, 0, 0, 0.5);
 
     /* shadcn semantic mapping → Teeforce */
     --background: var(--canvas);
@@ -189,6 +192,8 @@
 
     --blue: #5a9ae0;
     --blue-light: #1a2530;
+
+    --overlay: rgba(0, 0, 0, 0.7);
 
     --background: var(--canvas);
     --foreground: var(--ink);
