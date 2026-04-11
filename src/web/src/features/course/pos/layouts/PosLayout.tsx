@@ -9,7 +9,7 @@ function PosBrand() {
   return (
     <>
       <h1
-        className="max-w-[180px] truncate text-lg font-semibold font-[family-name:var(--font-heading)] text-sidebar-foreground"
+        className="max-w-[180px] truncate text-lg font-semibold font-[family-name:var(--font-heading)]"
         title={user?.organization?.name ?? 'Teeforce'}
       >
         {user?.organization?.name ?? 'Teeforce'}
@@ -45,7 +45,7 @@ export default function PosLayout({ variant = 'full' }: PosLayoutProps) {
       variant={variant}
       navConfig={variant === 'full' ? navConfig : undefined}
       brand={<PosBrand />}
-      settingsTo={`/course/${courseId}/manage/settings`}
+      settingsTo={variant === 'full' ? `/course/${courseId}/manage/settings` : undefined}
     >
       <Outlet />
     </AppShell>
