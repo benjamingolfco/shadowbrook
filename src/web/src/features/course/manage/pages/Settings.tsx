@@ -1,5 +1,15 @@
 import { useEffect } from 'react';
 import { useBlocker } from 'react-router';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { PageTopbar } from '@/components/layout/PageTopbar';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -46,7 +56,7 @@ export default function Settings() {
 
   const isDirty = form.formState.isDirty;
 
-  useBlocker(({ currentLocation, nextLocation }) =>
+  const blocker = useBlocker(({ currentLocation, nextLocation }) =>
     isDirty && currentLocation.pathname !== nextLocation.pathname,
   );
 
@@ -195,6 +205,21 @@ export default function Settings() {
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={blocker.state === 'blocked'}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Are you sure you want to leave this page?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => blocker.reset?.()}>Stay on page</AlertDialogCancel>
+            <AlertDialogAction onClick={() => blocker.proceed?.()}>Leave page</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
