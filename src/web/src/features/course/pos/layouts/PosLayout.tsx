@@ -21,7 +21,11 @@ function PosBrand() {
   );
 }
 
-export default function PosLayout() {
+interface PosLayoutProps {
+  variant?: 'full' | 'minimal';
+}
+
+export default function PosLayout({ variant = 'full' }: PosLayoutProps) {
   const courseId = useCourseId();
 
   const navConfig: NavConfig = {
@@ -37,7 +41,11 @@ export default function PosLayout() {
   };
 
   return (
-    <AppShell variant="full" navConfig={navConfig} brand={<PosBrand />}>
+    <AppShell
+      variant={variant}
+      navConfig={variant === 'full' ? navConfig : undefined}
+      brand={<PosBrand />}
+    >
       <Outlet />
     </AppShell>
   );
