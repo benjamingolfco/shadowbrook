@@ -8,7 +8,7 @@ interface WarningAlertProps {
 
 export function WarningAlert({ icon, children }: WarningAlertProps) {
   return (
-    <Alert className="text-warning border-warning/30 *:data-[slot=alert-description]:text-warning/90 [&>svg]:text-current">
+    <Alert className="border-orange-light bg-orange-faint text-foreground [&>svg]:text-orange">
       {icon}
       <AlertDescription>{children}</AlertDescription>
     </Alert>

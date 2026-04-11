@@ -14,12 +14,12 @@ export default function Confirmation({ result, phone }: ConfirmationProps) {
   return (
     <div className="space-y-6 text-center">
       <div
-        className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center"
+        className="mx-auto w-16 h-16 rounded-full bg-green-light flex items-center justify-center"
         aria-hidden="true"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="w-8 h-8 text-green-600"
+          className="w-8 h-8 text-green"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -48,11 +48,11 @@ export default function Confirmation({ result, phone }: ConfirmationProps) {
         <div className="pt-2">
           <Link
             to={`/dev/sms/golfer/${smsLinkId}`}
-            className="inline-flex items-center gap-2 rounded-md border-2 border-dashed border-amber-400 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 hover:bg-amber-100 transition-colors"
+            className="inline-flex items-center gap-2 rounded-md border-2 border-dashed border-orange bg-orange-faint px-4 py-2 text-sm font-semibold text-foreground hover:bg-orange-light transition-colors"
           >
             <MessageSquareText className="h-4 w-4" />
             View SMS messages
-            <span className="text-[10px] font-mono uppercase tracking-wide bg-amber-200 text-amber-900 rounded px-1.5 py-0.5">
+            <span className="text-[10px] font-mono uppercase tracking-wide bg-orange-light text-orange rounded px-1.5 py-0.5">
               Dev
             </span>
           </Link>
