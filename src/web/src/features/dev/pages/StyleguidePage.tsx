@@ -87,6 +87,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { WarningAlert } from '@/components/ui/warning-alert';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 
 const SECTIONS = [
   { id: 'palette', label: 'Palette' },
@@ -961,7 +962,7 @@ export default function StyleguidePage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4">
           <div>
             <h1 className="text-xl font-semibold tracking-tight text-foreground">Teeforce Styleguide</h1>
             <p className="text-xs text-muted-foreground">Every component, every variant.</p>
@@ -973,6 +974,7 @@ export default function StyleguidePage() {
               </a>
             ))}
           </nav>
+          <ThemeToggle />
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-6 py-10">
