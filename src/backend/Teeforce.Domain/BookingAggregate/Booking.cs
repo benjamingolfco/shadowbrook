@@ -108,7 +108,7 @@ public class Booking : Entity
         AddDomainEvent(new BookingRejected { BookingId = Id });
     }
 
-    public void Cancel()
+    public void Cancel(string? reason = null)
     {
         if (Status == BookingStatus.Cancelled)
         {
@@ -122,6 +122,6 @@ public class Booking : Entity
 
         var previousStatus = Status;
         Status = BookingStatus.Cancelled;
-        AddDomainEvent(new BookingCancelled { BookingId = Id, PreviousStatus = previousStatus });
+        AddDomainEvent(new BookingCancelled { BookingId = Id, PreviousStatus = previousStatus, Reason = reason });
     }
 }

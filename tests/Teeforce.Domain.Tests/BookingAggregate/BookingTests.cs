@@ -429,4 +429,39 @@ public class BookingTests
         Assert.Equal(bookingId, cancelledEvent.BookingId);
         Assert.Equal(BookingStatus.Confirmed, cancelledEvent.PreviousStatus);
     }
+
+    [Fact]
+    public void Cancel_WithReason_EventCarriesReason()
+    {
+        var booking = Booking.Create(
+            Guid.CreateVersion7(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 15),
+            new TimeOnly(9, 0),
+            1);
+
+        booking.Confirm();
+        booking.Cancel("Course maintenance");
+
+        var cancelledEvent = Assert.IsType<BookingCancelled>(booking.DomainEvents.Last());
+        Assert.Equal("Course maintenance", cancelledEvent.Reason);
+    }
+
+    [Fact]
+    public void Cancel_WithoutReason_EventReasonIsNull()
+    {
+        var booking = Booking.Create(
+            Guid.CreateVersion7(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 15),
+            new TimeOnly(9, 0),
+            1);
+
+        booking.Cancel();
+
+        var cancelledEvent = Assert.IsType<BookingCancelled>(booking.DomainEvents.Last());
+        Assert.Null(cancelledEvent.Reason);
+    }
 }

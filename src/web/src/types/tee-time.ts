@@ -8,6 +8,7 @@ export interface TeeSheetSlot {
 export interface TeeSheetResponse {
   courseId: string;
   courseName: string;
+  status: 'Draft' | 'Published' | null;
   slots: TeeSheetSlot[];
 }
 
