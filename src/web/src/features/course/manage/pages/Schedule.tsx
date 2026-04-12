@@ -11,6 +11,7 @@ import { useCourseId } from '../../hooks/useCourseId';
 import { useWeeklySchedule } from '../hooks/useWeeklySchedule';
 import { useBulkDraft } from '../hooks/useBulkDraft';
 import { useTeeTimeSettings } from '../hooks/useTeeTimeSettings';
+import { usePublishTeeSheet } from '../hooks/usePublishTeeSheet';
 import type { DayStatus } from '@/types/tee-time';
 
 const statusConfig = {
@@ -54,6 +55,7 @@ export default function Schedule() {
   const startDateStr = formatDateParam(weekStart);
   const { data, isLoading, isError } = useWeeklySchedule(courseId, startDateStr);
   const bulkDraft = useBulkDraft();
+  const publishTeeSheet = usePublishTeeSheet();
   const { data: settings } = useTeeTimeSettings(courseId);
 
   const isConfigured = !!settings?.firstTeeTime;
@@ -175,6 +177,8 @@ export default function Schedule() {
                 courseId={courseId}
                 isSelected={selectedDates.has(day.date)}
                 onToggle={() => toggleDate(day.date)}
+                onPublish={(date) => publishTeeSheet.mutate({ courseId, date }, {})}
+                isPublishing={publishTeeSheet.isPending}
               />
             ))}
           </div>
@@ -189,11 +193,14 @@ interface DayCardProps {
   courseId: string;
   isSelected: boolean;
   onToggle: () => void;
+  onPublish: (date: string) => void;
+  isPublishing: boolean;
 }
 
-function DayCard({ day, courseId, isSelected, onToggle }: DayCardProps) {
+function DayCard({ day, courseId, isSelected, onToggle, onPublish, isPublishing }: DayCardProps) {
   const config = statusConfig[day.status];
   const isNotStarted = day.status === 'notStarted';
+  const isDraft = day.status === 'draft';
 
   const cardContent = (
     <Card className={isSelected ? 'ring-2 ring-primary' : ''}>
@@ -211,6 +218,19 @@ function DayCard({ day, courseId, isSelected, onToggle }: DayCardProps) {
         <Badge variant={config.variant}>{config.label}</Badge>
         {day.intervalCount != null && (
           <p className="text-xs text-ink-muted">{day.intervalCount} intervals</p>
+        )}
+        {isDraft && (
+          <Button
+            size="sm"
+            className="w-full"
+            disabled={isPublishing}
+            onClick={(e) => {
+              e.preventDefault();
+              onPublish(day.date);
+            }}
+          >
+            Publish
+          </Button>
         )}
       </CardContent>
     </Card>
