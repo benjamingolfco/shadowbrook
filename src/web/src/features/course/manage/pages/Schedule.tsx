@@ -52,7 +52,7 @@ export default function Schedule() {
   const [selectedDates, setSelectedDates] = useState<Set<string>>(new Set());
 
   const startDateStr = formatDateParam(weekStart);
-  const { data, isLoading } = useWeeklySchedule(courseId, startDateStr);
+  const { data, isLoading, isError } = useWeeklySchedule(courseId, startDateStr);
   const bulkDraft = useBulkDraft();
   const { data: settings } = useTeeTimeSettings(courseId);
 
@@ -161,6 +161,10 @@ export default function Schedule() {
             {Array.from({ length: 7 }).map((_, i) => (
               <Skeleton key={i} className="h-28 rounded-lg" />
             ))}
+          </div>
+        ) : isError ? (
+          <div className="text-center py-12 text-ink-muted">
+            <p>Unable to load schedule. Please try again later.</p>
           </div>
         ) : (
           <div className="grid grid-cols-7 gap-3">

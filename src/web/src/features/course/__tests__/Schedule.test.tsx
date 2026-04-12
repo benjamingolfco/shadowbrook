@@ -115,6 +115,18 @@ describe('Schedule', () => {
     );
   });
 
+  it('shows error message when API fails', () => {
+    mockUseWeeklySchedule.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+    } as unknown as ReturnType<typeof useWeeklySchedule>);
+
+    render(<Schedule />);
+
+    expect(screen.getByText('Unable to load schedule. Please try again later.')).toBeInTheDocument();
+  });
+
   it('shows not-configured message when settings are missing', () => {
     mockUseTeeTimeSettings.mockReturnValue({
       data: undefined,
