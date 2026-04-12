@@ -118,13 +118,8 @@ builder.Services.AddScoped<ISmsFormatter<WaitlistOfferAvailable>, WaitlistOfferA
 builder.Services.AddScoped<ISmsFormatter<WaitlistOfferExpired>, WaitlistOfferExpiredSmsFormatter>();
 builder.Services.AddScoped<ISmsFormatter<WalkupConfirmation>, WalkupConfirmationSmsFormatter>();
 
-// SMS channel — environment-dependent
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddScoped<DatabaseSmsSender>();
-    builder.Services.AddScoped<ISmsSender>(sp => sp.GetRequiredService<DatabaseSmsSender>());
-}
-else
+// SMS channel — Telnyx in Production, database capture everywhere else
+if (builder.Environment.IsProduction())
 {
     builder.Services.Configure<TelnyxOptions>(builder.Configuration.GetSection("Telnyx"));
     builder.Services.AddTransient<TelnyxAuthHandler>(); // Must be transient — HttpClient factory requirement
@@ -141,6 +136,11 @@ else
     {
         builder.Services.AddScoped<DatabaseSmsSender>();
     }
+}
+else
+{
+    builder.Services.AddScoped<DatabaseSmsSender>();
+    builder.Services.AddScoped<ISmsSender>(sp => sp.GetRequiredService<DatabaseSmsSender>());
 }
 builder.Services.AddSingleton<IFeatureService, FeatureService>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
