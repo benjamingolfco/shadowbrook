@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import type { NavConfig } from '@/components/layout/AppShell';
 
+const isDevMode = import.meta.env.DEV || import.meta.env.VITE_SHOW_DEV_TOOLS === 'true';
+
 export const adminNav: NavConfig = {
   sections: [
     {
@@ -19,6 +21,14 @@ export const adminNav: NavConfig = {
         { to: '/admin/dead-letters', label: 'Dead Letters' },
       ],
     },
+    ...(isDevMode
+      ? [
+          {
+            label: 'Dev Tools',
+            items: [{ to: '/admin/dev/sms', label: 'SMS Viewer' }],
+          },
+        ]
+      : []),
   ],
 };
 

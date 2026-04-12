@@ -118,29 +118,19 @@ builder.Services.AddScoped<ISmsFormatter<WaitlistOfferAvailable>, WaitlistOfferA
 builder.Services.AddScoped<ISmsFormatter<WaitlistOfferExpired>, WaitlistOfferExpiredSmsFormatter>();
 builder.Services.AddScoped<ISmsFormatter<WalkupConfirmation>, WalkupConfirmationSmsFormatter>();
 
-// SMS channel — environment-dependent
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddScoped<DatabaseSmsSender>();
-    builder.Services.AddScoped<ISmsSender>(sp => sp.GetRequiredService<DatabaseSmsSender>());
-}
-else
+// SMS channel — Telnyx in Production, database capture everywhere else
+if (builder.Environment.IsProduction())
 {
     builder.Services.Configure<TelnyxOptions>(builder.Configuration.GetSection("Telnyx"));
     builder.Services.AddTransient<TelnyxAuthHandler>(); // Must be transient — HttpClient factory requirement
     builder.Services
-        .AddHttpClient<TelnyxSmsSender>(client => client.BaseAddress = new Uri("https://api.telnyx.com"))
+        .AddHttpClient<ISmsSender, TelnyxSmsSender>(client => client.BaseAddress = new Uri("https://api.telnyx.com"))
         .AddHttpMessageHandler<TelnyxAuthHandler>();
-    builder.Services.AddScoped<ISmsSender, TelnyxSmsSender>();
-
-    // DatabaseSmsSender is needed in non-Production environments because the /dev/sms/inbound
-    // endpoint (mapped below for all non-Production envs) depends on it directly. Without this
-    // registration, ASP.NET parameter inference fails at startup and kills the entire app —
-    // preventing all Wolverine endpoints from registering.
-    if (!builder.Environment.IsProduction())
-    {
-        builder.Services.AddScoped<DatabaseSmsSender>();
-    }
+}
+else
+{
+    builder.Services.AddScoped<DatabaseSmsSender>();
+    builder.Services.AddScoped<ISmsSender, DatabaseSmsSender>();
 }
 builder.Services.AddSingleton<IFeatureService, FeatureService>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
