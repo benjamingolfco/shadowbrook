@@ -14,18 +14,13 @@ public static class UnpublishTeeSheetEndpoint
     [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> Handle(
         Guid courseId,
-        string date,
+        DateOnly date,
         UnpublishTeeSheetRequest request,
         ITeeSheetRepository teeSheetRepository,
         ITimeProvider timeProvider,
         CancellationToken ct)
     {
-        if (!DateOnly.TryParseExact(date, "yyyy-MM-dd", out var dateOnly))
-        {
-            return Results.BadRequest(new { error = "date must be in yyyy-MM-dd format." });
-        }
-
-        var sheet = await teeSheetRepository.GetByCourseAndDateAsync(courseId, dateOnly, ct);
+        var sheet = await teeSheetRepository.GetByCourseAndDateAsync(courseId, date, ct);
         if (sheet is null)
         {
             return Results.NotFound(new { error = "Tee sheet not found." });
