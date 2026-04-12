@@ -72,6 +72,26 @@ public class TeeSheet : Entity
         });
     }
 
+    public void Unpublish(string? reason, ITimeProvider timeProvider)
+    {
+        if (Status != TeeSheetStatus.Published)
+        {
+            throw new TeeSheetNotPublishedException(Id);
+        }
+
+        Status = TeeSheetStatus.Draft;
+        PublishedAt = null;
+
+        AddDomainEvent(new TeeSheetUnpublished
+        {
+            TeeSheetId = Id,
+            CourseId = CourseId,
+            Date = Date,
+            Reason = reason,
+            UnpublishedAt = timeProvider.GetCurrentTimestamp(),
+        });
+    }
+
     public BookingAuthorization AuthorizeBooking()
     {
         if (Status != TeeSheetStatus.Published)
