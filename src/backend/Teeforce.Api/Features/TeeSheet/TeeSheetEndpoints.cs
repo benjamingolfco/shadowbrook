@@ -46,7 +46,7 @@ public static class TeeSheetEndpoints
         {
             // No sheet drafted/published yet for this date — return empty slot list
             // so the UI can render a "not yet published" state without blowing up.
-            return Results.Ok(new TeeSheetResponse(course.Id, course.Name, []));
+            return Results.Ok(new TeeSheetResponse(course.Id, course.Name, null, []));
         }
 
         var teeTimes = await teeTimeRepository.GetByTeeSheetIdAsync(sheet.Id, ct);
@@ -91,13 +91,14 @@ public static class TeeSheetEndpoints
             slots.Add(new TeeSheetSlot(slotDateTime, "booked", golferName, claim.GroupSize));
         }
 
-        return Results.Ok(new TeeSheetResponse(course.Id, course.Name, slots));
+        return Results.Ok(new TeeSheetResponse(course.Id, course.Name, sheet.Status.ToString(), slots));
     }
 }
 
 public record TeeSheetResponse(
     Guid CourseId,
     string CourseName,
+    string? Status,
     List<TeeSheetSlot> Slots);
 
 public record TeeSheetSlot(

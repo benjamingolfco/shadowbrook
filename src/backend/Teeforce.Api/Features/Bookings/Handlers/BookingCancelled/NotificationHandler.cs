@@ -33,6 +33,6 @@ public static class BookingCancelledNotificationHandler
             return;
         }
 
-        await notificationService.Send(booking.GolferId, new BookingCancellation(course.Name, booking.TeeTime.Date, booking.TeeTime.Time), ct);
+        await notificationService.Send(booking.GolferId, new BookingCancellation(course.Name, booking.TeeTime.Date, booking.TeeTime.Time, evt.Reason), ct);
     }
 }
