@@ -140,7 +140,7 @@ if (builder.Environment.IsProduction())
 else
 {
     builder.Services.AddScoped<DatabaseSmsSender>();
-    builder.Services.AddScoped<ISmsSender>(sp => sp.GetRequiredService<DatabaseSmsSender>());
+    builder.Services.AddScoped<ISmsSender, DatabaseSmsSender>();
 }
 builder.Services.AddSingleton<IFeatureService, FeatureService>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
