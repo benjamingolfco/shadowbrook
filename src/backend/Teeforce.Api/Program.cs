@@ -132,6 +132,15 @@ else
         .AddHttpClient<TelnyxSmsSender>(client => client.BaseAddress = new Uri("https://api.telnyx.com"))
         .AddHttpMessageHandler<TelnyxAuthHandler>();
     builder.Services.AddScoped<ISmsSender, TelnyxSmsSender>();
+
+    // DatabaseSmsSender is needed in non-Production environments because the /dev/sms/inbound
+    // endpoint (mapped below for all non-Production envs) depends on it directly. Without this
+    // registration, ASP.NET parameter inference fails at startup and kills the entire app —
+    // preventing all Wolverine endpoints from registering.
+    if (!builder.Environment.IsProduction())
+    {
+        builder.Services.AddScoped<DatabaseSmsSender>();
+    }
 }
 builder.Services.AddSingleton<IFeatureService, FeatureService>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
