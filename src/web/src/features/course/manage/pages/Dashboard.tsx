@@ -92,7 +92,9 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {statusCounts ? (
+            {weeklyQuery.isError ? (
+              <p className="text-sm text-ink-muted">Unable to load</p>
+            ) : statusCounts ? (
               <p className="text-sm text-ink">
                 {statusCounts.published} published, {statusCounts.draft} draft,{' '}
                 {statusCounts.notStarted} not started
