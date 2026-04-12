@@ -6,4 +6,6 @@ public interface IBookingRepository : IRepository<Booking>
 {
     void Add(Booking booking);
     Task<List<Booking>> GetByCourseAndTeeTimeAsync(Guid courseId, BookingDateTime teeTime, CancellationToken ct = default);
+    Task<List<Booking>> GetByTeeTimeIdsAsync(List<Guid> teeTimeIds, CancellationToken ct = default);
+    Task<int> GetConfirmedCountByTeeSheetIdAsync(Guid teeSheetId, CancellationToken ct = default);
 }
