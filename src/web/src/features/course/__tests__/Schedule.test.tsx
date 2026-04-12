@@ -4,6 +4,7 @@ import Schedule from '../manage/pages/Schedule';
 import { useWeeklySchedule } from '../manage/hooks/useWeeklySchedule';
 import { useBulkDraft } from '../manage/hooks/useBulkDraft';
 import { useTeeTimeSettings } from '../manage/hooks/useTeeTimeSettings';
+import { usePublishTeeSheet } from '../manage/hooks/usePublishTeeSheet';
 
 vi.mock('../hooks/useCourseId', () => ({
   useCourseId: () => 'course-1',
@@ -11,10 +12,12 @@ vi.mock('../hooks/useCourseId', () => ({
 vi.mock('../manage/hooks/useWeeklySchedule');
 vi.mock('../manage/hooks/useBulkDraft');
 vi.mock('../manage/hooks/useTeeTimeSettings');
+vi.mock('../manage/hooks/usePublishTeeSheet');
 
 const mockUseWeeklySchedule = vi.mocked(useWeeklySchedule);
 const mockUseBulkDraft = vi.mocked(useBulkDraft);
 const mockUseTeeTimeSettings = vi.mocked(useTeeTimeSettings);
+const mockUsePublishTeeSheet = vi.mocked(usePublishTeeSheet);
 
 const weekData = {
   weekStart: '2026-04-13',
@@ -31,6 +34,7 @@ const weekData = {
 };
 
 const mockDraftMutate = vi.fn();
+const mockPublishMutate = vi.fn();
 
 function defaultMocks() {
   mockUseWeeklySchedule.mockReturnValue({
@@ -46,6 +50,11 @@ function defaultMocks() {
   mockUseTeeTimeSettings.mockReturnValue({
     data: { teeTimeIntervalMinutes: 10, firstTeeTime: '07:00', lastTeeTime: '18:00', defaultCapacity: 4 },
   } as unknown as ReturnType<typeof useTeeTimeSettings>);
+
+  mockUsePublishTeeSheet.mockReturnValue({
+    mutate: mockPublishMutate,
+    isPending: false,
+  } as unknown as ReturnType<typeof usePublishTeeSheet>);
 }
 
 beforeEach(() => {
@@ -136,5 +145,25 @@ describe('Schedule', () => {
 
     expect(screen.getByText(/Schedule defaults are not configured/)).toBeInTheDocument();
     expect(screen.getByText('Configure settings')).toBeInTheDocument();
+  });
+
+  it('shows Publish button on Draft cards but not on other statuses', () => {
+    render(<Schedule />);
+
+    const publishButtons = screen.getAllByRole('button', { name: /Publish/i });
+    // Only 1 Draft card in weekData (Apr 14)
+    expect(publishButtons).toHaveLength(1);
+  });
+
+  it('calls publish mutation when Publish button is clicked', () => {
+    render(<Schedule />);
+
+    const publishButton = screen.getByRole('button', { name: /Publish/i });
+    fireEvent.click(publishButton);
+
+    expect(mockPublishMutate).toHaveBeenCalledWith(
+      { courseId: 'course-1', date: '2026-04-14' },
+      expect.any(Object),
+    );
   });
 });

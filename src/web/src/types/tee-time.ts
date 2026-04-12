@@ -8,6 +8,7 @@ export interface TeeSheetSlot {
 export interface TeeSheetResponse {
   courseId: string;
   courseName: string;
+  status: string | null;
   slots: TeeSheetSlot[];
 }
 
@@ -26,4 +27,13 @@ export interface WeeklyStatusResponse {
 
 export interface BulkDraftResponse {
   teeSheets: Array<{ date: string; teeSheetId: string }>;
+}
+
+export interface PublishResponse {
+  teeSheetId: string;
+  status: string;
+}
+
+export interface BookingCountResponse {
+  count: number;
 }
