@@ -7,6 +7,7 @@ using Teeforce.Domain.Common;
 using Teeforce.Domain.TeeSheetAggregate;
 using Teeforce.Domain.TeeSheetAggregate.Events;
 using Teeforce.Domain.TeeTimeAggregate;
+using DomainScheduleSettings = Teeforce.Domain.TeeSheetAggregate.ScheduleSettings;
 using DomainTeeSheet = Teeforce.Domain.TeeSheetAggregate.TeeSheet;
 
 namespace Teeforce.Api.Tests.Features.Bookings.Handlers;
@@ -34,7 +35,7 @@ public class TeeSheetUnpublishedCancelBookingsHandlerTests
 
     private TeeTime MakeTeeTimeWithClaim(Guid courseId, Guid bookingId)
     {
-        var settings = new ScheduleSettings(new TimeOnly(7, 0), new TimeOnly(8, 0), 30, 4);
+        var settings = new DomainScheduleSettings(new TimeOnly(7, 0), new TimeOnly(8, 0), 30, 4);
         var sheet = DomainTeeSheet.Draft(courseId, new DateOnly(2026, 6, 1), settings, this.timeProvider);
         sheet.Publish(this.timeProvider);
         var auth = sheet.AuthorizeBooking();

@@ -24,5 +24,6 @@ public class TeeTimeRepository(ApplicationDbContext db) : ITeeTimeRepository
 
     public void Add(TeeTime teeTime) => db.TeeTimes.Add(teeTime);
 
+
     public void Remove(TeeTime teeTime) => db.TeeTimes.Remove(teeTime);
 }

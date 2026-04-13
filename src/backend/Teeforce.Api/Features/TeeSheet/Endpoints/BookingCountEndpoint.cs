@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
 using Teeforce.Api.Infrastructure.Auth;
-using Teeforce.Api.Infrastructure.Data;
 using Teeforce.Domain.BookingAggregate;
 using Teeforce.Domain.TeeSheetAggregate;
 using Wolverine.Http;
@@ -16,7 +14,7 @@ public static class BookingCountEndpoint
         Guid courseId,
         DateOnly date,
         ITeeSheetRepository teeSheetRepository,
-        ApplicationDbContext db,
+        IBookingRepository bookingRepository,
         CancellationToken ct)
     {
         var sheet = await teeSheetRepository.GetByCourseAndDateAsync(courseId, date, ct);
@@ -25,11 +23,7 @@ public static class BookingCountEndpoint
             return Results.Ok(new { count = 0 });
         }
 
-        var count = await db.Bookings
-            .Where(b => b.TeeTimeId != null
-                && db.TeeTimes.Where(t => t.TeeSheetId == sheet.Id).Select(t => t.Id).Contains(b.TeeTimeId.Value)
-                && b.Status == BookingStatus.Confirmed)
-            .CountAsync(ct);
+        var count = await bookingRepository.GetConfirmedCountByTeeSheetIdAsync(sheet.Id, ct);
         return Results.Ok(new { count });
     }
 }

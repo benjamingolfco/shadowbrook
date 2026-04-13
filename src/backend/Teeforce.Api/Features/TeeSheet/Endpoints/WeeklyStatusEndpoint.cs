@@ -27,20 +27,16 @@ public static class WeeklyStatusEndpoint
     [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
     public static async Task<IResult> Handle(
         Guid courseId,
-        string? startDate,
+        DateOnly? startDate,
         ApplicationDbContext db,
         CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(startDate))
+        if (startDate is null)
         {
             return Results.BadRequest(new { error = "startDate query parameter is required." });
         }
 
-        if (!DateOnly.TryParseExact(startDate, "yyyy-MM-dd", out var start))
-        {
-            return Results.BadRequest(new { error = "startDate must be in yyyy-MM-dd format." });
-        }
-
+        var start = startDate.Value;
         var end = start.AddDays(6);
 
         var sheets = await db.TeeSheets

@@ -77,7 +77,11 @@ export default function Settings() {
   }, [settingsQuery.data, form]);
 
   function onSubmit(data: TeeTimeSettingsFormData) {
-    updateMutation.mutate({ courseId, data });
+    updateMutation.mutate({ courseId, data }, {
+      onSuccess: () => {
+        form.reset(data);
+      },
+    });
   }
 
   return (
