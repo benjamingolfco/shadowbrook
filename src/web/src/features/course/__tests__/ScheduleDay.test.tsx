@@ -26,7 +26,7 @@ const mockUseBookingCount = vi.mocked(useBookingCount);
 const teeSheetData = {
   courseId: 'course-1',
   courseName: 'Test Course',
-  status: 'published',
+  status: 'Published',
   slots: [
     { teeTime: '2026-04-14T07:00:00', status: 'open', golferName: null, playerCount: 4 },
     { teeTime: '2026-04-14T07:10:00', status: 'booked', golferName: 'John Doe', playerCount: 2 },
@@ -67,7 +67,7 @@ describe('ScheduleDay', () => {
 
   it('shows Draft status badge when status is draft', () => {
     mockUseTeeSheet.mockReturnValue({
-      data: { ...teeSheetData, status: 'draft' },
+      data: { ...teeSheetData, status: 'Draft' },
       isLoading: false,
       isError: false,
     } as unknown as ReturnType<typeof useTeeSheet>);
@@ -85,7 +85,7 @@ describe('ScheduleDay', () => {
 
   it('hides Unpublish button when status is draft', () => {
     mockUseTeeSheet.mockReturnValue({
-      data: { ...teeSheetData, status: 'draft' },
+      data: { ...teeSheetData, status: 'Draft' },
       isLoading: false,
       isError: false,
     } as unknown as ReturnType<typeof useTeeSheet>);
