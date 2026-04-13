@@ -121,7 +121,24 @@ At booking time:
 
 A null Price on the interval means "no price configured" — booking is still allowed. The claim captures null, and downstream consumers (Booking aggregate) treat it as unpriced/free. This avoids blocking bookings when pricing hasn't been set up yet.
 
-The `TeeTimeClaimed` domain event also carries the Price for downstream consumers (e.g., the Booking aggregate).
+The `TeeTimeClaimed` domain event gains a `Price` field (decimal?) for downstream consumers.
+
+### Booking Aggregate Changes
+
+Booking gains two properties:
+
+| Property | Type | Notes |
+|----------|------|-------|
+| PricePerPlayer | decimal? | Per-player rate at booking time — from TeeTimeClaimed.Price |
+| TotalPrice | decimal? | PricePerPlayer × PlayerCount — calculated in factory, stored as-is |
+
+Both `Booking.CreateConfirmed()` and the `TeeTimeClaimedCreateConfirmedBookingHandler` are updated:
+1. `TeeTimeClaimed` event carries `Price` (per-player)
+2. Handler passes it to `Booking.CreateConfirmed()`
+3. Factory calculates `TotalPrice = PricePerPlayer * PlayerCount` and stores both
+4. Null PricePerPlayer → both fields stay null (unpriced booking)
+
+TotalPrice is computed once at creation and stored — not derived at read time. This keeps the Booking as a financial record and allows pricing logic to evolve (e.g., group discounts) without changing how Booking stores its total.
 
 ## API Endpoints
 
