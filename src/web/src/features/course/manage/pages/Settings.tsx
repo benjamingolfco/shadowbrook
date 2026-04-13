@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useBlocker } from 'react-router';
 import {
   AlertDialog,
@@ -26,11 +26,19 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import type { ApiError } from '@/lib/api-client';
 import {
   useTeeTimeSettings,
   useUpdateTeeTimeSettings,
 } from '../hooks/useTeeTimeSettings';
 import { useCourseId } from '../../hooks/useCourseId';
+
+const fieldNameMap: Record<string, keyof TeeTimeSettingsFormData> = {
+  TeeTimeIntervalMinutes: 'teeTimeIntervalMinutes',
+  FirstTeeTime: 'firstTeeTime',
+  LastTeeTime: 'lastTeeTime',
+  DefaultCapacity: 'defaultCapacity',
+};
 
 const teeTimeSettingsSchema = z.object({
   teeTimeIntervalMinutes: z.number().int().min(1, 'Interval must be at least 1 minute'),
@@ -76,11 +84,20 @@ export default function Settings() {
     }
   }, [settingsQuery.data, form]);
 
+  const applyServerErrors = useCallback((error: ApiError) => {
+    const errors = (error.data as { errors?: Record<string, string[]> })?.errors;
+    if (!errors) { return; }
+    for (const [key, messages] of Object.entries(errors)) {
+      const field = fieldNameMap[key];
+      if (field && messages[0]) {
+        form.setError(field, { message: messages[0] });
+      }
+    }
+  }, [form]);
+
   function onSubmit(data: TeeTimeSettingsFormData) {
     updateMutation.mutate({ courseId, data }, {
-      onSuccess: () => {
-        form.reset(data);
-      },
+      onError: (error) => applyServerErrors(error as ApiError),
     });
   }
 
@@ -189,7 +206,7 @@ export default function Settings() {
                   )}
                 />
 
-                {updateMutation.isError && (
+                {updateMutation.isError && !Object.keys(form.formState.errors).length && (
                   <p className="text-destructive text-sm">
                     Error: {updateMutation.error.message}
                   </p>
