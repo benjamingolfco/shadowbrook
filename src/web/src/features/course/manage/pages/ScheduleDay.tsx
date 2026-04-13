@@ -12,13 +12,13 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const statusConfig: Record<string, { label: string; variant: 'outline' | 'default' }> = {
-  draft: { label: 'Draft', variant: 'outline' },
-  published: { label: 'Published', variant: 'default' },
+  Draft: { label: 'Draft', variant: 'outline' },
+  Published: { label: 'Published', variant: 'default' },
 };
 
 export default function ScheduleDay() {
   const courseId = useCourseId();
-  const { date } = useParams<{ date: string }>();
+  const { date } = useParams<{ date: string }>() as { date: string };
   const teeSheetQuery = useTeeSheet(courseId, date ?? '');
   const unpublish = useUnpublishTeeSheet();
   const bookingCountQuery = useBookingCount(courseId, date ?? '', false);
@@ -73,7 +73,7 @@ export default function ScheduleDay() {
           </div>
         }
         right={
-          status === 'published' ? (
+          status === 'Published' ? (
             <Button
               variant="outline"
               size="sm"
