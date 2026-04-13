@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Teeforce.Api.Features.TeeSheet.Handlers;
 using Teeforce.Domain.Common;
+using Teeforce.Domain.TeeSheetAggregate;
 using Teeforce.Domain.TeeSheetAggregate.Events;
 using Teeforce.Domain.TeeTimeAggregate;
 using DomainScheduleSettings = Teeforce.Domain.TeeSheetAggregate.ScheduleSettings;

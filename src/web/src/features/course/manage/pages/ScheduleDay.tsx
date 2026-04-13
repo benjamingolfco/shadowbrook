@@ -1,15 +1,29 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router';
 import { ChevronLeft } from 'lucide-react';
 import { useCourseId } from '../../hooks/useCourseId';
 import { useTeeSheet } from '../../pos/hooks/useTeeSheet';
+import { useUnpublishTeeSheet } from '../hooks/useUnpublishTeeSheet';
+import { useBookingCount } from '../hooks/useBookingCount';
+import { UnpublishTeeSheetDialog } from '../components/UnpublishTeeSheetDialog';
 import { PageTopbar } from '@/components/layout/PageTopbar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
+const statusConfig: Record<string, { label: string; variant: 'outline' | 'default' }> = {
+  Draft: { label: 'Draft', variant: 'outline' },
+  Published: { label: 'Published', variant: 'default' },
+};
+
 export default function ScheduleDay() {
   const courseId = useCourseId();
-  const { date } = useParams<{ date: string }>();
+  const { date } = useParams<{ date: string }>() as { date: string };
   const teeSheetQuery = useTeeSheet(courseId, date ?? '');
+  const unpublish = useUnpublishTeeSheet();
+  const bookingCountQuery = useBookingCount(courseId, date ?? '', false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [bookingCount, setBookingCount] = useState(0);
 
   if (!date) return null;
 
@@ -19,6 +33,30 @@ export default function ScheduleDay() {
     month: 'long',
     day: 'numeric',
   });
+
+  const status = teeSheetQuery.data?.status;
+  const statusBadge = status && statusConfig[status] ? (
+    <Badge variant={statusConfig[status].variant}>{statusConfig[status].label}</Badge>
+  ) : null;
+
+  async function handleUnpublish() {
+    const result = await bookingCountQuery.refetch();
+    const count = result.data?.count ?? 0;
+
+    if (count === 0) {
+      unpublish.mutate({ courseId, date }, {});
+    } else {
+      setBookingCount(count);
+      setDialogOpen(true);
+    }
+  }
+
+  function handleConfirmUnpublish(reason: string | undefined) {
+    unpublish.mutate(
+      { courseId, date, reason },
+      { onSuccess: () => setDialogOpen(false) },
+    );
+  }
 
   return (
     <>
@@ -31,7 +69,20 @@ export default function ScheduleDay() {
               </Link>
             </Button>
             <h1 className="font-display text-[18px] text-ink">{formattedDate}</h1>
+            {statusBadge}
           </div>
+        }
+        right={
+          status === 'Published' ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleUnpublish}
+              disabled={unpublish.isPending}
+            >
+              Unpublish
+            </Button>
+          ) : undefined
         }
       />
 
@@ -65,13 +116,21 @@ export default function ScheduleDay() {
                   className="flex items-center justify-between rounded-md border border-border px-4 py-2"
                 >
                   <span className="text-sm font-medium text-ink">{time}</span>
-                  <span className="text-sm text-ink-muted">4 players</span>
+                  <span className="text-sm text-ink-muted">{slot.playerCount} players</span>
                 </div>
               );
             })}
           </div>
         )}
       </div>
+
+      <UnpublishTeeSheetDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onConfirm={handleConfirmUnpublish}
+        isPending={unpublish.isPending}
+        bookingCount={bookingCount}
+      />
     </>
   );
 }

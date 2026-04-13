@@ -9,7 +9,7 @@ public class BookingCancellationSmsFormatter : ISmsFormatter<BookingCancellation
     public string Format(BookingCancellation n)
     {
         var message = $"Your tee time at {n.CourseName} on {n.Date:MMMM d, yyyy} at {n.Time:h:mm tt} has been cancelled.";
-        if (n.Reason is not null)
+        if (!string.IsNullOrWhiteSpace(n.Reason))
         {
             message += $" Reason: {n.Reason}";
         }

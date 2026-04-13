@@ -28,3 +28,12 @@ export interface WeeklyStatusResponse {
 export interface BulkDraftResponse {
   teeSheets: Array<{ date: string; teeSheetId: string }>;
 }
+
+export interface PublishResponse {
+  teeSheetId: string;
+  status: string;
+}
+
+export interface BookingCountResponse {
+  count: number;
+}

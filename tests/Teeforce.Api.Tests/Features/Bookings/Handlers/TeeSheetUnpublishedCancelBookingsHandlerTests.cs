@@ -4,6 +4,7 @@ using Teeforce.Api.Features.Bookings.Handlers;
 using Teeforce.Domain.BookingAggregate;
 using Teeforce.Domain.BookingAggregate.Events;
 using Teeforce.Domain.Common;
+using Teeforce.Domain.TeeSheetAggregate;
 using Teeforce.Domain.TeeSheetAggregate.Events;
 using Teeforce.Domain.TeeTimeAggregate;
 using DomainScheduleSettings = Teeforce.Domain.TeeSheetAggregate.ScheduleSettings;
