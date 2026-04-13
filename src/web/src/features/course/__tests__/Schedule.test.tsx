@@ -5,6 +5,7 @@ import { useWeeklySchedule } from '../manage/hooks/useWeeklySchedule';
 import { useBulkDraft } from '../manage/hooks/useBulkDraft';
 import { useTeeTimeSettings } from '../manage/hooks/useTeeTimeSettings';
 import { usePublishTeeSheet } from '../manage/hooks/usePublishTeeSheet';
+import { useUnpublishTeeSheet } from '../manage/hooks/useUnpublishTeeSheet';
 
 vi.mock('../hooks/useCourseId', () => ({
   useCourseId: () => 'course-1',
@@ -13,11 +14,13 @@ vi.mock('../manage/hooks/useWeeklySchedule');
 vi.mock('../manage/hooks/useBulkDraft');
 vi.mock('../manage/hooks/useTeeTimeSettings');
 vi.mock('../manage/hooks/usePublishTeeSheet');
+vi.mock('../manage/hooks/useUnpublishTeeSheet');
 
 const mockUseWeeklySchedule = vi.mocked(useWeeklySchedule);
 const mockUseBulkDraft = vi.mocked(useBulkDraft);
 const mockUseTeeTimeSettings = vi.mocked(useTeeTimeSettings);
 const mockUsePublishTeeSheet = vi.mocked(usePublishTeeSheet);
+const mockUseUnpublishTeeSheet = vi.mocked(useUnpublishTeeSheet);
 
 const weekData = {
   weekStart: '2026-04-13',
@@ -35,6 +38,7 @@ const weekData = {
 
 const mockDraftMutate = vi.fn();
 const mockPublishMutate = vi.fn();
+const mockUnpublishMutate = vi.fn();
 
 function defaultMocks() {
   mockUseWeeklySchedule.mockReturnValue({
@@ -55,6 +59,11 @@ function defaultMocks() {
     mutate: mockPublishMutate,
     isPending: false,
   } as unknown as ReturnType<typeof usePublishTeeSheet>);
+
+  mockUseUnpublishTeeSheet.mockReturnValue({
+    mutate: mockUnpublishMutate,
+    isPending: false,
+  } as unknown as ReturnType<typeof useUnpublishTeeSheet>);
 }
 
 beforeEach(() => {
@@ -150,7 +159,7 @@ describe('Schedule', () => {
   it('shows Publish button on Draft cards but not on other statuses', () => {
     render(<Schedule />);
 
-    const publishButtons = screen.getAllByRole('button', { name: /Publish/i });
+    const publishButtons = screen.getAllByRole('button', { name: 'Publish' });
     // Only 1 Draft card in weekData (Apr 14)
     expect(publishButtons).toHaveLength(1);
   });
@@ -158,11 +167,31 @@ describe('Schedule', () => {
   it('calls publish mutation when Publish button is clicked', () => {
     render(<Schedule />);
 
-    const publishButton = screen.getByRole('button', { name: /Publish/i });
+    const publishButton = screen.getByRole('button', { name: 'Publish' });
     fireEvent.click(publishButton);
 
     expect(mockPublishMutate).toHaveBeenCalledWith(
       { courseId: 'course-1', date: '2026-04-14' },
+      expect.any(Object),
+    );
+  });
+
+  it('shows Unpublish button on Published cards', () => {
+    render(<Schedule />);
+
+    const unpublishButtons = screen.getAllByRole('button', { name: 'Unpublish' });
+    // Only 1 Published card in weekData (Apr 15)
+    expect(unpublishButtons).toHaveLength(1);
+  });
+
+  it('calls unpublish mutation when Unpublish button is clicked', () => {
+    render(<Schedule />);
+
+    const unpublishButton = screen.getByRole('button', { name: 'Unpublish' });
+    fireEvent.click(unpublishButton);
+
+    expect(mockUnpublishMutate).toHaveBeenCalledWith(
+      { courseId: 'course-1', date: '2026-04-15' },
       expect.any(Object),
     );
   });

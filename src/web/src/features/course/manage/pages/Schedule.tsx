@@ -12,6 +12,7 @@ import { useWeeklySchedule } from '../hooks/useWeeklySchedule';
 import { useBulkDraft } from '../hooks/useBulkDraft';
 import { useTeeTimeSettings } from '../hooks/useTeeTimeSettings';
 import { usePublishTeeSheet } from '../hooks/usePublishTeeSheet';
+import { useUnpublishTeeSheet } from '../hooks/useUnpublishTeeSheet';
 import type { DayStatus } from '@/types/tee-time';
 
 const statusConfig = {
@@ -56,6 +57,7 @@ export default function Schedule() {
   const { data, isLoading, isError } = useWeeklySchedule(courseId, startDateStr);
   const bulkDraft = useBulkDraft();
   const publishTeeSheet = usePublishTeeSheet();
+  const unpublishTeeSheet = useUnpublishTeeSheet();
   const { data: settings } = useTeeTimeSettings(courseId);
 
   const isConfigured = !!settings?.firstTeeTime;
@@ -179,6 +181,8 @@ export default function Schedule() {
                 onToggle={() => toggleDate(day.date)}
                 onPublish={(date) => publishTeeSheet.mutate({ courseId, date }, {})}
                 isPublishing={publishTeeSheet.isPending}
+                onUnpublish={(date) => unpublishTeeSheet.mutate({ courseId, date }, {})}
+                isUnpublishing={unpublishTeeSheet.isPending}
               />
             ))}
           </div>
@@ -195,12 +199,15 @@ interface DayCardProps {
   onToggle: () => void;
   onPublish: (date: string) => void;
   isPublishing: boolean;
+  onUnpublish: (date: string) => void;
+  isUnpublishing: boolean;
 }
 
-function DayCard({ day, courseId, isSelected, onToggle, onPublish, isPublishing }: DayCardProps) {
+function DayCard({ day, courseId, isSelected, onToggle, onPublish, isPublishing, onUnpublish, isUnpublishing }: DayCardProps) {
   const config = statusConfig[day.status];
   const isNotStarted = day.status === 'notStarted';
   const isDraft = day.status === 'draft';
+  const isPublished = day.status === 'published';
 
   const cardContent = (
     <Card className={isSelected ? 'ring-2 ring-primary' : ''}>
@@ -230,6 +237,20 @@ function DayCard({ day, courseId, isSelected, onToggle, onPublish, isPublishing 
             }}
           >
             Publish
+          </Button>
+        )}
+        {isPublished && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full"
+            disabled={isUnpublishing}
+            onClick={(e) => {
+              e.preventDefault();
+              onUnpublish(day.date);
+            }}
+          >
+            Unpublish
           </Button>
         )}
       </CardContent>

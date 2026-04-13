@@ -1,5 +1,4 @@
 import { NavLink, Outlet } from 'react-router';
-import UserMenu from '@/components/layout/UserMenu';
 
 export default function GolferLayout() {
   return (
@@ -8,7 +7,6 @@ export default function GolferLayout() {
       <header className="border-b bg-white px-4 py-3">
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-bold">Teeforce</h1>
-          <UserMenu />
         </div>
       </header>
 
