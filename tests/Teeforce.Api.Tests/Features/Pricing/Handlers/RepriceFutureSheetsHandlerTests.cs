@@ -27,6 +27,7 @@ public class RepriceFutureSheetsHandlerTests
     {
         var courseId = Guid.NewGuid();
         var settings = CoursePricingSettings.Create(courseId, defaultPrice: 50m);
+        settings.UpdateBounds(1m, 1000m);
         settings.AddSchedule("Morning", [DayOfWeek.Monday], new TimeOnly(7, 0), new TimeOnly(12, 0), 75m);
         settings.ClearDomainEvents();
 
