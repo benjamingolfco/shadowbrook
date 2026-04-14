@@ -64,7 +64,7 @@ public class TeeTime : Entity
             CreatedAt = now,
         };
 
-        teeTime.ApplyClaim(bookingId, golferId, groupSize, now);
+        teeTime.ApplyClaim(bookingId, golferId, groupSize, interval.Price, now);
         return teeTime;
     }
 
@@ -96,12 +96,12 @@ public class TeeTime : Entity
             throw new InsufficientCapacityException(Id, groupSize, Remaining);
         }
 
-        ApplyClaim(bookingId, golferId, groupSize, timeProvider.GetCurrentTimestamp());
+        ApplyClaim(bookingId, golferId, groupSize, null, timeProvider.GetCurrentTimestamp());
     }
 
-    private void ApplyClaim(Guid bookingId, Guid golferId, int groupSize, DateTimeOffset now)
+    private void ApplyClaim(Guid bookingId, Guid golferId, int groupSize, decimal? price, DateTimeOffset now)
     {
-        this.claims.Add(new TeeTimeClaim(Id, bookingId, golferId, groupSize, now));
+        this.claims.Add(new TeeTimeClaim(Id, bookingId, golferId, groupSize, price, now));
         Remaining -= groupSize;
 
         AddDomainEvent(new TeeTimeClaimed
@@ -113,6 +113,7 @@ public class TeeTime : Entity
             CourseId = CourseId,
             Date = Date,
             Time = Time,
+            Price = price,
         });
 
         AddDomainEvent(new TeeTimeAvailabilityChanged
