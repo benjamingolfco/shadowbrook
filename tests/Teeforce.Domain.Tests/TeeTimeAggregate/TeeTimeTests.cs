@@ -77,7 +77,7 @@ public class TeeTimeTests
         var teeTime = TeeTime.Claim(interval, this.courseId, this.date, auth, Guid.NewGuid(), Guid.NewGuid(), 1, this.timeProvider);
         teeTime.ClearDomainEvents();
 
-        teeTime.Claim(auth, Guid.NewGuid(), Guid.NewGuid(), 2, this.timeProvider);
+        teeTime.Claim(auth, Guid.NewGuid(), Guid.NewGuid(), 2, null, this.timeProvider);
 
         Assert.Equal(1, teeTime.Remaining);
         Assert.Equal(2, teeTime.Claims.Count);
@@ -91,7 +91,7 @@ public class TeeTimeTests
         var teeTime = TeeTime.Claim(interval, this.courseId, this.date, auth, Guid.NewGuid(), Guid.NewGuid(), 2, this.timeProvider);
         teeTime.ClearDomainEvents();
 
-        teeTime.Claim(auth, Guid.NewGuid(), Guid.NewGuid(), 2, this.timeProvider);
+        teeTime.Claim(auth, Guid.NewGuid(), Guid.NewGuid(), 2, null, this.timeProvider);
 
         Assert.Equal(TeeTimeStatus.Filled, teeTime.Status);
         Assert.Equal(0, teeTime.Remaining);
@@ -106,7 +106,7 @@ public class TeeTimeTests
         var teeTime = TeeTime.Claim(interval, this.courseId, this.date, auth, Guid.NewGuid(), Guid.NewGuid(), 2, this.timeProvider);
 
         Assert.Throws<TeeTimeFilledException>(() =>
-            teeTime.Claim(auth, Guid.NewGuid(), Guid.NewGuid(), 1, this.timeProvider));
+            teeTime.Claim(auth, Guid.NewGuid(), Guid.NewGuid(), 1, null, this.timeProvider));
     }
 
     [Fact]
@@ -116,7 +116,7 @@ public class TeeTimeTests
         var teeTime = TeeTime.Block(interval, this.courseId, this.date, "frost", this.timeProvider);
 
         Assert.Throws<TeeTimeBlockedException>(() =>
-            teeTime.Claim(auth, Guid.NewGuid(), Guid.NewGuid(), 1, this.timeProvider));
+            teeTime.Claim(auth, Guid.NewGuid(), Guid.NewGuid(), 1, null, this.timeProvider));
     }
 
     [Fact]
@@ -126,7 +126,7 @@ public class TeeTimeTests
         var teeTime = TeeTime.Claim(interval, this.courseId, this.date, auth, Guid.NewGuid(), Guid.NewGuid(), 3, this.timeProvider);
 
         Assert.Throws<InsufficientCapacityException>(() =>
-            teeTime.Claim(auth, Guid.NewGuid(), Guid.NewGuid(), 2, this.timeProvider));
+            teeTime.Claim(auth, Guid.NewGuid(), Guid.NewGuid(), 2, null, this.timeProvider));
     }
 
     [Fact]
@@ -136,7 +136,7 @@ public class TeeTimeTests
         var teeTime = TeeTime.Claim(interval, this.courseId, this.date, auth, Guid.NewGuid(), Guid.NewGuid(), 1, this.timeProvider);
 
         Assert.Throws<InvalidGroupSizeException>(() =>
-            teeTime.Claim(auth, Guid.NewGuid(), Guid.NewGuid(), 0, this.timeProvider));
+            teeTime.Claim(auth, Guid.NewGuid(), Guid.NewGuid(), 0, null, this.timeProvider));
     }
 
     [Fact]
@@ -151,7 +151,7 @@ public class TeeTimeTests
         var foreignAuth = otherSheet.AuthorizeBooking();
 
         Assert.Throws<BookingAuthorizationMismatchException>(() =>
-            teeTime.Claim(foreignAuth, Guid.NewGuid(), Guid.NewGuid(), 1, this.timeProvider));
+            teeTime.Claim(foreignAuth, Guid.NewGuid(), Guid.NewGuid(), 1, null, this.timeProvider));
     }
 
     [Fact]
@@ -279,7 +279,7 @@ public class TeeTimeTests
         var teeTime = TeeTime.Claim(interval, this.courseId, this.date, auth, Guid.NewGuid(), Guid.NewGuid(), 1, this.timeProvider);
         teeTime.ClearDomainEvents();
 
-        teeTime.Claim(auth, Guid.NewGuid(), Guid.NewGuid(), 2, this.timeProvider);
+        teeTime.Claim(auth, Guid.NewGuid(), Guid.NewGuid(), 2, null, this.timeProvider);
 
         var evt = Assert.Single(teeTime.DomainEvents.OfType<TeeTimeAvailabilityChanged>());
         Assert.Equal(teeTime.Id, evt.TeeTimeId);

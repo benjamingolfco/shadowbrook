@@ -46,16 +46,16 @@ public class CoursePricingTests(TestWebApplicationFactory factory) : IAsyncLifet
     {
         var courseId = await CreateCourse();
 
-        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
+        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing/default", new
         {
-            FlatRatePrice = 45.00m
+            DefaultPrice = 45.00m
         });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var body = await response.Content.ReadFromJsonAsync<PricingResponse>();
+        var body = await response.Content.ReadFromJsonAsync<UpdateDefaultPriceResponse>();
         Assert.NotNull(body);
-        Assert.Equal(45.00m, body!.FlatRatePrice);
+        Assert.Equal(45.00m, body!.DefaultPrice);
     }
 
     // AC 3: Updates apply immediately
@@ -64,36 +64,36 @@ public class CoursePricingTests(TestWebApplicationFactory factory) : IAsyncLifet
     {
         var courseId = await CreateCourse();
 
-        await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
+        await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing/default", new
         {
-            FlatRatePrice = 45.00m
+            DefaultPrice = 45.00m
         });
 
-        var updateResponse = await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
+        var updateResponse = await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing/default", new
         {
-            FlatRatePrice = 50.00m
+            DefaultPrice = 50.00m
         });
 
         Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
 
-        var body = await updateResponse.Content.ReadFromJsonAsync<PricingResponse>();
-        Assert.Equal(50.00m, body!.FlatRatePrice);
+        var body = await updateResponse.Content.ReadFromJsonAsync<UpdateDefaultPriceResponse>();
+        Assert.Equal(50.00m, body!.DefaultPrice);
 
         // Verify GET reflects the update
         var getResponse = await this.client.GetAsync($"/courses/{courseId}/pricing");
         var getBody = await getResponse.Content.ReadFromJsonAsync<PricingResponse>();
-        Assert.Equal(50.00m, getBody!.FlatRatePrice);
+        Assert.Equal(50.00m, getBody!.DefaultPrice);
     }
 
-    // AC 5: Validation - zero is valid
+    // AC 5: Validation - zero is valid (null clears the price)
     [Fact]
     public async Task UpdatePricing_ZeroPrice_ReturnsOk()
     {
         var courseId = await CreateCourse();
 
-        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
+        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing/default", new
         {
-            FlatRatePrice = 0.00m
+            DefaultPrice = 0.00m
         });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -105,9 +105,9 @@ public class CoursePricingTests(TestWebApplicationFactory factory) : IAsyncLifet
     {
         var courseId = await CreateCourse();
 
-        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
+        var response = await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing/default", new
         {
-            FlatRatePrice = 10000.00m
+            DefaultPrice = 10000.00m
         });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -119,9 +119,9 @@ public class CoursePricingTests(TestWebApplicationFactory factory) : IAsyncLifet
     {
         var courseId = await CreateCourse();
 
-        await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing", new
+        await this.client.PutAsJsonAsync($"/courses/{courseId}/pricing/default", new
         {
-            FlatRatePrice = 75.50m
+            DefaultPrice = 75.50m
         });
 
         var response = await this.client.GetAsync($"/courses/{courseId}/pricing");
@@ -129,7 +129,7 @@ public class CoursePricingTests(TestWebApplicationFactory factory) : IAsyncLifet
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var body = await response.Content.ReadFromJsonAsync<PricingResponse>();
-        Assert.Equal(75.50m, body!.FlatRatePrice);
+        Assert.Equal(75.50m, body!.DefaultPrice);
     }
 
     // AC 6: Viewing when not configured
@@ -141,15 +141,20 @@ public class CoursePricingTests(TestWebApplicationFactory factory) : IAsyncLifet
         var response = await this.client.GetAsync($"/courses/{courseId}/pricing");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<PricingResponse>();
+        Assert.NotNull(body);
+        Assert.Null(body!.DefaultPrice);
+        Assert.Empty(body.Schedules ?? []);
     }
 
     // Error case: course not found
     [Fact]
     public async Task UpdatePricing_CourseNotFound_ReturnsNotFound()
     {
-        var response = await this.client.PutAsJsonAsync($"/courses/{Guid.NewGuid()}/pricing", new
+        var response = await this.client.PutAsJsonAsync($"/courses/{Guid.NewGuid()}/pricing/default", new
         {
-            FlatRatePrice = 45.00m
+            DefaultPrice = 45.00m
         });
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);

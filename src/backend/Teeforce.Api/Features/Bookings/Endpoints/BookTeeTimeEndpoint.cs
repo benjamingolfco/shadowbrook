@@ -72,7 +72,7 @@ public static class BookTeeTimeEndpoint
         }
         else
         {
-            existing.Claim(auth, request.BookingId, golferId.Value, request.GroupSize, timeProvider);
+            existing.Claim(auth, request.BookingId, golferId.Value, request.GroupSize, interval.Price, timeProvider);
         }
 
         return Results.Ok(new { bookingId = request.BookingId });

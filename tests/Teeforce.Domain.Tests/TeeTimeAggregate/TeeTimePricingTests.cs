@@ -79,7 +79,7 @@ public class TeeTimePricingTests
     }
 
     [Fact]
-    public void Claim_InstanceMethod_PriceIsNull()
+    public void Claim_InstanceMethod_StampsPriceFromParameter()
     {
         var (sheet, interval) = CreateSheetAndInterval(price: 60m);
         var auth = sheet.AuthorizeBooking();
@@ -90,9 +90,9 @@ public class TeeTimePricingTests
 
         teeTime.ClearDomainEvents();
         var auth2 = sheet.AuthorizeBooking();
-        teeTime.Claim(auth2, Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, this.timeProvider);
+        teeTime.Claim(auth2, Guid.NewGuid(), Guid.NewGuid(), groupSize: 1, interval.Price, this.timeProvider);
 
         var secondClaim = teeTime.Claims[1];
-        Assert.Null(secondClaim.Price);
+        Assert.Equal(60m, secondClaim.Price);
     }
 }

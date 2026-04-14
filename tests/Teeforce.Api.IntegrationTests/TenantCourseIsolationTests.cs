@@ -141,7 +141,7 @@ public class TenantCourseIsolationTests(TestWebApplicationFactory factory) : IAs
         var course = await createResponse.Content.ReadFromJsonAsync<CourseIdResponse>();
 
         // Act - Admin can update any course
-        var response = await this.client.PutAsJsonAsync($"/courses/{course!.Id}/pricing", new { FlatRatePrice = 45.00m });
+        var response = await this.client.PutAsJsonAsync($"/courses/{course!.Id}/pricing/default", new { DefaultPrice = 45.00m });
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

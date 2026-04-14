@@ -73,6 +73,7 @@ public class TeeTime : Entity
         Guid bookingId,
         Guid golferId,
         int groupSize,
+        decimal? price,
         ITimeProvider timeProvider)
     {
         if (auth.SheetId != TeeSheetId)
@@ -96,7 +97,7 @@ public class TeeTime : Entity
             throw new InsufficientCapacityException(Id, groupSize, Remaining);
         }
 
-        ApplyClaim(bookingId, golferId, groupSize, null, timeProvider.GetCurrentTimestamp());
+        ApplyClaim(bookingId, golferId, groupSize, price, timeProvider.GetCurrentTimestamp());
     }
 
     private void ApplyClaim(Guid bookingId, Guid golferId, int groupSize, decimal? price, DateTimeOffset now)
