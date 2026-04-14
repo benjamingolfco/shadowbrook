@@ -50,7 +50,18 @@ public class CoursePricingSettings : Entity
 
         foreach (var schedule in this.rateSchedules)
         {
-            ValidatePriceBounds(schedule.Price);
+            if (minPrice is not null && schedule.Price < minPrice)
+            {
+                schedule.MarkInvalid($"Price ${schedule.Price:F2} is below minimum of ${minPrice:F2}");
+            }
+            else if (maxPrice is not null && schedule.Price > maxPrice)
+            {
+                schedule.MarkInvalid($"Price ${schedule.Price:F2} exceeds maximum of ${maxPrice:F2}");
+            }
+            else
+            {
+                schedule.ClearInvalid();
+            }
         }
 
         RaisePricingChanged();
@@ -58,6 +69,10 @@ public class CoursePricingSettings : Entity
 
     public RateSchedule AddSchedule(string name, DayOfWeek[] daysOfWeek, TimeOnly startTime, TimeOnly endTime, decimal price)
     {
+        if (MinPrice is null || MaxPrice is null)
+        {
+            throw new DomainException("Price bounds must be configured before adding rate schedules.");
+        }
         if (daysOfWeek.Length == 0)
         {
             throw new DomainException("At least one day of week is required.");
@@ -102,6 +117,7 @@ public class CoursePricingSettings : Entity
         CheckForConflicts(temp, excludeId: scheduleId);
 
         schedule.Update(name, daysOfWeek, startTime, endTime, price);
+        schedule.ClearInvalid();
         RaisePricingChanged();
     }
 
@@ -117,6 +133,7 @@ public class CoursePricingSettings : Entity
     public decimal? ResolvePrice(DayOfWeek day, TimeOnly time)
     {
         var matches = this.rateSchedules
+            .Where(s => s.InvalidReason is null)
             .Where(s => s.DaysOfWeek.Contains(day) && s.StartTime <= time && time < s.EndTime)
             .OrderBy(s => s.DaysOfWeek.Length)
             .ThenBy(s => s.TimeBandWidth)
@@ -133,6 +150,7 @@ public class CoursePricingSettings : Entity
     public (decimal? Price, Guid? RateScheduleId) ResolvePriceWithSource(DayOfWeek day, TimeOnly time)
     {
         var matches = this.rateSchedules
+            .Where(s => s.InvalidReason is null)
             .Where(s => s.DaysOfWeek.Contains(day) && s.StartTime <= time && time < s.EndTime)
             .OrderBy(s => s.DaysOfWeek.Length)
             .ThenBy(s => s.TimeBandWidth)

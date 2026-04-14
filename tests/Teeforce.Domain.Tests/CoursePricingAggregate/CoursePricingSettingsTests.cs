@@ -89,19 +89,33 @@ public class CoursePricingSettingsTests
     }
 
     [Fact]
-    public void UpdateBounds_ExistingSchedulePriceOutOfBounds_Throws()
+    public void UpdateBounds_ExistingSchedulePriceOutOfBounds_MarksInvalid()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
         settings.AddSchedule("Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 30m);
         settings.ClearDomainEvents();
 
-        Assert.Throws<PriceOutOfBoundsException>(() => settings.UpdateBounds(minPrice: 40m, maxPrice: 200m));
+        settings.UpdateBounds(minPrice: 40m, maxPrice: 200m);
+
+        var schedule = settings.RateSchedules.Single();
+        Assert.NotNull(schedule.InvalidReason);
+    }
+
+    [Fact]
+    public void AddSchedule_WhenBoundsNotSet_ThrowsDomainException()
+    {
+        var settings = CoursePricingSettings.Create(Guid.NewGuid());
+
+        Assert.Throws<DomainException>(() =>
+            settings.AddSchedule("Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 50m));
     }
 
     [Fact]
     public void AddSchedule_CreatesScheduleAndRaisesEvent()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
         settings.ClearDomainEvents();
 
         var schedule = settings.AddSchedule(
@@ -122,6 +136,7 @@ public class CoursePricingSettingsTests
     public void AddSchedule_EmptyDays_Throws()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
 
         Assert.Throws<DomainException>(() =>
             settings.AddSchedule("Bad", [], new TimeOnly(6, 0), new TimeOnly(12, 0), 50m));
@@ -131,6 +146,7 @@ public class CoursePricingSettingsTests
     public void AddSchedule_StartAfterEnd_Throws()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
 
         Assert.Throws<DomainException>(() =>
             settings.AddSchedule("Bad", [DayOfWeek.Monday], new TimeOnly(14, 0), new TimeOnly(8, 0), 50m));
@@ -140,6 +156,7 @@ public class CoursePricingSettingsTests
     public void AddSchedule_ZeroPrice_Throws()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
 
         Assert.Throws<DomainException>(() =>
             settings.AddSchedule("Bad", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 0m));
@@ -160,6 +177,7 @@ public class CoursePricingSettingsTests
     public void RemoveSchedule_RemovesAndRaisesEvent()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
         var schedule = settings.AddSchedule("Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 50m);
         settings.ClearDomainEvents();
 
@@ -182,6 +200,7 @@ public class CoursePricingSettingsTests
     public void AddSchedule_ConflictingSameSpecificity_Throws()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
         settings.AddSchedule("Monday Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 50m);
 
         Assert.Throws<ConflictingScheduleException>(() =>
@@ -192,6 +211,7 @@ public class CoursePricingSettingsTests
     public void AddSchedule_OverlappingDifferentSpecificity_Allowed()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
         settings.AddSchedule("Weekend Morning", [DayOfWeek.Saturday, DayOfWeek.Sunday], new TimeOnly(6, 0), new TimeOnly(12, 0), 80m);
 
         settings.AddSchedule("Saturday Morning", [DayOfWeek.Saturday], new TimeOnly(6, 0), new TimeOnly(12, 0), 90m);
@@ -203,6 +223,7 @@ public class CoursePricingSettingsTests
     public void AddSchedule_OverlappingDifferentTimeBandWidth_Allowed()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
         settings.AddSchedule("Monday Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 50m);
 
         settings.AddSchedule("Monday Peak", [DayOfWeek.Monday], new TimeOnly(9, 0), new TimeOnly(11, 0), 70m);
@@ -214,6 +235,7 @@ public class CoursePricingSettingsTests
     public void AddSchedule_DifferentDaysNoConflict()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
         settings.AddSchedule("Monday Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 50m);
 
         settings.AddSchedule("Tuesday Morning", [DayOfWeek.Tuesday], new TimeOnly(6, 0), new TimeOnly(12, 0), 50m);
@@ -225,6 +247,7 @@ public class CoursePricingSettingsTests
     public void AddSchedule_NonOverlappingTimeSameDay_Allowed()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
         settings.AddSchedule("Monday Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 50m);
 
         settings.AddSchedule("Monday Afternoon", [DayOfWeek.Monday], new TimeOnly(12, 0), new TimeOnly(18, 0), 60m);
@@ -236,6 +259,7 @@ public class CoursePricingSettingsTests
     public void UpdateSchedule_UpdatesAndRaisesEvent()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
         var schedule = settings.AddSchedule("Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 50m);
         settings.ClearDomainEvents();
 
@@ -264,6 +288,7 @@ public class CoursePricingSettingsTests
     public void UpdateSchedule_ConflictsWithOther_Throws()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
         settings.AddSchedule("Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 50m);
         var afternoon = settings.AddSchedule("Afternoon", [DayOfWeek.Monday], new TimeOnly(12, 0), new TimeOnly(18, 0), 60m);
 
@@ -275,6 +300,7 @@ public class CoursePricingSettingsTests
     public void UpdateSchedule_SameValuesNoConflictWithSelf()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
         var schedule = settings.AddSchedule("Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 50m);
         settings.ClearDomainEvents();
 
@@ -307,6 +333,7 @@ public class CoursePricingSettingsTests
     public void ResolvePrice_MatchingSchedule_ReturnsSchedulePrice()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid(), defaultPrice: 50m);
+        settings.UpdateBounds(1m, 1000m);
         settings.AddSchedule("Monday Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 75m);
 
         var price = settings.ResolvePrice(DayOfWeek.Monday, new TimeOnly(9, 0));
@@ -318,6 +345,7 @@ public class CoursePricingSettingsTests
     public void ResolvePrice_NoMatchingSchedule_FallsBackToDefault()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid(), defaultPrice: 50m);
+        settings.UpdateBounds(1m, 1000m);
         settings.AddSchedule("Monday Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 75m);
 
         var price = settings.ResolvePrice(DayOfWeek.Tuesday, new TimeOnly(9, 0));
@@ -329,6 +357,7 @@ public class CoursePricingSettingsTests
     public void ResolvePrice_FewerDaysWins()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid(), defaultPrice: 50m);
+        settings.UpdateBounds(1m, 1000m);
         settings.AddSchedule("Weekend", [DayOfWeek.Saturday, DayOfWeek.Sunday], new TimeOnly(6, 0), new TimeOnly(12, 0), 80m);
         settings.AddSchedule("Saturday Only", [DayOfWeek.Saturday], new TimeOnly(6, 0), new TimeOnly(12, 0), 90m);
 
@@ -341,6 +370,7 @@ public class CoursePricingSettingsTests
     public void ResolvePrice_NarrowerTimeBandWins()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid(), defaultPrice: 50m);
+        settings.UpdateBounds(1m, 1000m);
         settings.AddSchedule("Monday Full", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(18, 0), 60m);
         settings.AddSchedule("Monday Peak", [DayOfWeek.Monday], new TimeOnly(9, 0), new TimeOnly(11, 0), 85m);
 
@@ -353,6 +383,7 @@ public class CoursePricingSettingsTests
     public void ResolvePrice_TimeAtStartBoundary_Matches()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid(), defaultPrice: 50m);
+        settings.UpdateBounds(1m, 1000m);
         settings.AddSchedule("Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 75m);
 
         Assert.Equal(75m, settings.ResolvePrice(DayOfWeek.Monday, new TimeOnly(6, 0)));
@@ -362,6 +393,7 @@ public class CoursePricingSettingsTests
     public void ResolvePrice_TimeAtEndBoundary_DoesNotMatch()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid(), defaultPrice: 50m);
+        settings.UpdateBounds(1m, 1000m);
         settings.AddSchedule("Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 75m);
 
         Assert.Equal(50m, settings.ResolvePrice(DayOfWeek.Monday, new TimeOnly(12, 0)));
@@ -371,6 +403,7 @@ public class CoursePricingSettingsTests
     public void ResolvePriceWithSource_ReturnsScheduleId()
     {
         var settings = CoursePricingSettings.Create(Guid.NewGuid(), defaultPrice: 50m);
+        settings.UpdateBounds(1m, 1000m);
         var schedule = settings.AddSchedule("Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 75m);
 
         var (price, scheduleId) = settings.ResolvePriceWithSource(DayOfWeek.Monday, new TimeOnly(9, 0));
@@ -388,5 +421,77 @@ public class CoursePricingSettingsTests
 
         Assert.Equal(50m, price);
         Assert.Null(scheduleId);
+    }
+
+    [Fact]
+    public void UpdateBounds_MarksSchedulesOutsideBoundsAsInvalid()
+    {
+        var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
+        var schedule = settings.AddSchedule("Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 150m);
+
+        settings.UpdateBounds(minPrice: 1m, maxPrice: 100m);
+
+        Assert.NotNull(schedule.InvalidReason);
+        Assert.Contains("150.00", schedule.InvalidReason);
+        Assert.Contains("100.00", schedule.InvalidReason);
+    }
+
+    [Fact]
+    public void UpdateBounds_ClearsInvalidReasonWhenPriceBackInBounds()
+    {
+        var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
+        var schedule = settings.AddSchedule("Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 150m);
+        settings.UpdateBounds(minPrice: 1m, maxPrice: 100m);
+        Assert.NotNull(schedule.InvalidReason);
+
+        settings.UpdateBounds(minPrice: 1m, maxPrice: 200m);
+
+        Assert.Null(schedule.InvalidReason);
+    }
+
+    [Fact]
+    public void UpdateBounds_MarksSchedulesBelowMinAsInvalid()
+    {
+        var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
+        var schedule = settings.AddSchedule("Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 20m);
+
+        settings.UpdateBounds(minPrice: 50m, maxPrice: 200m);
+
+        Assert.NotNull(schedule.InvalidReason);
+        Assert.Contains("20.00", schedule.InvalidReason);
+        Assert.Contains("50.00", schedule.InvalidReason);
+    }
+
+    [Fact]
+    public void ResolvePrice_SkipsInvalidSchedules()
+    {
+        var settings = CoursePricingSettings.Create(Guid.NewGuid(), defaultPrice: 50m);
+        settings.UpdateBounds(1m, 1000m);
+        settings.AddSchedule("Monday Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 150m);
+
+        // Tighten bounds so the schedule becomes invalid
+        settings.UpdateBounds(minPrice: 1m, maxPrice: 100m);
+
+        var price = settings.ResolvePrice(DayOfWeek.Monday, new TimeOnly(9, 0));
+
+        Assert.Equal(50m, price);
+    }
+
+    [Fact]
+    public void UpdateSchedule_ClearsInvalidReason()
+    {
+        var settings = CoursePricingSettings.Create(Guid.NewGuid());
+        settings.UpdateBounds(1m, 1000m);
+        var schedule = settings.AddSchedule("Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 150m);
+        settings.UpdateBounds(minPrice: 1m, maxPrice: 100m);
+        Assert.NotNull(schedule.InvalidReason);
+
+        settings.UpdateBounds(1m, 1000m);
+        settings.UpdateSchedule(schedule.Id, "Morning", [DayOfWeek.Monday], new TimeOnly(6, 0), new TimeOnly(12, 0), 75m);
+
+        Assert.Null(schedule.InvalidReason);
     }
 }

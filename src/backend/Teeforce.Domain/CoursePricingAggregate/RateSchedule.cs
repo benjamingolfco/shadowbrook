@@ -10,6 +10,7 @@ public class RateSchedule : Entity
     public TimeOnly StartTime { get; private set; }
     public TimeOnly EndTime { get; private set; }
     public decimal Price { get; private set; }
+    public string? InvalidReason { get; private set; }
 
     private RateSchedule() { } // EF
 
@@ -32,6 +33,10 @@ public class RateSchedule : Entity
         EndTime = endTime;
         Price = price;
     }
+
+    internal void MarkInvalid(string reason) => InvalidReason = reason;
+
+    internal void ClearInvalid() => InvalidReason = null;
 
     internal TimeSpan TimeBandWidth => EndTime.ToTimeSpan() - StartTime.ToTimeSpan();
 
