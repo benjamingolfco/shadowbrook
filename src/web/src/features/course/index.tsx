@@ -12,6 +12,7 @@ import Dashboard from './manage/pages/Dashboard';
 import Schedule from './manage/pages/Schedule';
 import ScheduleDay from './manage/pages/ScheduleDay';
 import Settings from './manage/pages/Settings';
+import Pricing from './manage/pages/Pricing';
 import TeeSheet from './pos/pages/TeeSheet';
 import WalkUpWaitlist from './pos/pages/WalkUpWaitlist';
 import CoursePicker from './pages/CoursePicker';
@@ -45,6 +46,7 @@ function CourseRoutes() {
         <Route path="schedule" element={<Schedule />} />
         <Route path="schedule/:date" element={<ScheduleDay />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="pricing" element={<Pricing />} />
       </Route>
       <Route path="pos" element={<PosLayout />}>
         <Route path="tee-sheet" element={<TeeSheet />} />

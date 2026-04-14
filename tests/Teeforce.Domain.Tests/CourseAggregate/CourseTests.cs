@@ -62,7 +62,6 @@ public class CourseTests
         Assert.Null(course.TeeTimeIntervalMinutes);
         Assert.Null(course.FirstTeeTime);
         Assert.Null(course.LastTeeTime);
-        Assert.Null(course.FlatRatePrice);
         Assert.Null(course.WaitlistEnabled);
     }
 
@@ -80,13 +79,4 @@ public class CourseTests
         Assert.Equal(last, course.LastTeeTime);
     }
 
-    [Fact]
-    public void UpdatePricing_SetsFlatRatePrice()
-    {
-        var course = Course.Create(OrganizationId, "Pebble Beach", "America/Los_Angeles");
-
-        course.UpdatePricing(59.99m);
-
-        Assert.Equal(59.99m, course.FlatRatePrice);
-    }
 }

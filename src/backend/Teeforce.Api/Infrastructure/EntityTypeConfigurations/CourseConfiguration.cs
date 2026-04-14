@@ -21,7 +21,6 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course>
         builder.Property(c => c.ZipCode).HasMaxLength(20);
         builder.Property(c => c.ContactEmail).HasMaxLength(200);
         builder.Property(c => c.ContactPhone).HasMaxLength(20);
-        builder.Property(c => c.FlatRatePrice).HasPrecision(18, 2);
         builder.Property(c => c.FeatureFlags)
             .HasColumnType("nvarchar(max)")
             .HasConversion(

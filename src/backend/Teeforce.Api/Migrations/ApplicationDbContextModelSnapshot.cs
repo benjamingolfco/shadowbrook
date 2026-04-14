@@ -212,6 +212,10 @@ namespace Teeforce.Api.Migrations
                     b.Property<int>("PlayerCount")
                         .HasColumnType("int");
 
+                    b.Property<decimal?>("PricePerPlayer")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -224,6 +228,10 @@ namespace Teeforce.Api.Migrations
 
                     b.Property<Guid?>("TeeTimeId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("TotalPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -281,10 +289,6 @@ namespace Teeforce.Api.Migrations
                     b.Property<TimeOnly?>("FirstTeeTime")
                         .HasColumnType("time");
 
-                    b.Property<decimal?>("FlatRatePrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<TimeOnly?>("LastTeeTime")
                         .HasColumnType("time");
 
@@ -339,6 +343,49 @@ namespace Teeforce.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("Courses", (string)null);
+                });
+
+            modelBuilder.Entity("Teeforce.Domain.CoursePricingAggregate.CoursePricingSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<decimal?>("DefaultPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("MaxPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("MinPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId")
+                        .IsUnique();
+
+                    b.ToTable("CoursePricingSettings", (string)null);
                 });
 
             modelBuilder.Entity("Teeforce.Domain.CourseWaitlistAggregate.CourseWaitlist", b =>
@@ -967,6 +1014,58 @@ namespace Teeforce.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Teeforce.Domain.CoursePricingAggregate.CoursePricingSettings", b =>
+                {
+                    b.HasOne("Teeforce.Domain.CourseAggregate.Course", null)
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsMany("Teeforce.Domain.CoursePricingAggregate.RateSchedule", "RateSchedules", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<Guid>("CoursePricingSettingsId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("DaysOfWeek")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(200)");
+
+                            b1.Property<TimeOnly>("EndTime")
+                                .HasColumnType("time");
+
+                            b1.Property<string>("InvalidReason")
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("nvarchar(200)");
+
+                            b1.Property<decimal>("Price")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("decimal(18,2)");
+
+                            b1.Property<TimeOnly>("StartTime")
+                                .HasColumnType("time");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("CoursePricingSettingsId");
+
+                            b1.ToTable("RateSchedules", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("CoursePricingSettingsId");
+                        });
+
+                    b.Navigation("RateSchedules");
+                });
+
             modelBuilder.Entity("Teeforce.Domain.CourseWaitlistAggregate.CourseWaitlist", b =>
                 {
                     b.HasOne("Teeforce.Domain.CourseAggregate.Course", null)
@@ -1006,6 +1105,13 @@ namespace Teeforce.Api.Migrations
 
                             b1.Property<int>("Capacity")
                                 .HasColumnType("int");
+
+                            b1.Property<decimal?>("Price")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("decimal(18,2)");
+
+                            b1.Property<Guid?>("RateScheduleId")
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<Guid>("TeeSheetId")
                                 .HasColumnType("uniqueidentifier");
@@ -1051,6 +1157,10 @@ namespace Teeforce.Api.Migrations
 
                             b1.Property<int>("GroupSize")
                                 .HasColumnType("int");
+
+                            b1.Property<decimal?>("Price")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("decimal(18,2)");
 
                             b1.Property<Guid>("TeeTimeId")
                                 .HasColumnType("uniqueidentifier");

@@ -16,7 +16,8 @@ public static class TeeTimeClaimedCreateConfirmedBookingHandler
             teeTimeId: evt.TeeTimeId,
             date: evt.Date,
             teeTime: evt.Time,
-            playerCount: evt.GroupSize);
+            playerCount: evt.GroupSize,
+            pricePerPlayer: evt.Price);
 
         bookingRepository.Add(booking);
     }

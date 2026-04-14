@@ -22,5 +22,18 @@ export interface TeeTimeSettings {
 }
 
 export interface Pricing {
-  flatRatePrice: number;
+  defaultPrice: number | null;
+  minPrice: number | null;
+  maxPrice: number | null;
+  schedules: RateSchedule[];
+}
+
+export interface RateSchedule {
+  id: string;
+  name: string;
+  daysOfWeek: number[];
+  startTime: string;
+  endTime: string;
+  price: number;
+  invalidReason: string | null;
 }

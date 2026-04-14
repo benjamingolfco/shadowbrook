@@ -26,6 +26,7 @@ using Teeforce.Domain.AppUserAggregate;
 using Teeforce.Domain.BookingAggregate;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.CourseAggregate;
+using Teeforce.Domain.CoursePricingAggregate;
 using Teeforce.Domain.CourseWaitlistAggregate;
 using Teeforce.Domain.GolferAggregate;
 using Teeforce.Domain.GolferWaitlistEntryAggregate;
@@ -148,6 +149,7 @@ builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<ITeeTimeOfferRepository, TeeTimeOfferRepository>();
 builder.Services.AddScoped<ITeeTimeWaitlistMatcher, EmptyTeeTimeWaitlistMatcher>();
 builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
+builder.Services.AddScoped<ICoursePricingSettingsRepository, CoursePricingSettingsRepository>();
 
 var useDevAuth = builder.Configuration.GetSection(AuthSettings.SectionName).Get<AuthSettings>()?.UseDevAuth ?? false;
 if (useDevAuth)

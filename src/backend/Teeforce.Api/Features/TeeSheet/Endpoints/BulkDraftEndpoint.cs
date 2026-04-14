@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Teeforce.Api.Infrastructure.Auth;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.CourseAggregate;
+using Teeforce.Domain.CoursePricingAggregate;
 using Teeforce.Domain.TeeSheetAggregate;
 using Teeforce.Domain.TeeSheetAggregate.Exceptions;
 using Wolverine.Http;
@@ -37,11 +38,13 @@ public static class BulkDraftEndpoint
         BulkDraftRequest request,
         ICourseRepository courseRepository,
         ITeeSheetRepository teeSheetRepository,
+        ICoursePricingSettingsRepository pricingRepository,
         ITimeProvider timeProvider,
         CancellationToken ct)
     {
         var course = await courseRepository.GetRequiredByIdAsync(courseId);
         var settings = course.CurrentScheduleDefaults();
+        var pricingSettings = await pricingRepository.GetByCourseIdAsync(courseId, ct);
 
         var existingSheets = await teeSheetRepository.GetByCourseAndDatesAsync(courseId, request.Dates, ct);
         if (existingSheets.Count > 0)
@@ -55,6 +58,11 @@ public static class BulkDraftEndpoint
         {
             var sheet = TeeSheetAggregate.Draft(courseId, date, settings, timeProvider);
             teeSheetRepository.Add(sheet);
+
+            if (pricingSettings is not null)
+            {
+                sheet.ApplyPricing(pricingSettings.ResolvePriceWithSource);
+            }
 
             results.Add(new BulkDraftItem(date, sheet.Id));
         }

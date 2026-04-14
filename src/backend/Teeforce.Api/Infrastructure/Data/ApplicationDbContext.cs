@@ -10,6 +10,7 @@ using Teeforce.Domain.AppUserAggregate;
 using Teeforce.Domain.BookingAggregate;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.CourseAggregate;
+using Teeforce.Domain.CoursePricingAggregate;
 using Teeforce.Domain.CourseWaitlistAggregate;
 using Teeforce.Domain.GolferAggregate;
 using Teeforce.Domain.GolferWaitlistEntryAggregate;
@@ -49,6 +50,7 @@ public class ApplicationDbContext(
     public DbSet<WaitlistOfferResponsePolicy> WaitlistOfferResponsePolicies => Set<WaitlistOfferResponsePolicy>();
     public DbSet<TeeTimeOffer> TeeTimeOffers => Set<TeeTimeOffer>();
     public DbSet<TeeTimeAvailabilityPolicy> TeeTimeAvailabilityPolicies => Set<TeeTimeAvailabilityPolicy>();
+    public DbSet<CoursePricingSettings> CoursePricingSettings => Set<CoursePricingSettings>();
     public DbSet<DevSmsMessage> DevSmsMessages => Set<DevSmsMessage>();
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -117,5 +119,6 @@ public class ApplicationDbContext(
         modelBuilder.ApplyConfiguration(new WaitlistOfferResponsePolicyConfiguration());
         modelBuilder.ApplyConfiguration(new TeeTimeOfferConfiguration());
         modelBuilder.ApplyConfiguration(new TeeTimeAvailabilityPolicyConfiguration());
+        modelBuilder.ApplyConfiguration(new CoursePricingSettingsConfiguration());
     }
 }

@@ -31,7 +31,13 @@ export default function ManagementLayout() {
         items: [
           { to: `/course/${courseId}/manage`, label: 'Dashboard' },
           { to: `/course/${courseId}/manage/schedule`, label: 'Schedule' },
-          { to: `/course/${courseId}/manage/settings`, label: 'Settings' },
+        ],
+      },
+      {
+        label: 'Settings',
+        items: [
+          { to: `/course/${courseId}/manage/settings`, label: 'Tee Times' },
+          { to: `/course/${courseId}/manage/pricing`, label: 'Pricing' },
         ],
       },
     ],

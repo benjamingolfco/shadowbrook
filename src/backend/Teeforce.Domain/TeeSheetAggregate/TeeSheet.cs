@@ -92,6 +92,16 @@ public class TeeSheet : Entity
         });
     }
 
+    public void ApplyPricing(Func<DayOfWeek, TimeOnly, (decimal? Price, Guid? RateScheduleId)> resolver)
+    {
+        var dayOfWeek = Date.DayOfWeek;
+        foreach (var interval in this.intervals)
+        {
+            var (price, scheduleId) = resolver(dayOfWeek, interval.Time);
+            interval.SetPricing(price, scheduleId);
+        }
+    }
+
     public BookingAuthorization AuthorizeBooking()
     {
         if (Status != TeeSheetStatus.Published)

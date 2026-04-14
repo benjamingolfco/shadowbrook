@@ -19,7 +19,6 @@ public class Course : Entity
     public TimeOnly? FirstTeeTime { get; private set; }
     public TimeOnly? LastTeeTime { get; private set; }
     public int DefaultCapacity { get; private set; } = 4;
-    public decimal? FlatRatePrice { get; private set; }
     public Dictionary<string, bool>? FeatureFlags { get; private set; }
     public bool? WaitlistEnabled { get; private set; }
     public string TimeZoneId { get; private set; } = string.Empty;
@@ -66,8 +65,6 @@ public class Course : Entity
         FirstTeeTime = firstTeeTime;
         LastTeeTime = lastTeeTime;
     }
-
-    public void UpdatePricing(decimal flatRatePrice) => FlatRatePrice = flatRatePrice;
 
     public void SetFeatureFlags(Dictionary<string, bool> flags) => FeatureFlags = flags;
 

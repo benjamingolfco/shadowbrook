@@ -27,5 +27,11 @@ public class TeeSheetRepository(ApplicationDbContext db) : ITeeSheetRepository
             .Include(s => s.Intervals)
             .FirstOrDefaultAsync(s => s.Intervals.Any(i => i.Id == intervalId), ct);
 
+    public async Task<List<TeeSheet>> GetFutureByCourseAsync(Guid courseId, DateOnly fromDate, CancellationToken ct = default) =>
+        await db.TeeSheets
+            .Include(s => s.Intervals)
+            .Where(s => s.CourseId == courseId && s.Date >= fromDate)
+            .ToListAsync(ct);
+
     public void Add(TeeSheet sheet) => db.TeeSheets.Add(sheet);
 }

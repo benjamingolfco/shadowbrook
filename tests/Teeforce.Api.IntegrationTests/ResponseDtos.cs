@@ -88,7 +88,8 @@ public record TeeTimeSettingsResponse(
     string LastTeeTime,
     int DefaultCapacity);
 
-public record PricingResponse(decimal FlatRatePrice);
+public record PricingResponse(decimal? DefaultPrice, decimal? MinPrice, decimal? MaxPrice, List<object>? Schedules);
+public record UpdateDefaultPriceResponse(decimal? DefaultPrice);
 
 public record TeeSheetResponse(
     Guid CourseId,

@@ -11,6 +11,8 @@ public class Booking : Entity
     public Guid? TeeTimeId { get; private set; }
     public BookingDateTime TeeTime { get; private set; } = null!;
     public int PlayerCount { get; private set; }
+    public decimal? PricePerPlayer { get; private set; }
+    public decimal? TotalPrice { get; private set; }
     public BookingStatus Status { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
 
@@ -56,7 +58,8 @@ public class Booking : Entity
         Guid? teeTimeId,
         DateOnly date,
         TimeOnly teeTime,
-        int playerCount)
+        int playerCount,
+        decimal? pricePerPlayer = null)
     {
         var now = DateTimeOffset.UtcNow;
         var booking = new Booking
@@ -67,6 +70,8 @@ public class Booking : Entity
             TeeTimeId = teeTimeId,
             TeeTime = new BookingDateTime(date, teeTime),
             PlayerCount = playerCount,
+            PricePerPlayer = pricePerPlayer,
+            TotalPrice = pricePerPlayer is not null ? pricePerPlayer.Value * playerCount : null,
             Status = BookingStatus.Confirmed,
             CreatedAt = now
         };
