@@ -5,12 +5,12 @@ using Teeforce.Domain.AppUserAggregate.Exceptions;
 using Teeforce.Domain.BookingAggregate.Exceptions;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.CourseAggregate.Exceptions;
+using Teeforce.Domain.CoursePricingAggregate.Exceptions;
 using Teeforce.Domain.CourseWaitlistAggregate.Exceptions;
 using Teeforce.Domain.GolferWaitlistEntryAggregate.Exceptions;
 using Teeforce.Domain.TeeSheetAggregate.Exceptions;
 using Teeforce.Domain.TeeTimeAggregate.Exceptions;
 using Teeforce.Domain.TeeTimeOpeningAggregate.Exceptions;
-using Teeforce.Domain.CoursePricingAggregate.Exceptions;
 using Teeforce.Domain.WaitlistOfferAggregate.Exceptions;
 
 namespace Teeforce.Api.Infrastructure.Middleware;

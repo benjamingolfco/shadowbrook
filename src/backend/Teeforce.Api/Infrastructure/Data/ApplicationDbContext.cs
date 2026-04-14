@@ -10,6 +10,7 @@ using Teeforce.Domain.AppUserAggregate;
 using Teeforce.Domain.BookingAggregate;
 using Teeforce.Domain.Common;
 using Teeforce.Domain.CourseAggregate;
+using Teeforce.Domain.CoursePricingAggregate;
 using Teeforce.Domain.CourseWaitlistAggregate;
 using Teeforce.Domain.GolferAggregate;
 using Teeforce.Domain.GolferWaitlistEntryAggregate;
@@ -19,7 +20,6 @@ using Teeforce.Domain.TeeTimeAggregate;
 using Teeforce.Domain.TeeTimeOfferAggregate;
 using Teeforce.Domain.TeeTimeOpeningAggregate;
 using Teeforce.Domain.TenantAggregate;
-using Teeforce.Domain.CoursePricingAggregate;
 using Teeforce.Domain.WaitlistOfferAggregate;
 
 namespace Teeforce.Api.Infrastructure.Data;
