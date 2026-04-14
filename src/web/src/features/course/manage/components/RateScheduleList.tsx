@@ -24,7 +24,9 @@ import { cn } from '@/lib/utils';
 import type { RateSchedule } from '@/types/course';
 
 function formatTime(time: string): string {
-  const [hours, minutes] = time.split(':').map(Number);
+  const parts = time.split(':').map(Number);
+  const hours = parts[0] ?? 0;
+  const minutes = parts[1] ?? 0;
   const period = hours >= 12 ? 'PM' : 'AM';
   const displayHour = hours % 12 || 12;
   return `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
