@@ -10,6 +10,7 @@ using Teeforce.Domain.GolferWaitlistEntryAggregate.Exceptions;
 using Teeforce.Domain.TeeSheetAggregate.Exceptions;
 using Teeforce.Domain.TeeTimeAggregate.Exceptions;
 using Teeforce.Domain.TeeTimeOpeningAggregate.Exceptions;
+using Teeforce.Domain.CoursePricingAggregate.Exceptions;
 using Teeforce.Domain.WaitlistOfferAggregate.Exceptions;
 
 namespace Teeforce.Api.Infrastructure.Middleware;
@@ -42,6 +43,8 @@ public static class DomainExceptionHandler
                     TeeTimeHasClaimsException => StatusCodes.Status409Conflict,
                     BookingAuthorizationMismatchException => StatusCodes.Status409Conflict,
                     CourseScheduleNotConfiguredException => StatusCodes.Status409Conflict,
+                    ConflictingScheduleException => StatusCodes.Status409Conflict,
+                    PriceOutOfBoundsException => StatusCodes.Status422UnprocessableEntity,
                     EntityNotFoundException => StatusCodes.Status404NotFound,
                     InvalidSlotsAvailableException => StatusCodes.Status422UnprocessableEntity,
                     Teeforce.Domain.TeeTimeOpeningAggregate.Exceptions.InvalidGroupSizeException => StatusCodes.Status422UnprocessableEntity,
