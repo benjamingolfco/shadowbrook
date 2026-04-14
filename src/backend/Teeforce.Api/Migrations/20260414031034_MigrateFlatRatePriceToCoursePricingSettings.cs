@@ -11,7 +11,7 @@ public partial class MigrateFlatRatePriceToCoursePricingSettings : Migration
     protected override void Up(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.Sql(@"
-                INSERT INTO CoursePricingSettings (Id, CourseId, DefaultPrice, MinPrice, MaxPrice, CreatedAt, UpdatedAt, UpdatedBy, RowVersion)
+                INSERT INTO CoursePricingSettings (Id, CourseId, DefaultPrice, MinPrice, MaxPrice, CreatedAt, UpdatedAt, UpdatedBy)
                 SELECT
                     NEWID(),
                     Id,
@@ -20,8 +20,7 @@ public partial class MigrateFlatRatePriceToCoursePricingSettings : Migration
                     NULL,
                     GETUTCDATE(),
                     GETUTCDATE(),
-                    NULL,
-                    0x00000000
+                    NULL
                 FROM Courses
                 WHERE Id NOT IN (SELECT CourseId FROM CoursePricingSettings)
             ");
