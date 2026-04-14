@@ -209,43 +209,6 @@ public static class CourseEndpoints
             course.DefaultCapacity));
     }
 
-    [WolverinePut("/courses/{courseId}/pricing")]
-    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
-    public static async Task<IResult> UpdatePricing(
-        Guid courseId,
-        PricingRequest request,
-        ApplicationDbContext db)
-    {
-        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
-
-        if (course is null)
-        {
-            return Results.NotFound(new { error = "Course not found." });
-        }
-
-        course.UpdatePricing(request.FlatRatePrice);
-
-        return Results.Ok(new PricingResponse(course.FlatRatePrice!.Value));
-    }
-
-    [WolverineGet("/courses/{courseId}/pricing")]
-    [Authorize(Policy = AuthorizationPolicies.RequireAppAccess)]
-    public static async Task<IResult> GetPricing(Guid courseId, ApplicationDbContext db)
-    {
-        var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
-
-        if (course is null)
-        {
-            return Results.NotFound(new { error = "Course not found." });
-        }
-
-        if (course.FlatRatePrice is null)
-        {
-            return Results.Ok(new { });
-        }
-
-        return Results.Ok(new PricingResponse(course.FlatRatePrice.Value));
-    }
 }
 
 public record CreateCourseRequest(
@@ -288,10 +251,6 @@ public record TeeTimeSettingsResponse(
     TimeOnly LastTeeTime,
     int DefaultCapacity);
 
-public record PricingRequest(decimal FlatRatePrice);
-
-public record PricingResponse(decimal FlatRatePrice);
-
 public class CreateCourseRequestValidator : AbstractValidator<CreateCourseRequest>
 {
     public CreateCourseRequestValidator()
@@ -325,16 +284,6 @@ public class UpdateCourseRequestValidator : AbstractValidator<UpdateCourseReques
             })
             .When(x => !string.IsNullOrEmpty(x.TimeZoneId))
             .WithMessage("TimeZoneId is not a valid IANA timezone.");
-    }
-}
-
-public class PricingRequestValidator : AbstractValidator<PricingRequest>
-{
-    public PricingRequestValidator()
-    {
-        RuleFor(x => x.FlatRatePrice)
-            .GreaterThanOrEqualTo(0).WithMessage("Price must be greater than or equal to 0.")
-            .LessThanOrEqualTo(10000).WithMessage("Price must be less than or equal to 10000.");
     }
 }
 
