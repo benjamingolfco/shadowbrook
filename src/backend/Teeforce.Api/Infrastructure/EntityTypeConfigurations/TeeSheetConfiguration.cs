@@ -35,6 +35,8 @@ public class TeeSheetConfiguration : IEntityTypeConfiguration<TeeSheet>
             i.Property(x => x.Id).ValueGeneratedNever();
             i.Property(x => x.Time).HasColumnType("time");
             i.Property(x => x.Capacity);
+            i.Property(x => x.Price).HasPrecision(18, 2);
+            i.Property(x => x.RateScheduleId);
             i.HasIndex(x => new { x.TeeSheetId, x.Time }).IsUnique();
         });
 

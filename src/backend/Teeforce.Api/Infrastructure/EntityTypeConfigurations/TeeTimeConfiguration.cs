@@ -32,6 +32,7 @@ public class TeeTimeConfiguration : IEntityTypeConfiguration<TeeTime>
             c.Property(x => x.BookingId);
             c.Property(x => x.GolferId);
             c.Property(x => x.GroupSize);
+            c.Property(x => x.Price).HasPrecision(18, 2);
             c.Property(x => x.ClaimedAt);
             c.HasIndex(x => new { x.TeeTimeId, x.BookingId }).IsUnique();
         });
