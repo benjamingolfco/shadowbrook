@@ -35,6 +35,7 @@ public class CoursePricingSettingsConfiguration : IEntityTypeConfiguration<Cours
             rs.Property(x => x.StartTime).HasColumnType("time");
             rs.Property(x => x.EndTime).HasColumnType("time");
             rs.Property(x => x.Price).HasPrecision(18, 2);
+            rs.Property(x => x.InvalidReason).HasMaxLength(500);
         });
 
         builder.HasOne<Course>()

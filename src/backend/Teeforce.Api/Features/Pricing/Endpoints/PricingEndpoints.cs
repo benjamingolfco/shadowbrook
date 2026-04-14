@@ -22,7 +22,7 @@ public static class PricingEndpoints
         }
 
         var schedules = settings.RateSchedules.Select(s => new RateScheduleResponse(
-            s.Id, s.Name, s.DaysOfWeek, s.StartTime, s.EndTime, s.Price)).ToList();
+            s.Id, s.Name, s.DaysOfWeek, s.StartTime, s.EndTime, s.Price, s.InvalidReason)).ToList();
 
         return Results.Ok(new GetPricingResponse(settings.DefaultPrice, settings.MinPrice, settings.MaxPrice, schedules));
     }
@@ -66,7 +66,7 @@ public static class PricingEndpoints
 
         return Results.Created(
             $"/courses/{courseId}/pricing/schedules/{schedule.Id}",
-            new RateScheduleResponse(schedule.Id, schedule.Name, schedule.DaysOfWeek, schedule.StartTime, schedule.EndTime, schedule.Price));
+            new RateScheduleResponse(schedule.Id, schedule.Name, schedule.DaysOfWeek, schedule.StartTime, schedule.EndTime, schedule.Price, schedule.InvalidReason));
     }
 
     [WolverinePut("/courses/{courseId}/pricing/schedules/{scheduleId}")]
@@ -87,7 +87,7 @@ public static class PricingEndpoints
         settings.UpdateSchedule(scheduleId, request.Name, request.DaysOfWeek, request.StartTime, request.EndTime, request.Price);
 
         var updated = settings.RateSchedules.First(s => s.Id == scheduleId);
-        return Results.Ok(new RateScheduleResponse(updated.Id, updated.Name, updated.DaysOfWeek, updated.StartTime, updated.EndTime, updated.Price));
+        return Results.Ok(new RateScheduleResponse(updated.Id, updated.Name, updated.DaysOfWeek, updated.StartTime, updated.EndTime, updated.Price, updated.InvalidReason));
     }
 
     [WolverineDelete("/courses/{courseId}/pricing/schedules/{scheduleId}")]
@@ -136,7 +136,8 @@ public record RateScheduleResponse(
     DayOfWeek[] DaysOfWeek,
     TimeOnly StartTime,
     TimeOnly EndTime,
-    decimal Price);
+    decimal Price,
+    string? InvalidReason);
 
 public record UpdateDefaultPriceRequest(decimal? DefaultPrice);
 
